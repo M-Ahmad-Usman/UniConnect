@@ -137,6 +137,8 @@ CLASS {
 }
 
 CLASS.cr_id - STUDENT_INFO.student_id
+CLASS.program_id > PROGRAM.id
+
 
 SECTION {
   id SERIAL PK
@@ -204,13 +206,12 @@ CHANNEL {
   course_id INT FK
 
   // For program channels (in department server)
-  program_id FK
+  program_id INT FK
 
   // For Society channels (in society type servers)
   // society_id FK // I think we don't need this as we can fetch all info of society using society_id fetched from this channel's parent society type server.
 
   is_locked BOOLEAN // DEfAULT FALSE
-  is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
   created_at TIMESTAMP // DEfAULT CURRENT_TIMESTAMP
 
@@ -220,6 +221,9 @@ CHANNEL {
 // One server can contain many channels
 // One channel can be in only one server
 CHANNEL.server_id > SERVER.id
+CHANNEL.course_id - COURSE.id
+CHANNEL.program_id - PROGRAM.id
+
 
 // Associative entity for server members as this is a many to many relationship 
 MEMBERSHIP {
