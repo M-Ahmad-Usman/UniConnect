@@ -240,12 +240,3 @@
 | Browser Support | Chrome, Firefox, Edge |
 
 ---
-
-## 10. Out of Scope (Phase 2)
-
-- Real-time chat (Socket.IO)
-- Event management with RSVP
-- Push notifications (Firebase)
-- Mobile application
-- Analytics dashboard
-- Calendar integration
