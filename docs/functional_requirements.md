@@ -76,28 +76,31 @@
 ## 4. Functional Requirements
 
 
-### 4.1 Authentication
+
+#### 4.1 Authentication
 
 | ID | Requirement |
 |-------|-------------|
-| FR-01 | User must be registered with necessary information by management. There will be no sign up flow for new user. |
-| FR-02 | User can login with email and password (JWT tokens) |
-| FR-03 | User can reset password via email link |
+| FR-1 | User must be registered with necessary information by management. There will be no sign up flow for new user. |
+| FR-2 | User can login with email and password (JWT tokens) |
+| FR-3 | User can reset password via email link |
 
-### 4.2 Server Management
+
+#### 4.2 Server Management
 
 | ID | Requirement |
 |-------|-------------|
-| FR-04 | Admin can create department, class, and society servers |
-| FR-05 | HOD can create classes for programs offered by his department. Class server should be automatically created |
-| FR-06 | HOD can create societies in his department |
-| FR-07 | Society Convenor and Society president must be specified when creating a new society |
-| FR-08 | Students are auto-added to their class and department servers based on their academic info |
-| FR-09 | Teachers are auto-added to their department server based on academic info |
+| FR-4 | Admin can create department, class, and society servers |
+| FR-5 | HOD can create classes for programs offered by his department. Class server should be automatically created |
+| FR-6 | HOD can create societies in his department |
+| FR-7 | Society Convenor and Society president must be specified when creating a new society |
+| FR-8 | Students are auto-added to their class and department servers based on their academic info |
+| FR-9 | Teachers are auto-added to their department server based on academic info |
 | FR-10 | Users can view list of servers they are member of |
 | FR-11 | Users can browse channels within a server |
 
-### 4.3 Channel Management
+
+#### 4.3 Channel Management
 
 | ID | Requirement |
 |----|-------------|
@@ -109,36 +112,39 @@
 | FR-17 | HOD has posting rights in all channels of his department server |
 | FR-18 | Program directors have posting rights in their respective program channel in their department server. |
 | FR-19 | HOD can create channels in their department server |
-| FR-20 | Teacher can view and post in all course channels assigned to them (across servers) |
-| FR-21 | Admin can lock/delete any channel |
-| FR-22 | HOD can lock/delete channels in department server |
-| FR-23 | Society Convenor/Society President can create/lock/delete channels in their managed society server |
-| FR-24 | Moderators can be scoped to entire server (server-level) or specific channels (channel-level). |
-| FR-25 | Server-level moderators can post in all channels of that server. |
-| FR-26 | Channel-level moderators can post only in assigned channels. |
+| FR-20 | Admin can lock/delete any channel |
+| FR-21 | HOD can lock/delete channels in department server |
+| FR-22 | Society Convenor/Society President can create/lock/delete channels in their managed society server |
+| FR-23 | Moderators can be scoped to entire server (server-level) or specific channels (channel-level). |
+| FR-24 | Server-level moderators can post in all channels of that server. |
+| FR-25 | Channel-level moderators can post only in assigned channels. |
 
-### 4.4 Posting & Announcements
 
-| ID | Requirement |
-|----|-------------|
-| FR-27 | Authorized users can create posts in channels in which they are authorized |
-| FR-28 | Teacher can post to one or multiple class servers simultaneously |
-| FR-29 | Posts display author info with role badge |
-| FR-30 | Users can view posts in channels (sorted by date, pinned first) |
-| FR-31 | Author can edit post within 24 hours (shows "Edited" badge) |
-| FR-32 | Author/Admin can delete posts (soft delete) |
-
-### 4.5 Notifications
+#### 4.4 Posting & Announcements
 
 | ID | Requirement |
 |----|-------------|
-| FR-33 | User sees notification bell with unread count |
-| FR-34 | New posts in subscribed channels trigger notifications |
-| FR-35 | User can mark notifications as read |
-| FR-36 | Urgent posts show prominent visual indicator |
-| FR-37 | User can subscribe/unsubscribe from notifications from whole server or from specific channels |
+| FR-26 | Authorized users can create posts in channels in which they are authorized |
+| FR-27 | Teacher can post in only the course channels assigned to them |
+| FR-28 | Posts display author info with role badge |
+| FR-29 | Users can view posts in channels (sorted by date, pinned first) |
+| FR-30 | Author can edit post within 24 hours (shows "Edited" badge) |
+| FR-31 | Author/Admin can delete posts (soft delete) |
 
-### 4.6 Search & Filter
+
+#### 4.5 Notifications
+
+| ID | Requirement |
+|----|-------------|
+| FR-32 | User sees notification bell with unread count |
+| FR-33 | New posts in subscribed channels trigger notifications |
+| FR-34 | User can mark notifications as read |
+| FR-35 | Urgent posts show prominent visual indicator |
+| FR-36 | User are automatically subscribed for notifications in the servers in which they are member of. |
+| FR-37 | Users can unsubscribe from notifications for whole server or individual channels. |
+
+
+#### 4.6 Search & Filter
 
 | ID | Requirement |
 |----|-------------|
@@ -146,7 +152,8 @@
 | FR-39 | User can filter posts by priority (Normal, Important, Urgent) |
 | FR-40 | User can filter posts by date range |
 
-### 4.7 User Profile
+
+#### 4.7 User Profile
 
 | ID | Requirement |
 |----|-------------|
@@ -154,7 +161,8 @@
 | FR-42 | User can update profile picture and bio |
 | FR-43 | User can view their role badges |
 
-### 4.8 Role Management
+
+#### 4.8 Role Management
 
 | ID | Requirement |
 |----|-------------|
