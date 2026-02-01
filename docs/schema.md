@@ -54,10 +54,12 @@ DEPARTMENT {
   id SERIAL PK
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
-  hod_id INT FK // UNIQUE Enforce NOT NULL in application layer
+  hod_id INTEGER FK // UNIQUE Enforce NOT NULL in application layer. Can't enforce in DB due to chicken egg problem.
+  server_id INTEGER FK // UNIQUE NOT NULL
 }
 
 DEPARTMENT.hod_id - TEACHER_INFO.teacher_id
+DEPARTMENT.server_id - SERVER.id
 
 DEGREE_LEVEL {
   id SERIAL PK
@@ -77,7 +79,7 @@ PROGRAM {
   semesters INTEGER // NOT NULL
   code VARCHAR(20) // NOT NULL UNIQUE
 
-  program_director_id INT FK // NOT NULL
+  program_director_id INTEGER FK // UNIQUE NOT NULL
 
   // UNIQUE(department_id, discipline_id, degree_level_id)
 }
@@ -93,6 +95,7 @@ USER {
   id SERIAL PK
   full_name VARCHAR(100) // NOT NULL
   email VARCHAR(255) // NOT NULL UNIQUE
+  phone VARCHAR(20) // NOT NULL
   password_hash VARCHAR(255) // NOT NULL
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
   profile_picture_url TEXT
@@ -112,7 +115,6 @@ DEPARTMENT.id < USER.department_id
 STUDENT_INFO {
   student_id INTEGER PK FK
   class_id INTEGER FK // NOT NULL
-  admission_year INTEGER // NOT NULL
   roll_number INTEGER // UNIQUE NOT NULL
 }
 
@@ -122,6 +124,7 @@ STUDENT_INFO.class_id > CLASS.id
 TEACHER_INFO {
   teacher_id INTEGER PK FK
   designation VARCHAR(100) // NOT NULL
+  // Add more fields as required
 }
 
 TEACHER_INFO.teacher_id - USER.id
@@ -130,30 +133,29 @@ CLASS {
   id SERIAL PK
   program_id INTEGER FK // NOT NULL
   current_semester INTEGER // NOT NULL CHECK (current_semester !> program.semesters AND current_semester !< program.semesters)
-  section_id INTEGER FK // NOT NULL
-  cr_id INT FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
+  academic_year INTEGER // NOT NULL. Represents current year
+  admission_year INTEGER // NOT NULL. Represents the year this batch was admitted
+  section VARCHAR(1) // NOT NULL enum['A', 'B']
+  cr_id INTEGER FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
+  server_id INTEGER FK // UNIQUE NOT NULL
   // Constraint CHECK (cr belongs to this class)
-  // UNIQUE (program_id, current_semester, section_id)
+  // UNIQUE (program_id, current_semester, section, admission_year)
 }
 
 CLASS.cr_id - STUDENT_INFO.student_id
 CLASS.program_id > PROGRAM.id
 
-
-SECTION {
-  id SERIAL PK
-  name VARCHAR(20) // NOT NULL
-}
-
-CLASS.section_id < SECTION.id
+// Class must have only one server
+CLASS.server_id - SERVER.id
 
 SOCIETY {
   id SERIAL PK
   name VARCHAR(100) // UNIQUE NOT NULL
   description TEXT
-  department_id INTEGER FK // NOT NULL
+  department_id INT FK // NOT NULL
   president_id INT FK // NOT NULL
   convenor_id INT FK // NOT NULL
+  server_id INT FK // UNIQUE NOT NULL
   is_active BOOLEAN // DEFAULT TRUE
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
 }
@@ -161,11 +163,15 @@ SOCIETY {
 // One department can contain many societies
 // One society can be in only one department
 SOCIETY.department_id > DEPARTMENT.id
+
 // One Society can have only one president which must be a student
 SOCIETY.president_id - STUDENT_INFO.student_id
 
 // One Society can have only one convenor which must be a teacher
 SOCIETY.convenor_id - TEACHER_INFO.teacher_id
+
+// Society must have only one server
+SOCIETY.server_id - SERVER.id
 
 SERVER {
   id SERIAL PK
@@ -173,27 +179,10 @@ SERVER {
   description TEXT
   type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
 
-  // Scope reference (only one should be set based on server_type)
-  department_id INTEGER FK
-  class_id INTEGER FK
-  society_id INTEGER FK
-
-  // CONSTRAINT: CHECK ( 
-    // (type='Department' AND department_id IS NOT NULL AND class_id IS NULL AND society_id IS NULL) OR 
-    // (type='Class' AND class_id IS NOT NULL AND department_id IS NULL AND society_id IS NULL) OR
-    // (type='Society' AND society_id IS NOT NULL AND department_id IS NULL AND class_id IS NULL)
-  // )
-
   icon_url TEXT,
   is_active BOOLEAN // DEFAULT TRUE
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
-
-  // UNIQUE (department_id, class_id, society_id)
 }
-
-SERVER.department_id - DEPARTMENT.id
-SERVER.class_id -  CLASS.id
-SERVER.society_id - SOCIETY.id
 
 CHANNEL {
   id SERIAL PK
@@ -209,12 +198,16 @@ CHANNEL {
   program_id INT FK
 
   // For Society channels (in society type servers)
-  // society_id FK // I think we don't need this as we can fetch all info of society using society_id fetched from this channel's parent society type server.
+  // society_id FK // I think we don't need this as we can fetch all info of society using server_id of this table which uniquely determines the society.
 
-  is_locked BOOLEAN // DEfAULT FALSE
+  is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
-  created_at TIMESTAMP // DEfAULT CURRENT_TIMESTAMP
-
+  deleted_by INTEGER FK
+  
+  is_auto_created BOOLEAN // DEFAULT FALSE
+  created_at TIMESTAMP
+  created_by INTEGER FK
+  
   // UNIQUE(server_id, name)
 }
 
@@ -223,6 +216,9 @@ CHANNEL {
 CHANNEL.server_id > SERVER.id
 CHANNEL.course_id - COURSE.id
 CHANNEL.program_id - PROGRAM.id
+
+CHANNEL.deleted_by > USER.id
+CHANNEL.created_by > USER.id
 
 
 // Associative entity for server members as this is a many to many relationship 
@@ -239,11 +235,9 @@ SERVER.id < MEMBERSHIP.server_id
 COURSE {
   id SERIAL PK
   title VARCHAR(50) // NOT NULL
-  code VARCHAR(50) // NOT NULL
+  code VARCHAR(50) // UNIQUE NOT NULL
   credit_hours INTEGER // NOT NULL
   department_id INTEGER FK // NOT NULL
-
-  // UNIQUE(title, code, department_id)
 }
 
 // One department offers many courses in its programs
@@ -265,29 +259,29 @@ POST {
   id SERIAL PK
   author_id INTEGER FK // NOT NULL
 
+  channel_id INTEGER FK // NOT NULL
+
   title VARCHAR(100) // NOT NULL
   content TEXT // NOT NULL
 
   type VARCHAR(50) // DEFAULT general enum ['announcement', 'update', 'event', 'general']
   priority VARCHAR(50) // DEFAULT normal enum ['normal', 'important', 'urgent']
 
-  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
-
-  edited_at TIMESTAMP
+  is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
+  deleted_by INTEGER FK
+  
+  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  
+  updated_at TIMESTAMP 
+  updated_by INTEGER FK
 }
 
 POST.author_id > USER.id
+POST.channel_id > CHANNEL.id
 
-// Associative entity as one post can be posted in many channels (multi-server posting by teachers)
-POST_CHANNEL {
-  post_id PK FK
-  channel_id PK FK
-  pinned_in_channel BOOLEAN // Pin status can differ per channel
-}
-
-POST_CHANNEL.post_id > POST.id
-POST_CHANNEL.channel_id > CHANNEL.id
+POST.deleted_by > USER.id
+POST.updated_by > USER.id
 
 POST_ATTACHMENT {
   id SERIAL PK
@@ -357,16 +351,16 @@ NOTIFICATION {
 NOTIFICATION.user_id > USER.id
 NOTIFICATION.post_id > POST.id
 
-NOTIFICATION_UNSUBSCRIBE {
-  user_id INTEGER FK
-  scope_type VARCHAR(20) // 'server' or 'channel'  
-  server_id INTEGER FK
-  channel_id INTEGER FK
-  unsubscribed_at TIMESTAMP // NOT NULL
-  // UNIQUE(user_id, server_id, channel_id)
+NOTIFICATION_PREFERENCE {
+  user_id INTEGER PK FK
+  scope_type VARCHAR(20) PK // enum['server, 'channel']
+  server_id INTEGER PK FK
+  channel_id INTEGER PK FK
+  is_subscribed BOOLEAN // DEFAULT TRUE
+  updated_at TIMESTAMP
 }
 
-NOTIFICATION_UNSUBSCRIBE.user_id > USER.id
-NOTIFICATION_UNSUBSCRIBE.server_id > SERVER.id
-NOTIFICATION_UNSUBSCRIBE.channel_id > CHANNEL.id
+NOTIFICATION_PREFERENCE.user_id > USER.id
+NOTIFICATION_PREFERENCE.server_id > SERVER.id
+NOTIFICATION_PREFERENCE.channel_id > CHANNEL.id
 ```
