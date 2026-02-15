@@ -1,0 +1,219 @@
+# ==============================
+# Node.js
+# ==============================
+node_modules/
+jspm_packages/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================
+# Environment variables
+# ==============================
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# ==============================
+# Build output
+# ==============================
+dist/
+build/
+out/
+.next/
+.next/cache/
+.turbo/
+.vercel/
+.cache/
+.tmp/
+.temp/
+coverage/
+coverage-final.json
+*.tsbuildinfo
+
+# TypeScript
+*.d.ts.map
+
+# ==============================
+# Next.js
+# ==============================
+.next/
+next-env.d.ts
+.next/cache/
+.vercel/
+
+# Static export
+out/
+
+# ==============================
+# Docker
+# ==============================
+.docker/
+docker-compose.override.yml
+docker-compose.local.yml
+*.tar
+*.tar.gz
+docker-data/
+docker-volumes/
+
+# ==============================
+# Playwright
+# ==============================
+playwright-report/
+playwright/.cache/
+test-results/
+blob-report/
+.playwright/
+*.trace
+*.har
+
+# ==============================
+# Jest
+# ==============================
+jest-html-reporters-*.html
+junit.xml
+
+# ==============================
+# Vitest
+# ==============================
+vitest-report/
+.vitest/
+
+# ==============================
+# Supertest
+# ==============================
+.supertest/
+
+# ==============================
+# Testing / Coverage
+# ==============================
+coverage/
+.nyc_output/
+.c8/
+lcov-report/
+
+# ==============================
+# ESLint / Prettier
+# ==============================
+.eslintcache
+.stylelintcache
+
+# ==============================
+# IDEs and Editors
+# ==============================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+
+# ==============================
+# OS files
+# ==============================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==============================
+# Mac
+# ==============================
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# ==============================
+# Windows
+# ==============================
+$RECYCLE.BIN/
+
+# ==============================
+# Linux
+# ==============================
+*~
+
+# ==============================
+# PM2
+# ==============================
+.pm2/
+pids/
+logs/
+
+# ==============================
+# Databases
+# ==============================
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# ==============================
+# Prisma
+# ==============================
+prisma/migrations/
+prisma/dev.db
+
+# ==============================
+# Redis dump
+# ==============================
+dump.rdb
+
+# ==============================
+# Firebase
+# ==============================
+.firebase/
+.firebaserc
+
+# ==============================
+# Sentry
+# ==============================
+.sentryclirc
+
+# ==============================
+# Misc
+# ==============================
+*.tgz
+*.gz
+*.zip
+*.rar
+*.7z
+
+# ==============================
+# Storybook
+# ==============================
+storybook-static/
+
+# ==============================
+# TurboRepo
+# ==============================
+.turbo/
+
+# ==============================
+# NX
+# ==============================
+nx-cache/
