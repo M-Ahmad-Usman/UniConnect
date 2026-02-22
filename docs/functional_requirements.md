@@ -84,96 +84,139 @@
 | FR-1 | User must be registered with necessary information by management. There will be no sign up flow for new user. |
 | FR-2 | User can login with email and password (JWT tokens) |
 | FR-3 | User can reset password via email link |
+| FR-4 | Admin can create individual user accounts via a form |
+| FR-5 | Admin can bulk-import users via CSV/Excel upload |
+| FR-6 | System sends email with temporary password to newly created users |
+| FR-7 | User must change temporary password on first login |
+| FR-8 | Logged-in user can change their password (requires current password) |
 
 
 #### 4.2 Server Management
 
 | ID | Requirement |
 |-------|-------------|
-| FR-4 | Admin can create department, class, and society servers |
-| FR-5 | HOD can create classes for programs offered by his department. Class server should be automatically created |
-| FR-6 | HOD can create societies in his department |
-| FR-7 | Society Convenor and Society president must be specified when creating a new society |
-| FR-8 | Students are auto-added to their class and department servers based on their academic info |
-| FR-9 | Teachers are auto-added to their department server based on academic info |
-| FR-10 | Users can view list of servers they are member of |
-| FR-11 | Users can browse channels within a server |
+| FR-9 | Admin can create department, class, and society servers |
+| FR-10 | HOD can create classes for programs offered by his department. Class server should be automatically created |
+| FR-11 | HOD can create societies in his department |
+| FR-12 | Society Convenor and Society president must be specified when creating a new society |
+| FR-13 | Students are auto-added to their class and department servers based on their academic info |
+| FR-14 | Teachers are auto-added to their department server based on academic info |
+| FR-15 | Users can view list of servers they are member of |
+| FR-16 | Users can browse channels within a server |
+| FR-17 | Users can view the member list of servers they belong to |
+| FR-18 | Member list displays user name, role badges, and profile picture |
+
 
 
 #### 4.3 Channel Management
 
 | ID | Requirement |
 |----|-------------|
-| FR-12 | Each server has a default `#announcements` channel (auto-created) |
-| FR-13 | Department servers have their programs channels (auto-created) |
-| FR-14 | Program channels cannot be deleted. They can be removed only by removing the program. |
-| FR-15 | Course channels must be automatically created in Class Servers based on the courses assigned to the class. |
-| FR-16 | Teacher must also be assigned when a course is assigned to a class |
-| FR-17 | HOD has posting rights in all channels of his department server |
-| FR-18 | Program directors have posting rights in their respective program channel in their department server. |
-| FR-19 | HOD can create channels in their department server |
-| FR-20 | Admin can lock/delete any channel |
-| FR-21 | HOD can lock/delete channels in department server |
-| FR-22 | Society Convenor/Society President can create/lock/delete channels in their managed society server |
-| FR-23 | Moderators can be scoped to entire server (server-level) or specific channels (channel-level). |
-| FR-24 | Server-level moderators can post in all channels of that server. |
-| FR-25 | Channel-level moderators can post only in assigned channels. |
+| FR-19 | Each server has a default `#announcements` channel (auto-created) |
+| FR-20 | Department servers have their programs channels (auto-created) |
+| FR-21 | Program channels cannot be deleted. They can be removed only by removing the program. |
+| FR-22 | HOD has posting rights in all channels of his department server |
+| FR-23 | Program directors have posting rights in their respective program channel in their department server. |
+| FR-24 | HOD can create channels in their department server |
+| FR-25 | Admin can lock/delete any channel |
+| FR-26 | HOD can lock/delete channels in department server |
+| FR-27 | Society Convenor/Society President can create/lock/delete channels in their managed society server |
+| FR-28 | Moderators can be scoped to entire server (server-level) or specific channels (channel-level). |
+| FR-29 | Server-level moderators can post in all channels of that server. |
+| FR-30 | Channel-level moderators can post only in assigned channels. |
+| FR-31 | HOD/Program Director can assign courses to a class for the current semester |
+| FR-32 | A teacher must be assigned to each course when assigning to a class |
+| FR-33 | Course channels are auto-created in the class server upon course assignment |
+| FR-34 | Assigned teacher automatically gets posting rights to the course channel in class server |
 
 
 #### 4.4 Posting & Announcements
 
 | ID | Requirement |
 |----|-------------|
-| FR-26 | Authorized users can create posts in channels in which they are authorized |
-| FR-27 | Teacher can post in only the course channels assigned to them |
-| FR-28 | Posts display author info with role badge |
-| FR-29 | Users can view posts in channels (sorted by date, pinned first) |
-| FR-30 | Author can edit post within 24 hours (shows "Edited" badge) |
-| FR-31 | Author/Admin can delete posts (soft delete) |
+| FR-35 | Authorized users can create posts in channels in which they are authorized |
+| FR-36 | Teacher can post in only the course channels assigned to them |
+| FR-37 | Posts display author info with role badge |
+| FR-38 | Users can view posts in channels (sorted by date, pinned first) |
+| FR-39 | Author can edit post within 24 hours (shows "Edited" badge) |
+| FR-40 | Author/Admin can delete posts (soft delete) |
+| FR-41 | All list views (posts, members, notifications) must support pagination |
+| FR-42 | Default page size is 20 items, configurable up to 50 |
 
 
 #### 4.5 Notifications
 
 | ID | Requirement |
 |----|-------------|
-| FR-32 | User sees notification bell with unread count |
-| FR-33 | New posts in subscribed channels trigger notifications |
-| FR-34 | User can mark notifications as read |
-| FR-35 | Urgent posts show prominent visual indicator |
-| FR-36 | User are automatically subscribed for notifications in the servers in which they are member of. |
-| FR-37 | Users can unsubscribe from notifications for whole server or individual channels. |
+| FR-43 | User sees notification bell with unread count |
+| FR-44 | New posts in subscribed channels trigger notifications |
+| FR-45 | User can mark notifications as read |
+| FR-46 | Urgent posts show prominent visual indicator |
+| FR-47 | User are automatically subscribed for notifications in the servers in which they are member of. |
+| FR-48 | Users can unsubscribe from notifications for whole server or individual channels. |
 
 
 #### 4.6 Search & Filter
 
 | ID | Requirement |
 |----|-------------|
-| FR-38 | User can search posts by title within a channel |
-| FR-39 | User can filter posts by priority (Normal, Important, Urgent) |
-| FR-40 | User can filter posts by date range |
+| FR-49 | User can search posts by title within a channel |
+| FR-50 | User can filter posts by priority (Normal, Important, Urgent) |
+| FR-51 | User can filter posts by date range |
 
 
 #### 4.7 User Profile
 
 | ID | Requirement |
 |----|-------------|
-| FR-41 | User can view their profile (name, program, semester, roles) |
-| FR-42 | User can update profile picture and bio |
-| FR-43 | User can view their role badges |
+| FR-52 | User can view their profile (name, program, semester, roles) |
+| FR-53 | User can update profile picture and bio |
+| FR-54 | User can view their role badges |
+| FR-55 | Admin can deactivate a user account (soft deactivation) |
+| FR-56 | Deactivated users cannot login but their posts and data are preserved |
+| FR-57 | Admin can reactivate a previously deactivated user |
 
 
 #### 4.8 Role Management
 
 | ID | Requirement |
 |----|-------------|
-| FR-44 | Admin can assign any role/sub-role to users |
-| FR-45 | HOD can assign sub-roles within their department (CR, Program Director, Moderators (channel and server level)) |
-| FR-46 | HOD can assign Society Convenor for societies |
-| FR-47 | CR can assign moderators (channel and server level) in their class server |
-| FR-48 | Society Convenor/President can assign moderator (channel and server level) in their society server |
-| FR-49 | Role changes take effect immediately |
+| FR-58 | Admin can assign any role/sub-role to users |
+| FR-59 | HOD can assign sub-roles within their department (CR, Program Director, Moderators (channel and server level)) |
+| FR-60 | HOD can assign Society Convenor for societies |
+| FR-61 | CR can assign moderators (channel and server level) in their class server |
+| FR-62 | Society Convenor/President can assign moderator (channel and server level) in their society server |
+| FR-63 | Role changes take effect immediately |
+
+#### 4.9 Society Membership
+
+| ID | Requirement |
+|----|-------------|
+| FR-64 | Students can browse societies within their department |
+| FR-65 | Students can send a join request to a society |
+| FR-66 | Society Convenor/President can approve or reject join requests |
+| FR-67 | Society Convenor/President can manually add students to the society |
+| FR-68 | Society Convenor/President can remove members from the society |
+| FR-69 | When a join request is approved, the student is auto-added to the society server |
 
 ---
+
+#### 4.10 Semester Transition
+
+| ID | Requirement |
+|----|-------------|
+| FR-70 | Admin/HOD can trigger semester progression for a class |
+| FR-71 | On semester progression, existing course channels are archived (read-only) |
+| FR-72 | New course channels are auto-created based on curriculum or manual assignment |
+| FR-73 | TEACHES assignments from previous semester are cleared; new teachers must be assigned |
+
+#### 4.11 Admin Dashboard
+
+| ID | Requirement |
+|----|-------------|
+| FR-74 | Admin can view a list of all users with filtering by type, department, and status |
+| FR-75 | Admin can view system statistics (total users, servers, posts) |
+| FR-76 | HOD can view all students and teachers in their department |
 
 ## 5. Permissions & Responsibilites
 
@@ -237,7 +280,7 @@
 
 ---
 
-## 9. Non-Functional Requirements
+## 7. Non-Functional Requirements
 
 | Requirement | Target |
 |-------------|--------|
