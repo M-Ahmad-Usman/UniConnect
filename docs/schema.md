@@ -68,7 +68,7 @@ DEGREE_LEVEL {
 
 DISCIPLINE {
   id SERIAL PK
-  name STRING // UNIQUE NOT NULL e.g 'Computer Science', 'Software Engineering'
+  name VARCHAR(100) // UNIQUE NOT NULL e.g 'Computer Science', 'Software Engineering'
 }
 
 PROGRAM {
@@ -79,7 +79,7 @@ PROGRAM {
   semesters INTEGER // NOT NULL
   code VARCHAR(20) // NOT NULL UNIQUE
 
-  program_director_id INTEGER FK // UNIQUE NOT NULL
+  program_director_id INTEGER FK // NOT NULL
 
   // UNIQUE(department_id, discipline_id, degree_level_id)
 }
@@ -100,7 +100,7 @@ USER {
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
   profile_picture_url TEXT
   bio TEXT
-  user_type VARCHAR(100) // NOT NULL enum ['Teacher', 'Student', 'Admin']
+  user_type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
   department_id INTEGER FK // Will be NULL only for admin user type
   is_active BOOLEAN // DEFAULT TRUE
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
@@ -132,7 +132,7 @@ TEACHER_INFO.teacher_id - USER.id
 CLASS {
   id SERIAL PK
   program_id INTEGER FK // NOT NULL
-  current_semester INTEGER // NOT NULL CHECK (current_semester !> program.semesters AND current_semester !< program.semesters)
+  current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
   academic_year INTEGER // NOT NULL. Represents current year
   admission_year INTEGER // NOT NULL. Represents the year this batch was admitted
   section VARCHAR(1) // NOT NULL enum['A', 'B']
@@ -179,10 +179,13 @@ SERVER {
   description TEXT
   type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
 
-  icon_url TEXT,
+  icon_url TEXT
   is_active BOOLEAN // DEFAULT TRUE
+  created_by INTEGER FK // NOT NULL
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
 }
+
+SERVER.created_by > USER.id
 
 CHANNEL {
   id SERIAL PK
@@ -197,8 +200,14 @@ CHANNEL {
   // For program channels (in department server)
   program_id INT FK
 
-  // For Society channels (in society type servers)
-  // society_id FK // I think we don't need this as we can fetch all info of society using server_id of this table which uniquely determines the society.
+  // CHECK (
+  // (type = 'course' AND course_id IS NOT NULL AND program_id IS NULL) OR
+  // (type = 'program' AND program_id IS NOT NULL AND course_id IS NULL) OR
+  // (type IN ('announcement', 'general') AND course_id IS NULL AND program_id IS NULL))
+
+  is_locked BOOLEAN // DEFAULT FALSE
+  locked_by INTEGER FK
+  locked_at TIMESTAMP
 
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
@@ -217,20 +226,37 @@ CHANNEL.server_id > SERVER.id
 CHANNEL.course_id - COURSE.id
 CHANNEL.program_id - PROGRAM.id
 
+CHANNEL.locked_by > USER.id
 CHANNEL.deleted_by > USER.id
 CHANNEL.created_by > USER.id
 
 
 // Associative entity for server members as this is a many to many relationship 
-MEMBERSHIP {
+SERVER_MEMBERSHIP {
   user_id PK FK
   server_id PK FK
   joined_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
   is_auto_joined BOOLEAN // DEFAULT FALSE
 }
 
-USER.id < MEMBERSHIP.user_id
-SERVER.id < MEMBERSHIP.server_id
+USER.id < SERVER_MEMBERSHIP.user_id
+SERVER.id < SERVER_MEMBERSHIP.server_id
+
+// Track user requests to join societies
+SOCIETY_MEMBERSHIP_REQUEST {
+  id SERIAL PK
+  society_id INTEGER FK  // NOT NULL
+  user_id INTEGER FK  // NOT NULL
+  status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
+  requested_at TIMESTAMP  // DEFAULT CURRENT_TIMESTAMP
+  reviewed_by INTEGER FK
+  reviewed_at TIMESTAMP
+  // UNIQUE(society_id, user_id)
+}
+
+SOCIETY_MEMBERSHIP_REQUEST.society_id > SOCIETY.id
+SOCIETY_MEMBERSHIP_REQUEST.user_id > USER.id
+SOCIETY_MEMBERSHIP_REQUEST.reviewed_by > USER.id
 
 COURSE {
   id SERIAL PK
@@ -264,8 +290,11 @@ POST {
   title VARCHAR(100) // NOT NULL
   content TEXT // NOT NULL
 
-  type VARCHAR(50) // DEFAULT general enum ['announcement', 'update', 'event', 'general']
   priority VARCHAR(50) // DEFAULT normal enum ['normal', 'important', 'urgent']
+
+  is_pinned BOOLEAN // DEFAULT FALSE
+  pinned_by INTEGER FK
+  pinned_at TIMESTAMP
 
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
@@ -283,12 +312,15 @@ POST.channel_id > CHANNEL.id
 POST.deleted_by > USER.id
 POST.updated_by > USER.id
 
+POST.pinned_by > USER.id
+
 POST_ATTACHMENT {
   id SERIAL PK
   post_id INTEGER FK // NOT NULL
   file_url TEXT // NOT NULL
-  file_type VARCHAR(50)
-  file_size INTEGER // in bytes
+  file_type VARCHAR(50) // NOT NULL enum ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', ...]
+  file_size INTEGER // NOT NULL, CHECK(file_size <= 5242880)  -- 5MB
+  // Also enforce max attachment count (e.g., 5) at application layer
   uploaded_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
 }
 
@@ -300,20 +332,20 @@ ROLE {
   name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
 }
 
-PERMISSIONS {
+PERMISSION {
   id SERIAL PK
-  name VARCHAR(100) // NOT NULL enum['post:channel', 'create:channel', 'delete:channel', 'create:society', create:department', 'create:class' 'assign:hod', 'assign:...other roles'] 
+  name VARCHAR(100) // NOT NULL enum['post:channel', 'create:channel', 'delete:channel', 'create:society', create:department', 'create:class' 'assign:program_director', 'assign:...other roles'] 
 }
 
 // This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
 // For example: HOD can create/post/delete channels only in his department. Can create society and class servers only within his department. Can assign society president and convenor only for societies associated with his department
-ROLE_PERMISSIONS {
+ROLE_PERMISSION {
   role_id INTEGER PK FK // NOT NULL
   permission_id INTEGER PK FK // NOT NULL
 }
 
-ROLE_PERMISSIONS.role_id > ROLE.id
-ROLE_PERMISSIONS.permission_id > PERMISSIONS.id
+ROLE_PERMISSION.role_id > ROLE.id
+ROLE_PERMISSION.permission_id > PERMISSION.id
 
 MODERATOR_ASSIGNMENT {
   id SERIAL PK
@@ -326,7 +358,7 @@ MODERATOR_ASSIGNMENT {
     // (scope_type='server' AND channel_id IS NULL)
   // )
 
-  // UNIQUE(user_id, server_id, channel_id)
+  // UNIQUE(user_id, server_id, COALESCE(channel_id, 0))
 
   assigned_by INTEGER FK // NOT NULL
   assigned_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
@@ -341,7 +373,7 @@ NOTIFICATION {
   id SERIAL PK
   user_id INTEGER FK // NOT NULL
   post_id INTEGER FK 
-  type VARCHAR(50) // enum ['new_post', 'mention', 'role_assigned']
+  type VARCHAR(50) // enum ['new_post', 'role_assigned']
   title VARCHAR(200) // NOT NULL
   message TEXT
   read_at TIMESTAMP
@@ -352,15 +384,41 @@ NOTIFICATION.user_id > USER.id
 NOTIFICATION.post_id > POST.id
 
 NOTIFICATION_PREFERENCE {
-  user_id INTEGER PK FK
-  scope_type VARCHAR(20) PK // enum['server, 'channel']
-  server_id INTEGER PK FK
-  channel_id INTEGER PK FK
+  id SERIAL PK
+  user_id INTEGER FK
+  scope_type VARCHAR(20) // enum['server, 'channel']
+  server_id INTEGER FK
+  channel_id INTEGER FK
   is_subscribed BOOLEAN // DEFAULT TRUE
   updated_at TIMESTAMP
+
+  // UNIQUE(user_id, scope_type, server_id, COALESCE(channel_id, 0))
 }
 
 NOTIFICATION_PREFERENCE.user_id > USER.id
 NOTIFICATION_PREFERENCE.server_id > SERVER.id
 NOTIFICATION_PREFERENCE.channel_id > CHANNEL.id
+
+REFRESH_TOKEN {
+  id SERIAL PK
+  user_id INTEGER FK  // NOT NULL
+  token_hash VARCHAR(255)  // NOT NULL UNIQUE
+  expires_at TIMESTAMP  // NOT NULL
+  created_at TIMESTAMP  // DEFAULT CURRENT_TIMESTAMP
+  revoked_at TIMESTAMP
+}
+
+REFRESH_TOKEN.user_id > USER.id
+
+PROGRAM_CURRICULUM {
+  id SERIAL PK
+  program_id INTEGER FK  // NOT NULL
+  course_id INTEGER FK  // NOT NULL
+  semester_number INTEGER  // NOT NULL
+  batch_year INTEGER  // NOT NULL (admission year this applies to)
+  // UNIQUE(program_id, course_id, batch_year)
+}
+
+PROGRAM_CURRICULUM.program_id > PROGRAM.id
+PROGRAM_CURRICULUM.course_id > COURSE.id
 ```
