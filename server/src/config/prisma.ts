@@ -1,0 +1,18 @@
+import { PrismaClient } from "../generated/prisma/client.js";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { env } from "./env.js";
+
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
+
+export const prisma = new PrismaClient({
+  adapter,
+  log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+});
+
+// Graceful shutdown
+const shutdown = async () => {
+  await prisma.$disconnect();
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

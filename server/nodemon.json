@@ -1,0 +1,5 @@
+{
+  "watchFiles": ["src/**/*.ts"],
+  "signal": "SIGTERM",
+  "exec": "tsx src/server.ts"
+}

@@ -1,0 +1,25 @@
+import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest/presets/default-esm",
+  testEnvironment: "node",
+  roots: ["<rootDir>/tests"],
+  setupFiles: ["<rootDir>/tests/setup.ts"],
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        useESM: true,
+        tsconfig: "tests/tsconfig.json",
+      },
+    ],
+  },
+  extensionsToTreatAsEsm: [".ts"],
+  testTimeout: 30000,
+};
+
+export default config;

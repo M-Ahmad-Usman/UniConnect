@@ -1,0 +1,39 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import { env } from "./config/env.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { NotFoundError } from "./shared/errors/index.js";
+
+const app = express();
+
+// ─── Security & Parsing Middleware ──────────────────────────────────────────
+app.use(helmet());
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+// ─── Health Check ───────────────────────────────────────────────────────────
+app.get("/api/health", (_req, res) => {
+  res.json({ success: true, message: "OK" });
+});
+
+// ─── API Routes will be mounted here ────────────────────────────────────────
+// e.g. app.use("/api/auth", authRoutes);
+
+// ─── 404 Handler ────────────────────────────────────────────────────────────
+app.use((_req, _res, next) => {
+  next(new NotFoundError("Route not found"));
+});
+
+// ─── Global Error Handler ───────────────────────────────────────────────────
+app.use(errorHandler);
+
+export { app };

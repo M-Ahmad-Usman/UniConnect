@@ -1,0 +1,535 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Gender {
+  MALE   @map("male")
+  FEMALE @map("female")
+
+  @@map("gender")
+}
+
+enum UserType {
+  TEACHER @map("Teacher")
+  STUDENT @map("Student")
+  ADMIN   @map("Admin")
+
+  @@map("user_type")
+}
+
+enum ServerType {
+  DEPARTMENT @map("Department")
+  CLASS      @map("Class")
+  SOCIETY    @map("Society")
+
+  @@map("server_type")
+}
+
+enum ChannelType {
+  ANNOUNCEMENT @map("announcement")
+  COURSE       @map("course")
+  GENERAL      @map("general")
+  PROGRAM      @map("program")
+
+  @@map("channel_type")
+}
+
+enum PostPriority {
+  NORMAL    @map("normal")
+  IMPORTANT @map("important")
+  URGENT    @map("urgent")
+
+  @@map("post_priority")
+}
+
+enum Section {
+  A @map("A")
+  B @map("B")
+
+  @@map("section")
+}
+
+enum ModeratorScopeType {
+  SERVER  @map("server")
+  CHANNEL @map("channel")
+
+  @@map("moderator_scope_type")
+}
+
+enum NotificationType {
+  NEW_POST       @map("new_post")
+  ROLE_ASSIGNED  @map("role_assigned")
+
+  @@map("notification_type")
+}
+
+enum NotificationScopeType {
+  SERVER  @map("server")
+  CHANNEL @map("channel")
+
+  @@map("notification_scope_type")
+}
+
+enum MembershipRequestStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+
+  @@map("membership_request_status")
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────
+
+model DegreeLevel {
+  id       Int       @id @default(autoincrement())
+  level    String    @unique @db.VarChar(50)
+  programs Program[]
+
+  @@map("degree_levels")
+}
+
+model Discipline {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique @db.VarChar(100)
+  programs Program[]
+
+  @@map("disciplines")
+}
+
+model Department {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique @db.VarChar(100)
+  code     String  @unique @db.VarChar(20)
+  hodId    Int?    @unique @map("hod_id")
+  serverId Int     @unique @map("server_id")
+
+  hod      TeacherInfo? @relation("DepartmentHOD", fields: [hodId], references: [teacherId])
+  server   Server       @relation("DepartmentServer", fields: [serverId], references: [id])
+
+  programs  Program[]
+  users     User[]
+  societies Society[]
+  courses   Course[]
+
+  @@map("departments")
+}
+
+model Program {
+  id                Int  @id @default(autoincrement())
+  departmentId      Int  @map("department_id")
+  disciplineId      Int  @map("discipline_id")
+  degreeLevelId     Int  @map("degree_level_id")
+  semesters         Int
+  code              String @unique @db.VarChar(20)
+  programDirectorId Int?   @unique @map("program_director_id")
+
+  department      Department   @relation(fields: [departmentId], references: [id])
+  discipline      Discipline   @relation(fields: [disciplineId], references: [id])
+  degreeLevel     DegreeLevel  @relation(fields: [degreeLevelId], references: [id])
+  programDirector TeacherInfo? @relation("ProgramDirector", fields: [programDirectorId], references: [teacherId])
+
+  classes    Class[]
+  channels   Channel[]          @relation("ProgramChannel")
+  curriculum ProgramCurriculum[]
+
+  @@unique([departmentId, disciplineId, degreeLevelId])
+  @@map("programs")
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  fullName         String    @map("full_name") @db.VarChar(100)
+  email            String    @unique @db.VarChar(255)
+  phone            String    @db.VarChar(20)
+  passwordHash     String    @map("password_hash") @db.VarChar(255)
+  gender           Gender
+  profilePictureUrl String?  @map("profile_picture_url")
+  bio              String?
+  userType         UserType  @map("user_type")
+  departmentId     Int?      @map("department_id")
+  isActive         Boolean   @default(true) @map("is_active")
+  mustChangePassword Boolean @default(false) @map("must_change_password")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  studentInfo      StudentInfo?
+  teacherInfo      TeacherInfo?
+  serverMemberships ServerMembership[]
+  createdServers   Server[]            @relation("ServerCreator")
+  lockedChannels   Channel[]           @relation("ChannelLocker")
+  deletedChannels  Channel[]           @relation("ChannelDeleter")
+  createdChannels  Channel[]           @relation("ChannelCreator")
+
+  authoredPosts    Post[]              @relation("PostAuthor")
+  deletedPosts     Post[]              @relation("PostDeleter")
+  updatedPosts     Post[]              @relation("PostUpdater")
+  pinnedPosts      Post[]              @relation("PostPinner")
+
+  moderatorAssignments        ModeratorAssignment[] @relation("ModeratorUser")
+  moderatorAssignmentsCreated ModeratorAssignment[] @relation("ModeratorAssigner")
+
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  refreshTokens           RefreshToken[]
+
+  societyMembershipRequests SocietyMembershipRequest[] @relation("MembershipRequester")
+  reviewedMembershipRequests SocietyMembershipRequest[] @relation("MembershipReviewer")
+
+  @@map("users")
+}
+
+model StudentInfo {
+  studentId  Int  @id @map("student_id")
+  classId    Int  @map("class_id")
+  rollNumber Int  @unique @map("roll_number")
+
+  user  User  @relation(fields: [studentId], references: [id])
+  class Class @relation(fields: [classId], references: [id])
+
+  crOfClass          Class?   @relation("ClassCR")
+  presidentOfSociety Society? @relation("SocietyPresident")
+
+  @@map("student_info")
+}
+
+model TeacherInfo {
+  teacherId   Int    @id @map("teacher_id")
+  designation String @db.VarChar(100)
+
+  user User @relation(fields: [teacherId], references: [id])
+
+  hodOfDepartment         Department? @relation("DepartmentHOD")
+  programDirectorOfProgram Program?   @relation("ProgramDirector")
+  convenorOfSociety       Society?   @relation("SocietyConvenor")
+
+  teaches Teaches[]
+
+  @@map("teacher_info")
+}
+
+model Class {
+  id              Int     @id @default(autoincrement())
+  programId       Int     @map("program_id")
+  currentSemester Int     @map("current_semester")
+  academicYear    Int     @map("academic_year")
+  admissionYear   Int     @map("admission_year")
+  section         Section
+  crId            Int?    @unique @map("cr_id")
+  serverId        Int     @unique @map("server_id")
+
+  program  Program      @relation(fields: [programId], references: [id])
+  cr       StudentInfo? @relation("ClassCR", fields: [crId], references: [studentId])
+  server   Server       @relation("ClassServer", fields: [serverId], references: [id])
+
+  students StudentInfo[]
+  teaches  Teaches[]
+
+  @@unique([programId, currentSemester, section, admissionYear])
+  @@map("classes")
+}
+
+model Society {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique @db.VarChar(100)
+  description  String?
+  departmentId Int      @map("department_id")
+  presidentId  Int      @unique @map("president_id")
+  convenorId   Int      @unique @map("convenor_id")
+  serverId     Int      @unique @map("server_id")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  department Department  @relation(fields: [departmentId], references: [id])
+  president  StudentInfo @relation("SocietyPresident", fields: [presidentId], references: [studentId])
+  convenor   TeacherInfo @relation("SocietyConvenor", fields: [convenorId], references: [teacherId])
+  server     Server      @relation("SocietyServer", fields: [serverId], references: [id])
+
+  membershipRequests SocietyMembershipRequest[]
+
+  @@map("societies")
+}
+
+model Server {
+  id          Int        @id @default(autoincrement())
+  name        String     @db.VarChar(100)
+  description String?
+  type        ServerType
+  iconUrl     String?    @map("icon_url")
+  isActive    Boolean    @default(true) @map("is_active")
+  createdBy   Int        @map("created_by")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  creator User @relation("ServerCreator", fields: [createdBy], references: [id])
+
+  department Department? @relation("DepartmentServer")
+  class      Class?      @relation("ClassServer")
+  society    Society?    @relation("SocietyServer")
+
+  channels    Channel[]
+  memberships ServerMembership[]
+
+  moderatorAssignments   ModeratorAssignment[]
+  notificationPreferences NotificationPreference[]
+
+  @@map("servers")
+}
+
+model Channel {
+  id          Int         @id @default(autoincrement())
+  serverId    Int         @map("server_id")
+  name        String      @db.VarChar(100)
+  description String?
+  type        ChannelType
+
+  courseId   Int? @unique @map("course_id")
+  programId Int? @map("program_id")
+
+  isLocked  Boolean   @default(false) @map("is_locked")
+  lockedBy  Int?      @map("locked_by")
+  lockedAt  DateTime? @map("locked_at")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy Int?      @map("deleted_by")
+
+  isAutoCreated Boolean  @default(false) @map("is_auto_created")
+  createdAt     DateTime @default(now()) @map("created_at")
+  createdBy     Int?     @map("created_by")
+
+  server  Server   @relation(fields: [serverId], references: [id])
+  course  Course?  @relation("CourseChannel", fields: [courseId], references: [id])
+  program Program? @relation("ProgramChannel", fields: [programId], references: [id])
+
+  locker  User? @relation("ChannelLocker", fields: [lockedBy], references: [id])
+  deleter User? @relation("ChannelDeleter", fields: [deletedBy], references: [id])
+  creator User? @relation("ChannelCreator", fields: [createdBy], references: [id])
+
+  posts                   Post[]
+  moderatorAssignments    ModeratorAssignment[]
+  notificationPreferences NotificationPreference[]
+
+  @@unique([serverId, name])
+  @@map("channels")
+}
+
+model ServerMembership {
+  userId       Int      @map("user_id")
+  serverId     Int      @map("server_id")
+  joinedAt     DateTime @default(now()) @map("joined_at")
+  isAutoJoined Boolean  @default(false) @map("is_auto_joined")
+
+  user   User   @relation(fields: [userId], references: [id])
+  server Server @relation(fields: [serverId], references: [id])
+
+  @@id([userId, serverId])
+  @@map("server_memberships")
+}
+
+model SocietyMembershipRequest {
+  id         Int                     @id @default(autoincrement())
+  societyId  Int                     @map("society_id")
+  userId     Int                     @map("user_id")
+  status     MembershipRequestStatus @default(PENDING)
+  requestedAt DateTime              @default(now()) @map("requested_at")
+  reviewedBy  Int?                  @map("reviewed_by")
+  reviewedAt  DateTime?             @map("reviewed_at")
+
+  society  Society @relation(fields: [societyId], references: [id])
+  user     User    @relation("MembershipRequester", fields: [userId], references: [id])
+  reviewer User?   @relation("MembershipReviewer", fields: [reviewedBy], references: [id])
+
+  @@unique([societyId, userId])
+  @@map("society_membership_requests")
+}
+
+model Course {
+  id           Int    @id @default(autoincrement())
+  title        String @db.VarChar(50)
+  code         String @unique @db.VarChar(50)
+  creditHours  Int    @map("credit_hours")
+  departmentId Int    @map("department_id")
+
+  department Department @relation(fields: [departmentId], references: [id])
+
+  channel    Channel?            @relation("CourseChannel")
+  teaches    Teaches[]
+  curriculum ProgramCurriculum[]
+
+  @@map("courses")
+}
+
+model Teaches {
+  teacherId Int @map("teacher_id")
+  courseId   Int @map("course_id")
+  classId    Int @map("class_id")
+
+  teacher TeacherInfo @relation(fields: [teacherId], references: [teacherId])
+  course  Course      @relation(fields: [courseId], references: [id])
+  class   Class       @relation(fields: [classId], references: [id])
+
+  @@id([teacherId, courseId, classId])
+  @@map("teaches")
+}
+
+model Post {
+  id        Int          @id @default(autoincrement())
+  authorId  Int          @map("author_id")
+  channelId Int          @map("channel_id")
+  title     String       @db.VarChar(100)
+  content   String
+  priority  PostPriority @default(NORMAL)
+
+  isPinned Boolean   @default(false) @map("is_pinned")
+  pinnedBy Int?      @map("pinned_by")
+  pinnedAt DateTime? @map("pinned_at")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy Int?      @map("deleted_by")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  updatedBy Int?      @map("updated_by")
+
+  author  User    @relation("PostAuthor", fields: [authorId], references: [id])
+  channel Channel @relation(fields: [channelId], references: [id])
+
+  deleter User? @relation("PostDeleter", fields: [deletedBy], references: [id])
+  updater User? @relation("PostUpdater", fields: [updatedBy], references: [id])
+  pinner  User? @relation("PostPinner", fields: [pinnedBy], references: [id])
+
+  attachments   PostAttachment[]
+  notifications Notification[]
+
+  @@map("posts")
+}
+
+model PostAttachment {
+  id         Int      @id @default(autoincrement())
+  postId     Int      @map("post_id")
+  fileUrl    String   @map("file_url")
+  fileType   String   @map("file_type") @db.VarChar(50)
+  fileSize   Int      @map("file_size")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  post Post @relation(fields: [postId], references: [id])
+
+  @@map("post_attachments")
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model ModeratorAssignment {
+  id        Int                @id @default(autoincrement())
+  userId    Int                @map("user_id")
+  scopeType ModeratorScopeType @map("scope_type")
+  serverId  Int                @map("server_id")
+  channelId Int?               @map("channel_id")
+
+  assignedBy Int      @map("assigned_by")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  user     User    @relation("ModeratorUser", fields: [userId], references: [id])
+  server   Server  @relation(fields: [serverId], references: [id])
+  channel  Channel? @relation(fields: [channelId], references: [id])
+  assigner User    @relation("ModeratorAssigner", fields: [assignedBy], references: [id])
+
+  @@unique([userId, serverId, channelId])
+  @@map("moderator_assignments")
+}
+
+model Notification {
+  id        Int               @id @default(autoincrement())
+  userId    Int               @map("user_id")
+  postId    Int?              @map("post_id")
+  type      NotificationType
+  title     String            @db.VarChar(200)
+  message   String?
+  readAt    DateTime?         @map("read_at")
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  user User  @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id           Int                    @id @default(autoincrement())
+  userId       Int                    @map("user_id")
+  scopeType    NotificationScopeType  @map("scope_type")
+  serverId     Int                    @map("server_id")
+  channelId    Int?                   @map("channel_id")
+  isSubscribed Boolean                @default(true) @map("is_subscribed")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  server  Server   @relation(fields: [serverId], references: [id])
+  channel Channel? @relation(fields: [channelId], references: [id])
+
+  @@unique([userId, scopeType, serverId, channelId])
+  @@map("notification_preferences")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("refresh_tokens")
+}
+
+model ProgramCurriculum {
+  id             Int @id @default(autoincrement())
+  programId      Int @map("program_id")
+  courseId        Int @map("course_id")
+  semesterNumber Int @map("semester_number")
+  batchYear      Int @map("batch_year")
+
+  program Program @relation(fields: [programId], references: [id])
+  course  Course  @relation(fields: [courseId], references: [id])
+
+  @@unique([programId, courseId, batchYear])
+  @@map("program_curriculum")
+}
