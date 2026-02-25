@@ -1,7 +1,7 @@
 # UniConnect - API Development Plan
 
 **Version:** 1.0  
-**Date:** February 23, 2026  
+**Date:** February 23, 2026 (Conventions added February 25, 2026)  
 **Team:** Muhammad Ahmad, Awais Hanif, Wasif Ali
 
 ---
@@ -34,6 +34,439 @@ Request → Route → Middleware (auth, validate) → Controller → Service →
 - **Controllers**: Handle HTTP concerns (parse req, send res). Thin layer — delegates to services
 - **Services**: All business logic lives here. Receive plain data, return plain data. Testable independently
 - **Prisma**: Data access layer auto-generated from schema
+
+---
+
+## Coding Conventions & Design Patterns
+
+This section is the single source of truth for how every module in this project must be written. Deviating from these conventions requires a deliberate team decision.
+
+---
+
+### 1. Module Structure (Module Pattern)
+
+Every domain feature is a self-contained module under `src/modules/<name>/` with exactly four files:
+
+```
+src/modules/auth/
+├── auth.routes.ts      ← HTTP routing: declares the middleware chain, maps paths to handlers
+├── auth.controller.ts  ← HTTP layer: reads req, calls service, writes res
+├── auth.service.ts     ← Business logic: receives plain values, returns plain objects
+└── auth.schema.ts      ← Validation: Zod schemas for this module's endpoints
+```
+
+**Rules:**
+- The service must never import `Request`, `Response`, or anything from `express`. It knows nothing about HTTP.
+- The controller must contain no business logic. If it does more than "call service → set cookies/res → return JSON", the logic belongs in the service.
+- Schemas live in their own file — never inline Zod schemas inside a route or controller.
+- Module-private helpers (functions not exported) go at the top of `auth.service.ts`, clearly separated with a comment banner:
+
+```typescript
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function hashToken(token: string): string { ... }
+```
+
+Section banners use `// ─── Title ${'─'.repeat(N)}` to visually separate code blocks within a file.
+
+---
+
+### 2. Layered Architecture & Data Flow
+
+```
+Request
+  │
+  ▼
+routes.ts        → validate(schema), authenticate, authorize, handler
+  │
+  ▼
+controller.ts    → reads req.body / req.params / req.user
+  │
+  ▼
+service.ts       → pure logic, Prisma, throws domain errors
+  │
+  ▼
+prisma.ts        → DB (singleton instance only, never `new PrismaClient()`)
+```
+
+**Controller shape — always this thin:**
+
+```typescript
+export async function handleCreate(req: Request, res: Response): Promise<void> {
+  const result = await someService.create(req.body, req.user!.id);
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    message: "Created successfully",
+  };
+
+  res.status(StatusCodes.CREATED).json(response);
+}
+```
+
+**Service shape — always these contracts:**
+
+```typescript
+// ✅ Correct: accepts plain values, returns plain object
+export async function createDepartment(name: string, code: string): Promise<Department> { ... }
+
+// ❌ Wrong: service must not touch req/res
+export async function createDepartment(req: Request): Promise<void> { ... }
+```
+
+---
+
+### 3. Error Handling (Domain Error Pattern)
+
+Never use `res.status(x).json(...)` to represent errors inside services or middleware. Always throw a typed domain error — the global `errorHandler` catches everything.
+
+**Error class hierarchy (`src/shared/errors/index.ts`):**
+
+| Class | HTTP | Code | When to use |
+|-------|------|------|-------------|
+| `NotFoundError` | 404 | `NOT_FOUND` | Resource doesn't exist by ID |
+| `UnauthorizedError` | 401 | `UNAUTHORIZED` | Not authenticated, or identity verification failed (wrong password, bad token) |
+| `ForbiddenError` | 403 | `FORBIDDEN` | Authenticated but not permitted (wrong role, wrong scope) |
+| `ConflictError` | 409 | `CONFLICT` | Uniqueness violation (duplicate email, etc.) |
+| `ValidationError` | 400 | `VALIDATION_ERROR` | Schema validation failed (Zod) |
+| `AppError` | 500 | `INTERNAL_ERROR` | Custom errors that don't fit the above |
+
+**Usage:**
+
+```typescript
+// ✅ Throw and forget — errorHandler converts to JSON automatically
+throw new NotFoundError("Department not found");
+throw new ForbiddenError("You can only manage your own department");
+throw new UnauthorizedError("Invalid credentials");
+
+// ❌ Never do this in a service
+res.status(404).json({ error: "not found" });
+```
+
+**Prisma errors are auto-mapped by the global error handler:**
+- `P2002` (unique constraint) → `ConflictError` — you rarely need to handle this manually
+- `P2025` (record not found) → `NotFoundError` — same
+
+**Anti-enumeration rule:** When a login-type operation could fail for multiple reasons (user not found vs. wrong password vs. deactivated), always throw the *same* error with the *same* message regardless of which condition triggered it. This prevents attackers from discovering which emails are registered.
+
+```typescript
+// ✅ Correct — identical message for both cases
+if (!user || !user.isActive) throw new UnauthorizedError("Invalid credentials");
+const valid = await bcrypt.compare(password, user.passwordHash);
+if (!valid) throw new UnauthorizedError("Invalid credentials");
+
+// ❌ Wrong — leaks information
+if (!user) throw new NotFoundError("No account with this email");
+if (!valid) throw new UnauthorizedError("Wrong password");
+```
+
+---
+
+### 4. Validation (Parse-Don't-Validate Pattern)
+
+We use Zod at the HTTP boundary. Once the request passes validation, all code downstream treats the data as fully typed and safe — no further defensive checks needed.
+
+**Schema file convention:**
+
+```typescript
+// auth.schema.ts
+import { z } from "zod";
+
+export const loginSchema = {
+  body: z.object({ ... }),        // ← key matches ValidationSchemas interface
+};
+
+export const getUserSchema = {
+  params: z.object({ id: z.coerce.number().int().positive() }),
+  query: paginationQuerySchema,   // ← compose reusable schemas
+};
+```
+
+**Route usage:**
+
+```typescript
+router.post("/login", validate(loginSchema), handleLogin);
+router.get("/:id", validate(getUserSchema), handleGetUser);
+```
+
+**Zod 4 rules — must follow these, not Zod 3 patterns:**
+
+| Pattern | Zod 3 (wrong) | Zod 4 (correct) |
+|---------|---------------|-----------------|
+| Inline error messages | `z.string().min(1, { message: "Required" })` | `z.string().min(1, { error: "Required" })` |
+| Email validation | `z.string().email()` (works but deprecated) | `z.email()` (preferred, top-level) |
+| Native enums | `z.nativeEnum(UserType)` (deprecated) | `z.enum(UserType)` |
+| Strict objects | `.strict()` (deprecated) | `z.strictObject(...)` |
+| Error formatting | `.flatten()` / `.format()` (deprecated) | `z.treeifyError(result.error)` |
+
+After `validate()` runs, `req.body` is replaced with the fully-typed Zod output — you get TypeScript safety without manual casting.
+
+**Password schema:** Any endpoint that accepts a new password must use the shared password strength schema from `auth.schema.ts`. Do not reinvent per-module password validation.
+
+---
+
+### 5. Import & Module Conventions (ESM)
+
+This project uses **native ESM** (`"type": "module"` in `package.json`). TypeScript compiles to ESM. All imports must use `.js` extensions even for `.ts` source files — this is Node ESM's requirement.
+
+```typescript
+// ✅ Correct
+import { prisma } from "../../config/prisma.js";
+import { NotFoundError } from "../../shared/errors/index.js";
+import type { AuthUser } from "../../shared/types/index.js";
+
+// ❌ Wrong — will fail at runtime
+import { prisma } from "../../config/prisma";
+import { NotFoundError } from "../../shared/errors";
+```
+
+**Path aliases:** Use `@/*` for imports from `src/` to avoid deep relative paths:
+
+```typescript
+import { prisma } from "@/config/prisma.js";
+import { NotFoundError } from "@/shared/errors/index.js";
+```
+
+**`import type` rule:** When importing only TypeScript types (interfaces, type aliases), always use `import type`. This is stripped at compile time with zero runtime cost:
+
+```typescript
+import type { Request, Response, NextFunction } from "express";
+import type { AuthUser } from "@/shared/types/index.js";
+```
+
+**Barrel files:** `shared/errors/index.ts` and `shared/types/index.ts` are barrel files — export everything from one place so callers import from the index, not from individual files.
+
+---
+
+### 6. Singleton Pattern (Config Instances)
+
+Anything expensive to construct or that must be shared across the entire app lifecycle is a module-level singleton:
+
+| Singleton | File | What it is |
+|-----------|------|------------|
+| `prisma` | `src/config/prisma.ts` | Prisma client with pg adapter |
+| `env` | `src/config/env.ts` | Zod-validated env object |
+| `emailService` | `src/config/email.ts` | Resend client wrapper |
+| `cloudinary` | `src/config/cloudinary.ts` | Cloudinary SDK instance (Module 2) |
+
+**Never call `new PrismaClient()` outside `src/config/prisma.ts`.** Never call `new Resend()` outside `src/config/email.ts`. Import the shared instance.
+
+---
+
+### 7. Response Format (Enforced Contract)
+
+Every handler must return one of these three shapes. Never invent custom response formats.
+
+```typescript
+// Single resource (201 or 200)
+const response: ApiResponse<User> = {
+  success: true,
+  data: user,
+  message: "User created successfully",
+};
+res.status(StatusCodes.CREATED).json(response);
+
+// Paginated list (200)
+const response: PaginatedResponse<User> = {
+  success: true,
+  data: users,
+  pagination: buildPaginationResponse(page, limit, total),
+};
+res.status(StatusCodes.OK).json(response);
+
+// No-data operation (200)
+const response: ApiResponse<null> = {
+  success: true,
+  data: null,
+  message: "Operation completed",
+};
+res.status(StatusCodes.OK).json(response);
+```
+
+**Always use `StatusCodes` from `http-status-codes`** — never raw numbers (`201`, `404`, etc.):
+
+```typescript
+// ✅ Correct
+res.status(StatusCodes.CREATED).json(response);
+res.status(StatusCodes.NO_CONTENT).send();
+
+// ❌ Wrong
+res.status(201).json(response);
+```
+
+---
+
+### 8. Authentication & Security Patterns
+
+#### Cookie configuration
+All auth cookies must be set with these flags:
+
+```typescript
+res.cookie("access_token", token, {
+  httpOnly: true,                          // JS cannot read it — blocks XSS token theft
+  secure: env.NODE_ENV === "production",   // HTTPS only in prod
+  sameSite: "strict",                      // Blocks CSRF
+  path: "/api",                            // Scope to API only
+  maxAge: parseExpiry(env.JWT_ACCESS_EXPIRY),
+});
+```
+
+Refresh token cookie must use `path: "/api/auth/refresh"` — it should only be sent to the refresh endpoint, not on every API request.
+
+#### JWT payload
+Every JWT must include `jti: crypto.randomUUID()`. This prevents unique-constraint collisions when multiple tokens are issued for the same user in rapid succession (tokens with identical payloads and the same `iat` second would hash identically).
+
+#### Refresh tokens — hash before storing
+Store `crypto.createHash("sha256").update(token).digest("hex")` in the database, not the raw token. Never store raw tokens. SHA-256 is correct here (not bcrypt) because JWTs are already high-entropy — bcrypt's dictionary-attack protection is unnecessary, and SHA-256 allows direct hash-based lookup (`WHERE token_hash = $hash`).
+
+#### Token rotation
+On every successful `/refresh` call: revoke the old refresh token first, then issue a new pair. Never extend an existing token — always replace it.
+
+#### Password hashing
+Always use `bcrypt.hash(password, 10)`. Never MD5, SHA-x, or any non-adaptive algorithm for passwords.
+
+#### Secret isolation
+Use separate secrets for separate token purposes:
+- `JWT_ACCESS_SECRET` — access tokens only
+- `JWT_REFRESH_SECRET` — refresh tokens only
+- `RESET_PASSWORD_SECRET` — password reset tokens only
+
+If a secret is compromised, the blast radius is limited to one token type.
+
+#### Revoke on sensitive operations
+After any password change or password reset, revoke **all** active refresh tokens for the affected user. This terminates all existing sessions across all devices.
+
+#### Idempotent operations
+Logout must be idempotent — calling it twice on the same token must not throw an error. Use `updateMany` (not `update`) when revoking, so a missing record is silently ignored.
+
+---
+
+### 9. Authorization Pattern (Module 2+)
+
+The `authorize` middleware (created in Module 2) wraps permission checks into the middleware chain. The convention is:
+
+```typescript
+// Route declaration
+router.post("/channels", authenticate, authorize("create:channel", getServerId), handleCreate);
+//                                      ↑ permission slug   ↑ scope resolver fn
+
+// Scope resolver: extracts the relevant entity ID from the request for permission scoping
+function getServerId(req: Request): number {
+  return parseInt(req.params.serverId, 10);
+}
+```
+
+**Business-logic permission checks stay in the service**, not the controller or route. The `authorize` middleware is for coarse-grained role/permission gates. Fine-grained checks (e.g., "HOD can only manage their own department") are enforced inside the service by comparing `req.user.departmentId` with the target entity.
+
+---
+
+### 10. Prisma Conventions
+
+**Always use the singleton:**
+```typescript
+import { prisma } from "@/config/prisma.js";
+```
+
+**Select only what you need.** Never fetch entire records when you only need a few fields — this matters both for performance and for never accidentally sending `passwordHash` to the client:
+
+```typescript
+// ✅ Correct — explicit select
+const user = await prisma.user.findUnique({
+  where: { id },
+  select: { id: true, fullName: true, email: true, userType: true },
+});
+
+// ❌ Wrong — fetches all fields including passwordHash
+const user = await prisma.user.findUnique({ where: { id } });
+return user; // passwordHash could leak
+```
+
+**Use transactions for multi-step writes.** Whenever a business operation requires multiple DB mutations (e.g., create user → create StudentInfo → create ServerMembership), wrap them in a `prisma.$transaction`:
+
+```typescript
+await prisma.$transaction(async (tx) => {
+  const user = await tx.user.create({ ... });
+  await tx.studentInfo.create({ data: { userId: user.id, ... } });
+  await tx.serverMembership.create({ data: { userId: user.id, serverId } });
+});
+```
+
+**Let the global error handler catch Prisma errors.** P2002 (unique) and P2025 (not found) are already mapped. Only add explicit Prisma error handling when you need a custom message beyond the defaults.
+
+---
+
+### 11. Test Conventions
+
+**File location:** Test files mirror the source structure — `tests/modules/auth.test.ts` corresponds to `src/modules/auth/`.
+
+**Test isolation:** Call `await resetDB()` in `beforeAll` of each `describe` block (not `beforeEach`). Creating users is expensive (bcrypt). Tests that mutate state must either use isolated users per test or reset and re-create as needed.
+
+**Factory pattern:** All test data must be created via factory helpers in `tests/helpers/factory.ts`. Never write raw `prisma.user.create(...)` in a test file.
+
+```typescript
+// ✅ Correct — uses factory
+const user = await createUser({ email: "test@test.com", password: "Pass@1234" });
+
+// ❌ Wrong — raw Prisma in test
+const user = await prisma.user.create({ data: { email: "test@test.com", passwordHash: "..." } });
+```
+
+**Authentication in tests:** Use `loginAs(email, password)` from the factory. It performs a real login via the Express app and returns the `Set-Cookie` headers, which you pass to protected requests:
+
+```typescript
+const cookies = await loginAs("user@test.com", "Pass@1234");
+const res = await request(app)
+  .get("/api/protected")
+  .set("Cookie", cookies);
+```
+
+**Assertions follow this order:**
+1. Assert the HTTP status code first.
+2. Assert `res.body.success` is `true`/`false` second.
+3. Assert specific fields on `res.body.data` third.
+4. Assert side effects (DB state) last, with a separate Prisma query.
+
+**Always disconnect after tests:**
+```typescript
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+```
+
+---
+
+### 12. Naming Conventions
+
+| Thing | Convention | Example |
+|-------|-----------|---------|
+| Files | `kebab-case` | `auth.service.ts`, `error-handler.ts` |
+| Functions | `camelCase` | `createUser`, `hashToken`, `handleLogin` |
+| Route handlers | `handle` prefix | `handleLogin`, `handleGetUser`, `handleCreate` |
+| Service functions | verb-noun | `login`, `createUser`, `assignRole`, `getProfile` |
+| Zod schema exports | `<scope>Schema` | `loginSchema`, `changePasswordSchema` |
+| TypeScript interfaces | `PascalCase` | `AuthUser`, `ApiResponse<T>` |
+| Constants | `UPPER_SNAKE_CASE` | `TEMP_PASSWORD_PREFIX`, `MAX_PAGE_SIZE` |
+| Env variable keys | `UPPER_SNAKE_CASE` | `JWT_ACCESS_SECRET`, `RESEND_API_KEY` |
+| DB tables/columns (Prisma) | `snake_case` in DB, `camelCase` in TS | `user_type` ↔ `userType` |
+
+---
+
+### Summary: What Pattern Is Each File?
+
+| Pattern | Where it lives |
+|---------|---------------|
+| **Layered Architecture** (Route → Controller → Service → DB) | Every module |
+| **Module Pattern** (self-contained domain folder) | `src/modules/<name>/` |
+| **Singleton** (shared expensive instances) | `src/config/prisma.ts`, `src/config/env.ts`, `src/config/email.ts` |
+| **Domain Error Hierarchy** (typed error classes) | `src/shared/errors/index.ts` |
+| **Middleware Chain** (authenticate → authorize → validate → handler) | `src/modules/*/routes.ts` |
+| **Parse-Don't-Validate** (Zod replaces req.body with typed output) | `src/middleware/validate.ts` + `*.schema.ts` |
+| **Factory** (test data creation helpers) | `tests/helpers/factory.ts` |
+| **Token Rotation** (revoke-old on every refresh) | `src/modules/auth/auth.service.ts` |
+| **Hash-Before-Store** (bcrypt passwords, SHA-256 refresh tokens) | `src/modules/auth/auth.service.ts` |
+| **Soft Delete** (mark deleted, don't remove) | Posts, Channels |
+| **Anti-Enumeration** (same error for multiple failure modes) | `src/modules/auth/auth.service.ts` |
 
 ---
 
