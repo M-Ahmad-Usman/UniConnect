@@ -33,6 +33,7 @@ export interface AuthUser {
   email: string;
   userType: string;
   departmentId: number | null;
+  mustChangePassword: boolean;
 }
 
 declare global {

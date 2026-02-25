@@ -1,6 +1,6 @@
 # UniConnect — Backend Development Progress Tracker
 
-**Last Updated:** February 23, 2026
+**Last Updated:** February 25, 2026
 
 ---
 
@@ -8,8 +8,8 @@
 
 | Module | Name | Status | Tests | Notes |
 |--------|------|--------|-------|-------|
-| 0 | Project Foundation & Shared Infrastructure | ✅ Complete | 30/30 passing | All infra in place |
-| 1 | Authentication | ⬜ Not Started | — | Depends on Module 0 |
+| 0 | Project Foundation & Shared Infrastructure | ✅ Complete | 30/53 passing | All infra in place |
+| 1 | Authentication | ✅ Complete | 23/53 passing | JWT cookies, Resend email, mustChangePassword guard |
 | 2 | User Management | ⬜ Not Started | — | Depends on Module 1 |
 | 3 | Department & Program Management | ⬜ Not Started | — | Depends on Module 2 |
 | 4 | Class Management | ⬜ Not Started | — | Depends on Module 3 |
@@ -50,7 +50,7 @@
 | Jest Config | `jest.config.ts` | ts-jest ESM preset, module mappers, 30s timeout |
 | Test Setup | `tests/setup.ts` | Sets NODE_ENV=test before test suites |
 | DB Helper | `tests/helpers/db.helper.ts` | `resetDB()` — truncates all tables with CASCADE |
-| Factory | `tests/helpers/factory.ts` | `createAdmin()` helper (stubs for others) |
+| Factory | `tests/helpers/factory.ts` | `createAdmin()`, `createUser()`, `loginAs()` helpers |
 
 ### Test Suites (30 total tests)
 
@@ -60,6 +60,65 @@
 | Pagination | `tests/shared/pagination.test.ts` | 10 | ✅ |
 | Validation Middleware | `tests/shared/validate.test.ts` | 7 | ✅ |
 | Error Handler | `tests/shared/errorHandler.test.ts` | 9 | ✅ |
+
+---
+
+## Module 1 — Detailed Completion Log
+
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Email Service | `src/config/email.ts` | Resend SDK instance; `sendResetPasswordEmail()` and `sendTempPasswordEmail()` (used in Module 2) |
+| Auth Schemas | `src/modules/auth/auth.schema.ts` | Zod 4 validation schemas for login, forgot-password, reset-password, change-password with full password strength rules |
+| Auth Service | `src/modules/auth/auth.service.ts` | All business logic: login, refresh (with token rotation), logout (idempotent), forgotPassword, resetPassword, changePassword |
+| Auth Controller | `src/modules/auth/auth.controller.ts` | Express handlers; `setCookies()` / `clearCookies()` helpers; cookie config (httpOnly, secure in prod, sameSite=strict) |
+| Auth Routes | `src/modules/auth/auth.routes.ts` | 6 endpoints mounted at `/api/auth` |
+| Authenticate Middleware | `src/middleware/authenticate.ts` | Reads `access_token` cookie → verifies JWT → attaches `req.user`; blocks all non-`/change-password` routes when `mustChangePassword=true` |
+| Env Config (updated) | `src/config/env.ts` | Added `RESET_PASSWORD_SECRET`, `RESET_PASSWORD_EXPIRY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` |
+| AuthUser Type (updated) | `src/shared/types/index.ts` | Added `mustChangePassword: boolean` field |
+| Factory (updated) | `tests/helpers/factory.ts` | Added `createUser()` (generic) and `loginAs()` (returns set-cookie headers) |
+| Auth Tests | `tests/modules/auth.test.ts` | 23 integration tests across 6 describe blocks |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/auth/login` | Public | Verify credentials → issue JWT pair as cookies |
+| POST | `/api/auth/logout` | ✅ Required | Revoke refresh token → clear cookies |
+| POST | `/api/auth/refresh` | Cookie | Rotate refresh token → issue new pair |
+| POST | `/api/auth/forgot-password` | Public | Send reset link via Resend (silent for unknown emails) |
+| POST | `/api/auth/reset-password` | Public | Verify reset JWT → update password → revoke all refresh tokens |
+| PATCH | `/api/auth/change-password` | ✅ Required | Verify current password → update → revoke all refresh tokens |
+
+### Cookie Configuration
+
+| Cookie | Path | Max-Age | Flags |
+|--------|------|---------|-------|
+| `access_token` | `/api` | 15 minutes | `httpOnly`, `secure` (prod), `sameSite=strict` |
+| `refresh_token` | `/api/auth/refresh` | 7 days | `httpOnly`, `secure` (prod), `sameSite=strict` |
+
+### Test Suites (23 new tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/auth/login` | 6 | ✅ |
+| POST `/api/auth/refresh` | 3 | ✅ |
+| POST `/api/auth/logout` | 2 | ✅ |
+| PATCH `/api/auth/change-password` | 4 | ✅ |
+| POST `/api/auth/forgot-password` | 2 | ✅ |
+| POST `/api/auth/reset-password` | 3 | ✅ |
+| First-login `mustChangePassword` guard | 3 | ✅ |
+
+### Key Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Reset token storage | Stateless JWT (signed with `RESET_PASSWORD_SECRET`) | No migration needed; short-lived (1h); separate secret isolates risk |
+| Refresh token storage | SHA-256 hash of the JWT stored in `refresh_tokens` table | JWTs are high-entropy so bcrypt is unnecessary; SHA-256 allows O(1) lookup |
+| Token uniqueness | `jti: crypto.randomUUID()` embedded in every token | Avoids unique constraint collisions when issuing multiple tokens rapidly |
+| First-login behaviour | Issue full token pair, block non-auth routes via middleware | Avoids a separate pre-auth flow; client uses the standard change-password endpoint |
+| Email failures | Caught and logged, not re-thrown | forgotPassword must not leak whether an email exists; failures are non-critical |
 
 ---
 
@@ -75,10 +134,7 @@
 | **@prisma/adapter-pg** | ^7.4.1 | Required by Prisma 7 — replaces built-in query engine with `node-pg` |
 | **pg** | (adapter dep) | PostgreSQL driver used by Prisma adapter |
 | **zod** | ^4.3.6 | **Zod 4** — `error` param replaces `message`, `.email()` now top-level, `.flatten()` deprecated |
-| **jsonwebtoken** | ^9.0.3 | JWT signing/verification |
-| **bcrypt** | ^6.0.0 | Password hashing |
-| **cookie-parser** | ^1.4.7 | Parse cookies from requests |
-| **cors** | ^2.8.6 | CORS middleware |
+| **resend** | ^6.9.2 | Transactional email (password reset, temp password notifications) |
 | **helmet** | ^8.1.0 | Security headers |
 | **http-status-codes** | ^2.3.0 | Readable HTTP status constants |
 | **dotenv** | ^17.3.1 | Runtime env loading for server entry point |
@@ -167,9 +223,9 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 1 — Authentication
+## Next Up: Module 2 — User Management
 
-**Scope:** FR-1, FR-2, FR-3, FR-6, FR-7, FR-8  
-**Key endpoints:** login, logout, refresh, forgot-password, reset-password, change-password  
-**New middleware:** `authenticate.ts` (JWT verification from cookies)  
-**Dependencies:** Module 0 ✅  
+**Scope:** FR-4, FR-5, FR-6, FR-9, FR-10  
+**Key endpoints:** Create/list/get/update/deactivate users (admin-only), profile endpoints  
+**New middleware:** `authorize.ts` (role-based permission checking)  
+**Dependencies:** Module 1 ✅  

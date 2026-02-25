@@ -11,6 +11,12 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRY: z.string().default("15m"),
   JWT_REFRESH_EXPIRY: z.string().default("7d"),
 
+  RESET_PASSWORD_SECRET: z.string().min(1, { error: "RESET_PASSWORD_SECRET is required" }),
+  RESET_PASSWORD_EXPIRY: z.string().default("1h"),
+
+  RESEND_API_KEY: z.string().min(1, { error: "RESEND_API_KEY is required" }),
+  RESEND_FROM_EMAIL: z.string().email({ error: "RESEND_FROM_EMAIL must be a valid email" }),
+
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 });
 

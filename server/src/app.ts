@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { NotFoundError } from "./shared/errors/index.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 
 const app = express();
 
@@ -25,8 +26,8 @@ app.get("/api/health", (_req, res) => {
   res.json({ success: true, message: "OK" });
 });
 
-// ─── API Routes will be mounted here ────────────────────────────────────────
-// e.g. app.use("/api/auth", authRoutes);
+// ─── API Routes ─────────────────────────────────────────────────────────────
+app.use("/api/auth", authRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {
