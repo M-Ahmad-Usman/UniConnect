@@ -38,6 +38,7 @@ export default defineConfig(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }],
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/no-confusing-void-expression': 'off',
 
       // --- General ---
       'eqeqeq': ['error', 'always'],
