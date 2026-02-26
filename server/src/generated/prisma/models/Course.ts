@@ -225,7 +225,7 @@ export type CourseWhereInput = {
   creditHours?: Prisma.IntFilter<"Course"> | number
   departmentId?: Prisma.IntFilter<"Course"> | number
   department?: Prisma.XOR<Prisma.DepartmentScalarRelationFilter, Prisma.DepartmentWhereInput>
-  channel?: Prisma.XOR<Prisma.ChannelNullableScalarRelationFilter, Prisma.ChannelWhereInput> | null
+  channels?: Prisma.ChannelListRelationFilter
   teaches?: Prisma.TeachesListRelationFilter
   curriculum?: Prisma.ProgramCurriculumListRelationFilter
 }
@@ -237,7 +237,7 @@ export type CourseOrderByWithRelationInput = {
   creditHours?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
   department?: Prisma.DepartmentOrderByWithRelationInput
-  channel?: Prisma.ChannelOrderByWithRelationInput
+  channels?: Prisma.ChannelOrderByRelationAggregateInput
   teaches?: Prisma.TeachesOrderByRelationAggregateInput
   curriculum?: Prisma.ProgramCurriculumOrderByRelationAggregateInput
 }
@@ -252,7 +252,7 @@ export type CourseWhereUniqueInput = Prisma.AtLeast<{
   creditHours?: Prisma.IntFilter<"Course"> | number
   departmentId?: Prisma.IntFilter<"Course"> | number
   department?: Prisma.XOR<Prisma.DepartmentScalarRelationFilter, Prisma.DepartmentWhereInput>
-  channel?: Prisma.XOR<Prisma.ChannelNullableScalarRelationFilter, Prisma.ChannelWhereInput> | null
+  channels?: Prisma.ChannelListRelationFilter
   teaches?: Prisma.TeachesListRelationFilter
   curriculum?: Prisma.ProgramCurriculumListRelationFilter
 }, "id" | "code">
@@ -286,7 +286,7 @@ export type CourseCreateInput = {
   code: string
   creditHours: number
   department: Prisma.DepartmentCreateNestedOneWithoutCoursesInput
-  channel?: Prisma.ChannelCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutCourseInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutCourseInput
   curriculum?: Prisma.ProgramCurriculumCreateNestedManyWithoutCourseInput
 }
@@ -297,7 +297,7 @@ export type CourseUncheckedCreateInput = {
   code: string
   creditHours: number
   departmentId: number
-  channel?: Prisma.ChannelUncheckedCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCourseInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutCourseInput
   curriculum?: Prisma.ProgramCurriculumUncheckedCreateNestedManyWithoutCourseInput
 }
@@ -307,7 +307,7 @@ export type CourseUpdateInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
   department?: Prisma.DepartmentUpdateOneRequiredWithoutCoursesNestedInput
-  channel?: Prisma.ChannelUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutCourseNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutCourseNestedInput
   curriculum?: Prisma.ProgramCurriculumUpdateManyWithoutCourseNestedInput
 }
@@ -318,7 +318,7 @@ export type CourseUncheckedUpdateInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
   departmentId?: Prisma.IntFieldUpdateOperationsInput | number
-  channel?: Prisma.ChannelUncheckedUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutCourseNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutCourseNestedInput
   curriculum?: Prisma.ProgramCurriculumUncheckedUpdateManyWithoutCourseNestedInput
 }
@@ -443,20 +443,20 @@ export type CourseUncheckedUpdateManyWithoutDepartmentNestedInput = {
   deleteMany?: Prisma.CourseScalarWhereInput | Prisma.CourseScalarWhereInput[]
 }
 
-export type CourseCreateNestedOneWithoutChannelInput = {
-  create?: Prisma.XOR<Prisma.CourseCreateWithoutChannelInput, Prisma.CourseUncheckedCreateWithoutChannelInput>
-  connectOrCreate?: Prisma.CourseCreateOrConnectWithoutChannelInput
+export type CourseCreateNestedOneWithoutChannelsInput = {
+  create?: Prisma.XOR<Prisma.CourseCreateWithoutChannelsInput, Prisma.CourseUncheckedCreateWithoutChannelsInput>
+  connectOrCreate?: Prisma.CourseCreateOrConnectWithoutChannelsInput
   connect?: Prisma.CourseWhereUniqueInput
 }
 
-export type CourseUpdateOneWithoutChannelNestedInput = {
-  create?: Prisma.XOR<Prisma.CourseCreateWithoutChannelInput, Prisma.CourseUncheckedCreateWithoutChannelInput>
-  connectOrCreate?: Prisma.CourseCreateOrConnectWithoutChannelInput
-  upsert?: Prisma.CourseUpsertWithoutChannelInput
+export type CourseUpdateOneWithoutChannelsNestedInput = {
+  create?: Prisma.XOR<Prisma.CourseCreateWithoutChannelsInput, Prisma.CourseUncheckedCreateWithoutChannelsInput>
+  connectOrCreate?: Prisma.CourseCreateOrConnectWithoutChannelsInput
+  upsert?: Prisma.CourseUpsertWithoutChannelsInput
   disconnect?: Prisma.CourseWhereInput | boolean
   delete?: Prisma.CourseWhereInput | boolean
   connect?: Prisma.CourseWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.CourseUpdateToOneWithWhereWithoutChannelInput, Prisma.CourseUpdateWithoutChannelInput>, Prisma.CourseUncheckedUpdateWithoutChannelInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CourseUpdateToOneWithWhereWithoutChannelsInput, Prisma.CourseUpdateWithoutChannelsInput>, Prisma.CourseUncheckedUpdateWithoutChannelsInput>
 }
 
 export type CourseCreateNestedOneWithoutTeachesInput = {
@@ -491,7 +491,7 @@ export type CourseCreateWithoutDepartmentInput = {
   title: string
   code: string
   creditHours: number
-  channel?: Prisma.ChannelCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutCourseInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutCourseInput
   curriculum?: Prisma.ProgramCurriculumCreateNestedManyWithoutCourseInput
 }
@@ -501,7 +501,7 @@ export type CourseUncheckedCreateWithoutDepartmentInput = {
   title: string
   code: string
   creditHours: number
-  channel?: Prisma.ChannelUncheckedCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCourseInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutCourseInput
   curriculum?: Prisma.ProgramCurriculumUncheckedCreateNestedManyWithoutCourseInput
 }
@@ -543,7 +543,7 @@ export type CourseScalarWhereInput = {
   departmentId?: Prisma.IntFilter<"Course"> | number
 }
 
-export type CourseCreateWithoutChannelInput = {
+export type CourseCreateWithoutChannelsInput = {
   title: string
   code: string
   creditHours: number
@@ -552,7 +552,7 @@ export type CourseCreateWithoutChannelInput = {
   curriculum?: Prisma.ProgramCurriculumCreateNestedManyWithoutCourseInput
 }
 
-export type CourseUncheckedCreateWithoutChannelInput = {
+export type CourseUncheckedCreateWithoutChannelsInput = {
   id?: number
   title: string
   code: string
@@ -562,23 +562,23 @@ export type CourseUncheckedCreateWithoutChannelInput = {
   curriculum?: Prisma.ProgramCurriculumUncheckedCreateNestedManyWithoutCourseInput
 }
 
-export type CourseCreateOrConnectWithoutChannelInput = {
+export type CourseCreateOrConnectWithoutChannelsInput = {
   where: Prisma.CourseWhereUniqueInput
-  create: Prisma.XOR<Prisma.CourseCreateWithoutChannelInput, Prisma.CourseUncheckedCreateWithoutChannelInput>
+  create: Prisma.XOR<Prisma.CourseCreateWithoutChannelsInput, Prisma.CourseUncheckedCreateWithoutChannelsInput>
 }
 
-export type CourseUpsertWithoutChannelInput = {
-  update: Prisma.XOR<Prisma.CourseUpdateWithoutChannelInput, Prisma.CourseUncheckedUpdateWithoutChannelInput>
-  create: Prisma.XOR<Prisma.CourseCreateWithoutChannelInput, Prisma.CourseUncheckedCreateWithoutChannelInput>
+export type CourseUpsertWithoutChannelsInput = {
+  update: Prisma.XOR<Prisma.CourseUpdateWithoutChannelsInput, Prisma.CourseUncheckedUpdateWithoutChannelsInput>
+  create: Prisma.XOR<Prisma.CourseCreateWithoutChannelsInput, Prisma.CourseUncheckedCreateWithoutChannelsInput>
   where?: Prisma.CourseWhereInput
 }
 
-export type CourseUpdateToOneWithWhereWithoutChannelInput = {
+export type CourseUpdateToOneWithWhereWithoutChannelsInput = {
   where?: Prisma.CourseWhereInput
-  data: Prisma.XOR<Prisma.CourseUpdateWithoutChannelInput, Prisma.CourseUncheckedUpdateWithoutChannelInput>
+  data: Prisma.XOR<Prisma.CourseUpdateWithoutChannelsInput, Prisma.CourseUncheckedUpdateWithoutChannelsInput>
 }
 
-export type CourseUpdateWithoutChannelInput = {
+export type CourseUpdateWithoutChannelsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
@@ -587,7 +587,7 @@ export type CourseUpdateWithoutChannelInput = {
   curriculum?: Prisma.ProgramCurriculumUpdateManyWithoutCourseNestedInput
 }
 
-export type CourseUncheckedUpdateWithoutChannelInput = {
+export type CourseUncheckedUpdateWithoutChannelsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
@@ -602,7 +602,7 @@ export type CourseCreateWithoutTeachesInput = {
   code: string
   creditHours: number
   department: Prisma.DepartmentCreateNestedOneWithoutCoursesInput
-  channel?: Prisma.ChannelCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutCourseInput
   curriculum?: Prisma.ProgramCurriculumCreateNestedManyWithoutCourseInput
 }
 
@@ -612,7 +612,7 @@ export type CourseUncheckedCreateWithoutTeachesInput = {
   code: string
   creditHours: number
   departmentId: number
-  channel?: Prisma.ChannelUncheckedCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCourseInput
   curriculum?: Prisma.ProgramCurriculumUncheckedCreateNestedManyWithoutCourseInput
 }
 
@@ -637,7 +637,7 @@ export type CourseUpdateWithoutTeachesInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
   department?: Prisma.DepartmentUpdateOneRequiredWithoutCoursesNestedInput
-  channel?: Prisma.ChannelUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutCourseNestedInput
   curriculum?: Prisma.ProgramCurriculumUpdateManyWithoutCourseNestedInput
 }
 
@@ -647,7 +647,7 @@ export type CourseUncheckedUpdateWithoutTeachesInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
   departmentId?: Prisma.IntFieldUpdateOperationsInput | number
-  channel?: Prisma.ChannelUncheckedUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutCourseNestedInput
   curriculum?: Prisma.ProgramCurriculumUncheckedUpdateManyWithoutCourseNestedInput
 }
 
@@ -656,7 +656,7 @@ export type CourseCreateWithoutCurriculumInput = {
   code: string
   creditHours: number
   department: Prisma.DepartmentCreateNestedOneWithoutCoursesInput
-  channel?: Prisma.ChannelCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutCourseInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutCourseInput
 }
 
@@ -666,7 +666,7 @@ export type CourseUncheckedCreateWithoutCurriculumInput = {
   code: string
   creditHours: number
   departmentId: number
-  channel?: Prisma.ChannelUncheckedCreateNestedOneWithoutCourseInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCourseInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutCourseInput
 }
 
@@ -691,7 +691,7 @@ export type CourseUpdateWithoutCurriculumInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
   department?: Prisma.DepartmentUpdateOneRequiredWithoutCoursesNestedInput
-  channel?: Prisma.ChannelUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutCourseNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutCourseNestedInput
 }
 
@@ -701,7 +701,7 @@ export type CourseUncheckedUpdateWithoutCurriculumInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
   departmentId?: Prisma.IntFieldUpdateOperationsInput | number
-  channel?: Prisma.ChannelUncheckedUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutCourseNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutCourseNestedInput
 }
 
@@ -716,7 +716,7 @@ export type CourseUpdateWithoutDepartmentInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
-  channel?: Prisma.ChannelUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutCourseNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutCourseNestedInput
   curriculum?: Prisma.ProgramCurriculumUpdateManyWithoutCourseNestedInput
 }
@@ -726,7 +726,7 @@ export type CourseUncheckedUpdateWithoutDepartmentInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   creditHours?: Prisma.IntFieldUpdateOperationsInput | number
-  channel?: Prisma.ChannelUncheckedUpdateOneWithoutCourseNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutCourseNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutCourseNestedInput
   curriculum?: Prisma.ProgramCurriculumUncheckedUpdateManyWithoutCourseNestedInput
 }
@@ -744,11 +744,13 @@ export type CourseUncheckedUpdateManyWithoutDepartmentInput = {
  */
 
 export type CourseCountOutputType = {
+  channels: number
   teaches: number
   curriculum: number
 }
 
 export type CourseCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  channels?: boolean | CourseCountOutputTypeCountChannelsArgs
   teaches?: boolean | CourseCountOutputTypeCountTeachesArgs
   curriculum?: boolean | CourseCountOutputTypeCountCurriculumArgs
 }
@@ -761,6 +763,13 @@ export type CourseCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exten
    * Select specific fields to fetch from the CourseCountOutputType
    */
   select?: Prisma.CourseCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * CourseCountOutputType without action
+ */
+export type CourseCountOutputTypeCountChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChannelWhereInput
 }
 
 /**
@@ -785,7 +794,7 @@ export type CourseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   creditHours?: boolean
   departmentId?: boolean
   department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
-  channel?: boolean | Prisma.Course$channelArgs<ExtArgs>
+  channels?: boolean | Prisma.Course$channelsArgs<ExtArgs>
   teaches?: boolean | Prisma.Course$teachesArgs<ExtArgs>
   curriculum?: boolean | Prisma.Course$curriculumArgs<ExtArgs>
   _count?: boolean | Prisma.CourseCountOutputTypeDefaultArgs<ExtArgs>
@@ -820,7 +829,7 @@ export type CourseSelectScalar = {
 export type CourseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "code" | "creditHours" | "departmentId", ExtArgs["result"]["course"]>
 export type CourseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
-  channel?: boolean | Prisma.Course$channelArgs<ExtArgs>
+  channels?: boolean | Prisma.Course$channelsArgs<ExtArgs>
   teaches?: boolean | Prisma.Course$teachesArgs<ExtArgs>
   curriculum?: boolean | Prisma.Course$curriculumArgs<ExtArgs>
   _count?: boolean | Prisma.CourseCountOutputTypeDefaultArgs<ExtArgs>
@@ -836,7 +845,7 @@ export type $CoursePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   name: "Course"
   objects: {
     department: Prisma.$DepartmentPayload<ExtArgs>
-    channel: Prisma.$ChannelPayload<ExtArgs> | null
+    channels: Prisma.$ChannelPayload<ExtArgs>[]
     teaches: Prisma.$TeachesPayload<ExtArgs>[]
     curriculum: Prisma.$ProgramCurriculumPayload<ExtArgs>[]
   }
@@ -1241,7 +1250,7 @@ readonly fields: CourseFieldRefs;
 export interface Prisma__CourseClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   department<T extends Prisma.DepartmentDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DepartmentDefaultArgs<ExtArgs>>): Prisma.Prisma__DepartmentClient<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  channel<T extends Prisma.Course$channelArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Course$channelArgs<ExtArgs>>): Prisma.Prisma__ChannelClient<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  channels<T extends Prisma.Course$channelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Course$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   teaches<T extends Prisma.Course$teachesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Course$teachesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeachesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   curriculum<T extends Prisma.Course$curriculumArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Course$curriculumArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProgramCurriculumPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1674,9 +1683,9 @@ export type CourseDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
 }
 
 /**
- * Course.channel
+ * Course.channels
  */
-export type Course$channelArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Course$channelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the Channel
    */
@@ -1690,6 +1699,11 @@ export type Course$channelArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   include?: Prisma.ChannelInclude<ExtArgs> | null
   where?: Prisma.ChannelWhereInput
+  orderBy?: Prisma.ChannelOrderByWithRelationInput | Prisma.ChannelOrderByWithRelationInput[]
+  cursor?: Prisma.ChannelWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChannelScalarFieldEnum | Prisma.ChannelScalarFieldEnum[]
 }
 
 /**

@@ -34,6 +34,7 @@ export type ChannelAvgAggregateOutputType = {
   lockedBy: number | null
   deletedBy: number | null
   createdBy: number | null
+  archivedBy: number | null
 }
 
 export type ChannelSumAggregateOutputType = {
@@ -44,6 +45,7 @@ export type ChannelSumAggregateOutputType = {
   lockedBy: number | null
   deletedBy: number | null
   createdBy: number | null
+  archivedBy: number | null
 }
 
 export type ChannelMinAggregateOutputType = {
@@ -63,6 +65,9 @@ export type ChannelMinAggregateOutputType = {
   isAutoCreated: boolean | null
   createdAt: Date | null
   createdBy: number | null
+  isArchived: boolean | null
+  archivedAt: Date | null
+  archivedBy: number | null
 }
 
 export type ChannelMaxAggregateOutputType = {
@@ -82,6 +87,9 @@ export type ChannelMaxAggregateOutputType = {
   isAutoCreated: boolean | null
   createdAt: Date | null
   createdBy: number | null
+  isArchived: boolean | null
+  archivedAt: Date | null
+  archivedBy: number | null
 }
 
 export type ChannelCountAggregateOutputType = {
@@ -101,6 +109,9 @@ export type ChannelCountAggregateOutputType = {
   isAutoCreated: number
   createdAt: number
   createdBy: number
+  isArchived: number
+  archivedAt: number
+  archivedBy: number
   _all: number
 }
 
@@ -113,6 +124,7 @@ export type ChannelAvgAggregateInputType = {
   lockedBy?: true
   deletedBy?: true
   createdBy?: true
+  archivedBy?: true
 }
 
 export type ChannelSumAggregateInputType = {
@@ -123,6 +135,7 @@ export type ChannelSumAggregateInputType = {
   lockedBy?: true
   deletedBy?: true
   createdBy?: true
+  archivedBy?: true
 }
 
 export type ChannelMinAggregateInputType = {
@@ -142,6 +155,9 @@ export type ChannelMinAggregateInputType = {
   isAutoCreated?: true
   createdAt?: true
   createdBy?: true
+  isArchived?: true
+  archivedAt?: true
+  archivedBy?: true
 }
 
 export type ChannelMaxAggregateInputType = {
@@ -161,6 +177,9 @@ export type ChannelMaxAggregateInputType = {
   isAutoCreated?: true
   createdAt?: true
   createdBy?: true
+  isArchived?: true
+  archivedAt?: true
+  archivedBy?: true
 }
 
 export type ChannelCountAggregateInputType = {
@@ -180,6 +199,9 @@ export type ChannelCountAggregateInputType = {
   isAutoCreated?: true
   createdAt?: true
   createdBy?: true
+  isArchived?: true
+  archivedAt?: true
+  archivedBy?: true
   _all?: true
 }
 
@@ -286,6 +308,9 @@ export type ChannelGroupByOutputType = {
   isAutoCreated: boolean
   createdAt: Date
   createdBy: number | null
+  isArchived: boolean
+  archivedAt: Date | null
+  archivedBy: number | null
   _count: ChannelCountAggregateOutputType | null
   _avg: ChannelAvgAggregateOutputType | null
   _sum: ChannelSumAggregateOutputType | null
@@ -328,12 +353,16 @@ export type ChannelWhereInput = {
   isAutoCreated?: Prisma.BoolFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableFilter<"Channel"> | number | null
+  isArchived?: Prisma.BoolFilter<"Channel"> | boolean
+  archivedAt?: Prisma.DateTimeNullableFilter<"Channel"> | Date | string | null
+  archivedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   course?: Prisma.XOR<Prisma.CourseNullableScalarRelationFilter, Prisma.CourseWhereInput> | null
   program?: Prisma.XOR<Prisma.ProgramNullableScalarRelationFilter, Prisma.ProgramWhereInput> | null
   locker?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deleter?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  archiver?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   posts?: Prisma.PostListRelationFilter
   moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
@@ -356,12 +385,16 @@ export type ChannelOrderByWithRelationInput = {
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  isArchived?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  archivedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   server?: Prisma.ServerOrderByWithRelationInput
   course?: Prisma.CourseOrderByWithRelationInput
   program?: Prisma.ProgramOrderByWithRelationInput
   locker?: Prisma.UserOrderByWithRelationInput
   deleter?: Prisma.UserOrderByWithRelationInput
   creator?: Prisma.UserOrderByWithRelationInput
+  archiver?: Prisma.UserOrderByWithRelationInput
   posts?: Prisma.PostOrderByRelationAggregateInput
   moderatorAssignments?: Prisma.ModeratorAssignmentOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
@@ -369,8 +402,8 @@ export type ChannelOrderByWithRelationInput = {
 
 export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  courseId?: number
   serverId_name?: Prisma.ChannelServerIdNameCompoundUniqueInput
+  serverId_courseId?: Prisma.ChannelServerIdCourseIdCompoundUniqueInput
   AND?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
   OR?: Prisma.ChannelWhereInput[]
   NOT?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
@@ -378,6 +411,7 @@ export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Channel"> | string
   description?: Prisma.StringNullableFilter<"Channel"> | string | null
   type?: Prisma.EnumChannelTypeFilter<"Channel"> | $Enums.ChannelType
+  courseId?: Prisma.IntNullableFilter<"Channel"> | number | null
   programId?: Prisma.IntNullableFilter<"Channel"> | number | null
   isLocked?: Prisma.BoolFilter<"Channel"> | boolean
   lockedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
@@ -388,16 +422,20 @@ export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   isAutoCreated?: Prisma.BoolFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableFilter<"Channel"> | number | null
+  isArchived?: Prisma.BoolFilter<"Channel"> | boolean
+  archivedAt?: Prisma.DateTimeNullableFilter<"Channel"> | Date | string | null
+  archivedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   course?: Prisma.XOR<Prisma.CourseNullableScalarRelationFilter, Prisma.CourseWhereInput> | null
   program?: Prisma.XOR<Prisma.ProgramNullableScalarRelationFilter, Prisma.ProgramWhereInput> | null
   locker?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deleter?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  archiver?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   posts?: Prisma.PostListRelationFilter
   moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
-}, "id" | "courseId" | "serverId_name">
+}, "id" | "serverId_name" | "serverId_courseId">
 
 export type ChannelOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -416,6 +454,9 @@ export type ChannelOrderByWithAggregationInput = {
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  isArchived?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  archivedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ChannelCountOrderByAggregateInput
   _avg?: Prisma.ChannelAvgOrderByAggregateInput
   _max?: Prisma.ChannelMaxOrderByAggregateInput
@@ -443,6 +484,9 @@ export type ChannelScalarWhereWithAggregatesInput = {
   isAutoCreated?: Prisma.BoolWithAggregatesFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableWithAggregatesFilter<"Channel"> | number | null
+  isArchived?: Prisma.BoolWithAggregatesFilter<"Channel"> | boolean
+  archivedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Channel"> | Date | string | null
+  archivedBy?: Prisma.IntNullableWithAggregatesFilter<"Channel"> | number | null
 }
 
 export type ChannelCreateInput = {
@@ -455,12 +499,15 @@ export type ChannelCreateInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -483,6 +530,9 @@ export type ChannelUncheckedCreateInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -498,12 +548,15 @@ export type ChannelUpdateInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
@@ -526,6 +579,9 @@ export type ChannelUncheckedUpdateInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
@@ -548,6 +604,9 @@ export type ChannelCreateManyInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
 }
 
 export type ChannelUpdateManyMutationInput = {
@@ -560,6 +619,8 @@ export type ChannelUpdateManyMutationInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ChannelUncheckedUpdateManyInput = {
@@ -579,6 +640,9 @@ export type ChannelUncheckedUpdateManyInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ChannelListRelationFilter = {
@@ -594,6 +658,11 @@ export type ChannelOrderByRelationAggregateInput = {
 export type ChannelServerIdNameCompoundUniqueInput = {
   serverId: number
   name: string
+}
+
+export type ChannelServerIdCourseIdCompoundUniqueInput = {
+  serverId: number
+  courseId: number
 }
 
 export type ChannelCountOrderByAggregateInput = {
@@ -613,6 +682,9 @@ export type ChannelCountOrderByAggregateInput = {
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
+  isArchived?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrder
+  archivedBy?: Prisma.SortOrder
 }
 
 export type ChannelAvgOrderByAggregateInput = {
@@ -623,6 +695,7 @@ export type ChannelAvgOrderByAggregateInput = {
   lockedBy?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
+  archivedBy?: Prisma.SortOrder
 }
 
 export type ChannelMaxOrderByAggregateInput = {
@@ -642,6 +715,9 @@ export type ChannelMaxOrderByAggregateInput = {
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
+  isArchived?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrder
+  archivedBy?: Prisma.SortOrder
 }
 
 export type ChannelMinOrderByAggregateInput = {
@@ -661,6 +737,9 @@ export type ChannelMinOrderByAggregateInput = {
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
+  isArchived?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrder
+  archivedBy?: Prisma.SortOrder
 }
 
 export type ChannelSumOrderByAggregateInput = {
@@ -671,16 +750,17 @@ export type ChannelSumOrderByAggregateInput = {
   lockedBy?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
-}
-
-export type ChannelNullableScalarRelationFilter = {
-  is?: Prisma.ChannelWhereInput | null
-  isNot?: Prisma.ChannelWhereInput | null
+  archivedBy?: Prisma.SortOrder
 }
 
 export type ChannelScalarRelationFilter = {
   is?: Prisma.ChannelWhereInput
   isNot?: Prisma.ChannelWhereInput
+}
+
+export type ChannelNullableScalarRelationFilter = {
+  is?: Prisma.ChannelWhereInput | null
+  isNot?: Prisma.ChannelWhereInput | null
 }
 
 export type ChannelCreateNestedManyWithoutProgramInput = {
@@ -746,6 +826,13 @@ export type ChannelCreateNestedManyWithoutCreatorInput = {
   connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
 }
 
+export type ChannelCreateNestedManyWithoutArchiverInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutArchiverInput, Prisma.ChannelUncheckedCreateWithoutArchiverInput> | Prisma.ChannelCreateWithoutArchiverInput[] | Prisma.ChannelUncheckedCreateWithoutArchiverInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutArchiverInput | Prisma.ChannelCreateOrConnectWithoutArchiverInput[]
+  createMany?: Prisma.ChannelCreateManyArchiverInputEnvelope
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+}
+
 export type ChannelUncheckedCreateNestedManyWithoutLockerInput = {
   create?: Prisma.XOR<Prisma.ChannelCreateWithoutLockerInput, Prisma.ChannelUncheckedCreateWithoutLockerInput> | Prisma.ChannelCreateWithoutLockerInput[] | Prisma.ChannelUncheckedCreateWithoutLockerInput[]
   connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutLockerInput | Prisma.ChannelCreateOrConnectWithoutLockerInput[]
@@ -764,6 +851,13 @@ export type ChannelUncheckedCreateNestedManyWithoutCreatorInput = {
   create?: Prisma.XOR<Prisma.ChannelCreateWithoutCreatorInput, Prisma.ChannelUncheckedCreateWithoutCreatorInput> | Prisma.ChannelCreateWithoutCreatorInput[] | Prisma.ChannelUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCreatorInput | Prisma.ChannelCreateOrConnectWithoutCreatorInput[]
   createMany?: Prisma.ChannelCreateManyCreatorInputEnvelope
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+}
+
+export type ChannelUncheckedCreateNestedManyWithoutArchiverInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutArchiverInput, Prisma.ChannelUncheckedCreateWithoutArchiverInput> | Prisma.ChannelCreateWithoutArchiverInput[] | Prisma.ChannelUncheckedCreateWithoutArchiverInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutArchiverInput | Prisma.ChannelCreateOrConnectWithoutArchiverInput[]
+  createMany?: Prisma.ChannelCreateManyArchiverInputEnvelope
   connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
 }
 
@@ -809,6 +903,20 @@ export type ChannelUpdateManyWithoutCreatorNestedInput = {
   deleteMany?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
 }
 
+export type ChannelUpdateManyWithoutArchiverNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutArchiverInput, Prisma.ChannelUncheckedCreateWithoutArchiverInput> | Prisma.ChannelCreateWithoutArchiverInput[] | Prisma.ChannelUncheckedCreateWithoutArchiverInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutArchiverInput | Prisma.ChannelCreateOrConnectWithoutArchiverInput[]
+  upsert?: Prisma.ChannelUpsertWithWhereUniqueWithoutArchiverInput | Prisma.ChannelUpsertWithWhereUniqueWithoutArchiverInput[]
+  createMany?: Prisma.ChannelCreateManyArchiverInputEnvelope
+  set?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  disconnect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  delete?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  update?: Prisma.ChannelUpdateWithWhereUniqueWithoutArchiverInput | Prisma.ChannelUpdateWithWhereUniqueWithoutArchiverInput[]
+  updateMany?: Prisma.ChannelUpdateManyWithWhereWithoutArchiverInput | Prisma.ChannelUpdateManyWithWhereWithoutArchiverInput[]
+  deleteMany?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
+}
+
 export type ChannelUncheckedUpdateManyWithoutLockerNestedInput = {
   create?: Prisma.XOR<Prisma.ChannelCreateWithoutLockerInput, Prisma.ChannelUncheckedCreateWithoutLockerInput> | Prisma.ChannelCreateWithoutLockerInput[] | Prisma.ChannelUncheckedCreateWithoutLockerInput[]
   connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutLockerInput | Prisma.ChannelCreateOrConnectWithoutLockerInput[]
@@ -848,6 +956,20 @@ export type ChannelUncheckedUpdateManyWithoutCreatorNestedInput = {
   connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
   update?: Prisma.ChannelUpdateWithWhereUniqueWithoutCreatorInput | Prisma.ChannelUpdateWithWhereUniqueWithoutCreatorInput[]
   updateMany?: Prisma.ChannelUpdateManyWithWhereWithoutCreatorInput | Prisma.ChannelUpdateManyWithWhereWithoutCreatorInput[]
+  deleteMany?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
+}
+
+export type ChannelUncheckedUpdateManyWithoutArchiverNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutArchiverInput, Prisma.ChannelUncheckedCreateWithoutArchiverInput> | Prisma.ChannelCreateWithoutArchiverInput[] | Prisma.ChannelUncheckedCreateWithoutArchiverInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutArchiverInput | Prisma.ChannelCreateOrConnectWithoutArchiverInput[]
+  upsert?: Prisma.ChannelUpsertWithWhereUniqueWithoutArchiverInput | Prisma.ChannelUpsertWithWhereUniqueWithoutArchiverInput[]
+  createMany?: Prisma.ChannelCreateManyArchiverInputEnvelope
+  set?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  disconnect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  delete?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  update?: Prisma.ChannelUpdateWithWhereUniqueWithoutArchiverInput | Prisma.ChannelUpdateWithWhereUniqueWithoutArchiverInput[]
+  updateMany?: Prisma.ChannelUpdateManyWithWhereWithoutArchiverInput | Prisma.ChannelUpdateManyWithWhereWithoutArchiverInput[]
   deleteMany?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
 }
 
@@ -901,36 +1023,46 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
 }
 
-export type ChannelCreateNestedOneWithoutCourseInput = {
-  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
-  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput
-  connect?: Prisma.ChannelWhereUniqueInput
+export type ChannelCreateNestedManyWithoutCourseInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput> | Prisma.ChannelCreateWithoutCourseInput[] | Prisma.ChannelUncheckedCreateWithoutCourseInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput | Prisma.ChannelCreateOrConnectWithoutCourseInput[]
+  createMany?: Prisma.ChannelCreateManyCourseInputEnvelope
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
 }
 
-export type ChannelUncheckedCreateNestedOneWithoutCourseInput = {
-  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
-  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput
-  connect?: Prisma.ChannelWhereUniqueInput
+export type ChannelUncheckedCreateNestedManyWithoutCourseInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput> | Prisma.ChannelCreateWithoutCourseInput[] | Prisma.ChannelUncheckedCreateWithoutCourseInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput | Prisma.ChannelCreateOrConnectWithoutCourseInput[]
+  createMany?: Prisma.ChannelCreateManyCourseInputEnvelope
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
 }
 
-export type ChannelUpdateOneWithoutCourseNestedInput = {
-  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
-  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput
-  upsert?: Prisma.ChannelUpsertWithoutCourseInput
-  disconnect?: Prisma.ChannelWhereInput | boolean
-  delete?: Prisma.ChannelWhereInput | boolean
-  connect?: Prisma.ChannelWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelUpdateToOneWithWhereWithoutCourseInput, Prisma.ChannelUpdateWithoutCourseInput>, Prisma.ChannelUncheckedUpdateWithoutCourseInput>
+export type ChannelUpdateManyWithoutCourseNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput> | Prisma.ChannelCreateWithoutCourseInput[] | Prisma.ChannelUncheckedCreateWithoutCourseInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput | Prisma.ChannelCreateOrConnectWithoutCourseInput[]
+  upsert?: Prisma.ChannelUpsertWithWhereUniqueWithoutCourseInput | Prisma.ChannelUpsertWithWhereUniqueWithoutCourseInput[]
+  createMany?: Prisma.ChannelCreateManyCourseInputEnvelope
+  set?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  disconnect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  delete?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  update?: Prisma.ChannelUpdateWithWhereUniqueWithoutCourseInput | Prisma.ChannelUpdateWithWhereUniqueWithoutCourseInput[]
+  updateMany?: Prisma.ChannelUpdateManyWithWhereWithoutCourseInput | Prisma.ChannelUpdateManyWithWhereWithoutCourseInput[]
+  deleteMany?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
 }
 
-export type ChannelUncheckedUpdateOneWithoutCourseNestedInput = {
-  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
-  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput
-  upsert?: Prisma.ChannelUpsertWithoutCourseInput
-  disconnect?: Prisma.ChannelWhereInput | boolean
-  delete?: Prisma.ChannelWhereInput | boolean
-  connect?: Prisma.ChannelWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelUpdateToOneWithWhereWithoutCourseInput, Prisma.ChannelUpdateWithoutCourseInput>, Prisma.ChannelUncheckedUpdateWithoutCourseInput>
+export type ChannelUncheckedUpdateManyWithoutCourseNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput> | Prisma.ChannelCreateWithoutCourseInput[] | Prisma.ChannelUncheckedCreateWithoutCourseInput[]
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput | Prisma.ChannelCreateOrConnectWithoutCourseInput[]
+  upsert?: Prisma.ChannelUpsertWithWhereUniqueWithoutCourseInput | Prisma.ChannelUpsertWithWhereUniqueWithoutCourseInput[]
+  createMany?: Prisma.ChannelCreateManyCourseInputEnvelope
+  set?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  disconnect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  delete?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  connect?: Prisma.ChannelWhereUniqueInput | Prisma.ChannelWhereUniqueInput[]
+  update?: Prisma.ChannelUpdateWithWhereUniqueWithoutCourseInput | Prisma.ChannelUpdateWithWhereUniqueWithoutCourseInput[]
+  updateMany?: Prisma.ChannelUpdateManyWithWhereWithoutCourseInput | Prisma.ChannelUpdateManyWithWhereWithoutCourseInput[]
+  deleteMany?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
 }
 
 export type ChannelCreateNestedOneWithoutPostsInput = {
@@ -989,11 +1121,14 @@ export type ChannelCreateWithoutProgramInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -1015,6 +1150,9 @@ export type ChannelUncheckedCreateWithoutProgramInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -1066,6 +1204,9 @@ export type ChannelScalarWhereInput = {
   isAutoCreated?: Prisma.BoolFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableFilter<"Channel"> | number | null
+  isArchived?: Prisma.BoolFilter<"Channel"> | boolean
+  archivedAt?: Prisma.DateTimeNullableFilter<"Channel"> | Date | string | null
+  archivedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
 }
 
 export type ChannelCreateWithoutLockerInput = {
@@ -1078,11 +1219,14 @@ export type ChannelCreateWithoutLockerInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -1104,6 +1248,9 @@ export type ChannelUncheckedCreateWithoutLockerInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -1129,11 +1276,14 @@ export type ChannelCreateWithoutDeleterInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -1155,6 +1305,9 @@ export type ChannelUncheckedCreateWithoutDeleterInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -1180,11 +1333,14 @@ export type ChannelCreateWithoutCreatorInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -1206,6 +1362,9 @@ export type ChannelUncheckedCreateWithoutCreatorInput = {
   deletedBy?: number | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -1218,6 +1377,63 @@ export type ChannelCreateOrConnectWithoutCreatorInput = {
 
 export type ChannelCreateManyCreatorInputEnvelope = {
   data: Prisma.ChannelCreateManyCreatorInput | Prisma.ChannelCreateManyCreatorInput[]
+  skipDuplicates?: boolean
+}
+
+export type ChannelCreateWithoutArchiverInput = {
+  name: string
+  description?: string | null
+  type: $Enums.ChannelType
+  isLocked?: boolean
+  lockedAt?: Date | string | null
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  isAutoCreated?: boolean
+  createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  server: Prisma.ServerCreateNestedOneWithoutChannelsInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
+  program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
+  locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
+  deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  posts?: Prisma.PostCreateNestedManyWithoutChannelInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
+}
+
+export type ChannelUncheckedCreateWithoutArchiverInput = {
+  id?: number
+  serverId: number
+  name: string
+  description?: string | null
+  type: $Enums.ChannelType
+  courseId?: number | null
+  programId?: number | null
+  isLocked?: boolean
+  lockedBy?: number | null
+  lockedAt?: Date | string | null
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  isAutoCreated?: boolean
+  createdAt?: Date | string
+  createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
+}
+
+export type ChannelCreateOrConnectWithoutArchiverInput = {
+  where: Prisma.ChannelWhereUniqueInput
+  create: Prisma.XOR<Prisma.ChannelCreateWithoutArchiverInput, Prisma.ChannelUncheckedCreateWithoutArchiverInput>
+}
+
+export type ChannelCreateManyArchiverInputEnvelope = {
+  data: Prisma.ChannelCreateManyArchiverInput | Prisma.ChannelCreateManyArchiverInput[]
   skipDuplicates?: boolean
 }
 
@@ -1269,6 +1485,22 @@ export type ChannelUpdateManyWithWhereWithoutCreatorInput = {
   data: Prisma.XOR<Prisma.ChannelUpdateManyMutationInput, Prisma.ChannelUncheckedUpdateManyWithoutCreatorInput>
 }
 
+export type ChannelUpsertWithWhereUniqueWithoutArchiverInput = {
+  where: Prisma.ChannelWhereUniqueInput
+  update: Prisma.XOR<Prisma.ChannelUpdateWithoutArchiverInput, Prisma.ChannelUncheckedUpdateWithoutArchiverInput>
+  create: Prisma.XOR<Prisma.ChannelCreateWithoutArchiverInput, Prisma.ChannelUncheckedCreateWithoutArchiverInput>
+}
+
+export type ChannelUpdateWithWhereUniqueWithoutArchiverInput = {
+  where: Prisma.ChannelWhereUniqueInput
+  data: Prisma.XOR<Prisma.ChannelUpdateWithoutArchiverInput, Prisma.ChannelUncheckedUpdateWithoutArchiverInput>
+}
+
+export type ChannelUpdateManyWithWhereWithoutArchiverInput = {
+  where: Prisma.ChannelScalarWhereInput
+  data: Prisma.XOR<Prisma.ChannelUpdateManyMutationInput, Prisma.ChannelUncheckedUpdateManyWithoutArchiverInput>
+}
+
 export type ChannelCreateWithoutServerInput = {
   name: string
   description?: string | null
@@ -1279,11 +1511,14 @@ export type ChannelCreateWithoutServerInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -1305,6 +1540,9 @@ export type ChannelUncheckedCreateWithoutServerInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -1346,11 +1584,14 @@ export type ChannelCreateWithoutCourseInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
@@ -1372,6 +1613,9 @@ export type ChannelUncheckedCreateWithoutCourseInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
@@ -1382,56 +1626,25 @@ export type ChannelCreateOrConnectWithoutCourseInput = {
   create: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
 }
 
-export type ChannelUpsertWithoutCourseInput = {
-  update: Prisma.XOR<Prisma.ChannelUpdateWithoutCourseInput, Prisma.ChannelUncheckedUpdateWithoutCourseInput>
-  create: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
-  where?: Prisma.ChannelWhereInput
+export type ChannelCreateManyCourseInputEnvelope = {
+  data: Prisma.ChannelCreateManyCourseInput | Prisma.ChannelCreateManyCourseInput[]
+  skipDuplicates?: boolean
 }
 
-export type ChannelUpdateToOneWithWhereWithoutCourseInput = {
-  where?: Prisma.ChannelWhereInput
+export type ChannelUpsertWithWhereUniqueWithoutCourseInput = {
+  where: Prisma.ChannelWhereUniqueInput
+  update: Prisma.XOR<Prisma.ChannelUpdateWithoutCourseInput, Prisma.ChannelUncheckedUpdateWithoutCourseInput>
+  create: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput>
+}
+
+export type ChannelUpdateWithWhereUniqueWithoutCourseInput = {
+  where: Prisma.ChannelWhereUniqueInput
   data: Prisma.XOR<Prisma.ChannelUpdateWithoutCourseInput, Prisma.ChannelUncheckedUpdateWithoutCourseInput>
 }
 
-export type ChannelUpdateWithoutCourseInput = {
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
-  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
-  locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
-  deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
-  creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
-  posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
-  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
-}
-
-export type ChannelUncheckedUpdateWithoutCourseInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  serverId?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
-  programId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  lockedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
-  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
+export type ChannelUpdateManyWithWhereWithoutCourseInput = {
+  where: Prisma.ChannelScalarWhereInput
+  data: Prisma.XOR<Prisma.ChannelUpdateManyMutationInput, Prisma.ChannelUncheckedUpdateManyWithoutCourseInput>
 }
 
 export type ChannelCreateWithoutPostsInput = {
@@ -1444,12 +1657,15 @@ export type ChannelCreateWithoutPostsInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
@@ -1471,6 +1687,9 @@ export type ChannelUncheckedCreateWithoutPostsInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
@@ -1501,12 +1720,15 @@ export type ChannelUpdateWithoutPostsInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
@@ -1528,6 +1750,9 @@ export type ChannelUncheckedUpdateWithoutPostsInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
@@ -1542,12 +1767,15 @@ export type ChannelCreateWithoutModeratorAssignmentsInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
@@ -1569,6 +1797,9 @@ export type ChannelUncheckedCreateWithoutModeratorAssignmentsInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
@@ -1599,12 +1830,15 @@ export type ChannelUpdateWithoutModeratorAssignmentsInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
@@ -1626,6 +1860,9 @@ export type ChannelUncheckedUpdateWithoutModeratorAssignmentsInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
@@ -1640,12 +1877,15 @@ export type ChannelCreateWithoutNotificationPreferencesInput = {
   deletedAt?: Date | string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
   server: Prisma.ServerCreateNestedOneWithoutChannelsInput
-  course?: Prisma.CourseCreateNestedOneWithoutChannelInput
+  course?: Prisma.CourseCreateNestedOneWithoutChannelsInput
   program?: Prisma.ProgramCreateNestedOneWithoutChannelsInput
   locker?: Prisma.UserCreateNestedOneWithoutLockedChannelsInput
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
 }
@@ -1667,6 +1907,9 @@ export type ChannelUncheckedCreateWithoutNotificationPreferencesInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
 }
@@ -1697,12 +1940,15 @@ export type ChannelUpdateWithoutNotificationPreferencesInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
 }
@@ -1724,6 +1970,9 @@ export type ChannelUncheckedUpdateWithoutNotificationPreferencesInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
 }
@@ -1744,6 +1993,9 @@ export type ChannelCreateManyProgramInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
 }
 
 export type ChannelUpdateWithoutProgramInput = {
@@ -1756,11 +2008,14 @@ export type ChannelUpdateWithoutProgramInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
@@ -1782,6 +2037,9 @@ export type ChannelUncheckedUpdateWithoutProgramInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
@@ -1803,6 +2061,9 @@ export type ChannelUncheckedUpdateManyWithoutProgramInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ChannelCreateManyLockerInput = {
@@ -1821,6 +2082,9 @@ export type ChannelCreateManyLockerInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
 }
 
 export type ChannelCreateManyDeleterInput = {
@@ -1839,6 +2103,9 @@ export type ChannelCreateManyDeleterInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
 }
 
 export type ChannelCreateManyCreatorInput = {
@@ -1857,6 +2124,30 @@ export type ChannelCreateManyCreatorInput = {
   deletedBy?: number | null
   isAutoCreated?: boolean
   createdAt?: Date | string
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
+}
+
+export type ChannelCreateManyArchiverInput = {
+  id?: number
+  serverId: number
+  name: string
+  description?: string | null
+  type: $Enums.ChannelType
+  courseId?: number | null
+  programId?: number | null
+  isLocked?: boolean
+  lockedBy?: number | null
+  lockedAt?: Date | string | null
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  isAutoCreated?: boolean
+  createdAt?: Date | string
+  createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
 }
 
 export type ChannelUpdateWithoutLockerInput = {
@@ -1869,11 +2160,14 @@ export type ChannelUpdateWithoutLockerInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
@@ -1895,6 +2189,9 @@ export type ChannelUncheckedUpdateWithoutLockerInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
@@ -1916,6 +2213,9 @@ export type ChannelUncheckedUpdateManyWithoutLockerInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ChannelUpdateWithoutDeleterInput = {
@@ -1928,11 +2228,14 @@ export type ChannelUpdateWithoutDeleterInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
@@ -1954,6 +2257,9 @@ export type ChannelUncheckedUpdateWithoutDeleterInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
@@ -1975,6 +2281,9 @@ export type ChannelUncheckedUpdateManyWithoutDeleterInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ChannelUpdateWithoutCreatorInput = {
@@ -1987,11 +2296,14 @@ export type ChannelUpdateWithoutCreatorInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
@@ -2013,6 +2325,9 @@ export type ChannelUncheckedUpdateWithoutCreatorInput = {
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
@@ -2034,6 +2349,77 @@ export type ChannelUncheckedUpdateManyWithoutCreatorInput = {
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type ChannelUpdateWithoutArchiverInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
+  program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
+  locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
+  deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
+}
+
+export type ChannelUncheckedUpdateWithoutArchiverInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  courseId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  programId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lockedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
+}
+
+export type ChannelUncheckedUpdateManyWithoutArchiverInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  courseId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  programId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lockedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ChannelCreateManyServerInput = {
@@ -2052,6 +2438,9 @@ export type ChannelCreateManyServerInput = {
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
 }
 
 export type ChannelUpdateWithoutServerInput = {
@@ -2064,11 +2453,14 @@ export type ChannelUpdateWithoutServerInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  course?: Prisma.CourseUpdateOneWithoutChannelNestedInput
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  course?: Prisma.CourseUpdateOneWithoutChannelsNestedInput
   program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
   locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
@@ -2090,6 +2482,9 @@ export type ChannelUncheckedUpdateWithoutServerInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
   moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
@@ -2111,6 +2506,98 @@ export type ChannelUncheckedUpdateManyWithoutServerInput = {
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type ChannelCreateManyCourseInput = {
+  id?: number
+  serverId: number
+  name: string
+  description?: string | null
+  type: $Enums.ChannelType
+  programId?: number | null
+  isLocked?: boolean
+  lockedBy?: number | null
+  lockedAt?: Date | string | null
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  isAutoCreated?: boolean
+  createdAt?: Date | string
+  createdBy?: number | null
+  isArchived?: boolean
+  archivedAt?: Date | string | null
+  archivedBy?: number | null
+}
+
+export type ChannelUpdateWithoutCourseInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  server?: Prisma.ServerUpdateOneRequiredWithoutChannelsNestedInput
+  program?: Prisma.ProgramUpdateOneWithoutChannelsNestedInput
+  locker?: Prisma.UserUpdateOneWithoutLockedChannelsNestedInput
+  deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
+  posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
+}
+
+export type ChannelUncheckedUpdateWithoutCourseInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  programId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lockedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
+}
+
+export type ChannelUncheckedUpdateManyWithoutCourseInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  programId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lockedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -2179,12 +2666,16 @@ export type ChannelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
+  isArchived?: boolean
+  archivedAt?: boolean
+  archivedBy?: boolean
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   course?: boolean | Prisma.Channel$courseArgs<ExtArgs>
   program?: boolean | Prisma.Channel$programArgs<ExtArgs>
   locker?: boolean | Prisma.Channel$lockerArgs<ExtArgs>
   deleter?: boolean | Prisma.Channel$deleterArgs<ExtArgs>
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
+  archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
   posts?: boolean | Prisma.Channel$postsArgs<ExtArgs>
   moderatorAssignments?: boolean | Prisma.Channel$moderatorAssignmentsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Channel$notificationPreferencesArgs<ExtArgs>
@@ -2208,12 +2699,16 @@ export type ChannelSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
+  isArchived?: boolean
+  archivedAt?: boolean
+  archivedBy?: boolean
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   course?: boolean | Prisma.Channel$courseArgs<ExtArgs>
   program?: boolean | Prisma.Channel$programArgs<ExtArgs>
   locker?: boolean | Prisma.Channel$lockerArgs<ExtArgs>
   deleter?: boolean | Prisma.Channel$deleterArgs<ExtArgs>
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
+  archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
 }, ExtArgs["result"]["channel"]>
 
 export type ChannelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2233,12 +2728,16 @@ export type ChannelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
+  isArchived?: boolean
+  archivedAt?: boolean
+  archivedBy?: boolean
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   course?: boolean | Prisma.Channel$courseArgs<ExtArgs>
   program?: boolean | Prisma.Channel$programArgs<ExtArgs>
   locker?: boolean | Prisma.Channel$lockerArgs<ExtArgs>
   deleter?: boolean | Prisma.Channel$deleterArgs<ExtArgs>
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
+  archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
 }, ExtArgs["result"]["channel"]>
 
 export type ChannelSelectScalar = {
@@ -2258,9 +2757,12 @@ export type ChannelSelectScalar = {
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
+  isArchived?: boolean
+  archivedAt?: boolean
+  archivedBy?: boolean
 }
 
-export type ChannelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serverId" | "name" | "description" | "type" | "courseId" | "programId" | "isLocked" | "lockedBy" | "lockedAt" | "isDeleted" | "deletedAt" | "deletedBy" | "isAutoCreated" | "createdAt" | "createdBy", ExtArgs["result"]["channel"]>
+export type ChannelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serverId" | "name" | "description" | "type" | "courseId" | "programId" | "isLocked" | "lockedBy" | "lockedAt" | "isDeleted" | "deletedAt" | "deletedBy" | "isAutoCreated" | "createdAt" | "createdBy" | "isArchived" | "archivedAt" | "archivedBy", ExtArgs["result"]["channel"]>
 export type ChannelInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   course?: boolean | Prisma.Channel$courseArgs<ExtArgs>
@@ -2268,6 +2770,7 @@ export type ChannelInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   locker?: boolean | Prisma.Channel$lockerArgs<ExtArgs>
   deleter?: boolean | Prisma.Channel$deleterArgs<ExtArgs>
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
+  archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
   posts?: boolean | Prisma.Channel$postsArgs<ExtArgs>
   moderatorAssignments?: boolean | Prisma.Channel$moderatorAssignmentsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Channel$notificationPreferencesArgs<ExtArgs>
@@ -2280,6 +2783,7 @@ export type ChannelIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   locker?: boolean | Prisma.Channel$lockerArgs<ExtArgs>
   deleter?: boolean | Prisma.Channel$deleterArgs<ExtArgs>
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
+  archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
 }
 export type ChannelIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
@@ -2288,6 +2792,7 @@ export type ChannelIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   locker?: boolean | Prisma.Channel$lockerArgs<ExtArgs>
   deleter?: boolean | Prisma.Channel$deleterArgs<ExtArgs>
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
+  archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
 }
 
 export type $ChannelPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2299,6 +2804,7 @@ export type $ChannelPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     locker: Prisma.$UserPayload<ExtArgs> | null
     deleter: Prisma.$UserPayload<ExtArgs> | null
     creator: Prisma.$UserPayload<ExtArgs> | null
+    archiver: Prisma.$UserPayload<ExtArgs> | null
     posts: Prisma.$PostPayload<ExtArgs>[]
     moderatorAssignments: Prisma.$ModeratorAssignmentPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
@@ -2320,6 +2826,9 @@ export type $ChannelPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     isAutoCreated: boolean
     createdAt: Date
     createdBy: number | null
+    isArchived: boolean
+    archivedAt: Date | null
+    archivedBy: number | null
   }, ExtArgs["result"]["channel"]>
   composites: {}
 }
@@ -2720,6 +3229,7 @@ export interface Prisma__ChannelClient<T, Null = never, ExtArgs extends runtime.
   locker<T extends Prisma.Channel$lockerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$lockerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   deleter<T extends Prisma.Channel$deleterArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$deleterArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   creator<T extends Prisma.Channel$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$creatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  archiver<T extends Prisma.Channel$archiverArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$archiverArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   posts<T extends Prisma.Channel$postsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$postsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   moderatorAssignments<T extends Prisma.Channel$moderatorAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$moderatorAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ModeratorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.Channel$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2768,6 +3278,9 @@ export interface ChannelFieldRefs {
   readonly isAutoCreated: Prisma.FieldRef<"Channel", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Channel", 'DateTime'>
   readonly createdBy: Prisma.FieldRef<"Channel", 'Int'>
+  readonly isArchived: Prisma.FieldRef<"Channel", 'Boolean'>
+  readonly archivedAt: Prisma.FieldRef<"Channel", 'DateTime'>
+  readonly archivedBy: Prisma.FieldRef<"Channel", 'Int'>
 }
     
 
@@ -3243,6 +3756,25 @@ export type Channel$deleterArgs<ExtArgs extends runtime.Types.Extensions.Interna
  * Channel.creator
  */
 export type Channel$creatorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * Channel.archiver
+ */
+export type Channel$archiverArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the User
    */

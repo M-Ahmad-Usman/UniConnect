@@ -2,7 +2,7 @@
 
 **Last Updated:** February 26, 2026
 
-**Current Automated Test Status:** 113/113 passing (7 suites)
+**Current Automated Test Status:** 146/146 passing (8 suites)
 
 ---
 
@@ -14,7 +14,7 @@
 | 1 | Authentication | ✅ Complete | 23 tests | JWT cookies, Resend email, mustChangePassword guard |
 | 2 | User Management | ✅ Complete | 24 tests | Admin user creation/import, profile endpoints, listing + get-by-id scope rules, deactivation/reactivation |
 | 3 | Department & Program Management | ✅ Complete | 36 tests | Department/program/discipline APIs, auto-created channels, hardening + sync integrity |
-| 4 | Class Management | ⬜ Not Started | — | Depends on Module 3 |
+| 4 | Class Management | ✅ Complete | 33 tests | Class CRUD, course assignment/removal, channel archiving |
 | 5 | Course Management | ⬜ Not Started | — | Depends on Module 3 |
 | 6 | Society Management | ⬜ Not Started | — | Depends on Module 4 |
 | 7 | Role Management | ⬜ Not Started | — | Depends on Module 2 |
@@ -355,9 +355,71 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 4 — Class Management
+## Module 4 — Detailed Completion Log
 
-**Scope:** FR-9, FR-10, FR-31, FR-32, FR-33, FR-34  
-**Key endpoints:** Class create/list/get + course assignment/unassignment/list for classes  
-**Core rules:** Class server bootstrap, default channels, class-scoped authorization for HOD/PD flows  
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Class Schemas | `src/modules/class/class.schema.ts` | Zod 4 schemas for class create/list/get, course assignment/list/removal |
+| Class Service | `src/modules/class/class.service.ts` | Business logic with transactional class+server+channel creation, course assignment with auto-channel, course removal with channel archiving |
+| Class Controller | `src/modules/class/class.controller.ts` | Thin handlers following established response contract |
+| Class Routes | `src/modules/class/class.routes.ts` | Route wiring with authenticate, authorize, validate middleware |
+| App Route Mount (updated) | `src/app.ts` | Mounted `/api/classes` routes |
+| Schema Migration | `prisma/migrations/20260226152732_*` | Changed `Channel.courseId` from `@unique` to `@@unique([serverId, courseId])`; added `isArchived`, `archivedAt`, `archivedBy` fields and `ChannelArchiver` relation |
+| Prisma Schema (updated) | `prisma/schema.prisma` | `Channel` now supports archiving and allows same course in multiple servers; `Course.channels` is now one-to-many |
+| Test Factory (updated) | `tests/helpers/factory.ts` | Added `createCourse()` helper; fixed `createProgram()` default code length for VARCHAR(20) |
+| Module 4 Integration Tests | `tests/modules/class.test.ts` | 33 integration tests covering all endpoints and authorization scenarios |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/classes` | Admin / HOD | Create class + auto-create CLASS server + `#announcements` + `#general` channels |
+| GET | `/api/classes` | Authenticated | List classes (paginated, filterable by programId, semester) |
+| GET | `/api/classes/:id` | Authenticated | Get class details with program, CR, student/course counts |
+| POST | `/api/classes/:id/courses` | Admin / HOD / PD | Assign course + teacher to class, auto-create course channel, auto-add teacher to server |
+| GET | `/api/classes/:id/courses` | Authenticated | List courses assigned to class with teacher info |
+| DELETE | `/api/classes/:id/courses/:courseId` | Admin / HOD / PD | Remove course from class, archive course channel |
+
+### Test Suites (33 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/classes` | 10 | ✅ |
+| GET `/api/classes` | 3 | ✅ |
+| GET `/api/classes/:id` | 2 | ✅ |
+| POST `/api/classes/:id/courses` | 10 | ✅ |
+| GET `/api/classes/:id/courses` | 3 | ✅ |
+| DELETE `/api/classes/:id/courses/:courseId` | 5 | ✅ |
+
+### Schema Changes
+
+| Change | Before | After | Reason |
+|--------|--------|-------|--------|
+| `Channel.courseId` constraint | `@unique` (1:1 globally) | `@@unique([serverId, courseId])` (unique per server) | Same course can be assigned to multiple classes, each needing its own channel |
+| `Course.channels` relation | `channel Channel?` (1:1) | `channels Channel[]` (1:many) | Follows from courseId constraint change |
+| Channel archiving | No archive mechanism | `isArchived`, `archivedAt`, `archivedBy` fields + `ChannelArchiver` relation | Preserves course channel history when courses are removed from classes |
+
+### Key Design & Architecture Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Authorization model | Route-level `userTypes: ["ADMIN", "TEACHER"]` + service-level HOD/PD scope | Consistent with Module 2 pattern; avoids over-complicating middleware |
+| HOD scope enforcement | Compare `department.hodId === userId` in service | Only HOD of the class's program's department can create/manage |
+| PD scope enforcement | Compare `program.programDirectorId === userId` in service | Only PD of the class's program can assign/remove courses |
+| Course removal strategy | Archive channel (not delete) + delete Teaches records | Preserves channel history for audit; clean removal of assignment record |
+| Student auto-membership | Deferred to user creation flow (Module 2) | At class creation time, no students are assigned yet |
+| Teacher auto-membership | Auto-added to class server on course assignment | Teacher needs server access to use course channel |
+| Single assignment per request | `{ courseId, teacherId }` body | Simpler error handling, clearer REST semantics |
+| Course catalog dependency | Module 4 uses factory-created courses in tests | Course CRUD is Module 5; Module 4 focuses on class ↔ course assignment |
+| Semester validation | Reject if `currentSemester > program.semesters` | Prevents invalid class configurations |
+
+---
+
+## Next Up: Module 5 — Course Management
+
+**Scope:** FR-31, FR-32, FR-33, FR-34 (Course CRUD)  
+**Key endpoints:** Course create/list/get/update for the course catalog  
+**Core rules:** Admin-only CRUD, department-scoped courses, unique course codes  
 **Dependencies:** Module 3 ✅  

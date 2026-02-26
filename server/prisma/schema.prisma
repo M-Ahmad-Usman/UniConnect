@@ -168,6 +168,7 @@ model User {
   lockedChannels   Channel[]           @relation("ChannelLocker")
   deletedChannels  Channel[]           @relation("ChannelDeleter")
   createdChannels  Channel[]           @relation("ChannelCreator")
+  archivedChannels Channel[]           @relation("ChannelArchiver")
 
   authoredPosts    Post[]              @relation("PostAuthor")
   deletedPosts     Post[]              @relation("PostDeleter")
@@ -290,7 +291,7 @@ model Channel {
   description String?
   type        ChannelType
 
-  courseId   Int? @unique @map("course_id")
+  courseId   Int? @map("course_id")
   programId Int? @map("program_id")
 
   isLocked  Boolean   @default(false) @map("is_locked")
@@ -309,15 +310,21 @@ model Channel {
   course  Course?  @relation("CourseChannel", fields: [courseId], references: [id])
   program Program? @relation("ProgramChannel", fields: [programId], references: [id])
 
-  locker  User? @relation("ChannelLocker", fields: [lockedBy], references: [id])
-  deleter User? @relation("ChannelDeleter", fields: [deletedBy], references: [id])
-  creator User? @relation("ChannelCreator", fields: [createdBy], references: [id])
+  isArchived  Boolean   @default(false) @map("is_archived")
+  archivedAt  DateTime? @map("archived_at")
+  archivedBy  Int?      @map("archived_by")
+
+  locker   User? @relation("ChannelLocker", fields: [lockedBy], references: [id])
+  deleter  User? @relation("ChannelDeleter", fields: [deletedBy], references: [id])
+  creator  User? @relation("ChannelCreator", fields: [createdBy], references: [id])
+  archiver User? @relation("ChannelArchiver", fields: [archivedBy], references: [id])
 
   posts                   Post[]
   moderatorAssignments    ModeratorAssignment[]
   notificationPreferences NotificationPreference[]
 
   @@unique([serverId, name])
+  @@unique([serverId, courseId])
   @@map("channels")
 }
 
@@ -360,7 +367,7 @@ model Course {
 
   department Department @relation(fields: [departmentId], references: [id])
 
-  channel    Channel?            @relation("CourseChannel")
+  channels   Channel[]           @relation("CourseChannel")
   teaches    Teaches[]
   curriculum ProgramCurriculum[]
 

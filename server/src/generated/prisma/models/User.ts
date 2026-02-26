@@ -300,6 +300,7 @@ export type UserWhereInput = {
   lockedChannels?: Prisma.ChannelListRelationFilter
   deletedChannels?: Prisma.ChannelListRelationFilter
   createdChannels?: Prisma.ChannelListRelationFilter
+  archivedChannels?: Prisma.ChannelListRelationFilter
   authoredPosts?: Prisma.PostListRelationFilter
   deletedPosts?: Prisma.PostListRelationFilter
   updatedPosts?: Prisma.PostListRelationFilter
@@ -336,6 +337,7 @@ export type UserOrderByWithRelationInput = {
   lockedChannels?: Prisma.ChannelOrderByRelationAggregateInput
   deletedChannels?: Prisma.ChannelOrderByRelationAggregateInput
   createdChannels?: Prisma.ChannelOrderByRelationAggregateInput
+  archivedChannels?: Prisma.ChannelOrderByRelationAggregateInput
   authoredPosts?: Prisma.PostOrderByRelationAggregateInput
   deletedPosts?: Prisma.PostOrderByRelationAggregateInput
   updatedPosts?: Prisma.PostOrderByRelationAggregateInput
@@ -375,6 +377,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   lockedChannels?: Prisma.ChannelListRelationFilter
   deletedChannels?: Prisma.ChannelListRelationFilter
   createdChannels?: Prisma.ChannelListRelationFilter
+  archivedChannels?: Prisma.ChannelListRelationFilter
   authoredPosts?: Prisma.PostListRelationFilter
   deletedPosts?: Prisma.PostListRelationFilter
   updatedPosts?: Prisma.PostListRelationFilter
@@ -451,6 +454,7 @@ export type UserCreateInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -486,6 +490,7 @@ export type UserUncheckedCreateInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -520,6 +525,7 @@ export type UserUpdateInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -555,6 +561,7 @@ export type UserUncheckedUpdateInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -820,6 +827,12 @@ export type UserCreateNestedOneWithoutCreatedChannelsInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
+export type UserCreateNestedOneWithoutArchivedChannelsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutArchivedChannelsInput, Prisma.UserUncheckedCreateWithoutArchivedChannelsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutArchivedChannelsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
 export type UserUpdateOneWithoutLockedChannelsNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutLockedChannelsInput, Prisma.UserUncheckedCreateWithoutLockedChannelsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutLockedChannelsInput
@@ -848,6 +861,16 @@ export type UserUpdateOneWithoutCreatedChannelsNestedInput = {
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedChannelsInput, Prisma.UserUpdateWithoutCreatedChannelsInput>, Prisma.UserUncheckedUpdateWithoutCreatedChannelsInput>
+}
+
+export type UserUpdateOneWithoutArchivedChannelsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutArchivedChannelsInput, Prisma.UserUncheckedCreateWithoutArchivedChannelsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutArchivedChannelsInput
+  upsert?: Prisma.UserUpsertWithoutArchivedChannelsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutArchivedChannelsInput, Prisma.UserUpdateWithoutArchivedChannelsInput>, Prisma.UserUncheckedUpdateWithoutArchivedChannelsInput>
 }
 
 export type UserCreateNestedOneWithoutServerMembershipsInput = {
@@ -1046,6 +1069,7 @@ export type UserCreateWithoutDepartmentInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1080,6 +1104,7 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1159,6 +1184,7 @@ export type UserCreateWithoutStudentInfoInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1193,6 +1219,7 @@ export type UserUncheckedCreateWithoutStudentInfoInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1242,6 +1269,7 @@ export type UserUpdateWithoutStudentInfoInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -1276,6 +1304,7 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -1309,6 +1338,7 @@ export type UserCreateWithoutTeacherInfoInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1343,6 +1373,7 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1392,6 +1423,7 @@ export type UserUpdateWithoutTeacherInfoInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -1426,6 +1458,7 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -1459,6 +1492,7 @@ export type UserCreateWithoutCreatedServersInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1493,6 +1527,7 @@ export type UserUncheckedCreateWithoutCreatedServersInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1542,6 +1577,7 @@ export type UserUpdateWithoutCreatedServersInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -1576,6 +1612,7 @@ export type UserUncheckedUpdateWithoutCreatedServersInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -1609,6 +1646,7 @@ export type UserCreateWithoutLockedChannelsInput = {
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1643,6 +1681,7 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1681,6 +1720,7 @@ export type UserCreateWithoutDeletedChannelsInput = {
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1715,6 +1755,7 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1753,6 +1794,7 @@ export type UserCreateWithoutCreatedChannelsInput = {
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -1787,6 +1829,7 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -1803,6 +1846,80 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
 export type UserCreateOrConnectWithoutCreatedChannelsInput = {
   where: Prisma.UserWhereUniqueInput
   create: Prisma.XOR<Prisma.UserCreateWithoutCreatedChannelsInput, Prisma.UserUncheckedCreateWithoutCreatedChannelsInput>
+}
+
+export type UserCreateWithoutArchivedChannelsInput = {
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  isActive?: boolean
+  mustChangePassword?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutArchivedChannelsInput = {
+  id?: number
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  isActive?: boolean
+  mustChangePassword?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutArchivedChannelsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutArchivedChannelsInput, Prisma.UserUncheckedCreateWithoutArchivedChannelsInput>
 }
 
 export type UserUpsertWithoutLockedChannelsInput = {
@@ -1836,6 +1953,7 @@ export type UserUpdateWithoutLockedChannelsInput = {
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -1870,6 +1988,7 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -1914,6 +2033,7 @@ export type UserUpdateWithoutDeletedChannelsInput = {
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -1948,6 +2068,7 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -1992,6 +2113,7 @@ export type UserUpdateWithoutCreatedChannelsInput = {
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -2026,6 +2148,87 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUpsertWithoutArchivedChannelsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutArchivedChannelsInput, Prisma.UserUncheckedUpdateWithoutArchivedChannelsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutArchivedChannelsInput, Prisma.UserUncheckedCreateWithoutArchivedChannelsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutArchivedChannelsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutArchivedChannelsInput, Prisma.UserUncheckedUpdateWithoutArchivedChannelsInput>
+}
+
+export type UserUpdateWithoutArchivedChannelsInput = {
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2059,6 +2262,7 @@ export type UserCreateWithoutServerMembershipsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -2093,6 +2297,7 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2142,6 +2347,7 @@ export type UserUpdateWithoutServerMembershipsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -2176,6 +2382,7 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2210,6 +2417,7 @@ export type UserCreateWithoutSocietyMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -2244,6 +2452,7 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2282,6 +2491,7 @@ export type UserCreateWithoutReviewedMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -2316,6 +2526,7 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2365,6 +2576,7 @@ export type UserUpdateWithoutSocietyMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -2399,6 +2611,7 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2443,6 +2656,7 @@ export type UserUpdateWithoutReviewedMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -2477,6 +2691,7 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -2510,6 +2725,7 @@ export type UserCreateWithoutAuthoredPostsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
@@ -2544,6 +2760,7 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
@@ -2582,6 +2799,7 @@ export type UserCreateWithoutDeletedPostsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
@@ -2616,6 +2834,7 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
@@ -2654,6 +2873,7 @@ export type UserCreateWithoutUpdatedPostsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
@@ -2688,6 +2908,7 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
@@ -2726,6 +2947,7 @@ export type UserCreateWithoutPinnedPostsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -2760,6 +2982,7 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -2809,6 +3032,7 @@ export type UserUpdateWithoutAuthoredPostsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
@@ -2843,6 +3067,7 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
@@ -2887,6 +3112,7 @@ export type UserUpdateWithoutDeletedPostsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
@@ -2921,6 +3147,7 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
@@ -2965,6 +3192,7 @@ export type UserUpdateWithoutUpdatedPostsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
@@ -2999,6 +3227,7 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
@@ -3043,6 +3272,7 @@ export type UserUpdateWithoutPinnedPostsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3077,6 +3307,7 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3110,6 +3341,7 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -3144,6 +3376,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -3182,6 +3415,7 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -3216,6 +3450,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -3265,6 +3500,7 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3299,6 +3535,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3343,6 +3580,7 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3377,6 +3615,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3410,6 +3649,7 @@ export type UserCreateWithoutNotificationsInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -3444,6 +3684,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -3493,6 +3734,7 @@ export type UserUpdateWithoutNotificationsInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3527,6 +3769,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3560,6 +3803,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -3594,6 +3838,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -3643,6 +3888,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3677,6 +3923,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3710,6 +3957,7 @@ export type UserCreateWithoutRefreshTokensInput = {
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
@@ -3744,6 +3992,7 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
@@ -3793,6 +4042,7 @@ export type UserUpdateWithoutRefreshTokensInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3827,6 +4077,7 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3875,6 +4126,7 @@ export type UserUpdateWithoutDepartmentInput = {
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
@@ -3909,6 +4161,7 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
@@ -3949,6 +4202,7 @@ export type UserCountOutputType = {
   lockedChannels: number
   deletedChannels: number
   createdChannels: number
+  archivedChannels: number
   authoredPosts: number
   deletedPosts: number
   updatedPosts: number
@@ -3968,6 +4222,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   lockedChannels?: boolean | UserCountOutputTypeCountLockedChannelsArgs
   deletedChannels?: boolean | UserCountOutputTypeCountDeletedChannelsArgs
   createdChannels?: boolean | UserCountOutputTypeCountCreatedChannelsArgs
+  archivedChannels?: boolean | UserCountOutputTypeCountArchivedChannelsArgs
   authoredPosts?: boolean | UserCountOutputTypeCountAuthoredPostsArgs
   deletedPosts?: boolean | UserCountOutputTypeCountDeletedPostsArgs
   updatedPosts?: boolean | UserCountOutputTypeCountUpdatedPostsArgs
@@ -4023,6 +4278,13 @@ export type UserCountOutputTypeCountDeletedChannelsArgs<ExtArgs extends runtime.
  * UserCountOutputType without action
  */
 export type UserCountOutputTypeCountCreatedChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChannelWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountArchivedChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ChannelWhereInput
 }
 
@@ -4127,6 +4389,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   lockedChannels?: boolean | Prisma.User$lockedChannelsArgs<ExtArgs>
   deletedChannels?: boolean | Prisma.User$deletedChannelsArgs<ExtArgs>
   createdChannels?: boolean | Prisma.User$createdChannelsArgs<ExtArgs>
+  archivedChannels?: boolean | Prisma.User$archivedChannelsArgs<ExtArgs>
   authoredPosts?: boolean | Prisma.User$authoredPostsArgs<ExtArgs>
   deletedPosts?: boolean | Prisma.User$deletedPostsArgs<ExtArgs>
   updatedPosts?: boolean | Prisma.User$updatedPostsArgs<ExtArgs>
@@ -4204,6 +4467,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   lockedChannels?: boolean | Prisma.User$lockedChannelsArgs<ExtArgs>
   deletedChannels?: boolean | Prisma.User$deletedChannelsArgs<ExtArgs>
   createdChannels?: boolean | Prisma.User$createdChannelsArgs<ExtArgs>
+  archivedChannels?: boolean | Prisma.User$archivedChannelsArgs<ExtArgs>
   authoredPosts?: boolean | Prisma.User$authoredPostsArgs<ExtArgs>
   deletedPosts?: boolean | Prisma.User$deletedPostsArgs<ExtArgs>
   updatedPosts?: boolean | Prisma.User$updatedPostsArgs<ExtArgs>
@@ -4235,6 +4499,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     lockedChannels: Prisma.$ChannelPayload<ExtArgs>[]
     deletedChannels: Prisma.$ChannelPayload<ExtArgs>[]
     createdChannels: Prisma.$ChannelPayload<ExtArgs>[]
+    archivedChannels: Prisma.$ChannelPayload<ExtArgs>[]
     authoredPosts: Prisma.$PostPayload<ExtArgs>[]
     deletedPosts: Prisma.$PostPayload<ExtArgs>[]
     updatedPosts: Prisma.$PostPayload<ExtArgs>[]
@@ -4664,6 +4929,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   lockedChannels<T extends Prisma.User$lockedChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$lockedChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deletedChannels<T extends Prisma.User$deletedChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   createdChannels<T extends Prisma.User$createdChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  archivedChannels<T extends Prisma.User$archivedChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$archivedChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   authoredPosts<T extends Prisma.User$authoredPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$authoredPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deletedPosts<T extends Prisma.User$deletedPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   updatedPosts<T extends Prisma.User$updatedPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$updatedPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -5270,6 +5536,30 @@ export type User$deletedChannelsArgs<ExtArgs extends runtime.Types.Extensions.In
  * User.createdChannels
  */
 export type User$createdChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Channel
+   */
+  select?: Prisma.ChannelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Channel
+   */
+  omit?: Prisma.ChannelOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChannelInclude<ExtArgs> | null
+  where?: Prisma.ChannelWhereInput
+  orderBy?: Prisma.ChannelOrderByWithRelationInput | Prisma.ChannelOrderByWithRelationInput[]
+  cursor?: Prisma.ChannelWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChannelScalarFieldEnum | Prisma.ChannelScalarFieldEnum[]
+}
+
+/**
+ * User.archivedChannels
+ */
+export type User$archivedChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the Channel
    */

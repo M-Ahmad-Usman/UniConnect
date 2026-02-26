@@ -230,7 +230,10 @@ export const ChannelScalarFieldEnum = {
   deletedBy: 'deletedBy',
   isAutoCreated: 'isAutoCreated',
   createdAt: 'createdAt',
-  createdBy: 'createdBy'
+  createdBy: 'createdBy',
+  isArchived: 'isArchived',
+  archivedAt: 'archivedAt',
+  archivedBy: 'archivedBy'
 } as const
 
 export type ChannelScalarFieldEnum = (typeof ChannelScalarFieldEnum)[keyof typeof ChannelScalarFieldEnum]

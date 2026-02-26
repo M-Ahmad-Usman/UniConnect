@@ -152,7 +152,7 @@ export async function createProgram(
       disciplineId: discipline.id,
       degreeLevelId: degreeLevel.id,
       semesters: overrides?.semesters ?? 8,
-      code: overrides?.code ?? `PROG-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      code: overrides?.code ?? `P-${Date.now().toString(36)}`,
     },
   });
 }
@@ -262,6 +262,22 @@ export async function createStudentWithInfo(
   }
 
   return student;
+}
+
+// ─── Module 4 Helpers ──────────────────────────────────────────────────────
+
+export async function createCourse(
+  departmentId: number,
+  overrides?: { title?: string; code?: string; creditHours?: number }
+) {
+  return prisma.course.create({
+    data: {
+      title: overrides?.title ?? `Course-${Date.now()}`,
+      code: overrides?.code ?? `CRS-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      creditHours: overrides?.creditHours ?? 3,
+      departmentId,
+    },
+  });
 }
 
 export function generateCSV(rows: Record<string, string>[]): Buffer {
