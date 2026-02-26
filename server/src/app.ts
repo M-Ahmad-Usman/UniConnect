@@ -11,6 +11,7 @@ import departmentRoutes from "./modules/department/department.routes.js";
 import programRoutes from "./modules/program/program.routes.js";
 import disciplineRoutes from "./modules/discipline/discipline.routes.js";
 import classRoutes from "./modules/class/class.routes.js";
+import courseRoutes from "./modules/course/course.routes.js";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/programs", programRoutes);
 app.use("/api/disciplines", disciplineRoutes);
 app.use("/api/classes", classRoutes);
+app.use("/api/courses", courseRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {

@@ -2,7 +2,7 @@
 
 **Last Updated:** February 26, 2026
 
-**Current Automated Test Status:** 146/146 passing (8 suites)
+**Current Automated Test Status:** 164/164 passing (9 suites)
 
 ---
 
@@ -15,7 +15,7 @@
 | 2 | User Management | ✅ Complete | 24 tests | Admin user creation/import, profile endpoints, listing + get-by-id scope rules, deactivation/reactivation |
 | 3 | Department & Program Management | ✅ Complete | 36 tests | Department/program/discipline APIs, auto-created channels, hardening + sync integrity |
 | 4 | Class Management | ✅ Complete | 33 tests | Class CRUD, course assignment/removal, channel archiving |
-| 5 | Course Management | ⬜ Not Started | — | Depends on Module 3 |
+| 5 | Course Management | ✅ Complete | 16 tests | Course catalog CRUD with channel sync |
 | 6 | Society Management | ⬜ Not Started | — | Depends on Module 4 |
 | 7 | Role Management | ⬜ Not Started | — | Depends on Module 2 |
 | 8 | Server & Channel Management | ⬜ Not Started | — | Depends on Module 6 |
@@ -417,9 +417,51 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 5 — Course Management
+## Module 5 — Detailed Completion Log
 
-**Scope:** FR-31, FR-32, FR-33, FR-34 (Course CRUD)  
-**Key endpoints:** Course create/list/get/update for the course catalog  
-**Core rules:** Admin-only CRUD, department-scoped courses, unique course codes  
-**Dependencies:** Module 3 ✅  
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Course Schemas | `src/modules/course/course.schema.ts` | Zod 4 schemas for course create/list/get/update with param validation |
+| Course Service | `src/modules/course/course.service.ts` | CRUD business logic with department validation, duplicate code checks, channel name sync on code change |
+| Course Controller | `src/modules/course/course.controller.ts` | Thin handlers following established response contract |
+| Course Routes | `src/modules/course/course.routes.ts` | Route wiring with authenticate, authorize, validate middleware |
+| App Route Mount (updated) | `src/app.ts` | Mounted `/api/courses` routes |
+| Module 5 Integration Tests | `tests/modules/course.test.ts` | 16 integration tests covering all endpoints, authorization, and channel sync |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/courses` | Admin | Create course in the course catalog |
+| GET | `/api/courses` | Authenticated | List courses (paginated, filterable by departmentId) |
+| GET | `/api/courses/:id` | Authenticated | Get course details with department info |
+| PATCH | `/api/courses/:id` | Admin | Update course (title, code, creditHours); syncs channel names on code change |
+
+### Test Suites (16 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/courses` | 5 | ✅ |
+| GET `/api/courses` | 3 | ✅ |
+| GET `/api/courses/:id` | 2 | ✅ |
+| PATCH `/api/courses/:id` | 6 | ✅ |
+
+### Key Design & Architecture Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Update scope | `title`, `code`, `creditHours` only — not `departmentId` | Avoids complexity of cross-department moves and cascading side-effects |
+| Channel name sync | Update all auto-created COURSE channels by `courseId` (no `serverId` filter) | Unlike programs (scoped to one department server), courses can be assigned to multiple class servers |
+| Pagination | Paginated list with `parsePagination`/`buildPaginationResponse` | Courses can grow significantly; matches `GET /classes` pattern |
+| Detail response | Includes nested `department: { id, name }` | Consistent with class details including related entity info |
+| Duplicate code check | Explicit pre-check in service + `ConflictError` | Cleaner domain-level error than relying on Prisma P2002 mapping |
+| Department validation | Verify `departmentId` exists before course creation | Produces explicit 404 rather than FK constraint error |
+
+---
+
+## Next Up: Module 6 — Society Management
+
+**Scope:** Society CRUD, membership requests, approval flows  
+**Dependencies:** Module 4 ✅
