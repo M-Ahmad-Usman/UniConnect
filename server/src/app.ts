@@ -7,6 +7,9 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { NotFoundError } from "./shared/errors/index.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/user/user.routes.js";
+import departmentRoutes from "./modules/department/department.routes.js";
+import programRoutes from "./modules/program/program.routes.js";
+import disciplineRoutes from "./modules/discipline/discipline.routes.js";
 
 const app = express();
 
@@ -30,6 +33,9 @@ app.get("/api/health", (_req, res) => {
 // ─── API Routes ─────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/api/programs", programRoutes);
+app.use("/api/disciplines", disciplineRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {

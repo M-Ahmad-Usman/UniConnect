@@ -2,16 +2,18 @@
 
 **Last Updated:** February 26, 2026
 
+**Current Automated Test Status:** 113/113 passing (7 suites)
+
 ---
 
 ## Module Progress
 
 | Module | Name | Status | Tests | Notes |
 |--------|------|--------|-------|-------|
-| 0 | Project Foundation & Shared Infrastructure | ✅ Complete | 30/53 passing | All infra in place |
-| 1 | Authentication | ✅ Complete | 23/53 passing | JWT cookies, Resend email, mustChangePassword guard |
-| 2 | User Management | ✅ Complete | 24/77 passing | Admin user creation/import, profile endpoints, listing + get-by-id scope rules, deactivation/reactivation |
-| 3 | Department & Program Management | ⬜ Not Started | — | Depends on Module 2 |
+| 0 | Project Foundation & Shared Infrastructure | ✅ Complete | 30 tests | All infra in place |
+| 1 | Authentication | ✅ Complete | 23 tests | JWT cookies, Resend email, mustChangePassword guard |
+| 2 | User Management | ✅ Complete | 24 tests | Admin user creation/import, profile endpoints, listing + get-by-id scope rules, deactivation/reactivation |
+| 3 | Department & Program Management | ✅ Complete | 36 tests | Department/program/discipline APIs, auto-created channels, hardening + sync integrity |
 | 4 | Class Management | ⬜ Not Started | — | Depends on Module 3 |
 | 5 | Course Management | ⬜ Not Started | — | Depends on Module 3 |
 | 6 | Society Management | ⬜ Not Started | — | Depends on Module 4 |
@@ -98,7 +100,7 @@
 | `access_token` | `/api` | 15 minutes | `httpOnly`, `secure` (prod), `sameSite=strict` |
 | `refresh_token` | `/api/auth/refresh` | 7 days | `httpOnly`, `secure` (prod), `sameSite=strict` |
 
-### Test Suites (23 new tests)
+### Test Suites (23 tests)
 
 | Suite | Tests | Status |
 |-------|-------|--------|
@@ -155,7 +157,7 @@
 | PATCH | `/api/users/:id/deactivate` | Admin | Soft deactivate account and revoke active refresh tokens |
 | PATCH | `/api/users/:id/reactivate` | Admin | Reactivate previously deactivated account |
 
-### Test Suites (24 new tests)
+### Test Suites (24 tests)
 
 | Suite | Tests | Status |
 |-------|-------|--------|
@@ -180,6 +182,72 @@
 | Upload validation | MIME/type + size checks in middleware | Enforces constraints at boundary before business logic |
 | Email failure behavior | Temp password email errors are logged, not blocking create | Preserves successful account creation even with transient email issues |
 | Session revocation on deactivation | Revoke all active refresh tokens in deactivation transaction | Immediately cuts existing sessions after deactivation |
+
+---
+
+## Module 3 — Detailed Completion Log
+
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Discipline Schemas/Service/Controller/Routes | `src/modules/discipline/*` | Discipline create/list APIs with admin guard on create |
+| Department Schemas/Service/Controller/Routes | `src/modules/department/*` | Department create/list/get/update and nested program create/list endpoints |
+| Program Schemas/Service/Controller/Routes | `src/modules/program/*` | Program update endpoint |
+| App Route Mounts (updated) | `src/app.ts` | Mounted `/api/departments`, `/api/programs`, `/api/disciplines` |
+| Test Factory (updated) | `tests/helpers/factory.ts` | Added `createDiscipline()` and `createDegreeLevelIfNeeded()` helpers |
+| Module 3 Integration Tests | `tests/modules/department.test.ts` | Full integration coverage for discipline/department/program endpoints and side effects |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/disciplines` | Admin | Create discipline |
+| GET | `/api/disciplines` | Authenticated | List disciplines |
+| POST | `/api/departments` | Admin | Create department + auto-create department server + `announcements` channel |
+| GET | `/api/departments` | Authenticated | List departments |
+| GET | `/api/departments/:id` | Authenticated | Get department details (including HOD info + program count) |
+| PATCH | `/api/departments/:id` | Admin | Update department (includes linked server-name sync) |
+| POST | `/api/departments/:id/programs` | Admin | Create program + auto-create program channel |
+| GET | `/api/departments/:id/programs` | Authenticated | List programs in department |
+| PATCH | `/api/programs/:id` | Admin | Update program (includes linked channel-name sync on code change) |
+
+### Test Suites (36 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST/GET `/api/disciplines` | 6 | ✅ |
+| POST/GET/PATCH `/api/departments` (+ `/:id`) | 17 | ✅ |
+| POST/GET `/api/departments/:id/programs` | 8 | ✅ |
+| PATCH `/api/programs/:id` | 5 | ✅ |
+
+### Key Design & Architecture Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Module boundaries | Split into `discipline`, `department`, `program` modules | Keeps route/service ownership clear and consistent with existing architecture |
+| Nested resources | Program create/list handled under department routes | Reflects data ownership (`Program.departmentId`) and aligns with API plan |
+| Auto-created channels | Department creation auto-creates `announcements`; program creation auto-creates `PROGRAM` channel | Enforces FR-19/FR-20 behavior at write boundary |
+| Immutable auto-created flag | All system-created channels marked `isAutoCreated: true` | Required to enforce FR-21 semantics in later channel-management modules |
+| Transactional writes | Multi-step create/update flows wrapped in `prisma.$transaction()` | Prevents partial state (e.g., entity created without required side-channel records) |
+| Cross-entity name/code sync | Updating department name syncs server name; updating program code syncs program channel name | Preserves consistency for derived resources and avoids stale identifiers |
+| Existence checks strategy | Domain-level `NotFoundError` checks for referenced entities before writes | Produces explicit API semantics (404) and avoids generic DB errors |
+| Validation style | Zod 4 object schemas with `body/params/query` and clear field errors | Matches established middleware contract and existing module conventions |
+| Input normalization | Added `.trim()` for discipline/department/program string fields | Hardens API against whitespace variants and uniqueness edge cases |
+| List response shape | Non-paginated list endpoints for low-cardinality reference/domain data | Keeps payloads simple while staying aligned with project guidance for module 3 |
+
+### Hardening Pass Outcomes
+
+- Added synchronization logic for dependent resources on update flows:
+	- `department.name` → linked `server.name`
+	- `program.code` → linked auto-created program `channel.name`
+- Added regression tests for:
+	- duplicate department name conflicts
+	- duplicate program code conflicts
+	- unauthenticated create request behavior
+	- input trimming for discipline/department/program fields
+	- update-flow synchronization side effects (server/channel naming)
+- Removed unused schema export (`programIdParamSchema`) to keep module surface minimal.
 
 ---
 
@@ -287,9 +355,9 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 3 — Department & Program Management
+## Next Up: Module 4 — Class Management
 
-**Scope:** FR-9 (department part), FR-20, FR-21  
-**Key endpoints:** Department CRUD + Program create/list/update + auto-created channels  
-**Core rules:** Department server bootstrap, default channels, and non-deletable auto-created program channels  
-**Dependencies:** Module 2 ✅  
+**Scope:** FR-9, FR-10, FR-31, FR-32, FR-33, FR-34  
+**Key endpoints:** Class create/list/get + course assignment/unassignment/list for classes  
+**Core rules:** Class server bootstrap, default channels, class-scoped authorization for HOD/PD flows  
+**Dependencies:** Module 3 ✅  

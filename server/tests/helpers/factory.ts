@@ -83,6 +83,21 @@ export async function loginAs(
 
 // ─── Module 2 Helpers ──────────────────────────────────────────────────────
 
+export async function createDiscipline(overrides?: { name?: string }) {
+  return prisma.discipline.create({
+    data: {
+      name: overrides?.name ?? `Discipline-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    },
+  });
+}
+
+export async function createDegreeLevelIfNeeded(level: string = "Bachelors") {
+  return (
+    (await prisma.degreeLevel.findFirst({ where: { level } })) ??
+    (await prisma.degreeLevel.create({ data: { level } }))
+  );
+}
+
 export async function createServer(
   type: "DEPARTMENT" | "CLASS" | "SOCIETY",
   creatorId?: number,
