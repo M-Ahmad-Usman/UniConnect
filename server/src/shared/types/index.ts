@@ -36,10 +36,18 @@ export interface AuthUser {
   mustChangePassword: boolean;
 }
 
+export interface UserRole {
+  role: string;
+  serverId: number;
+  channelId?: number | null;
+  scopeType: "server" | "channel";
+}
+
 declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      userRoles?: UserRole[];
     }
   }
 }

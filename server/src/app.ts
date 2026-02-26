@@ -6,6 +6,7 @@ import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { NotFoundError } from "./shared/errors/index.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import userRoutes from "./modules/user/user.routes.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.get("/api/health", (_req, res) => {
 
 // ─── API Routes ─────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {

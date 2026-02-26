@@ -1,6 +1,6 @@
 # UniConnect — Backend Development Progress Tracker
 
-**Last Updated:** February 25, 2026
+**Last Updated:** February 26, 2026
 
 ---
 
@@ -10,7 +10,7 @@
 |--------|------|--------|-------|-------|
 | 0 | Project Foundation & Shared Infrastructure | ✅ Complete | 30/53 passing | All infra in place |
 | 1 | Authentication | ✅ Complete | 23/53 passing | JWT cookies, Resend email, mustChangePassword guard |
-| 2 | User Management | ⬜ Not Started | — | Depends on Module 1 |
+| 2 | User Management | ✅ Complete | 24/77 passing | Admin user creation/import, profile endpoints, listing + get-by-id scope rules, deactivation/reactivation |
 | 3 | Department & Program Management | ⬜ Not Started | — | Depends on Module 2 |
 | 4 | Class Management | ⬜ Not Started | — | Depends on Module 3 |
 | 5 | Course Management | ⬜ Not Started | — | Depends on Module 3 |
@@ -122,6 +122,67 @@
 
 ---
 
+## Module 2 — Detailed Completion Log
+
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Cloudinary Config | `src/config/cloudinary.ts` | Singleton Cloudinary uploader service for profile pictures |
+| Env Validation (updated) | `src/config/env.ts`, `.env.test` | Added Cloudinary environment variables and test placeholders |
+| Authorization Middleware | `src/middleware/authorize.ts` | Coarse userType gates + scoped role-permission checks with role resolution helpers |
+| Upload Middleware | `src/middleware/upload.ts` | Multer memory uploads for profile images and CSV with type/size validation |
+| Shared Types (updated) | `src/shared/types/index.ts` | Added `UserRole` and `req.userRoles` for request-scoped authorization caching |
+| User Validation Schemas | `src/modules/user/user.schema.ts` | Zod 4 schemas for create/import/profile/list/id routes |
+| User Service | `src/modules/user/user.service.ts` | User create/import/profile/list/get/deactivate/reactivate business logic |
+| User Controller | `src/modules/user/user.controller.ts` | Thin handlers for Module 2 endpoints with standard response contract |
+| User Routes | `src/modules/user/user.routes.ts` | Full route wiring with `authenticate`, `authorize`, `validate`, `upload` |
+| App Route Mount (updated) | `src/app.ts` | Mounted `/api/users` routes |
+| Test Factories (updated) | `tests/helpers/factory.ts` | Added module-aware helpers (department/program/class/teacher/student/csv generation) |
+| User Integration Tests | `tests/modules/user.test.ts` | Comprehensive Module 2 API tests including hardening scenarios |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/users` | Admin | Create single user (student/teacher/admin) |
+| POST | `/api/users/bulk-import` | Admin | Bulk import users via CSV upload |
+| GET | `/api/users/me` | Authenticated | Fetch own profile |
+| PATCH | `/api/users/me` | Authenticated | Update own bio |
+| PATCH | `/api/users/me/profile-picture` | Authenticated | Upload/update profile picture |
+| GET | `/api/users` | Admin/HOD | Paginated list with filters and HOD scope restrictions |
+| GET | `/api/users/:id` | Admin/HOD | Fetch user details with HOD department scoping |
+| PATCH | `/api/users/:id/deactivate` | Admin | Soft deactivate account and revoke active refresh tokens |
+| PATCH | `/api/users/:id/reactivate` | Admin | Reactivate previously deactivated account |
+
+### Test Suites (24 new tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/users` | 5 | ✅ |
+| POST `/api/users/bulk-import` | 3 | ✅ |
+| GET/PATCH `/api/users/me` | 3 | ✅ |
+| GET `/api/users` | 4 | ✅ |
+| GET `/api/users/:id` | 3 | ✅ |
+| PATCH `/api/users/:id/deactivate|reactivate` | 6 | ✅ |
+
+### Key Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Authorization strategy | Added full `authorize` middleware in Module 2 | Establishes reusable permission infrastructure early for later modules |
+| HOD scope enforcement | Route allows `ADMIN` + `TEACHER`; service enforces HOD-only dept scope | Keeps coarse auth in middleware and fine-grained business scope in service |
+| Temp password policy | `TEMP_PASSWORD_PREFIX + Aa1@ + random hex` | Guarantees strength requirements and aligns with `mustChangePassword` flow |
+| Duplicate email handling | Explicit pre-check in service + domain `ConflictError` | Cleaner domain-level conflict behavior than relying only on Prisma mapping |
+| Auto-membership writes | Performed in transaction with user/info creation | Ensures atomic state for user + role-specific info + memberships |
+| CSV parsing robustness | Header normalization (trim + BOM strip) | Handles common spreadsheet-exported CSV quirks safely |
+| Bulk import failure model | Partial success report (`successful`, `failed`, `errors`) | Avoids all-or-nothing failure on mixed-validity imports |
+| Upload validation | MIME/type + size checks in middleware | Enforces constraints at boundary before business logic |
+| Email failure behavior | Temp password email errors are logged, not blocking create | Preserves successful account creation even with transient email issues |
+| Session revocation on deactivation | Revoke all active refresh tokens in deactivation transaction | Immediately cuts existing sessions after deactivation |
+
+---
+
 ## Library Versions & Key Decisions
 
 ### Installed Package Versions (auto-resolved, not hardcoded)
@@ -132,6 +193,9 @@
 | **@prisma/client** | ^7.4.1 | **Prisma 7** — ESM-only, requires driver adapter, new config file |
 | **prisma** (CLI) | ^7.4.1 | Schema at `prisma/schema.prisma`, config at `prisma.config.ts` |
 | **@prisma/adapter-pg** | ^7.4.1 | Required by Prisma 7 — replaces built-in query engine with `node-pg` |
+| **cloudinary** | ^2.9.0 | Profile picture uploads (Module 2) |
+| **multer** | ^2.0.2 | Multipart file handling for profile picture and CSV endpoints |
+| **csv-parser** | ^3.2.0 | Streaming CSV parsing for bulk import |
 | **pg** | (adapter dep) | PostgreSQL driver used by Prisma adapter |
 | **zod** | ^4.3.6 | **Zod 4** — `error` param replaces `message`, `.email()` now top-level, `.flatten()` deprecated |
 | **resend** | ^6.9.2 | Transactional email (password reset, temp password notifications) |
@@ -223,9 +287,9 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 2 — User Management
+## Next Up: Module 3 — Department & Program Management
 
-**Scope:** FR-4, FR-5, FR-6, FR-9, FR-10  
-**Key endpoints:** Create/list/get/update/deactivate users (admin-only), profile endpoints  
-**New middleware:** `authorize.ts` (role-based permission checking)  
-**Dependencies:** Module 1 ✅  
+**Scope:** FR-9 (department part), FR-20, FR-21  
+**Key endpoints:** Department CRUD + Program create/list/update + auto-created channels  
+**Core rules:** Department server bootstrap, default channels, and non-deletable auto-created program channels  
+**Dependencies:** Module 2 ✅  

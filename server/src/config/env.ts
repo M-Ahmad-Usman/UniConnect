@@ -17,6 +17,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1, { error: "RESEND_API_KEY is required" }),
   RESEND_FROM_EMAIL: z.string().email({ error: "RESEND_FROM_EMAIL must be a valid email" }),
 
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, { error: "CLOUDINARY_CLOUD_NAME is required" }),
+  CLOUDINARY_API_KEY: z.string().min(1, { error: "CLOUDINARY_API_KEY is required" }),
+  CLOUDINARY_API_SECRET: z.string().min(1, { error: "CLOUDINARY_API_SECRET is required" }),
+
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 });
 

@@ -12,7 +12,7 @@ const passwordSchema = z
 // ─── Login ──────────────────────────────────────────────────────────────────
 export const loginSchema = {
   body: z.object({
-    email: z.string().email({ error: "Invalid email address" }),
+    email: z.email({ error: "Invalid email address" }),
     password: z.string().min(1, { error: "Password is required" }),
   }),
 };
@@ -20,7 +20,7 @@ export const loginSchema = {
 // ─── Forgot Password ───────────────────────────────────────────────────────
 export const forgotPasswordSchema = {
   body: z.object({
-    email: z.string().email({ error: "Invalid email address" }),
+    email: z.email({ error: "Invalid email address" }),
   }),
 };
 
