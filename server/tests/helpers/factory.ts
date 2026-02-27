@@ -486,3 +486,51 @@ export async function addServerMembership(userId: number, serverId: number) {
     update: {},
   });
 }
+
+// ─── Module 9 Helpers ──────────────────────────────────────────────────────
+
+export async function createPost(
+  channelId: number,
+  authorId: number,
+  overrides?: {
+    title?: string;
+    content?: string;
+    priority?: "NORMAL" | "IMPORTANT" | "URGENT";
+    isPinned?: boolean;
+    pinnedBy?: number;
+    pinnedAt?: Date;
+    createdAt?: Date;
+  }
+) {
+  return prisma.post.create({
+    data: {
+      channelId,
+      authorId,
+      title: overrides?.title ?? `Post Title ${uniqueSuffix()}`,
+      content: overrides?.content ?? "This is a test post content.",
+      priority: overrides?.priority ?? "NORMAL",
+      isPinned: overrides?.isPinned ?? false,
+      pinnedBy: overrides?.pinnedBy ?? null,
+      pinnedAt: overrides?.pinnedAt ?? null,
+      createdAt: overrides?.createdAt ?? undefined,
+    },
+  });
+}
+
+export async function createPostAttachment(
+  postId: number,
+  overrides?: {
+    fileUrl?: string;
+    fileType?: string;
+    fileSize?: number;
+  }
+) {
+  return prisma.postAttachment.create({
+    data: {
+      postId,
+      fileUrl: overrides?.fileUrl ?? `https://res.cloudinary.com/test/post-attachments/${uniqueSuffix()}.jpg`,
+      fileType: overrides?.fileType ?? "image/jpeg",
+      fileSize: overrides?.fileSize ?? 1024,
+    },
+  });
+}

@@ -1,6 +1,6 @@
 import multer from "multer";
 import type { NextFunction, Request, Response } from "express";
-import { MAX_FILE_SIZE } from "../shared/constants.js";
+import { MAX_ATTACHMENTS, MAX_FILE_SIZE } from "../shared/constants.js";
 import { ValidationError } from "../shared/errors/index.js";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -57,6 +57,12 @@ const imageUpload = multer({
 
 export const uploadProfilePicture = wrapUpload(
   imageUpload.single("profilePicture")
+);
+
+// ─── Post Attachments Upload ───────────────────────────────────────────────
+
+export const uploadPostAttachments = wrapUpload(
+  imageUpload.array("attachments", MAX_ATTACHMENTS)
 );
 
 // ─── CSV Upload ────────────────────────────────────────────────────────────

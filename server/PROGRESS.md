@@ -2,7 +2,7 @@
 
 **Last Updated:** February 28, 2026
 
-**Current Automated Test Status:** 319/319 passing (13 suites)
+**Current Automated Test Status:** 365/365 passing (14 suites)
 
 ---
 
@@ -19,7 +19,7 @@
 | 6 | Society Management | ✅ Complete | 52 tests | Society CRUD, join requests, member management |
 | 7 | Role Management | ✅ Complete | 42 tests | Role assign/revoke/get with scoped permissions + hardening |
 | 8 | Server & Channel Management | ✅ Complete | 59 tests | Server listing/details, channel CRUD, lock/unlock, soft-delete, posting rights, permission-based middleware |
-| 9 | Posts & Announcements | ⬜ Not Started | — | Depends on Module 8 |
+| 9 | Posts & Announcements | ✅ Complete | 46 tests | Post CRUD, pin/unpin, search/filter, attachments, author badges, 24h edit window |
 | 10 | Notifications + Socket.IO | ⬜ Not Started | — | Depends on Module 9 |
 | 11 | Semester Transition | ⬜ Not Started | — | Depends on Module 10 |
 | 12 | Admin Dashboard | ⬜ Not Started | — | Depends on Module 11 |
@@ -642,7 +642,73 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 9 — Posts & Announcements
+## Module 9 — Detailed Completion Log
 
-**Scope:** Post creation, listing, pinning, deletion with posting rights enforcement via `canPostInChannel`  
-**Dependencies:** Module 8 ✅
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Upload Middleware (updated) | `src/middleware/upload.ts` | Added `uploadPostAttachments` (multi-image uploads, max 3 files, size/type guarded by existing multer config) |
+| Post Schemas | `src/modules/post/post.schema.ts` | Zod 4 validation for create/list/get/update/delete/pin/attachments with pagination + filter query support |
+| Post Service | `src/modules/post/post.service.ts` | Post creation/listing/detail/update/delete, pin/unpin, attachment uploads, author badge resolution, 24-hour edit window, soft delete |
+| Post Controller | `src/modules/post/post.controller.ts` | Thin handlers with `ApiResponse`/`PaginatedResponse` contracts |
+| Post Routes | `src/modules/post/post.routes.ts` | Channel-scoped (`/api/channels/:id/posts`) and post-scoped (`/api/posts/:id*`) routing |
+| App Route Mount (updated) | `src/app.ts` | Mounted `channelPostRoutes` and `postRoutes` |
+| Factory Helpers (updated) | `tests/helpers/factory.ts` | Added `createPost()` and `createPostAttachment()` for integration tests |
+| Post Integration Tests | `tests/modules/post.test.ts` | End-to-end coverage for all Module 9 endpoints and role/business rules |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/channels/:id/posts` | Authorized poster | Create post in channel (supports inline attachments) |
+| GET | `/api/channels/:id/posts` | Member / Admin | List posts (paginated, pinned first) with search/filter |
+| GET | `/api/posts/:id` | Member / Admin | Get single post detail |
+| PATCH | `/api/posts/:id` | Author | Edit post within 24 hours |
+| DELETE | `/api/posts/:id` | Author / Admin | Soft-delete post |
+| PATCH | `/api/posts/:id/pin` | `lock:channel` permission | Pin/unpin post |
+| POST | `/api/posts/:id/attachments` | Author | Upload post attachments |
+
+### Test Suites (46 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/channels/:id/posts` | 13 | ✅ |
+| GET `/api/channels/:id/posts` | 9 | ✅ |
+| GET `/api/posts/:id` | 5 | ✅ |
+| PATCH `/api/posts/:id` | 6 | ✅ |
+| DELETE `/api/posts/:id` | 4 | ✅ |
+| PATCH `/api/posts/:id/pin` | 5 | ✅ |
+| POST `/api/posts/:id/attachments` | 4 | ✅ |
+
+### Key Design & Hardening Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Posting authorization source | Service-level `canPostInChannel(userId, userType, channelId)` | Captures contextual posting matrix (server type, role, course assignment) better than static permission-only checks |
+| Pin/unpin authorization | `authorize({ permission: "lock:channel", serverIdFrom: resolveServerIdFromPost })` | Reuses existing channel-management permission model for post moderation actions |
+| Attachment support model | Supported both inline create upload and dedicated add-attachments endpoint | Matches API plan and practical client flow needs |
+| Edit tracking | 24-hour edit window + explicit `updatedAt`/`updatedBy` writes | Aligns with FR-39 edited-badge semantics without unintended updates on pin/delete |
+| Delete model | Soft delete (`isDeleted`, `deletedAt`, `deletedBy`) | Preserves auditability and keeps list/get semantics consistent |
+| Author badges | Dedicated `resolveAuthorBadges()` in post service | Keeps Module 9 self-contained while following existing server/member badge logic |
+| Resource existence semantics | Missing/deleted/archived channel on create/list returns `404` | Clearer API contract than generic permission-denied responses |
+| Empty attachment hardening | `POST /api/posts/:id/attachments` now rejects empty file payloads (`400`) | Prevents no-op upload requests and enforces endpoint intent |
+
+### Focused Refinement Pass (February 28, 2026)
+
+| Area | Refinement | Impact |
+|------|------------|--------|
+| Missing resource handling | Added explicit active-channel checks before create/list flows | Improved correctness of `404` vs `403` behavior |
+| Null-safety | Removed unsafe non-null assertions in post retrieval/attachment flows | Reduced runtime risk and improved defensive behavior |
+| Route middleware order | Validated `postId` before upload middleware on add-attachments endpoint | Avoids unnecessary multipart processing for malformed IDs |
+| Attachment endpoint validation | Added explicit empty-file guard in service and test coverage | Prevents invalid no-op attachment requests |
+| Badge resolution output | Deduplicated per-user badges in resolver helper | Stable and cleaner author badge arrays |
+
+**Post-refinement validation:** 365/365 tests passing (14 suites), including Module 9 targeted tests and full regression run.
+
+---
+
+## Next Up: Module 10 — Notifications + Socket.IO
+
+**Scope:** Notification persistence/preferences plus real-time delivery hooks from post events  
+**Dependencies:** Module 9 ✅

@@ -16,6 +16,7 @@ import societyRoutes from "./modules/society/society.routes.js";
 import roleRoutes from "./modules/role/role.routes.js";
 import serverRoutes from "./modules/server/server.routes.js";
 import channelRoutes from "./modules/channel/channel.routes.js";
+import { channelPostRoutes, postRoutes } from "./modules/post/post.routes.js";
 
 const app = express();
 
@@ -48,6 +49,8 @@ app.use("/api/societies", societyRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/servers", serverRoutes);
 app.use("/api/channels", channelRoutes);
+app.use("/api/channels", channelPostRoutes);
+app.use("/api/posts", postRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {
