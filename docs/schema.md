@@ -50,7 +50,7 @@ styleMode shadow
 typeface clean
 notation chen
 
-DEPARTMENT {
+departments {
   id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
@@ -58,10 +58,10 @@ DEPARTMENT {
   server_id INTEGER FK // UNIQUE NOT NULL
 }
 
-DEPARTMENT.hod_id - TEACHER_INFO.teacher_id
-DEPARTMENT.server_id - SERVER.id
+departments.hod_id - teachers.teacher_id
+departments.server_id - servers.id
 
-PROGRAM {
+programs {
   id GENERATED ALWAYS AS IDENTITY PK
   department_id INTEGER FK // NOT NULL
   discipline TEXT // NOT NULL enum ['Computer Science', 'Software Engineering', ...]
@@ -74,12 +74,24 @@ PROGRAM {
   // UNIQUE(department_id, discipline, degree_level)
 }
 
-PROGRAM.program_director_id - TEACHER_INFO.teacher_id
+programs.program_director_id - teachers.teacher_id
 
 // One department can have many programs
-DEPARTMENT.id < PROGRAM.department_id
+departments.id < programs.department_id
 
-USER {
+program_curricula {
+  id GENERATED ALWAYS AS IDENTITY PK
+  program_id INTEGER FK  // NOT NULL
+  course_id INTEGER FK  // NOT NULL
+  semester_number INTEGER  // NOT NULL
+  batch_year INTEGER  // NOT NULL (admission year this applies to)
+  // UNIQUE(program_id, course_id, batch_year)
+}
+
+program_curricula.program_id > programs.id
+program_curricula.course_id > courses.id
+
+users {
   id GENERATED ALWAYS AS IDENTITY PK
   full_name VARCHAR(100) // NOT NULL
   email VARCHAR(255) // NOT NULL UNIQUE
@@ -97,27 +109,27 @@ USER {
 
 // One department can have many users.
 // One user can be in only one department
-DEPARTMENT.id < USER.department_id
+departments.id < users.department_id
 
 // For users who have student role
-STUDENT_INFO {
+students {
   student_id INTEGER PK FK
   class_id INTEGER FK // NOT NULL
   roll_number INTEGER // UNIQUE NOT NULL
 }
 
-STUDENT_INFO.student_id - USER.id
-STUDENT_INFO.class_id > CLASS.id
+students.student_id - users.id
+students.class_id > classes.id
 
-TEACHER_INFO {
+teachers {
   teacher_id INTEGER PK FK
   designation VARCHAR(100) // NOT NULL
   // Add more fields as required
 }
 
-TEACHER_INFO.teacher_id - USER.id
+teachers.teacher_id - users.id
 
-CLASS {
+classes {
   id GENERATED ALWAYS AS IDENTITY PK
   program_id INTEGER FK // NOT NULL
   current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
@@ -130,13 +142,13 @@ CLASS {
   // UNIQUE (program_id, current_semester, section, admission_year)
 }
 
-CLASS.cr_id - STUDENT_INFO.student_id
-CLASS.program_id > PROGRAM.id
+classes.cr_id - students.student_id
+classes.program_id > programs.id
 
 // Class must have only one server
-CLASS.server_id - SERVER.id
+classes.server_id - servers.id
 
-SOCIETY {
+societies {
   id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // UNIQUE NOT NULL
   description TEXT
@@ -150,18 +162,18 @@ SOCIETY {
 
 // One department can contain many societies
 // One society can be in only one department
-SOCIETY.department_id > DEPARTMENT.id
+societies.department_id > departments.id
 
 // One Society can have only one president which must be a student
-SOCIETY.president_id - STUDENT_INFO.student_id
+societies.president_id - students.student_id
 
 // One Society can have only one convenor which must be a teacher
-SOCIETY.convenor_id - TEACHER_INFO.teacher_id
+societies.convenor_id - teachers.teacher_id
 
 // Society must have only one server
-SOCIETY.server_id - SERVER.id
+societies.server_id - servers.id
 
-SERVER {
+servers {
   id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // NOT NULL
   description TEXT
@@ -173,9 +185,9 @@ SERVER {
   created_at TIMESTAMPZ // DEFAULT NOW()
 }
 
-SERVER.created_by > USER.id
+servers.created_by > users.id
 
-CHANNEL {
+channels {
   id GENERATED ALWAYS AS IDENTITY PK
   server_id INTEGER FK // NOT NULL
   name VARCHAR(100) // NOT NULL
@@ -214,29 +226,29 @@ CHANNEL {
 
 // One server can contain many channels
 // One channel can be in only one server
-CHANNEL.server_id > SERVER.id
-CHANNEL.course_id - COURSE.id
-CHANNEL.program_id - PROGRAM.id
+channels.server_id > servers.id
+channels.course_id - courses.id
+channels.program_id - programs.id
 
-CHANNEL.locked_by > USER.id
-CHANNEL.deleted_by > USER.id
-CHANNEL.created_by > USER.id
+channels.locked_by > users.id
+channels.deleted_by > users.id
+channels.created_by > users.id
 
-CHANNEL.archived_by > USER.id
+channels.archived_by > users.id
 
 // Associative entity for server members as this is a many to many relationship 
-SERVER_MEMBERSHIP {
+server_memberships {
   user_id PK FK
   server_id PK FK
   joined_at TIMESTAMPZ // DEFAULT NOW()
   is_auto_joined BOOLEAN // DEFAULT FALSE
 }
 
-USER.id < SERVER_MEMBERSHIP.user_id
-SERVER.id < SERVER_MEMBERSHIP.server_id
+users.id < server_memberships.user_id
+servers.id < server_memberships.server_id
 
 // Track user requests to join societies
-SOCIETY_MEMBERSHIP_REQUEST {
+society_membership_requests {
   id GENERATED ALWAYS AS IDENTITY PK
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
@@ -247,11 +259,11 @@ SOCIETY_MEMBERSHIP_REQUEST {
   // UNIQUE(society_id, user_id)
 }
 
-SOCIETY_MEMBERSHIP_REQUEST.society_id > SOCIETY.id
-SOCIETY_MEMBERSHIP_REQUEST.user_id > USER.id
-SOCIETY_MEMBERSHIP_REQUEST.reviewed_by > USER.id
+society_membership_requests.society_id > societies.id
+society_membership_requests.user_id > users.id
+society_membership_requests.reviewed_by > users.id
 
-COURSE {
+courses {
   id GENERATED ALWAYS AS IDENTITY PK
   title VARCHAR(50) // NOT NULL
   code VARCHAR(50) // UNIQUE NOT NULL
@@ -260,21 +272,21 @@ COURSE {
 }
 
 // One department offers many courses in its programs
-COURSE.department_id > DEPARTMENT.id
+courses.department_id > departments.id
 
 // Associative Entity
-TEACHES {
+course_assignments {
   teacher_id INTEGER PK FK
   course_id INTEGER PK FK
   class_id INTEGER PK FK
 }
 
 // One teacher can teach many courses to many classes
-TEACHES.teacher_id > TEACHER_INFO.teacher_id
-TEACHES.course_id > COURSE.id
-TEACHES.class_id > CLASS.id
+course_assignments.teacher_id > teachers.teacher_id
+course_assignments.course_id > courses.id
+course_assignments.class_id > classes.id
 
-POST {
+posts {
   id GENERATED ALWAYS AS IDENTITY PK
   author_id INTEGER FK // NOT NULL
 
@@ -299,15 +311,15 @@ POST {
   updated_by INTEGER FK
 }
 
-POST.author_id > USER.id
-POST.channel_id > CHANNEL.id
+posts.author_id > users.id
+posts.channel_id > channels.id
 
-POST.deleted_by > USER.id
-POST.updated_by > USER.id
+posts.deleted_by > users.id
+posts.updated_by > users.id
 
-POST.pinned_by > USER.id
+posts.pinned_by > users.id
 
-POST_ATTACHMENT {
+post_attachments {
   id GENERATED ALWAYS AS IDENTITY PK
   post_id INTEGER FK // NOT NULL
   file_url TEXT // NOT NULL
@@ -318,29 +330,29 @@ POST_ATTACHMENT {
 }
 
 // One post can have many attachments
-POST_ATTACHMENT.post_id > POST.id
+post_attachments.post_id > posts.id
 
-ROLE {
+roles {
   id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
 }
 
-PERMISSION {
+permissions {
   id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // NOT NULL enum['post:channel', 'create:channel', 'delete:channel', 'create:society', create:department', 'create:class' 'assign:program_director', 'assign:...other roles'] 
 }
 
 // This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
 // For example: HOD can create/post/delete channels only in his department. Can create society and class servers only within his department. Can assign society president and convenor only for societies associated with his department
-ROLE_PERMISSION {
+role_permissions {
   role_id INTEGER PK FK // NOT NULL
   permission_id INTEGER PK FK // NOT NULL
 }
 
-ROLE_PERMISSION.role_id > ROLE.id
-ROLE_PERMISSION.permission_id > PERMISSION.id
+role_permissions.role_id > roles.id
+role_permissions.permission_id > permissions.id
 
-MODERATOR_ASSIGNMENT {
+moderator_assignments {
   id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK
   scope_type VARCHAR(20) // NOT NULL enum ['server' or 'channel']
@@ -357,12 +369,12 @@ MODERATOR_ASSIGNMENT {
   assigned_at TIMESTAMPZ // DEFAULT NOW()
 }
 
-MODERATOR_ASSIGNMENT.user_id > USER.id
-MODERATOR_ASSIGNMENT.server_id > SERVER.id
-MODERATOR_ASSIGNMENT.channel_id > CHANNEL.id
-MODERATOR_ASSIGNMENT.assigned_by > USER.id
+moderator_assignments.user_id > users.id
+moderator_assignments.server_id > servers.id
+moderator_assignments.channel_id > channels.id
+moderator_assignments.assigned_by > users.id
 
-NOTIFICATION {
+notifications {
   id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK // NOT NULL
   post_id INTEGER FK 
@@ -373,10 +385,10 @@ NOTIFICATION {
   created_at TIMESTAMPZ // DEFAULT NOW()
 }
 
-NOTIFICATION.user_id > USER.id
-NOTIFICATION.post_id > POST.id
+notifications.user_id > users.id
+notifications.post_id > posts.id
 
-NOTIFICATION_PREFERENCE {
+notification_preferences {
   id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK
   scope_type VARCHAR(20) // enum['server, 'channel']
@@ -388,11 +400,11 @@ NOTIFICATION_PREFERENCE {
   // UNIQUE(user_id, scope_type, server_id, COALESCE(channel_id, 0))
 }
 
-NOTIFICATION_PREFERENCE.user_id > USER.id
-NOTIFICATION_PREFERENCE.server_id > SERVER.id
-NOTIFICATION_PREFERENCE.channel_id > CHANNEL.id
+notification_preferences.user_id > users.id
+notification_preferences.server_id > servers.id
+notification_preferences.channel_id > channels.id
 
-REFRESH_TOKEN {
+refresh_tokens {
   id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK  // NOT NULL
   token_hash VARCHAR(255)  // NOT NULL UNIQUE
@@ -401,17 +413,5 @@ REFRESH_TOKEN {
   revoked_at TIMESTAMPZ
 }
 
-REFRESH_TOKEN.user_id > USER.id
-
-PROGRAM_CURRICULUM {
-  id GENERATED ALWAYS AS IDENTITY PK
-  program_id INTEGER FK  // NOT NULL
-  course_id INTEGER FK  // NOT NULL
-  semester_number INTEGER  // NOT NULL
-  batch_year INTEGER  // NOT NULL (admission year this applies to)
-  // UNIQUE(program_id, course_id, batch_year)
-}
-
-PROGRAM_CURRICULUM.program_id > PROGRAM.id
-PROGRAM_CURRICULUM.course_id > COURSE.id
+refresh_tokens.user_id > users.id
 ```
