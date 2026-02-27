@@ -103,8 +103,8 @@ USER {
   user_type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
   department_id INTEGER FK // Will be NULL only for admin user type
   is_active BOOLEAN // DEFAULT TRUE
-  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
-  updated_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
 }
 
 // One department can have many users.
@@ -157,7 +157,7 @@ SOCIETY {
   convenor_id INT FK // NOT NULL
   server_id INT FK // UNIQUE NOT NULL
   is_active BOOLEAN // DEFAULT TRUE
-  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
 }
 
 // One department can contain many societies
@@ -182,7 +182,7 @@ SERVER {
   icon_url TEXT
   is_active BOOLEAN // DEFAULT TRUE
   created_by INTEGER FK // NOT NULL
-  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
 }
 
 SERVER.created_by > USER.id
@@ -207,14 +207,14 @@ CHANNEL {
 
   is_locked BOOLEAN // DEFAULT FALSE
   locked_by INTEGER FK
-  locked_at TIMESTAMP
+  locked_at TIMESTAMPZ
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_at TIMESTAMP
+  deleted_at TIMESTAMPZ
   deleted_by INTEGER FK
-  
+
   is_auto_created BOOLEAN // DEFAULT FALSE
-  created_at TIMESTAMP
+  created_at TIMESTAMPZ
   created_by INTEGER FK
   
   // UNIQUE(server_id, name)
@@ -235,7 +235,7 @@ CHANNEL.created_by > USER.id
 SERVER_MEMBERSHIP {
   user_id PK FK
   server_id PK FK
-  joined_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  joined_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
   is_auto_joined BOOLEAN // DEFAULT FALSE
 }
 
@@ -248,9 +248,9 @@ SOCIETY_MEMBERSHIP_REQUEST {
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
   status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
-  requested_at TIMESTAMP  // DEFAULT CURRENT_TIMESTAMP
+  requested_at TIMESTAMPZ  // DEFAULT CURRENT_TIMESTAMP
   reviewed_by INTEGER FK
-  reviewed_at TIMESTAMP
+  reviewed_at TIMESTAMPZ
   // UNIQUE(society_id, user_id)
 }
 
@@ -294,15 +294,15 @@ POST {
 
   is_pinned BOOLEAN // DEFAULT FALSE
   pinned_by INTEGER FK
-  pinned_at TIMESTAMP
+  pinned_at TIMESTAMPZ
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_at TIMESTAMP
+  deleted_at TIMESTAMPZ
   deleted_by INTEGER FK
   
-  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
   
-  updated_at TIMESTAMP 
+  updated_at TIMESTAMPZ 
   updated_by INTEGER FK
 }
 
@@ -321,7 +321,7 @@ POST_ATTACHMENT {
   file_type VARCHAR(50) // NOT NULL enum ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', ...]
   file_size INTEGER // NOT NULL, CHECK(file_size <= 5242880)  -- 5MB
   // Also enforce max attachment count (e.g., 5) at application layer
-  uploaded_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  uploaded_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
 }
 
 // One post can have many attachments
@@ -361,7 +361,7 @@ MODERATOR_ASSIGNMENT {
   // UNIQUE(user_id, server_id, COALESCE(channel_id, 0))
 
   assigned_by INTEGER FK // NOT NULL
-  assigned_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  assigned_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
 }
 
 MODERATOR_ASSIGNMENT.user_id > USER.id
@@ -376,8 +376,8 @@ NOTIFICATION {
   type VARCHAR(50) // enum ['new_post', 'role_assigned']
   title VARCHAR(200) // NOT NULL
   message TEXT
-  read_at TIMESTAMP
-  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  read_at TIMESTAMPZ
+  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
 }
 
 NOTIFICATION.user_id > USER.id
@@ -390,7 +390,7 @@ NOTIFICATION_PREFERENCE {
   server_id INTEGER FK
   channel_id INTEGER FK
   is_subscribed BOOLEAN // DEFAULT TRUE
-  updated_at TIMESTAMP
+  updated_at TIMESTAMPZ
 
   // UNIQUE(user_id, scope_type, server_id, COALESCE(channel_id, 0))
 }
@@ -403,9 +403,9 @@ REFRESH_TOKEN {
   id SERIAL PK
   user_id INTEGER FK  // NOT NULL
   token_hash VARCHAR(255)  // NOT NULL UNIQUE
-  expires_at TIMESTAMP  // NOT NULL
-  created_at TIMESTAMP  // DEFAULT CURRENT_TIMESTAMP
-  revoked_at TIMESTAMP
+  expires_at TIMESTAMPZ  // NOT NULL
+  created_at TIMESTAMPZ  // DEFAULT CURRENT_TIMESTAMP
+  revoked_at TIMESTAMPZ
 }
 
 REFRESH_TOKEN.user_id > USER.id
