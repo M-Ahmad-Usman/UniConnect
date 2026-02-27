@@ -2,7 +2,7 @@
 
 **Last Updated:** February 27, 2026
 
-**Current Automated Test Status:** 218/218 passing (10 suites)
+**Current Automated Test Status:** 260/260 passing (11 suites)
 
 ---
 
@@ -17,7 +17,7 @@
 | 4 | Class Management | ✅ Complete | 36 tests | Class CRUD, course assignment/removal, channel archiving |
 | 5 | Course Management | ✅ Complete | 16 tests | Course catalog CRUD with channel sync |
 | 6 | Society Management | ✅ Complete | 52 tests | Society CRUD, join requests, member management |
-| 7 | Role Management | ⬜ Not Started | — | Depends on Module 2 |
+| 7 | Role Management | ✅ Complete | 42 tests | Role assign/revoke/get with scoped permissions + hardening |
 | 8 | Server & Channel Management | ⬜ Not Started | — | Depends on Module 6 |
 | 9 | Posts & Announcements | ⬜ Not Started | — | Depends on Module 8 |
 | 10 | Notifications + Socket.IO | ⬜ Not Started | — | Depends on Module 9 |
@@ -519,7 +519,51 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 7 — Role Management
+## Module 7 — Detailed Completion Log
 
-**Scope:** Assign/revoke/get contextual roles (HOD, CR, Program Director, Moderator)  
-**Dependencies:** Module 6 ✅
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Role Schemas | `src/modules/role/role.schema.ts` | Zod 4 validation for role assign/revoke/get endpoints with conditional rules for moderator scope inputs |
+| Role Service | `src/modules/role/role.service.ts` | Business logic for role assignment, revocation, and role listing with fine-grained scope checks |
+| Role Controller | `src/modules/role/role.controller.ts` | Thin handlers following established ApiResponse contract |
+| Role Routes | `src/modules/role/role.routes.ts` | Route wiring with authenticate/authorize/validate middleware |
+| App Route Mount (updated) | `src/app.ts` | Mounted `/api/roles` routes |
+| Factory Helpers (updated) | `tests/helpers/factory.ts` | Added `assignHOD`, `assignCR`, `assignPD`, `addServerMembership` helpers |
+| Module 7 Integration Tests | `tests/modules/role.test.ts` | 42 integration tests covering assignment, revocation, scope authorization, and hardening cases |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/roles/assign` | Authenticated | Assign contextual roles (`hod`, `program_director`, `cr`, `society_president`, `society_convenor`, `moderator`) with scope-aware authorization |
+| POST | `/api/roles/revoke` | Authenticated | Revoke supported roles (`hod`, `program_director`, `cr`, `moderator`) |
+| GET | `/api/roles/users/:id` | Admin / HOD | Get all roles for a user (HOD is restricted to own department users) |
+
+### Test Suites (42 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/roles/assign` | 27 | ✅ |
+| POST `/api/roles/revoke` | 8 | ✅ |
+| GET `/api/roles/users/:id` | 6 | ✅ |
+| FR-63 immediate effectiveness | 1 | ✅ |
+
+### Key Design & Hardening Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Revoke endpoint shape | `POST /api/roles/revoke` | Action endpoint with request body is clearer and more interoperable than DELETE-with-body |
+| Society leadership revoke | `society_president` / `society_convenor` are not revocable via role endpoint | Prisma schema keeps these fields non-nullable; leadership changes remain in society update flow |
+| Moderator input model | Dedicated `serverId` + optional `channelId` (no overloaded `scopeId`) | Cleaner contract and unambiguous server/channel scope handling |
+| Moderator membership requirement | Must already be a `ServerMembership` | Avoids implicit access escalation during moderator assignment |
+| Duplicate server-scoped moderators | Explicit pre-check before create | PostgreSQL unique constraints with nullable `channelId` do not prevent duplicate `NULL` combinations |
+| PD authority | Program Director can assign CR within own program | Matches seeded permission model (`assign:cr`) and enforced by program scope checks |
+| Convenor president assignment scope | Convenor can assign president only within own society | Prevents cross-society privilege escalation in same department |
+| Validation coercion | Body IDs use `z.coerce.number()` | Consistent with existing API style and robust to numeric strings |
+
+## Next Up: Module 8 — Server & Channel Management
+
+**Scope:** Server/channel CRUD and lifecycle controls (lock/archive/delete) with role-based scope rules  
+**Dependencies:** Module 7 ✅

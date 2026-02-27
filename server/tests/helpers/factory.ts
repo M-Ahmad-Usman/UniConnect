@@ -354,3 +354,34 @@ export function generateCSV(rows: Record<string, string>[]): Buffer {
 
   return Buffer.from(lines.join("\n"), "utf-8");
 }
+
+// ─── Module 7 Helpers ──────────────────────────────────────────────────────
+
+export async function assignHOD(departmentId: number, teacherUserId: number) {
+  return prisma.department.update({
+    where: { id: departmentId },
+    data: { hodId: teacherUserId },
+  });
+}
+
+export async function assignCR(classId: number, studentUserId: number) {
+  return prisma.class.update({
+    where: { id: classId },
+    data: { crId: studentUserId },
+  });
+}
+
+export async function assignPD(programId: number, teacherUserId: number) {
+  return prisma.program.update({
+    where: { id: programId },
+    data: { programDirectorId: teacherUserId },
+  });
+}
+
+export async function addServerMembership(userId: number, serverId: number) {
+  return prisma.serverMembership.upsert({
+    where: { userId_serverId: { userId, serverId } },
+    create: { userId, serverId, isAutoJoined: false },
+    update: {},
+  });
+}
