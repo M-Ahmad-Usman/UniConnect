@@ -51,7 +51,7 @@ typeface clean
 notation chen
 
 DEPARTMENT {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
   hod_id INTEGER FK // UNIQUE Enforce NOT NULL in application layer. Can't enforce in DB due to chicken egg problem.
@@ -62,7 +62,7 @@ DEPARTMENT.hod_id - TEACHER_INFO.teacher_id
 DEPARTMENT.server_id - SERVER.id
 
 PROGRAM {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   department_id INTEGER FK // NOT NULL
   discipline TEXT // NOT NULL enum ['Computer Science', 'Software Engineering', ...]
   degree_level TEXT // NOT NULL enum ['Bachelors', 'Masters', 'PHD']
@@ -80,7 +80,7 @@ PROGRAM.program_director_id - TEACHER_INFO.teacher_id
 DEPARTMENT.id < PROGRAM.department_id
 
 USER {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   full_name VARCHAR(100) // NOT NULL
   email VARCHAR(255) // NOT NULL UNIQUE
   phone VARCHAR(20) // NOT NULL
@@ -118,7 +118,7 @@ TEACHER_INFO {
 TEACHER_INFO.teacher_id - USER.id
 
 CLASS {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   program_id INTEGER FK // NOT NULL
   current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
   academic_year INTEGER // NOT NULL. Represents current year
@@ -137,7 +137,7 @@ CLASS.program_id > PROGRAM.id
 CLASS.server_id - SERVER.id
 
 SOCIETY {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // UNIQUE NOT NULL
   description TEXT
   department_id INT FK // NOT NULL
@@ -162,7 +162,7 @@ SOCIETY.convenor_id - TEACHER_INFO.teacher_id
 SOCIETY.server_id - SERVER.id
 
 SERVER {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // NOT NULL
   description TEXT
   type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
@@ -176,7 +176,7 @@ SERVER {
 SERVER.created_by > USER.id
 
 CHANNEL {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   server_id INTEGER FK // NOT NULL
   name VARCHAR(100) // NOT NULL
   description TEXT
@@ -237,7 +237,7 @@ SERVER.id < SERVER_MEMBERSHIP.server_id
 
 // Track user requests to join societies
 SOCIETY_MEMBERSHIP_REQUEST {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
   status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
@@ -252,7 +252,7 @@ SOCIETY_MEMBERSHIP_REQUEST.user_id > USER.id
 SOCIETY_MEMBERSHIP_REQUEST.reviewed_by > USER.id
 
 COURSE {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   title VARCHAR(50) // NOT NULL
   code VARCHAR(50) // UNIQUE NOT NULL
   credit_hours INTEGER // NOT NULL
@@ -275,7 +275,7 @@ TEACHES.course_id > COURSE.id
 TEACHES.class_id > CLASS.id
 
 POST {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   author_id INTEGER FK // NOT NULL
 
   channel_id INTEGER FK // NOT NULL
@@ -308,7 +308,7 @@ POST.updated_by > USER.id
 POST.pinned_by > USER.id
 
 POST_ATTACHMENT {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   post_id INTEGER FK // NOT NULL
   file_url TEXT // NOT NULL
   file_type VARCHAR(50) // NOT NULL enum ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', ...]
@@ -321,12 +321,12 @@ POST_ATTACHMENT {
 POST_ATTACHMENT.post_id > POST.id
 
 ROLE {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
 }
 
 PERMISSION {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // NOT NULL enum['post:channel', 'create:channel', 'delete:channel', 'create:society', create:department', 'create:class' 'assign:program_director', 'assign:...other roles'] 
 }
 
@@ -341,7 +341,7 @@ ROLE_PERMISSION.role_id > ROLE.id
 ROLE_PERMISSION.permission_id > PERMISSION.id
 
 MODERATOR_ASSIGNMENT {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK
   scope_type VARCHAR(20) // NOT NULL enum ['server' or 'channel']
   server_id INTEGER FK // NOT NULL Always required
@@ -363,7 +363,7 @@ MODERATOR_ASSIGNMENT.channel_id > CHANNEL.id
 MODERATOR_ASSIGNMENT.assigned_by > USER.id
 
 NOTIFICATION {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK // NOT NULL
   post_id INTEGER FK 
   type VARCHAR(50) // enum ['new_post', 'role_assigned']
@@ -377,7 +377,7 @@ NOTIFICATION.user_id > USER.id
 NOTIFICATION.post_id > POST.id
 
 NOTIFICATION_PREFERENCE {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK
   scope_type VARCHAR(20) // enum['server, 'channel']
   server_id INTEGER FK
@@ -393,7 +393,7 @@ NOTIFICATION_PREFERENCE.server_id > SERVER.id
 NOTIFICATION_PREFERENCE.channel_id > CHANNEL.id
 
 REFRESH_TOKEN {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   user_id INTEGER FK  // NOT NULL
   token_hash VARCHAR(255)  // NOT NULL UNIQUE
   expires_at TIMESTAMPZ  // NOT NULL
@@ -404,7 +404,7 @@ REFRESH_TOKEN {
 REFRESH_TOKEN.user_id > USER.id
 
 PROGRAM_CURRICULUM {
-  id SERIAL PK
+  id GENERATED ALWAYS AS IDENTITY PK
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
   semester_number INTEGER  // NOT NULL
