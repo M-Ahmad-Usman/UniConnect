@@ -100,7 +100,7 @@ USER {
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
   profile_picture_url TEXT
   bio TEXT
-  user_type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
+  type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
   department_id INTEGER FK // Will be NULL only for admin user type
   is_active BOOLEAN // DEFAULT TRUE
   created_at TIMESTAMPZ // DEFAULT NOW()
