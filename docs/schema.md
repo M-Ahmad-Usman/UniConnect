@@ -103,8 +103,8 @@ USER {
   user_type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
   department_id INTEGER FK // Will be NULL only for admin user type
   is_active BOOLEAN // DEFAULT TRUE
-  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
-  updated_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT NOW()
+  updated_at TIMESTAMPZ // DEFAULT NOW()
 }
 
 // One department can have many users.
@@ -157,7 +157,7 @@ SOCIETY {
   convenor_id INT FK // NOT NULL
   server_id INT FK // UNIQUE NOT NULL
   is_active BOOLEAN // DEFAULT TRUE
-  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT NOW()
 }
 
 // One department can contain many societies
@@ -182,7 +182,7 @@ SERVER {
   icon_url TEXT
   is_active BOOLEAN // DEFAULT TRUE
   created_by INTEGER FK // NOT NULL
-  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT NOW()
 }
 
 SERVER.created_by > USER.id
@@ -235,7 +235,7 @@ CHANNEL.created_by > USER.id
 SERVER_MEMBERSHIP {
   user_id PK FK
   server_id PK FK
-  joined_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  joined_at TIMESTAMPZ // DEFAULT NOW()
   is_auto_joined BOOLEAN // DEFAULT FALSE
 }
 
@@ -248,7 +248,7 @@ SOCIETY_MEMBERSHIP_REQUEST {
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
   status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
-  requested_at TIMESTAMPZ  // DEFAULT CURRENT_TIMESTAMP
+  requested_at TIMESTAMPZ  // DEFAULT NOW()
   reviewed_by INTEGER FK
   reviewed_at TIMESTAMPZ
   // UNIQUE(society_id, user_id)
@@ -300,7 +300,7 @@ POST {
   deleted_at TIMESTAMPZ
   deleted_by INTEGER FK
   
-  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT NOW()
   
   updated_at TIMESTAMPZ 
   updated_by INTEGER FK
@@ -321,7 +321,7 @@ POST_ATTACHMENT {
   file_type VARCHAR(50) // NOT NULL enum ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', ...]
   file_size INTEGER // NOT NULL, CHECK(file_size <= 5242880)  -- 5MB
   // Also enforce max attachment count (e.g., 5) at application layer
-  uploaded_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  uploaded_at TIMESTAMPZ // DEFAULT NOW()
 }
 
 // One post can have many attachments
@@ -361,7 +361,7 @@ MODERATOR_ASSIGNMENT {
   // UNIQUE(user_id, server_id, COALESCE(channel_id, 0))
 
   assigned_by INTEGER FK // NOT NULL
-  assigned_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  assigned_at TIMESTAMPZ // DEFAULT NOW()
 }
 
 MODERATOR_ASSIGNMENT.user_id > USER.id
@@ -377,7 +377,7 @@ NOTIFICATION {
   title VARCHAR(200) // NOT NULL
   message TEXT
   read_at TIMESTAMPZ
-  created_at TIMESTAMPZ // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ // DEFAULT NOW()
 }
 
 NOTIFICATION.user_id > USER.id
@@ -404,7 +404,7 @@ REFRESH_TOKEN {
   user_id INTEGER FK  // NOT NULL
   token_hash VARCHAR(255)  // NOT NULL UNIQUE
   expires_at TIMESTAMPZ  // NOT NULL
-  created_at TIMESTAMPZ  // DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPZ  // DEFAULT NOW()
   revoked_at TIMESTAMPZ
 }
 
