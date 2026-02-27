@@ -84,7 +84,7 @@ program_curricula {
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
   semester_number INTEGER  // NOT NULL
-  batch_year INTEGER  // NOT NULL (admission year this applies to)
+  batch_year DATE  // NOT NULL (admission year this applies to)
   // UNIQUE(program_id, course_id, batch_year)
 }
 
