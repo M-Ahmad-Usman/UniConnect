@@ -93,6 +93,7 @@ program_curricula.course_id > courses.id
 
 users {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   full_name VARCHAR(100) // NOT NULL
   email VARCHAR(255) // NOT NULL UNIQUE
   phone VARCHAR(20) // NOT NULL
@@ -131,6 +132,7 @@ teachers.teacher_id - users.id
 
 classes {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   program_id INTEGER FK // NOT NULL
   current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
   academic_year INTEGER // NOT NULL. Represents current year
@@ -150,6 +152,7 @@ classes.server_id - servers.id
 
 societies {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   name VARCHAR(100) // UNIQUE NOT NULL
   description TEXT
   department_id INT FK // NOT NULL
@@ -175,6 +178,7 @@ societies.server_id - servers.id
 
 servers {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   name VARCHAR(100) // NOT NULL
   description TEXT
   type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
@@ -189,6 +193,7 @@ servers.created_by > users.id
 
 channels {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   server_id INTEGER FK // NOT NULL
   name VARCHAR(100) // NOT NULL
   description TEXT
@@ -250,6 +255,7 @@ servers.id < server_memberships.server_id
 // Track user requests to join societies
 society_membership_requests {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
   status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
@@ -288,6 +294,7 @@ course_assignments.class_id > classes.id
 
 posts {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   author_id INTEGER FK // NOT NULL
 
   channel_id INTEGER FK // NOT NULL
@@ -376,6 +383,7 @@ moderator_assignments.assigned_by > users.id
 
 notifications {
   id GENERATED ALWAYS AS IDENTITY PK
+  public_id UUID // NOT NULL DEFAULT uuidv7()
   user_id INTEGER FK // NOT NULL
   post_id INTEGER FK 
   type VARCHAR(50) // enum ['new_post', 'role_assigned']
