@@ -792,6 +792,31 @@ describe("Module 4 - Class Management", () => {
       expect(res.body.success).toBe(false);
     });
 
+    it("should return 403 when assigning a course from another department", async () => {
+      const admin = await createUser({
+        email: `admin-crossdept-assn-${Date.now()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const deptA = await createDepartment({ code: `CROSS-A-${uid()}` });
+      const deptB = await createDepartment({ code: `CROSS-B-${uid()}` });
+      const programA = await createProgram(deptA.id, { semesters: 8 });
+      const klass = await createClass(programA.id);
+      const teacherA = await createTeacherWithInfo(deptA.id, {
+        email: `teacher-crossdept-${Date.now()}@test.com`,
+      });
+      const courseFromOtherDept = await createCourse(deptB.id, { code: `CROSS-CRS-${uid()}` });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/classes/${klass.id}/courses`)
+        .set("Cookie", cookies)
+        .send({ courseId: courseFromOtherDept.id, teacherId: teacherA.id });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+    });
+
     it("should allow same course in multiple classes (different servers)", async () => {
       const admin = await createUser({
         email: `admin-multicls-${Date.now()}@test.com`,

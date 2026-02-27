@@ -1,8 +1,8 @@
 # UniConnect — Backend Development Progress Tracker
 
-**Last Updated:** February 26, 2026
+**Last Updated:** February 27, 2026
 
-**Current Automated Test Status:** 164/164 passing (9 suites)
+**Current Automated Test Status:** 218/218 passing (10 suites)
 
 ---
 
@@ -11,12 +11,12 @@
 | Module | Name | Status | Tests | Notes |
 |--------|------|--------|-------|-------|
 | 0 | Project Foundation & Shared Infrastructure | ✅ Complete | 30 tests | All infra in place |
-| 1 | Authentication | ✅ Complete | 23 tests | JWT cookies, Resend email, mustChangePassword guard |
+| 1 | Authentication | ✅ Complete | 24 tests | JWT cookies, Resend email, mustChangePassword guard |
 | 2 | User Management | ✅ Complete | 24 tests | Admin user creation/import, profile endpoints, listing + get-by-id scope rules, deactivation/reactivation |
 | 3 | Department & Program Management | ✅ Complete | 36 tests | Department/program/discipline APIs, auto-created channels, hardening + sync integrity |
-| 4 | Class Management | ✅ Complete | 33 tests | Class CRUD, course assignment/removal, channel archiving |
+| 4 | Class Management | ✅ Complete | 36 tests | Class CRUD, course assignment/removal, channel archiving |
 | 5 | Course Management | ✅ Complete | 16 tests | Course catalog CRUD with channel sync |
-| 6 | Society Management | ⬜ Not Started | — | Depends on Module 4 |
+| 6 | Society Management | ✅ Complete | 52 tests | Society CRUD, join requests, member management |
 | 7 | Role Management | ⬜ Not Started | — | Depends on Module 2 |
 | 8 | Server & Channel Management | ⬜ Not Started | — | Depends on Module 6 |
 | 9 | Posts & Announcements | ⬜ Not Started | — | Depends on Module 8 |
@@ -80,7 +80,7 @@
 | Env Config (updated) | `src/config/env.ts` | Added `RESET_PASSWORD_SECRET`, `RESET_PASSWORD_EXPIRY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` |
 | AuthUser Type (updated) | `src/shared/types/index.ts` | Added `mustChangePassword: boolean` field |
 | Factory (updated) | `tests/helpers/factory.ts` | Added `createUser()` (generic) and `loginAs()` (returns set-cookie headers) |
-| Auth Tests | `tests/modules/auth.test.ts` | 23 integration tests across 6 describe blocks |
+| Auth Tests | `tests/modules/auth.test.ts` | 24 integration tests across 6 describe blocks |
 
 ### API Endpoints
 
@@ -100,12 +100,12 @@
 | `access_token` | `/api` | 15 minutes | `httpOnly`, `secure` (prod), `sameSite=strict` |
 | `refresh_token` | `/api/auth/refresh` | 7 days | `httpOnly`, `secure` (prod), `sameSite=strict` |
 
-### Test Suites (23 tests)
+### Test Suites (24 tests)
 
 | Suite | Tests | Status |
 |-------|-------|--------|
 | POST `/api/auth/login` | 6 | ✅ |
-| POST `/api/auth/refresh` | 3 | ✅ |
+| POST `/api/auth/refresh` | 4 | ✅ |
 | POST `/api/auth/logout` | 2 | ✅ |
 | PATCH `/api/auth/change-password` | 4 | ✅ |
 | POST `/api/auth/forgot-password` | 2 | ✅ |
@@ -369,7 +369,7 @@ npm run db:studio
 | Schema Migration | `prisma/migrations/20260226152732_*` | Changed `Channel.courseId` from `@unique` to `@@unique([serverId, courseId])`; added `isArchived`, `archivedAt`, `archivedBy` fields and `ChannelArchiver` relation |
 | Prisma Schema (updated) | `prisma/schema.prisma` | `Channel` now supports archiving and allows same course in multiple servers; `Course.channels` is now one-to-many |
 | Test Factory (updated) | `tests/helpers/factory.ts` | Added `createCourse()` helper; fixed `createProgram()` default code length for VARCHAR(20) |
-| Module 4 Integration Tests | `tests/modules/class.test.ts` | 33 integration tests covering all endpoints and authorization scenarios |
+| Module 4 Integration Tests | `tests/modules/class.test.ts` | 36 integration tests covering all endpoints and authorization scenarios |
 
 ### API Endpoints
 
@@ -382,14 +382,14 @@ npm run db:studio
 | GET | `/api/classes/:id/courses` | Authenticated | List courses assigned to class with teacher info |
 | DELETE | `/api/classes/:id/courses/:courseId` | Admin / HOD / PD | Remove course from class, archive course channel |
 
-### Test Suites (33 tests)
+### Test Suites (36 tests)
 
 | Suite | Tests | Status |
 |-------|-------|--------|
 | POST `/api/classes` | 10 | ✅ |
 | GET `/api/classes` | 3 | ✅ |
 | GET `/api/classes/:id` | 2 | ✅ |
-| POST `/api/classes/:id/courses` | 10 | ✅ |
+| POST `/api/classes/:id/courses` | 13 | ✅ |
 | GET `/api/classes/:id/courses` | 3 | ✅ |
 | DELETE `/api/classes/:id/courses/:courseId` | 5 | ✅ |
 
@@ -461,7 +461,65 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 6 — Society Management
+## Module 6 — Detailed Completion Log
 
-**Scope:** Society CRUD, membership requests, approval flows  
-**Dependencies:** Module 4 ✅
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Society Schemas | `src/modules/society/society.schema.ts` | Zod 4 validation for all 10 endpoints (CRUD, join requests, members) |
+| Society Service | `src/modules/society/society.service.ts` | All business logic: create with auto-provisioned server/channels, list/get/update, join request flow, member management |
+| Society Controller | `src/modules/society/society.controller.ts` | 10 thin Express handlers following established ApiResponse/PaginatedResponse patterns |
+| Society Routes | `src/modules/society/society.routes.ts` | 10 endpoints mounted at `/api/societies` with authenticate/authorize/validate middleware |
+| App Route Mount (updated) | `src/app.ts` | Mounted `/api/societies` routes |
+| Factory Helpers (updated) | `tests/helpers/factory.ts` | Added `createSociety()` and `createSocietyMembershipRequest()` helpers |
+| Module 6 Integration Tests | `tests/modules/society.test.ts` | 52 integration tests covering all endpoints, authorization, and side-effects |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/societies` | Admin / HOD | Create society with auto-provisioned server, #announcements + #general channels |
+| GET | `/api/societies` | Authenticated | List societies (paginated, filterable by departmentId) |
+| GET | `/api/societies/:id` | Authenticated | Get society details with member count, department, leadership info |
+| PATCH | `/api/societies/:id` | Convenor / President / HOD / Admin | Update society info and/or leadership (field-level auth) |
+| POST | `/api/societies/:id/join-request` | Student | Submit a join request (supports re-apply after rejection) |
+| GET | `/api/societies/:id/join-requests` | Convenor / President / Admin | List join requests (filterable by status) |
+| PATCH | `/api/societies/:id/join-requests/:requestId` | Convenor / President / Admin | Approve or reject a pending request |
+| POST | `/api/societies/:id/members` | Convenor / President / Admin | Manually add a member (auto-approves pending request) |
+| DELETE | `/api/societies/:id/members/:userId` | Convenor / President / Admin | Remove a member (cannot remove leadership) |
+| GET | `/api/societies/:id/members` | Member | List society members (paginated) |
+
+### Test Suites (52 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| POST `/api/societies` | 13 | ✅ |
+| GET `/api/societies` | 3 | ✅ |
+| GET `/api/societies/:id` | 2 | ✅ |
+| PATCH `/api/societies/:id` | 9 | ✅ |
+| POST `/api/societies/:id/join-request` | 5 | ✅ |
+| GET `/api/societies/:id/join-requests` | 3 | ✅ |
+| PATCH `/api/societies/:id/join-requests/:requestId` | 5 | ✅ |
+| POST `/api/societies/:id/members` | 4 | ✅ |
+| DELETE `/api/societies/:id/members/:userId` | 4 | ✅ |
+| GET `/api/societies/:id/members` | 4 | ✅ |
+
+### Key Design & Architecture Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Single PATCH endpoint | Field-level auth in service: Convenor/President edit name+description, HOD/Admin edit leadership | Consistent with existing single-PATCH pattern; avoids endpoint proliferation |
+| User IDs in API body | `presidentId`/`convenorId` accept User IDs, resolved to StudentInfo/TeacherInfo IDs internally | Friendlier API surface — clients don't know internal info-table IDs |
+| Re-apply after rejection | Rejected requests are updated back to PENDING (same row) | Satisfies `@@unique([societyId, userId])` without requiring delete-and-recreate |
+| Leadership immovable via remove | DELETE `/members/:userId` prevents removing president/convenor | Leadership changes must go through PATCH; avoids orphaned society state |
+| Auto-provisioned server | Society creation auto-creates Server (type: SOCIETY) + 2 channels + 2 memberships in a transaction | Matches department/class creation patterns; ensures data consistency |
+| Server name sync | Updating society name also updates server name | Server name should always reflect society name |
+| Manual add auto-approves | Adding a member directly also approves any pending join request | Prevents stale PENDING requests after manual intervention |
+
+---
+
+## Next Up: Module 7 — Role Management
+
+**Scope:** Assign/revoke/get contextual roles (HOD, CR, Program Director, Moderator)  
+**Dependencies:** Module 6 ✅

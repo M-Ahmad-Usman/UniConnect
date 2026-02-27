@@ -102,47 +102,66 @@ export async function refresh(refreshTokenCookie: string) {
     throw new UnauthorizedError("Invalid refresh token");
   }
 
+  const tokenUserId = Number(payload.id);
+  if (!Number.isInteger(tokenUserId) || tokenUserId <= 0) {
+    throw new UnauthorizedError("Invalid refresh token");
+  }
+
   const tokenHash = hashToken(refreshTokenCookie);
 
-  const storedToken = await prisma.refreshToken.findFirst({
-    where: {
-      tokenHash,
-      revokedAt: null,
-      expiresAt: { gt: new Date() },
-    },
+  return prisma.$transaction(async (tx) => {
+    const storedToken = await tx.refreshToken.findFirst({
+      where: {
+        tokenHash,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true, userId: true },
+    });
+
+    if (!storedToken || storedToken.userId !== tokenUserId) {
+      throw new UnauthorizedError("Invalid refresh token");
+    }
+
+    const revokeResult = await tx.refreshToken.updateMany({
+      where: { id: storedToken.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    if (revokeResult.count !== 1) {
+      throw new UnauthorizedError("Invalid refresh token");
+    }
+
+    const user = await tx.user.findUnique({
+      where: { id: storedToken.userId },
+    });
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedError("Invalid refresh token");
+    }
+
+    const newAccessToken = generateAccessToken({
+      id: user.id,
+      email: user.email,
+      userType: user.userType,
+      departmentId: user.departmentId,
+      mustChangePassword: user.mustChangePassword,
+    });
+
+    const newRefreshToken = generateRefreshToken(user.id);
+    const newTokenHash = hashToken(newRefreshToken);
+    const expiresAt = new Date(Date.now() + parseExpiry(env.JWT_REFRESH_EXPIRY));
+
+    await tx.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: newTokenHash,
+        expiresAt,
+      },
+    });
+
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   });
-
-  if (!storedToken) {
-    throw new UnauthorizedError("Invalid refresh token");
-  }
-
-  // Revoke old token
-  await prisma.refreshToken.update({
-    where: { id: storedToken.id },
-    data: { revokedAt: new Date() },
-  });
-
-  const user = await prisma.user.findUnique({
-    where: { id: payload.id },
-  });
-
-  if (!user || !user.isActive) {
-    throw new UnauthorizedError("Invalid refresh token");
-  }
-
-  // Issue new pair
-  const newAccessToken = generateAccessToken({
-    id: user.id,
-    email: user.email,
-    userType: user.userType,
-    departmentId: user.departmentId,
-    mustChangePassword: user.mustChangePassword,
-  });
-
-  const newRefreshToken = generateRefreshToken(user.id);
-  await storeRefreshToken(user.id, newRefreshToken);
-
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 }
 
 // ─── Logout ─────────────────────────────────────────────────────────────────

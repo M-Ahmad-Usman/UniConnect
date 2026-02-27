@@ -187,6 +187,24 @@ describe("POST /api/auth/refresh", () => {
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
   });
+
+  it("should allow only one successful refresh when the same token is used concurrently", async () => {
+    const freshCookies = await loginAs("refresh@test.com", PASSWORD);
+    const refreshCookie = freshCookies.find((c) => c.startsWith("refresh_token="));
+    expect(refreshCookie).toBeDefined();
+
+    const [resA, resB] = await Promise.all([
+      request(app)
+        .post("/api/auth/refresh")
+        .set("Cookie", refreshCookie!),
+      request(app)
+        .post("/api/auth/refresh")
+        .set("Cookie", refreshCookie!),
+    ]);
+
+    const statuses = [resA.status, resB.status].sort((a, b) => a - b);
+    expect(statuses).toEqual([200, 401]);
+  });
 });
 
 // ─── POST /api/auth/logout ──────────────────────────────────────────────────

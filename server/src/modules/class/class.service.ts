@@ -303,11 +303,15 @@ export async function assignCourseToClass(
 
   const course = await prisma.course.findUnique({
     where: { id: data.courseId },
-    select: { id: true, code: true, title: true },
+    select: { id: true, code: true, title: true, departmentId: true },
   });
 
   if (!course) {
     throw new NotFoundError("Course not found");
+  }
+
+  if (course.departmentId !== classRecord.program.departmentId) {
+    throw new ForbiddenError("Course must belong to the same department as the class");
   }
 
   const teacher = await prisma.teacherInfo.findUnique({

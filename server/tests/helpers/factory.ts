@@ -280,6 +280,67 @@ export async function createCourse(
   });
 }
 
+// ─── Module 6 Helpers ──────────────────────────────────────────────────────
+
+export async function createSociety(
+  departmentId: number,
+  presidentUserId: number,
+  convenorUserId: number,
+  overrides?: { name?: string; description?: string; creatorId?: number }
+) {
+  const createdBy = await ensureCreatorUser(overrides?.creatorId);
+
+  const server = await prisma.server.create({
+    data: {
+      name: overrides?.name ?? `Society-${Date.now()}`,
+      type: "SOCIETY",
+      createdBy,
+      isActive: true,
+    },
+  });
+
+  await prisma.channel.createMany({
+    data: [
+      { serverId: server.id, name: "announcements", type: "ANNOUNCEMENT", isAutoCreated: true, createdBy },
+      { serverId: server.id, name: "general", type: "GENERAL", isAutoCreated: true, createdBy },
+    ],
+  });
+
+  const society = await prisma.society.create({
+    data: {
+      name: overrides?.name ?? `Society-${Date.now()}`,
+      description: overrides?.description ?? null,
+      departmentId,
+      presidentId: presidentUserId,
+      convenorId: convenorUserId,
+      serverId: server.id,
+    },
+  });
+
+  await prisma.serverMembership.createMany({
+    data: [
+      { userId: presidentUserId, serverId: server.id, isAutoJoined: true },
+      { userId: convenorUserId, serverId: server.id, isAutoJoined: true },
+    ],
+  });
+
+  return { society, server };
+}
+
+export async function createSocietyMembershipRequest(
+  societyId: number,
+  userId: number,
+  status: "PENDING" | "APPROVED" | "REJECTED" = "PENDING"
+) {
+  return prisma.societyMembershipRequest.create({
+    data: {
+      societyId,
+      userId,
+      status,
+    },
+  });
+}
+
 export function generateCSV(rows: Record<string, string>[]): Buffer {
   if (rows.length === 0) {
     return Buffer.from("");
