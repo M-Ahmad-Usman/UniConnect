@@ -209,6 +209,10 @@ CHANNEL {
   locked_by INTEGER FK
   locked_at TIMESTAMPZ
 
+  is_archived BOOLEAN // DEFAULT FALSE
+  archived_at TIMESTAMPZ
+  archived_by INTEGER FK
+
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMPZ
   deleted_by INTEGER FK
@@ -230,6 +234,7 @@ CHANNEL.locked_by > USER.id
 CHANNEL.deleted_by > USER.id
 CHANNEL.created_by > USER.id
 
+CHANNEL.archived_by > USER.id
 
 // Associative entity for server members as this is a many to many relationship 
 SERVER_MEMBERSHIP {
