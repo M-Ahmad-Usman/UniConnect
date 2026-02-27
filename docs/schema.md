@@ -61,35 +61,23 @@ DEPARTMENT {
 DEPARTMENT.hod_id - TEACHER_INFO.teacher_id
 DEPARTMENT.server_id - SERVER.id
 
-DEGREE_LEVEL {
-  id SERIAL PK
-  level VARCHAR(50) // UNIQUE NOT NULL enum ['Bachelors', 'Masters', 'PHD']
-}
-
-DISCIPLINE {
-  id SERIAL PK
-  name VARCHAR(100) // UNIQUE NOT NULL e.g 'Computer Science', 'Software Engineering'
-}
-
 PROGRAM {
   id SERIAL PK
   department_id INTEGER FK // NOT NULL
-  discipline_id INTEGER FK // NOT NULL
-  degree_level_id INTEGER FK // NOT NULL
+  discipline TEXT // NOT NULL enum ['Computer Science', 'Software Engineering', ...]
+  degree_level TEXT // NOT NULL enum ['Bachelors', 'Masters', 'PHD']
   semesters INTEGER // NOT NULL
   code VARCHAR(20) // NOT NULL UNIQUE
 
   program_director_id INTEGER FK // NOT NULL
 
-  // UNIQUE(department_id, discipline_id, degree_level_id)
+  // UNIQUE(department_id, discipline, degree_level)
 }
 
 PROGRAM.program_director_id - TEACHER_INFO.teacher_id
 
 // One department can have many programs
 DEPARTMENT.id < PROGRAM.department_id
-DISCIPLINE.id < PROGRAM.discipline_id
-DEGREE_LEVEL.id < PROGRAM.degree_level_id
 
 USER {
   id SERIAL PK
