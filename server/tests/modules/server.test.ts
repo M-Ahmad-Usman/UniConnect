@@ -1,0 +1,614 @@
+import request from "supertest";
+import { jest } from "@jest/globals";
+import { app } from "../../src/app.js";
+import { prisma } from "../../src/config/prisma.js";
+import { resetDB } from "../helpers/db.helper.js";
+import {
+  createUser,
+  createDepartment,
+  createProgram,
+  createClass,
+  createTeacherWithInfo,
+  createStudentWithInfo,
+  createSociety,
+  createChannel,
+  assignHOD,
+  assignCR,
+  assignPD,
+  addServerMembership,
+  loginAs,
+  seedRolesAndPermissions,
+} from "../helpers/factory.js";
+
+/** Short unique suffix */
+let uidCounter = 0;
+function uid(): string {
+  return (++uidCounter).toString(36);
+}
+
+beforeAll(async () => {
+  await resetDB();
+  await seedRolesAndPermissions();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
+describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
+  // ─── GET /api/servers ────────────────────────────────────────────────
+
+  describe("GET /api/servers", () => {
+    it("should return only servers the user is a member of → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `SRV-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      // Student is auto-joined to dept + class servers
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-srv-list-${u}@test.com`,
+      });
+      const cookies = await loginAs(`stu-srv-list-${u}@test.com`, "Pass@1234");
+
+      // Create another department the student is NOT a member of
+      await createDepartment({ code: `OTHER-SRV-${u}` });
+
+      const res = await request(app).get("/api/servers").set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2); // dept + class
+      // All returned servers should include ones the student is a member of
+      const serverIds = res.body.data.map((s: { id: number }) => s.id);
+      expect(serverIds).toContain(dept.serverId);
+      expect(serverIds).toContain(cls.serverId);
+    });
+
+    it("should allow admin to list all servers → 200", async () => {
+      const u = uid();
+      const admin = await createUser({
+        email: `admin-srv-list-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-srv-list-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app).get("/api/servers").set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+    });
+
+    it("should filter servers by type → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `FLT-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-flt-${u}@test.com`,
+      });
+      const cookies = await loginAs(`stu-flt-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/servers?type=DEPARTMENT")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      for (const server of res.body.data) {
+        expect(server.type).toBe("DEPARTMENT");
+      }
+    });
+
+    it("should return 401 for unauthenticated request", async () => {
+      const res = await request(app).get("/api/servers");
+      expect(res.status).toBe(401);
+    });
+  });
+
+  // ─── GET /api/servers/:id ────────────────────────────────────────────
+
+  describe("GET /api/servers/:id", () => {
+    it("should return server details for a member → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `DET-${u}` });
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-det-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-det-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.id).toBe(dept.serverId);
+      expect(res.body.data.type).toBe("DEPARTMENT");
+      expect(res.body.data.department).toBeDefined();
+      expect(res.body.data.department.id).toBe(dept.id);
+    });
+
+    it("should return 403 for non-member → 403", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NM-${u}` });
+      const otherDept = await createDepartment({ code: `OTH-${u}` });
+      const teacher = await createTeacherWithInfo(otherDept.id, {
+        email: `teacher-nm-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-nm-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(403);
+    });
+
+    it("should return 404 for non-existent server", async () => {
+      const u = uid();
+      const admin = await createUser({
+        email: `admin-ne-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-ne-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/servers/999999")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(404);
+    });
+
+    it("should allow admin to view any server → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ADM-${u}` });
+      const admin = await createUser({
+        email: `admin-any-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-any-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.id).toBe(dept.serverId);
+    });
+  });
+
+  // ─── GET /api/servers/:id/channels ───────────────────────────────────
+
+  describe("GET /api/servers/:id/channels", () => {
+    it("should return channels for a member → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CH-${u}` });
+      // Create some channels in the department server
+      await createChannel(dept.serverId, { name: `announcements-${u}`, type: "ANNOUNCEMENT", isAutoCreated: true });
+      await createChannel(dept.serverId, { name: `general-${u}`, type: "GENERAL" });
+
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-ch-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-ch-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("should exclude deleted and archived channels", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `DEL-${u}` });
+      await createChannel(dept.serverId, { name: `active-${u}`, type: "GENERAL" });
+
+      // Create a deleted channel
+      await prisma.channel.create({
+        data: {
+          serverId: dept.serverId,
+          name: `deleted-${u}`,
+          type: "GENERAL",
+          isDeleted: true,
+          deletedAt: new Date(),
+        },
+      });
+
+      // Create an archived channel
+      await prisma.channel.create({
+        data: {
+          serverId: dept.serverId,
+          name: `archived-${u}`,
+          type: "GENERAL",
+          isArchived: true,
+          archivedAt: new Date(),
+        },
+      });
+
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-del-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-del-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const names = res.body.data.map((c: { name: string }) => c.name);
+      expect(names).toContain(`active-${u}`);
+      expect(names).not.toContain(`deleted-${u}`);
+      expect(names).not.toContain(`archived-${u}`);
+    });
+
+    it("should return 403 for non-member", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CHNM-${u}` });
+      const otherDept = await createDepartment({ code: `CHOTH-${u}` });
+      const teacher = await createTeacherWithInfo(otherDept.id, {
+        email: `teacher-chnm-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-chnm-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ─── GET /api/servers/:id/members ────────────────────────────────────
+
+  describe("GET /api/servers/:id/members", () => {
+    it("should return members with role badges for department server → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `MEM-${u}` });
+      const hodTeacher = await createTeacherWithInfo(dept.id, {
+        email: `hod-mem-${u}@test.com`,
+      });
+      await assignHOD(dept.id, hodTeacher.id);
+
+      const program = await createProgram(dept.id);
+      const pdTeacher = await createTeacherWithInfo(dept.id, {
+        email: `pd-mem-${u}@test.com`,
+      });
+      await assignPD(program.id, pdTeacher.id);
+
+      const cookies = await loginAs(`hod-mem-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/members`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+
+      // Find the HOD member and check badges
+      const hodMember = res.body.data.find(
+        (m: { user: { id: number } }) => m.user.id === hodTeacher.id
+      );
+      expect(hodMember).toBeDefined();
+      expect(hodMember.badges).toContain("hod");
+
+      // Find the PD member and check badges
+      const pdMember = res.body.data.find(
+        (m: { user: { id: number } }) => m.user.id === pdTeacher.id
+      );
+      expect(pdMember).toBeDefined();
+      expect(pdMember.badges).toContain("program_director");
+    });
+
+    it("should return members with role badges for class server → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CMB-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const student1 = await createStudentWithInfo(cls.id, dept.id, {
+        email: `cr-cmb-${u}@test.com`,
+      });
+      await assignCR(cls.id, student1.id);
+
+      const cookies = await loginAs(`cr-cmb-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${cls.serverId}/members`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const crMember = res.body.data.find(
+        (m: { user: { id: number } }) => m.user.id === student1.id
+      );
+      expect(crMember).toBeDefined();
+      expect(crMember.badges).toContain("cr");
+    });
+
+    it("should return members with role badges for society server → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `SMB-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-smb-${u}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-smb-${u}@test.com`,
+      });
+
+      const { server: socServer } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `Society-${u}`,
+      });
+
+      const cookies = await loginAs(`pres-smb-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${socServer.id}/members`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const presMember = res.body.data.find(
+        (m: { user: { id: number } }) => m.user.id === president.id
+      );
+      expect(presMember).toBeDefined();
+      expect(presMember.badges).toContain("president");
+
+      const convMember = res.body.data.find(
+        (m: { user: { id: number } }) => m.user.id === convenor.id
+      );
+      expect(convMember).toBeDefined();
+      expect(convMember.badges).toContain("convenor");
+    });
+
+    it("should return 403 for non-member", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `MEMNM-${u}` });
+      const otherDept = await createDepartment({ code: `MEMOTH-${u}` });
+      const teacher = await createTeacherWithInfo(otherDept.id, {
+        email: `teacher-memnm-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-memnm-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/members`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(403);
+    });
+
+    it("should paginate members", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `PAGE-${u}` });
+      // Add a few teachers
+      for (let i = 0; i < 3; i++) {
+        await createTeacherWithInfo(dept.id, {
+          email: `t-page-${u}-${i}@test.com`,
+        });
+      }
+
+      const admin = await createUser({
+        email: `admin-page-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-page-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/members?page=1&limit=2`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.length).toBeLessThanOrEqual(2);
+      expect(res.body.pagination).toBeDefined();
+      expect(res.body.pagination.page).toBe(1);
+      expect(res.body.pagination.limit).toBe(2);
+    });
+  });
+
+  // ─── POST /api/servers/:id/channels ──────────────────────────────────
+
+  describe("POST /api/servers/:id/channels", () => {
+    it("should allow HOD to create a channel in department server → 201", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CRHOD-${u}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-cr-${u}@test.com`,
+      });
+      await assignHOD(dept.id, hod.id);
+      const cookies = await loginAs(`hod-cr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `test-channel-${u}`, description: "A test channel" });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe(`test-channel-${u}`);
+      expect(res.body.data.type).toBe("GENERAL");
+      expect(res.body.data.isAutoCreated).toBe(false);
+
+      // verify in DB
+      const channel = await prisma.channel.findFirst({
+        where: { serverId: dept.serverId, name: `test-channel-${u}` },
+      });
+      expect(channel).not.toBeNull();
+    });
+
+    it("should allow CR to create a channel in class server → 201", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CRCR-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `cr-cr-${u}@test.com`,
+      });
+      await assignCR(cls.id, student.id);
+      const cookies = await loginAs(`cr-cr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${cls.serverId}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `cr-channel-${u}` });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.name).toBe(`cr-channel-${u}`);
+    });
+
+    it("should allow society president to create a channel → 201", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CRPRES-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-cr-${u}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-cr-${u}@test.com`,
+      });
+      const { server: socServer } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `SocCR-${u}`,
+      });
+      const cookies = await loginAs(`pres-cr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${socServer.id}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `soc-channel-${u}` });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.name).toBe(`soc-channel-${u}`);
+    });
+
+    it("should allow society convenor to create a channel → 201", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CRCONV-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-conv-${u}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-conv-${u}@test.com`,
+      });
+      const { server: socServer } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `SocConv-${u}`,
+      });
+      const cookies = await loginAs(`conv-conv-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${socServer.id}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `conv-channel-${u}` });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.name).toBe(`conv-channel-${u}`);
+    });
+
+    it("should return 403 when HOD tries to create in another dept server", async () => {
+      const u = uid();
+      const dept1 = await createDepartment({ code: `HOD1-${u}` });
+      const dept2 = await createDepartment({ code: `HOD2-${u}` });
+      const hod = await createTeacherWithInfo(dept1.id, {
+        email: `hod-other-${u}@test.com`,
+      });
+      await assignHOD(dept1.id, hod.id);
+      const cookies = await loginAs(`hod-other-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${dept2.serverId}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `should-fail-${u}` });
+
+      expect(res.status).toBe(403);
+    });
+
+    it("should return 403 for student without role", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NROLE-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-nrole-${u}@test.com`,
+      });
+      const cookies = await loginAs(`stu-nrole-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `should-fail-${u}` });
+
+      expect(res.status).toBe(403);
+    });
+
+    it("should allow admin to create a channel in any server → 201", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ADMCR-${u}` });
+      const admin = await createUser({
+        email: `admin-cr-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-cr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `admin-channel-${u}` });
+
+      expect(res.status).toBe(201);
+    });
+
+    it("should return 409 for duplicate channel name in same server", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `DUP-${u}` });
+      await createChannel(dept.serverId, { name: `dup-channel-${u}` });
+
+      const admin = await createUser({
+        email: `admin-dup-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-dup-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies)
+        .send({ name: `dup-channel-${u}` });
+
+      expect(res.status).toBe(409);
+    });
+
+    it("should return 404 for non-existent server", async () => {
+      const u = uid();
+      const admin = await createUser({
+        email: `admin-ne-srv-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-ne-srv-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/servers/999999/channels")
+        .set("Cookie", cookies)
+        .send({ name: `channel-${u}` });
+
+      expect(res.status).toBe(404);
+    });
+  });
+});

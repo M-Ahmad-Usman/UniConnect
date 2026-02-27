@@ -3,6 +3,81 @@ import supertest from "supertest";
 import { prisma } from "../../src/config/prisma.js";
 import { TEMP_PASSWORD_PREFIX } from "../../src/shared/constants.js";
 import { app } from "../../src/app.js";
+import { clearRolePermissionCache } from "../../src/middleware/authorize.js";
+
+let uniqueCounter = 0;
+
+function uniqueSuffix(): string {
+  uniqueCounter += 1;
+  const t = Date.now().toString(36).slice(-6);
+  const c = (uniqueCounter % 1296).toString(36).padStart(2, "0");
+  const r = Math.random().toString(36).slice(2, 4);
+  return `${t}${c}${r}`;
+}
+
+// ─── Seed Helpers ──────────────────────────────────────────────────────────
+
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  hod: [
+    "post:channel", "create:channel", "delete:channel", "lock:channel",
+    "create:society", "create:class", "assign:program_director", "assign:cr",
+    "assign:society_president", "assign:society_convenor", "assign:moderator",
+  ],
+  program_director: ["post:channel", "assign:cr"],
+  society_president: [
+    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:moderator",
+  ],
+  society_convenor: [
+    "post:channel", "create:channel", "delete:channel", "lock:channel",
+    "assign:moderator", "assign:society_president",
+  ],
+  cr: [
+    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:moderator",
+  ],
+  moderator: ["post:channel"],
+};
+
+/**
+ * Seed roles, permissions, and role-permission mappings.
+ * Required for tests that use the permission-based authorize middleware.
+ */
+export async function seedRolesAndPermissions() {
+  const permNames = [
+    "post:channel", "create:channel", "delete:channel", "lock:channel",
+    "create:society", "create:department", "create:class",
+    "assign:hod", "assign:program_director", "assign:cr",
+    "assign:society_president", "assign:society_convenor", "assign:moderator",
+  ];
+  const roleNames = Object.keys(ROLE_PERMISSIONS);
+
+  // Create roles and permissions
+  await Promise.all([
+    ...roleNames.map((name) =>
+      prisma.role.upsert({ where: { name }, update: {}, create: { name } })
+    ),
+    ...permNames.map((name) =>
+      prisma.permission.upsert({ where: { name }, update: {}, create: { name } })
+    ),
+  ]);
+
+  // Create mappings
+  for (const [roleName, perms] of Object.entries(ROLE_PERMISSIONS)) {
+    const role = await prisma.role.findUnique({ where: { name: roleName } });
+    if (!role) continue;
+    for (const permName of perms) {
+      const perm = await prisma.permission.findUnique({ where: { name: permName } });
+      if (!perm) continue;
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: role.id, permissionId: perm.id } },
+        update: {},
+        create: { roleId: role.id, permissionId: perm.id },
+      });
+    }
+  }
+
+  // Clear the cached role-permission map so it reloads from DB
+  clearRolePermissionCache();
+}
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
@@ -11,7 +86,7 @@ async function ensureCreatorUser(userId?: number): Promise<number> {
     return userId;
   }
 
-  const creator = await createAdmin({ email: `creator-${Date.now()}@test.com` });
+  const creator = await createAdmin({ email: `creator-${uniqueSuffix()}@test.com` });
   return creator.id;
 }
 
@@ -54,7 +129,7 @@ export async function createUser(overrides: {
   return prisma.user.create({
     data: {
       fullName: overrides.fullName ?? "Test User",
-      email: overrides.email ?? `testuser-${Date.now()}@test.com`,
+      email: overrides.email ?? `testuser-${uniqueSuffix()}@test.com`,
       phone: "03001234567",
       passwordHash,
       gender: "MALE",
@@ -127,8 +202,8 @@ export async function createDepartment(overrides?: {
 
   return prisma.department.create({
     data: {
-      name: overrides?.name ?? `Computer Science ${Date.now()}`,
-      code: overrides?.code ?? `CS-${Date.now()}`,
+      name: overrides?.name ?? `Computer Science ${uniqueSuffix()}`,
+      code: overrides?.code ?? `CS-${uniqueSuffix()}`,
       serverId: server.id,
     },
   });
@@ -152,7 +227,7 @@ export async function createProgram(
       disciplineId: discipline.id,
       degreeLevelId: degreeLevel.id,
       semesters: overrides?.semesters ?? 8,
-      code: overrides?.code ?? `P-${Date.now().toString(36)}`,
+      code: overrides?.code ?? `P-${uniqueSuffix()}`,
     },
   });
 }
@@ -182,7 +257,7 @@ export async function createTeacherWithInfo(
   overrides?: { email?: string; designation?: string; fullName?: string; password?: string }
 ) {
   const teacher = await createUser({
-    email: overrides?.email ?? `teacher-${Date.now()}@test.com`,
+    email: overrides?.email ?? `teacher-${uniqueSuffix()}@test.com`,
     fullName: overrides?.fullName ?? "Test Teacher",
     password: overrides?.password ?? "Pass@1234",
     userType: "TEACHER",
@@ -221,7 +296,7 @@ export async function createStudentWithInfo(
   }
 ) {
   const student = await createUser({
-    email: overrides?.email ?? `student-${Date.now()}@test.com`,
+    email: overrides?.email ?? `student-${uniqueSuffix()}@test.com`,
     fullName: overrides?.fullName ?? "Test Student",
     password: overrides?.password ?? "Pass@1234",
     userType: "STUDENT",
@@ -292,7 +367,7 @@ export async function createSociety(
 
   const server = await prisma.server.create({
     data: {
-      name: overrides?.name ?? `Society-${Date.now()}`,
+      name: overrides?.name ?? `Society-${uniqueSuffix()}`,
       type: "SOCIETY",
       createdBy,
       isActive: true,
@@ -308,7 +383,7 @@ export async function createSociety(
 
   const society = await prisma.society.create({
     data: {
-      name: overrides?.name ?? `Society-${Date.now()}`,
+      name: overrides?.name ?? `Society-${uniqueSuffix()}`,
       description: overrides?.description ?? null,
       departmentId,
       presidentId: presidentUserId,
@@ -356,6 +431,32 @@ export function generateCSV(rows: Record<string, string>[]): Buffer {
 }
 
 // ─── Module 7 Helpers ──────────────────────────────────────────────────────
+
+export async function createChannel(
+  serverId: number,
+  overrides?: {
+    name?: string;
+    description?: string;
+    type?: "ANNOUNCEMENT" | "COURSE" | "GENERAL" | "PROGRAM";
+    isAutoCreated?: boolean;
+    courseId?: number;
+    programId?: number;
+    createdBy?: number;
+  }
+) {
+  return prisma.channel.create({
+    data: {
+      serverId,
+      name: overrides?.name ?? `channel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      description: overrides?.description ?? null,
+      type: overrides?.type ?? "GENERAL",
+      isAutoCreated: overrides?.isAutoCreated ?? false,
+      courseId: overrides?.courseId ?? null,
+      programId: overrides?.programId ?? null,
+      createdBy: overrides?.createdBy ?? null,
+    },
+  });
+}
 
 export async function assignHOD(departmentId: number, teacherUserId: number) {
   return prisma.department.update({

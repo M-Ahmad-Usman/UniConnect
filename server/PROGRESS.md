@@ -1,8 +1,8 @@
 # UniConnect — Backend Development Progress Tracker
 
-**Last Updated:** February 27, 2026
+**Last Updated:** February 28, 2026
 
-**Current Automated Test Status:** 260/260 passing (11 suites)
+**Current Automated Test Status:** 319/319 passing (13 suites)
 
 ---
 
@@ -18,7 +18,7 @@
 | 5 | Course Management | ✅ Complete | 16 tests | Course catalog CRUD with channel sync |
 | 6 | Society Management | ✅ Complete | 52 tests | Society CRUD, join requests, member management |
 | 7 | Role Management | ✅ Complete | 42 tests | Role assign/revoke/get with scoped permissions + hardening |
-| 8 | Server & Channel Management | ⬜ Not Started | — | Depends on Module 6 |
+| 8 | Server & Channel Management | ✅ Complete | 59 tests | Server listing/details, channel CRUD, lock/unlock, soft-delete, posting rights, permission-based middleware |
 | 9 | Posts & Announcements | ⬜ Not Started | — | Depends on Module 8 |
 | 10 | Notifications + Socket.IO | ⬜ Not Started | — | Depends on Module 9 |
 | 11 | Semester Transition | ⬜ Not Started | — | Depends on Module 10 |
@@ -563,7 +563,86 @@ npm run db:studio
 | Convenor president assignment scope | Convenor can assign president only within own society | Prevents cross-society privilege escalation in same department |
 | Validation coercion | Body IDs use `z.coerce.number()` | Consistent with existing API style and robust to numeric strings |
 
-## Next Up: Module 8 — Server & Channel Management
+---
 
-**Scope:** Server/channel CRUD and lifecycle controls (lock/archive/delete) with role-based scope rules  
-**Dependencies:** Module 7 ✅
+## Module 8 — Detailed Completion Log
+
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Authorize Middleware Enhancement | `src/middleware/authorize.ts` | `IdResolver` type now supports async functions (`Promise<number>`) for DB lookups; added `clearRolePermissionCache()` export for test isolation |
+| Server Schemas | `src/modules/server/server.schema.ts` | Zod 4 validation for list servers (with type filter), server details, channel listing, member listing, and channel creation |
+| Server Service | `src/modules/server/server.service.ts` | Business logic for listing user's servers, server details with entity info, channel listing (filtering deleted/archived), member listing with role badge resolution, and channel creation |
+| Server Controller | `src/modules/server/server.controller.ts` | Thin handlers following established ApiResponse/PaginatedResponse contract |
+| Server Routes | `src/modules/server/server.routes.ts` | Route wiring with authenticate for reads, permission-based authorize for channel creation |
+| Channel Schemas | `src/modules/channel/channel.schema.ts` | Zod 4 validation for channel update (with non-empty refine), lock/unlock/delete params |
+| Channel Service | `src/modules/channel/channel.service.ts` | Channel update, lock/unlock, soft-delete (with auto-created protection), `resolveServerIdFromChannel()` for middleware, `canPostInChannel()` posting rights utility |
+| Channel Controller | `src/modules/channel/channel.controller.ts` | Thin handlers for update/lock/unlock/delete |
+| Channel Routes | `src/modules/channel/channel.routes.ts` | Route wiring with async `serverIdFromChannel` resolver for permission-based authorize |
+| App Route Mount (updated) | `src/app.ts` | Mounted `/api/servers` and `/api/channels` routes |
+| Factory Helpers (updated) | `tests/helpers/factory.ts` | Added `createChannel()`, `seedRolesAndPermissions()` helpers; imported `clearRolePermissionCache` for test isolation |
+| Server Integration Tests | `tests/modules/server.test.ts` | 25 integration tests covering server listing, details, channels, members with badges, and channel creation |
+| Channel Integration Tests | `tests/modules/channel.test.ts` | 34 integration tests covering update, lock/unlock, soft-delete, auto-created protection, and posting rights |
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/servers` | Authenticated | List servers user is member of (admin sees all); optional `type` filter |
+| GET | `/api/servers/:id` | Member / Admin | Get server details with related entity info |
+| GET | `/api/servers/:id/channels` | Member / Admin | List non-deleted, non-archived channels in server |
+| GET | `/api/servers/:id/members` | Member / Admin | List members with role badges (paginated) |
+| POST | `/api/servers/:id/channels` | `create:channel` permission | Create a GENERAL channel in server |
+| PATCH | `/api/channels/:id` | `create:channel` permission | Update channel name/description |
+| PATCH | `/api/channels/:id/lock` | `lock:channel` permission | Lock a channel |
+| PATCH | `/api/channels/:id/unlock` | `lock:channel` permission | Unlock a locked channel |
+| DELETE | `/api/channels/:id` | `delete:channel` permission | Soft-delete channel (auto-created channels protected) |
+
+### Test Suites (59 tests)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| GET `/api/servers` | 4 | ✅ |
+| GET `/api/servers/:id` | 4 | ✅ |
+| GET `/api/servers/:id/channels` | 3 | ✅ |
+| GET `/api/servers/:id/members` | 5 | ✅ |
+| POST `/api/servers/:id/channels` | 9 | ✅ |
+| PATCH `/api/channels/:id` | 6 | ✅ |
+| PATCH `/api/channels/:id/lock` | 5 | ✅ |
+| PATCH `/api/channels/:id/unlock` | 3 | ✅ |
+| DELETE `/api/channels/:id` | 7 | ✅ |
+| `canPostInChannel` unit tests | 13 | ✅ |
+
+### Key Design & Hardening Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Permission-based middleware | First real usage of `authorize({ permission, serverIdFrom })` for write endpoints | Leverages the seeded role-permission system; reads use membership checks in service only |
+| Async IdResolver | Enhanced `IdResolver` type to support `Promise<number>` | Channel endpoints need DB lookup to resolve `serverId` from `channelId` (~5 lines changed) |
+| Two-module split | Separate `server/` and `channel/` modules | Follows URL path split (`/api/servers/*` vs `/api/channels/*`) and existing directory structure |
+| Auto-created channel protection | All `isAutoCreated` channels are protected from deletion | Broader than FR-21 (program only) to prevent accidental deletion of announcements/general channels |
+| `create:channel` for updates | Reused `create:channel` permission for PATCH updates | No `update:channel` permission exists in seed; `create:channel` covers "channel management" semantically |
+| Role badge resolution | Batch queries per server type, not per-user `getUserRoles()` | Efficient: one query for leadership + one for moderators vs N queries for N members |
+| `canPostInChannel` location | Exported from `channel.service.ts` | Complex role-based logic lives in the channel module; Module 9 imports it directly |
+| `seedRolesAndPermissions` helper | New test factory function + `clearRolePermissionCache` export | Required because `resetDB()` truncates role/permission tables; ensures permission middleware works in tests |
+| Locked channel posting | Locked channels block all posts | Conservative default; can be refined later if needed |
+| Soft-delete filtering | Channel queries filter `isDeleted: false`, `isArchived: false` | Consistent with existing channel handling in department/class/society modules |
+
+### Focused Refinement Pass (February 28, 2026)
+
+| Area | Refinement | Impact |
+|------|------------|--------|
+| Middleware execution order | Reordered channel/server write routes to run `validate(...)` before `authorize(...)` | Safer handling of malformed params/body and cleaner request lifecycle |
+| Channel posting rights query path | Removed redundant `teacherInfo` lookup in `canPostInChannel()` and queried `teaches` directly by `userId` | Same business behavior with one fewer DB round-trip in teacher course-channel checks |
+| Server member badge resolution | Added early return in `resolveMemberBadges()` when current page has no members | Avoids unnecessary DB queries on empty member pages |
+| Test data stability | Replaced collision-prone `Date.now()` defaults with compact unique suffix generation in test factory | Eliminated flaky uniqueness collisions while keeping values within DB column limits |
+
+**Post-refinement validation:** 319/319 tests passing (13 suites), including targeted Module 8 suites and full regression run.
+
+---
+
+## Next Up: Module 9 — Posts & Announcements
+
+**Scope:** Post creation, listing, pinning, deletion with posting rights enforcement via `canPostInChannel`  
+**Dependencies:** Module 8 ✅

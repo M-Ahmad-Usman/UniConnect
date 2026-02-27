@@ -5,7 +5,7 @@ import type { UserRole } from "../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
-type IdResolver = string | ((req: Request) => number);
+type IdResolver = string | ((req: Request) => number | Promise<number>);
 
 interface AuthorizeOptions {
   userTypes?: string[];
@@ -18,6 +18,13 @@ interface AuthorizeOptions {
 // ─── Role-Permission Cache ─────────────────────────────────────────────────
 
 let rolePermissionMap: Map<string, Set<string>> | null = null;
+
+/**
+ * Clear the cached role-permission map. Useful in tests after re-seeding.
+ */
+export function clearRolePermissionCache(): void {
+  rolePermissionMap = null;
+}
 
 async function getRolePermissionMap(): Promise<Map<string, Set<string>>> {
   if (rolePermissionMap) {
@@ -44,10 +51,10 @@ async function getRolePermissionMap(): Promise<Map<string, Set<string>>> {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function resolveId(req: Request, resolver: IdResolver): number {
+async function resolveId(req: Request, resolver: IdResolver): Promise<number> {
   const rawValue =
     typeof resolver === "function"
-      ? resolver(req)
+      ? await resolver(req)
       : req.params[resolver] ??
         (req.body && typeof req.body === "object" ? req.body[resolver] : undefined) ??
         req.query[resolver];
@@ -168,8 +175,8 @@ export function authorize(options: AuthorizeOptions) {
     }
 
     if (options.permission) {
-      const serverId = resolveId(req, options.serverIdFrom ?? "serverId");
-      const channelId = options.channelIdFrom ? resolveId(req, options.channelIdFrom) : undefined;
+      const serverId = await resolveId(req, options.serverIdFrom ?? "serverId");
+      const channelId = options.channelIdFrom ? await resolveId(req, options.channelIdFrom) : undefined;
 
       if (!req.userRoles) {
         req.userRoles = await getUserRoles(user.id);
