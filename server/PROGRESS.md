@@ -2,7 +2,7 @@
 
 **Last Updated:** February 28, 2026
 
-**Current Automated Test Status:** 427/427 passing (16 suites)
+**Current Automated Test Status:** 446/446 passing (17 suites)
 
 ---
 
@@ -22,7 +22,7 @@
 | 9 | Posts & Announcements | ✅ Complete | 46 tests | Post CRUD, pin/unpin, search/filter, attachments, author badges, 24h edit window |
 | 10 | Notifications + Socket.IO | ✅ Complete | 26 tests | Notification persistence, preferences, real-time delivery via Socket.IO |
 | 11 | Semester Transition | ✅ Complete | 36 tests | Semester progression, curriculum CRUD, archived channel visibility + hardening validations |
-| 12 | Admin Dashboard | ⬜ Not Started | — | Depends on Module 11 |
+| 12 | Admin Dashboard | ✅ Complete | 19 tests | System stats, admin user list with search + validation hardening, department stats (HOD-scoped) |
 
 ---
 
@@ -851,3 +851,51 @@ npm run db:studio
 
 **Scope:** Admin dashboard APIs for platform statistics and management  
 **Dependencies:** Module 11 ✅
+
+---
+
+## Module 12 — Detailed Completion Log
+
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Admin Schema | `src/modules/admin/admin.schema.ts` | Zod validation for admin user list query (pagination + userType, departmentId, isActive, search filters) |
+| Admin Service | `src/modules/admin/admin.service.ts` | `getSystemStats()` — aggregated user/server/post counts; `listAllUsers()` — paginated admin user list with search by name/email |
+| Admin Controller | `src/modules/admin/admin.controller.ts` | Thin HTTP handlers: `handleGetSystemStats`, `handleListAllUsers` |
+| Admin Routes | `src/modules/admin/admin.routes.ts` | `GET /stats`, `GET /users` — both admin-only with authenticate + authorize middleware |
+| Department Stats Service | `src/modules/department/department.service.ts` | `getDepartmentStats()` — counts students, teachers, classes, societies; admin or HOD-scoped |
+| Department Stats Controller | `src/modules/department/department.controller.ts` | `handleGetDepartmentStats` handler |
+| Department Stats Route | `src/modules/department/department.routes.ts` | `GET /:id/stats` — admin + teacher (HOD checked in service) |
+| App Registration | `src/app.ts` | Mounted `/api/admin` routes |
+| Tests | `tests/modules/admin.test.ts` | 19 tests covering all endpoints, auth, filters, search, validation edge-cases, and scoping |
+
+### API Endpoints
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/admin/stats` | System-wide statistics (users by type, servers by type, posts) | Admin |
+| GET | `/api/admin/users` | Paginated user list with filters (userType, departmentId, isActive, search) | Admin |
+| GET | `/api/departments/:id/stats` | Department-level statistics (students, teachers, classes, societies) | Admin / HOD |
+
+### Test Counts
+
+| Suite | New Tests | Total |
+|-------|-----------|-------|
+| admin.test.ts | +17 | 17 |
+| **Total Module 12** | **19** | — |
+| **Grand Total** | — | **446** |
+
+### Key Design & Architecture Decisions
+
+- **Separate admin module**: `GET /api/admin/stats` and `GET /api/admin/users` live in a dedicated `admin/` module rather than extending the user module, keeping concerns cleanly separated.
+- **Department stats in department module**: `GET /api/departments/:id/stats` is mounted on existing department routes since the URL path is department-scoped. The HOD authorization check lives in the service layer.
+- **Search via Prisma `contains` + `insensitive`**: Case-insensitive partial matching on `fullName` and `email` using PostgreSQL `ILIKE` under the hood — simple and efficient for the expected scale.
+- **groupBy for stats**: Uses `prisma.user.groupBy` and `prisma.server.groupBy` for efficient aggregation in a single query per entity type.
+- **HOD scoping in service**: Department stats authorization is checked in the service (not middleware) because it requires a DB lookup to verify the requesting teacher is HOD of the target department.
+
+---
+
+## All Modules Complete
+
+All 13 modules (0–12) are implemented and tested. The backend API is feature-complete per the functional requirements.

@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma.js";
-import { NotFoundError } from "../../shared/errors/index.js";
+import { ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
+import type { AuthUser } from "../../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -223,4 +224,32 @@ export async function listPrograms(departmentId: number) {
     select: programSelect,
     orderBy: { code: "asc" },
   });
+}
+
+// ─── Department Stats ──────────────────────────────────────────────────────
+
+export async function getDepartmentStats(departmentId: number, requestingUser: AuthUser) {
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
+    select: { id: true, hodId: true },
+  });
+
+  if (!department) {
+    throw new NotFoundError("Department not found");
+  }
+
+  if (requestingUser.userType !== "ADMIN") {
+    if (department.hodId !== requestingUser.id) {
+      throw new ForbiddenError("Only the HOD of this department can view its stats");
+    }
+  }
+
+  const [students, teachers, classes, societies] = await Promise.all([
+    prisma.user.count({ where: { departmentId, userType: "STUDENT", isActive: true } }),
+    prisma.user.count({ where: { departmentId, userType: "TEACHER", isActive: true } }),
+    prisma.class.count({ where: { program: { departmentId } } }),
+    prisma.society.count({ where: { departmentId, isActive: true } }),
+  ]);
+
+  return { departmentId, students, teachers, classes, societies };
 }

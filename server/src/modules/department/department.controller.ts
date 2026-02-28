@@ -74,3 +74,14 @@ export async function handleListPrograms(req: Request, res: Response): Promise<v
 
   res.status(StatusCodes.OK).json(response);
 }
+
+export async function handleGetDepartmentStats(req: Request, res: Response): Promise<void> {
+  const stats = await departmentService.getDepartmentStats(Number(req.params.id), req.user!);
+
+  const response: ApiResponse<typeof stats> = {
+    success: true,
+    data: stats,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}

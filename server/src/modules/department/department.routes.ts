@@ -16,6 +16,7 @@ import {
   handleUpdateDepartment,
   handleCreateProgram,
   handleListPrograms,
+  handleGetDepartmentStats,
 } from "./department.controller.js";
 
 const router = Router();
@@ -29,6 +30,14 @@ router.post(
 );
 
 router.get("/", authenticate, handleListDepartments);
+
+router.get(
+  "/:id/stats",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(departmentIdParamSchema),
+  handleGetDepartmentStats
+);
 
 router.get(
   "/:id",

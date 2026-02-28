@@ -22,6 +22,7 @@ import {
   notificationPreferenceRoutes,
 } from "./modules/notification/notification.routes.js";
 import { registerNotificationListeners } from "./modules/notification/notification.listener.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/channels", channelPostRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/notification-preferences", notificationPreferenceRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ─── Event Listeners ────────────────────────────────────────────────────────
 registerNotificationListeners();
