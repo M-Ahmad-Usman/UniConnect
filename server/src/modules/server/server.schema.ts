@@ -27,6 +27,12 @@ export const listServerChannelsSchema = {
   params: z.object({
     id: z.coerce.number().int().positive({ error: "Server ID must be a positive integer" }),
   }),
+  query: z.object({
+    includeArchived: z
+      .enum(["true", "false"], { error: "includeArchived must be 'true' or 'false'" })
+      .default("false")
+      .transform((v) => v === "true"),
+  }),
 };
 
 // ─── List Server Members ───────────────────────────────────────────────────

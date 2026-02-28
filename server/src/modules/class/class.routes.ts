@@ -9,6 +9,7 @@ import {
   assignCourseSchema,
   listClassCoursesSchema,
   removeCourseSchema,
+  semesterProgressionSchema,
 } from "./class.schema.js";
 import {
   handleCreateClass,
@@ -17,6 +18,7 @@ import {
   handleAssignCourse,
   handleListClassCourses,
   handleRemoveCourse,
+  handleAdvanceSemester,
 } from "./class.controller.js";
 
 const router = Router();
@@ -63,6 +65,16 @@ router.delete(
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(removeCourseSchema),
   handleRemoveCourse
+);
+
+// ─── Semester Progression Route ──────────────────────────────────────────
+
+router.post(
+  "/:id/semester-progression",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(semesterProgressionSchema),
+  handleAdvanceSemester
 );
 
 export default router;

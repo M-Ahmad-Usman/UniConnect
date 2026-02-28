@@ -40,10 +40,12 @@ export async function handleGetServer(req: Request, res: Response): Promise<void
 }
 
 export async function handleListServerChannels(req: Request, res: Response): Promise<void> {
-  const channels = await serverService.listServerChannels(Number(req.params.id), {
-    id: req.user!.id,
-    userType: req.user!.userType,
-  });
+  const query = req.query as { includeArchived?: boolean };
+  const channels = await serverService.listServerChannels(
+    Number(req.params.id),
+    { id: req.user!.id, userType: req.user!.userType },
+    { includeArchived: query.includeArchived ?? false }
+  );
 
   const response: ApiResponse<typeof channels> = {
     success: true,

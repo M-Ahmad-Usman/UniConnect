@@ -268,6 +268,85 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       expect(res.status).toBe(403);
     });
+
+    it("should include archived channels when includeArchived=true", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ARCH-${u}` });
+      await createChannel(dept.serverId, { name: `active-arch-${u}`, type: "GENERAL" });
+
+      // Create an archived channel
+      await prisma.channel.create({
+        data: {
+          serverId: dept.serverId,
+          name: `archived-inc-${u}`,
+          type: "GENERAL",
+          isArchived: true,
+          archivedAt: new Date(),
+        },
+      });
+
+      // Create a deleted channel (should never be returned)
+      await prisma.channel.create({
+        data: {
+          serverId: dept.serverId,
+          name: `deleted-inc-${u}`,
+          type: "GENERAL",
+          isDeleted: true,
+          deletedAt: new Date(),
+        },
+      });
+
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-arch-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-arch-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/channels?includeArchived=true`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const names = res.body.data.map((c: { name: string }) => c.name);
+      expect(names).toContain(`active-arch-${u}`);
+      expect(names).toContain(`archived-inc-${u}`);
+      expect(names).not.toContain(`deleted-inc-${u}`);
+
+      // Verify isArchived field is present in response
+      const archivedChannel = res.body.data.find(
+        (c: { name: string }) => c.name === `archived-inc-${u}`
+      );
+      expect(archivedChannel.isArchived).toBe(true);
+    });
+
+    it("should exclude archived channels by default (includeArchived not set)", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ARCHD-${u}` });
+      await createChannel(dept.serverId, { name: `active-def-${u}`, type: "GENERAL" });
+
+      await prisma.channel.create({
+        data: {
+          serverId: dept.serverId,
+          name: `archived-def-${u}`,
+          type: "GENERAL",
+          isArchived: true,
+          archivedAt: new Date(),
+        },
+      });
+
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-archd-${u}@test.com`,
+      });
+      const cookies = await loginAs(`teacher-archd-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(`/api/servers/${dept.serverId}/channels`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const names = res.body.data.map((c: { name: string }) => c.name);
+      expect(names).toContain(`active-def-${u}`);
+      expect(names).not.toContain(`archived-def-${u}`);
+    });
   });
 
   // ─── GET /api/servers/:id/members ────────────────────────────────────

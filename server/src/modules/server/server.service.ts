@@ -78,6 +78,7 @@ const channelListSelect = {
   description: true,
   type: true,
   isLocked: true,
+  isArchived: true,
   isAutoCreated: true,
   courseId: true,
   programId: true,
@@ -287,16 +288,25 @@ export async function getServer(serverId: number, caller: CallerInfo) {
   return server;
 }
 
-export async function listServerChannels(serverId: number, caller: CallerInfo) {
+export async function listServerChannels(
+  serverId: number,
+  caller: CallerInfo,
+  options: { includeArchived?: boolean } = {}
+) {
   await findServerOrThrow(serverId);
   await assertMembershipOrAdmin(serverId, caller);
 
+  const where: Record<string, unknown> = {
+    serverId,
+    isDeleted: false,
+  };
+
+  if (!options.includeArchived) {
+    where.isArchived = false;
+  }
+
   const channels = await prisma.channel.findMany({
-    where: {
-      serverId,
-      isDeleted: false,
-      isArchived: false,
-    },
+    where,
     select: channelListSelect,
     orderBy: { createdAt: "asc" },
   });

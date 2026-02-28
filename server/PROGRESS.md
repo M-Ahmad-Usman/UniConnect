@@ -2,7 +2,7 @@
 
 **Last Updated:** February 28, 2026
 
-**Current Automated Test Status:** 391/391 passing (15 suites)
+**Current Automated Test Status:** 427/427 passing (16 suites)
 
 ---
 
@@ -21,7 +21,7 @@
 | 8 | Server & Channel Management | ✅ Complete | 59 tests | Server listing/details, channel CRUD, lock/unlock, soft-delete, posting rights, permission-based middleware |
 | 9 | Posts & Announcements | ✅ Complete | 46 tests | Post CRUD, pin/unpin, search/filter, attachments, author badges, 24h edit window |
 | 10 | Notifications + Socket.IO | ✅ Complete | 26 tests | Notification persistence, preferences, real-time delivery via Socket.IO |
-| 11 | Semester Transition | ⬜ Not Started | — | Depends on Module 10 |
+| 11 | Semester Transition | ✅ Complete | 36 tests | Semester progression, curriculum CRUD, archived channel visibility + hardening validations |
 | 12 | Admin Dashboard | ⬜ Not Started | — | Depends on Module 11 |
 
 ---
@@ -790,7 +790,64 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 11 — Semester Transition
+## Module 11 — Detailed Completion Log
 
-**Scope:** Semester progression for classes, curriculum management for programs  
-**Dependencies:** Module 10 ✅
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| Semester Progression Endpoint | `POST /api/classes/:id/semester-progression` | Advance class to next semester with full transaction |
+| Curriculum CRUD | `GET/POST /api/programs/:id/curriculum`, `DELETE /api/programs/:id/curriculum/:curriculumId` | Manage program curriculum per semester per batch year |
+| Archived Channel Visibility | `GET /api/servers/:id/channels?includeArchived=true` | Enhanced existing endpoint with query filter |
+| Curriculum Validation Schemas | `src/modules/program/program.schema.ts` | `getCurriculumSchema`, `addCurriculumSchema`, `removeCurriculumSchema` |
+| Semester Progression Schema | `src/modules/class/class.schema.ts` | `semesterProgressionSchema` with teacherAssignments array |
+| Channel Listing Schema Update | `src/modules/server/server.schema.ts` | Added `includeArchived` query param with enum → boolean transform |
+| Curriculum Service | `src/modules/program/program.service.ts` | `getCurriculum`, `addCurriculum`, `removeCurriculum` with HOD/Admin auth |
+| Semester Progression Service | `src/modules/class/class.service.ts` | `advanceSemester` — archives+locks channels, clears TEACHES, increments semester, updates server name, auto-creates from curriculum |
+| Curriculum Controller | `src/modules/program/program.controller.ts` | 3 thin handlers for curriculum CRUD |
+| Semester Progression Controller | `src/modules/class/class.controller.ts` | `handleAdvanceSemester` handler |
+| Curriculum Routes | `src/modules/program/program.routes.ts` | 3 routes with auth + validation + authorize |
+| Semester Progression Route | `src/modules/class/class.routes.ts` | `POST /:id/semester-progression` with ADMIN/TEACHER authorize |
+| Server Service Update | `src/modules/server/server.service.ts` | `listServerChannels` accepts `includeArchived` option; `isArchived` added to select |
+| Test Factory Helpers | `tests/helpers/factory.ts` | `createTeachesRecord`, `createCurriculum` |
+| Semester Progression Tests | `tests/modules/class.test.ts` | 15 new tests for all semester progression scenarios |
+| Curriculum Tests | `tests/modules/curriculum.test.ts` | 16 tests for curriculum CRUD + auth + edge cases |
+| Archived Channel Tests | `tests/modules/server.test.ts` | 2 new tests for includeArchived query param |
+
+### Semester Progression Business Logic (Transaction)
+
+1. Validate `currentSemester < program.semesters` (400 if at max)
+2. Assert HOD/Admin authorization against program's department
+3. Archive + Lock ALL existing course channels (`isArchived: true`, `isLocked: true` with audit trail)
+4. Clear all TEACHES records for the class
+5. Increment `class.currentSemester`
+6. Update server name to reflect new semester (`{code} - S{n} - Section {section}`)
+7. Lookup curriculum for new semester + class's admissionYear
+8. If curriculum exists: validate all courses have teacher assignments, create/un-archive course channels, create TEACHES records, auto-add teachers to server
+9. If no curriculum: skip auto-creation (manual assignment via Module 4)
+
+### Key Design Decisions
+
+- **Archive + Lock**: Course channels are both archived and locked during semester progression. Archived hides from default listing, locked prevents posting. `?includeArchived=true` allows viewing old content.
+- **Teacher assignments mandatory**: When curriculum exists, all curriculum courses must have teacher assignments in the request body.
+- **Batch year = admission year**: `class.admissionYear` maps to `ProgramCurriculum.batchYear`.
+- **Server name updated**: Reflects new semester number after progression.
+- **Un-archive on re-assignment**: If same course appears in new semester curriculum, existing archived channel is un-archived (preserving history) rather than creating a new one.
+- **No curriculum = still allowed**: Progression succeeds; courses assigned manually via Module 4's assign-course endpoint.
+
+### Test Counts
+
+| Suite | New Tests | Total |
+|-------|-----------|-------|
+| class.test.ts | +15 | 51 |
+| curriculum.test.ts | +16 | 16 |
+| server.test.ts | +2 | 27 |
+| **Total Module 11** | **36** | — |
+| **Grand Total** | — | **427** |
+
+---
+
+## Next Up: Module 12 — Admin Dashboard
+
+**Scope:** Admin dashboard APIs for platform statistics and management  
+**Dependencies:** Module 11 ✅

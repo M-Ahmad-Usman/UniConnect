@@ -580,3 +580,26 @@ export async function createNotificationPreference(
     },
   });
 }
+
+// ─── Module 11 Helpers ─────────────────────────────────────────────────────
+
+export async function createTeachesRecord(
+  teacherId: number,
+  courseId: number,
+  classId: number
+) {
+  return prisma.teaches.create({
+    data: { teacherId, courseId, classId },
+  });
+}
+
+export async function createCurriculum(
+  programId: number,
+  courseId: number,
+  semesterNumber: number,
+  batchYear: number
+) {
+  return prisma.programCurriculum.create({
+    data: { programId, courseId, semesterNumber, batchYear },
+  });
+}

@@ -37,6 +37,8 @@ export function validate(schemas: ValidationSchemas) {
             source: "params",
           });
         }
+      } else {
+        Object.assign(req.params, result.data);
       }
     }
 
@@ -50,6 +52,8 @@ export function validate(schemas: ValidationSchemas) {
             source: "query",
           });
         }
+      } else {
+        Object.assign(req.query as Record<string, unknown>, result.data);
       }
     }
 

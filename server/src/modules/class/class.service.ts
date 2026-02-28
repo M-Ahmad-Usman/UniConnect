@@ -1,5 +1,5 @@
 import { prisma } from "../../config/prisma.js";
-import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -22,6 +22,15 @@ type ListClassesQuery = {
   semester?: number;
   page?: number;
   limit?: number;
+};
+
+type TeacherAssignment = {
+  courseId: number;
+  teacherId: number;
+};
+
+type SemesterProgressionInput = {
+  teacherAssignments: TeacherAssignment[];
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -486,5 +495,229 @@ export async function removeCourseFromClass(
         archivedBy: userId,
       },
     });
+  });
+}
+
+// ─── Semester Progression ──────────────────────────────────────────────────
+
+export async function advanceSemester(
+  classId: number,
+  data: SemesterProgressionInput,
+  userId: number,
+  userType: string
+) {
+  const classRecord = await prisma.class.findUnique({
+    where: { id: classId },
+    select: {
+      id: true,
+      currentSemester: true,
+      admissionYear: true,
+      section: true,
+      serverId: true,
+      programId: true,
+      program: {
+        select: {
+          id: true,
+          code: true,
+          semesters: true,
+          departmentId: true,
+        },
+      },
+    },
+  });
+
+  if (!classRecord) {
+    throw new NotFoundError("Class not found");
+  }
+
+  if (classRecord.currentSemester >= classRecord.program.semesters) {
+    throw new ValidationError(
+      `Class is already at the maximum semester (${classRecord.program.semesters})`
+    );
+  }
+
+  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+
+  const newSemester = classRecord.currentSemester + 1;
+
+  // Lookup curriculum for next semester
+  const curriculum = await prisma.programCurriculum.findMany({
+    where: {
+      programId: classRecord.programId,
+      semesterNumber: newSemester,
+      batchYear: classRecord.admissionYear,
+    },
+    select: {
+      courseId: true,
+      course: {
+        select: { id: true, code: true },
+      },
+    },
+  });
+
+  // Validate teacher assignments if curriculum exists
+  if (curriculum.length > 0) {
+    const curriculumCourseIds = curriculum.map((c) => c.courseId);
+    const assignedCourseIds = data.teacherAssignments.map((a) => a.courseId);
+
+    const assignmentSet = new Set<number>();
+    const duplicateAssignments: number[] = [];
+    for (const courseId of assignedCourseIds) {
+      if (assignmentSet.has(courseId)) {
+        duplicateAssignments.push(courseId);
+      } else {
+        assignmentSet.add(courseId);
+      }
+    }
+    if (duplicateAssignments.length > 0) {
+      throw new ValidationError(
+        `Duplicate teacher assignments found for course IDs: ${[...new Set(duplicateAssignments)].join(", ")}`
+      );
+    }
+
+    const extraAssignments = assignedCourseIds.filter((id) => !curriculumCourseIds.includes(id));
+    if (extraAssignments.length > 0) {
+      throw new ValidationError(
+        `Teacher assignments contain courses not in the target semester curriculum: ${[...new Set(extraAssignments)].join(", ")}`
+      );
+    }
+
+    const missingCourses = curriculumCourseIds.filter((id) => !assignedCourseIds.includes(id));
+    if (missingCourses.length > 0) {
+      throw new ValidationError(
+        `Teacher assignments are required for all curriculum courses. Missing assignments for course IDs: ${missingCourses.join(", ")}`
+      );
+    }
+
+    // Validate all referenced teachers exist
+    const teacherIds = [...new Set(data.teacherAssignments.map((a) => a.teacherId))];
+    const teachers = await prisma.teacherInfo.findMany({
+      where: { teacherId: { in: teacherIds } },
+      select: { teacherId: true },
+    });
+    const foundTeacherIds = teachers.map((t) => t.teacherId);
+    const missingTeachers = teacherIds.filter((id) => !foundTeacherIds.includes(id));
+    if (missingTeachers.length > 0) {
+      throw new NotFoundError(
+        `Teachers not found: ${missingTeachers.join(", ")}`
+      );
+    }
+  } else if (data.teacherAssignments.length > 0) {
+    throw new ValidationError(
+      "Teacher assignments were provided but no curriculum exists for the next semester"
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    // 1. Archive + Lock all existing course channels
+    await tx.channel.updateMany({
+      where: {
+        serverId: classRecord.serverId,
+        type: "COURSE",
+        isArchived: false,
+      },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: userId,
+        isLocked: true,
+        lockedBy: userId,
+        lockedAt: new Date(),
+      },
+    });
+
+    // 2. Clear all TEACHES records for this class
+    await tx.teaches.deleteMany({
+      where: { classId },
+    });
+
+    // 3. Increment semester
+    const updatedClass = await tx.class.update({
+      where: { id: classId },
+      data: { currentSemester: newSemester },
+      select: classDetailSelect,
+    });
+
+    // 4. Update server name to reflect new semester
+    await tx.server.update({
+      where: { id: classRecord.serverId },
+      data: {
+        name: `${classRecord.program.code} - S${newSemester} - Section ${classRecord.section}`,
+      },
+    });
+
+    // 5. Auto-create course channels from curriculum
+    if (curriculum.length > 0) {
+      for (const entry of curriculum) {
+        // Check for existing channel (may have been archived from a previous semester)
+        const existingChannel = await tx.channel.findFirst({
+          where: {
+            serverId: classRecord.serverId,
+            courseId: entry.courseId,
+          },
+          select: { id: true, isArchived: true, isLocked: true },
+        });
+
+        if (existingChannel) {
+          // Un-archive and unlock if it was previously archived
+          await tx.channel.update({
+            where: { id: existingChannel.id },
+            data: {
+              isArchived: false,
+              archivedAt: null,
+              archivedBy: null,
+              isLocked: false,
+              lockedBy: null,
+              lockedAt: null,
+            },
+          });
+        } else {
+          await tx.channel.create({
+            data: {
+              serverId: classRecord.serverId,
+              name: entry.course.code,
+              type: "COURSE",
+              courseId: entry.courseId,
+              isAutoCreated: true,
+              createdBy: userId,
+            },
+          });
+        }
+
+        // Create Teaches record
+        const assignment = data.teacherAssignments.find((a) => a.courseId === entry.courseId);
+        if (assignment) {
+          await tx.teaches.create({
+            data: {
+              teacherId: assignment.teacherId,
+              courseId: entry.courseId,
+              classId,
+            },
+          });
+
+          // Auto-add teacher to class server if not already a member
+          const existingMembership = await tx.serverMembership.findUnique({
+            where: {
+              userId_serverId: {
+                userId: assignment.teacherId,
+                serverId: classRecord.serverId,
+              },
+            },
+          });
+
+          if (!existingMembership) {
+            await tx.serverMembership.create({
+              data: {
+                userId: assignment.teacherId,
+                serverId: classRecord.serverId,
+                isAutoJoined: true,
+              },
+            });
+          }
+        }
+      }
+    }
+
+    return updatedClass;
   });
 }

@@ -96,3 +96,22 @@ export async function handleRemoveCourse(req: Request, res: Response): Promise<v
 
   res.status(StatusCodes.OK).json(response);
 }
+
+// ─── Semester Progression Handler ─────────────────────────────────────────
+
+export async function handleAdvanceSemester(req: Request, res: Response): Promise<void> {
+  const result = await classService.advanceSemester(
+    Number(req.params.id),
+    req.body,
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    message: "Semester advanced successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}

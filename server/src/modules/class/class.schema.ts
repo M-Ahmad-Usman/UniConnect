@@ -67,3 +67,21 @@ export const removeCourseSchema = {
     courseId: z.coerce.number().int().positive({ error: "Course ID must be a positive integer" }),
   }),
 };
+
+// ─── Semester Progression ──────────────────────────────────────────────────
+
+export const semesterProgressionSchema = {
+  params: z.object({
+    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+  }),
+  body: z.object({
+    teacherAssignments: z
+      .array(
+        z.object({
+          courseId: z.number().int().positive({ error: "Course ID must be a positive integer" }),
+          teacherId: z.number().int().positive({ error: "Teacher ID must be a positive integer" }),
+        })
+      )
+      .default([]),
+  }),
+};
