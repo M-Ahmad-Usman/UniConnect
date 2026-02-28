@@ -225,6 +225,7 @@ async function assertCallerCanAssignModerator(
 
 // ─── Assign Role ───────────────────────────────────────────────────────────
 
+// TODO: Emit ROLE_ASSIGNED notification event (deferred from Module 10)
 export async function assignRole(input: AssignRoleInput, caller: CallerInfo) {
   const targetUser = await findActiveUserOrThrow(input.userId);
 

@@ -534,3 +534,49 @@ export async function createPostAttachment(
     },
   });
 }
+
+// ─── Module 10 Helpers ─────────────────────────────────────────────────────
+
+export async function createNotification(
+  userId: number,
+  overrides?: {
+    postId?: number;
+    type?: "NEW_POST" | "ROLE_ASSIGNED";
+    title?: string;
+    message?: string;
+    readAt?: Date | null;
+    createdAt?: Date;
+  }
+) {
+  return prisma.notification.create({
+    data: {
+      userId,
+      postId: overrides?.postId ?? null,
+      type: overrides?.type ?? "NEW_POST",
+      title: overrides?.title ?? `Notification ${uniqueSuffix()}`,
+      message: overrides?.message ?? "Test notification message",
+      readAt: overrides?.readAt ?? null,
+      createdAt: overrides?.createdAt ?? undefined,
+    },
+  });
+}
+
+export async function createNotificationPreference(
+  userId: number,
+  serverId: number,
+  overrides?: {
+    scopeType?: "SERVER" | "CHANNEL";
+    channelId?: number;
+    isSubscribed?: boolean;
+  }
+) {
+  return prisma.notificationPreference.create({
+    data: {
+      userId,
+      scopeType: overrides?.scopeType ?? "SERVER",
+      serverId,
+      channelId: overrides?.channelId ?? null,
+      isSubscribed: overrides?.isSubscribed ?? true,
+    },
+  });
+}

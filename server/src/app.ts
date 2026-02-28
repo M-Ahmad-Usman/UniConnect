@@ -17,6 +17,11 @@ import roleRoutes from "./modules/role/role.routes.js";
 import serverRoutes from "./modules/server/server.routes.js";
 import channelRoutes from "./modules/channel/channel.routes.js";
 import { channelPostRoutes, postRoutes } from "./modules/post/post.routes.js";
+import {
+  notificationRoutes,
+  notificationPreferenceRoutes,
+} from "./modules/notification/notification.routes.js";
+import { registerNotificationListeners } from "./modules/notification/notification.listener.js";
 
 const app = express();
 
@@ -51,6 +56,11 @@ app.use("/api/servers", serverRoutes);
 app.use("/api/channels", channelRoutes);
 app.use("/api/channels", channelPostRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/notification-preferences", notificationPreferenceRoutes);
+
+// ─── Event Listeners ────────────────────────────────────────────────────────
+registerNotificationListeners();
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {

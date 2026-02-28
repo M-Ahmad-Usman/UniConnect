@@ -2,7 +2,7 @@
 
 **Last Updated:** February 28, 2026
 
-**Current Automated Test Status:** 365/365 passing (14 suites)
+**Current Automated Test Status:** 391/391 passing (15 suites)
 
 ---
 
@@ -20,7 +20,7 @@
 | 7 | Role Management | ✅ Complete | 42 tests | Role assign/revoke/get with scoped permissions + hardening |
 | 8 | Server & Channel Management | ✅ Complete | 59 tests | Server listing/details, channel CRUD, lock/unlock, soft-delete, posting rights, permission-based middleware |
 | 9 | Posts & Announcements | ✅ Complete | 46 tests | Post CRUD, pin/unpin, search/filter, attachments, author badges, 24h edit window |
-| 10 | Notifications + Socket.IO | ⬜ Not Started | — | Depends on Module 9 |
+| 10 | Notifications + Socket.IO | ✅ Complete | 26 tests | Notification persistence, preferences, real-time delivery via Socket.IO |
 | 11 | Semester Transition | ⬜ Not Started | — | Depends on Module 10 |
 | 12 | Admin Dashboard | ⬜ Not Started | — | Depends on Module 11 |
 
@@ -708,7 +708,89 @@ npm run db:studio
 
 ---
 
-## Next Up: Module 10 — Notifications + Socket.IO
+## Module 10 — Detailed Completion Log
 
-**Scope:** Notification persistence/preferences plus real-time delivery hooks from post events  
-**Dependencies:** Module 9 ✅
+### What was built
+
+| Component | File(s) | Description |
+|-----------|---------|-------------|
+| App Event Emitter | `src/shared/events.ts` | Typed EventEmitter singleton for decoupled inter-module communication; emits `post:created` events |
+| Socket.IO Setup | `src/socket/index.ts` | Socket.IO server initialization with JWT cookie authentication; users join `user:{id}` rooms for targeted delivery |
+| Notification Service | `src/modules/notification/notification.service.ts` | Notification CRUD: create post notifications (bulk), list (paginated), mark read, mark all read, unread count; preference management with upsert |
+| Notification Controller | `src/modules/notification/notification.controller.ts` | Thin handlers for 6 endpoints following established ApiResponse/PaginatedResponse patterns |
+| Notification Schema | `src/modules/notification/notification.schema.ts` | Zod 4 validation schemas for list query (type/unreadOnly filters), notification ID params, preference update (with cross-field refinements) |
+| Notification Routes | `src/modules/notification/notification.routes.ts` | Two routers: `notificationRoutes` (GET list, GET unread-count, PATCH read, PATCH read-all) and `notificationPreferenceRoutes` (GET, PATCH) |
+| Notification Listener | `src/modules/notification/notification.listener.ts` | EventEmitter listener for `post:created`; delegates to notification service with error isolation |
+| Factory Helpers | `tests/helpers/factory.ts` | Added `createNotification()` and `createNotificationPreference()` helpers |
+| Integration Tests | `tests/modules/notification.test.ts` | 26 tests covering notification generation, CRUD endpoints, subscription preferences, and Socket.IO real-time delivery |
+
+### Key Design Decisions
+
+| Decision | Rationale |
+|----------|----------|
+| **Implicit subscription model** | No `NotificationPreference` record = subscribed. Records only created on explicit unsubscribe. Avoids modifying all 6+ membership creation points |
+| **EventEmitter pattern** | Post service emits `POST_CREATED`; notification listener handles creation + Socket.IO delivery. Decoupled, extensible for future events like `ROLE_ASSIGNED` |
+| **User-specific Socket.IO rooms** | Each authenticated user joins `user:{userId}` room, enabling targeted notification delivery without broadcasting |
+| **JWT cookie auth for Socket.IO** | Reuses the same `access_token` cookie and verification logic as REST endpoints |
+| **NEW_POST scope only** | `ROLE_ASSIGNED` notifications deferred with TODO comment in `role.service.ts` |
+| **Fire-and-forget notification creation** | Notification listener catches errors internally; post creation is never blocked by notification failures |
+
+### Endpoints Implemented
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/notifications` | Authenticated | Paginated user notifications (type/unreadOnly filters) |
+| GET | `/api/notifications/unread-count` | Authenticated | Unread notification count |
+| PATCH | `/api/notifications/:id/read` | Authenticated | Mark single notification as read |
+| PATCH | `/api/notifications/read-all` | Authenticated | Mark all notifications as read |
+| GET | `/api/notification-preferences` | Authenticated | Get subscription preferences |
+| PATCH | `/api/notification-preferences` | Authenticated | Update subscribe/unsubscribe preference |
+
+### Socket.IO Events
+
+| Direction | Event | Payload | Description |
+|-----------|-------|---------|-------------|
+| Server → Client | `notification:new` | Notification object | Emitted to each recipient when a post triggers notifications |
+| Server → Client | `notification:unread-count` | `{ count: number }` | Emitted after notification creation or read actions |
+
+### Dependencies Added
+
+| Package | Type | Version | Purpose |
+|---------|------|---------|--------|
+| `socket.io` | Production | ^4.x | WebSocket server for real-time notification delivery |
+| `socket.io-client` | Dev | ^4.x | Socket.IO client for integration tests |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/server.ts` | Added Socket.IO initialization and graceful shutdown |
+| `src/app.ts` | Registered notification routes and event listener |
+| `src/modules/post/post.service.ts` | Replaced TODO comments with `appEvents.emit(APP_EVENTS.POST_CREATED, ...)` |
+| `src/modules/role/role.service.ts` | Added TODO comment for future ROLE_ASSIGNED notifications |
+| `tests/helpers/factory.ts` | Added `createNotification()` and `createNotificationPreference()` helpers |
+| `package.json` | Added `socket.io` and `socket.io-client` dependencies |
+
+**Post-implementation validation:** 391/391 tests passing (15 suites), including 26 Module 10 tests and full regression run.
+
+### Module 10 — Refinement + Hardening Pass (Final)
+
+| Area | Refinement | Outcome |
+|------|------------|---------|
+| Socket lifecycle safety | Hardened re-initialization/reset logic to close existing Socket.IO instances and remove listeners | Prevents duplicate handlers and stale instances during repeated init/test cycles |
+| Socket auth parity | Enforced `mustChangePassword` guard at Socket.IO handshake level | Aligns WebSocket auth behavior with REST access policy |
+| Cookie parsing robustness | Added safe URL-decoding fallback for `access_token` parsing from handshake cookies | Improves compatibility with encoded cookie values |
+| Event listener safety | Made notification listener registration idempotent | Avoids duplicate `post:created` processing |
+| Notification recipient filtering | Limited fan-out to active members only | Prevents emitting notifications to inactive users |
+| Event payload typing | Tightened `PostCreatedPayload` fields to Prisma enums (`PostPriority`, `ServerType`) | Stronger compile-time guarantees and safer event contracts |
+| Async emission resilience | Kept unread-count emits non-blocking with explicit error capture | Post/read flows remain robust even if emit fails |
+| List ordering determinism | Added secondary `id DESC` sort for notifications | Stable pagination order for same-timestamp rows |
+
+**Final hardening validation:** TypeScript compile check passed, Module 10 targeted tests passed (26/26), and full regression passed (391/391 across 15 suites).
+
+---
+
+## Next Up: Module 11 — Semester Transition
+
+**Scope:** Semester progression for classes, curriculum management for programs  
+**Dependencies:** Module 10 ✅

@@ -1,0 +1,902 @@
+import request from "supertest";
+import { jest } from "@jest/globals";
+import http from "node:http";
+import { io as ioClient, type Socket as ClientSocket } from "socket.io-client";
+import { app } from "../../src/app.js";
+import { prisma } from "../../src/config/prisma.js";
+import { resetDB } from "../helpers/db.helper.js";
+import { initializeSocket, resetIO } from "../../src/socket/index.js";
+import { appEvents, APP_EVENTS } from "../../src/shared/events.js";
+import {
+  createDepartment,
+  createProgram,
+  createClass,
+  createTeacherWithInfo,
+  createStudentWithInfo,
+  createChannel,
+  createNotification,
+  createNotificationPreference,
+  createPost,
+  addServerMembership,
+  loginAs,
+  seedRolesAndPermissions,
+  assignHOD,
+} from "../helpers/factory.js";
+
+/** Short unique suffix */
+let uidCounter = 0;
+function uid(): string {
+  return (++uidCounter).toString(36);
+}
+
+beforeAll(async () => {
+  await resetDB();
+  await seedRolesAndPermissions();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
+describe("Module 10 - Notifications", () => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // POST CREATION → NOTIFICATION GENERATION (via EventEmitter)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("Post creation → notification generation", () => {
+    it("should generate notifications for subscribed channel members when a post is created", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NTF-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+
+      const student1 = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu1-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const student2 = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu2-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, {
+        name: `ann-${u}`,
+        type: "ANNOUNCEMENT",
+      });
+
+      const cookies = await loginAs(`hod-ntf-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", cookies)
+        .send({ title: "Test Notification", content: "Content for notification test" });
+
+      expect(res.status).toBe(201);
+
+      // Wait briefly for async notification creation
+      await new Promise((r) => setTimeout(r, 500));
+
+      // Verify notifications were created for student1 and student2
+      const notifications = await prisma.notification.findMany({
+        where: { postId: res.body.data.id },
+        orderBy: { userId: "asc" },
+      });
+
+      // Both students are members of the dept server, so they should get notifications
+      const recipientIds = notifications.map((n) => n.userId);
+      expect(recipientIds).toContain(student1.id);
+      expect(recipientIds).toContain(student2.id);
+      // Author should NOT get a notification
+      expect(recipientIds).not.toContain(hod.id);
+      // All notifications should be type NEW_POST
+      expect(notifications.every((n) => n.type === "NEW_POST")).toBe(true);
+    });
+
+    it("should mark urgent post notifications with urgent indicator", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `URG-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-urg-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-urg-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, {
+        name: `ann-urg-${u}`,
+        type: "ANNOUNCEMENT",
+      });
+
+      const cookies = await loginAs(`hod-urg-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", cookies)
+        .send({
+          title: "Critical Update",
+          content: "Urgent content",
+          priority: "URGENT",
+        });
+
+      expect(res.status).toBe(201);
+      await new Promise((r) => setTimeout(r, 500));
+
+      const notifications = await prisma.notification.findMany({
+        where: { postId: res.body.data.id },
+      });
+
+      expect(notifications.length).toBeGreaterThanOrEqual(1);
+      // Urgent notifications should have the 🚨 prefix in title
+      for (const n of notifications) {
+        expect(n.title).toContain("🚨");
+        expect(n.title).toContain("[URGENT]");
+        expect(n.message).toContain("Urgent");
+      }
+    });
+
+    it("should NOT generate notification for unsubscribed user (channel-level)", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `UNS-CH-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-unsch-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+
+      const subscribedStudent = await createStudentWithInfo(cls.id, dept.id, {
+        email: `sub-unsch-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const unsubscribedStudent = await createStudentWithInfo(cls.id, dept.id, {
+        email: `unsub-unsch-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, {
+        name: `gen-unsch-${u}`,
+        type: "GENERAL",
+      });
+
+      // Unsubscribe the student from this specific channel
+      await createNotificationPreference(unsubscribedStudent.id, dept.serverId, {
+        scopeType: "CHANNEL",
+        channelId: channel.id,
+        isSubscribed: false,
+      });
+
+      const cookies = await loginAs(`hod-unsch-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", cookies)
+        .send({ title: "Test Unsub Channel", content: "Should skip unsubscribed" });
+
+      expect(res.status).toBe(201);
+      await new Promise((r) => setTimeout(r, 500));
+
+      const notifications = await prisma.notification.findMany({
+        where: { postId: res.body.data.id },
+      });
+
+      const recipientIds = notifications.map((n) => n.userId);
+      expect(recipientIds).toContain(subscribedStudent.id);
+      expect(recipientIds).not.toContain(unsubscribedStudent.id);
+    });
+
+    it("should NOT generate notifications for user unsubscribed from server", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `UNS-SV-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-unssv-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+
+      const subscribedStudent = await createStudentWithInfo(cls.id, dept.id, {
+        email: `sub-unssv-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const unsubscribedStudent = await createStudentWithInfo(cls.id, dept.id, {
+        email: `unsub-unssv-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, {
+        name: `gen-unssv-${u}`,
+        type: "GENERAL",
+      });
+
+      // Unsubscribe from the entire server
+      await createNotificationPreference(unsubscribedStudent.id, dept.serverId, {
+        scopeType: "SERVER",
+        isSubscribed: false,
+      });
+
+      const cookies = await loginAs(`hod-unssv-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", cookies)
+        .send({ title: "Test Unsub Server", content: "Should skip server-unsubbed" });
+
+      expect(res.status).toBe(201);
+      await new Promise((r) => setTimeout(r, 500));
+
+      const notifications = await prisma.notification.findMany({
+        where: { postId: res.body.data.id },
+      });
+
+      const recipientIds = notifications.map((n) => n.userId);
+      expect(recipientIds).toContain(subscribedStudent.id);
+      expect(recipientIds).not.toContain(unsubscribedStudent.id);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GET /api/notifications
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("GET /api/notifications", () => {
+    it("should return paginated notifications, newest first → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `LIST-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-list-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      // Create notifications with different timestamps
+      const now = new Date();
+      await createNotification(student.id, {
+        title: "Old notification",
+        createdAt: new Date(now.getTime() - 60000),
+      });
+      await createNotification(student.id, {
+        title: "New notification",
+        createdAt: new Date(now.getTime()),
+      });
+
+      const cookies = await loginAs(`stu-list-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/notifications")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(res.body.pagination).toBeDefined();
+      expect(res.body.pagination.page).toBe(1);
+
+      // Verify newest first
+      const dates = res.body.data.map((n: { createdAt: string }) => new Date(n.createdAt).getTime());
+      for (let i = 1; i < dates.length; i++) {
+        expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
+      }
+    });
+
+    it("should filter by type → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `FILT-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-filt-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      await createNotification(student.id, { type: "NEW_POST", title: "Post notif" });
+      await createNotification(student.id, { type: "ROLE_ASSIGNED", title: "Role notif" });
+
+      const cookies = await loginAs(`stu-filt-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/notifications?type=NEW_POST")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.every((n: { type: string }) => n.type === "NEW_POST")).toBe(true);
+    });
+
+    it("should filter unread only → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `UNRD-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-unrd-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      await createNotification(student.id, { title: "Unread", readAt: null });
+      await createNotification(student.id, { title: "Read", readAt: new Date() });
+
+      const cookies = await loginAs(`stu-unrd-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/notifications?unreadOnly=true")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.every((n: { readAt: string | null }) => n.readAt === null)).toBe(true);
+    });
+
+    it("should return 401 for unauthenticated request", async () => {
+      const res = await request(app).get("/api/notifications");
+      expect(res.status).toBe(401);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GET /api/notifications/unread-count
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("GET /api/notifications/unread-count", () => {
+    it("should return correct unread count → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CNT-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-cnt-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      await createNotification(student.id, { title: "Unread 1" });
+      await createNotification(student.id, { title: "Unread 2" });
+      await createNotification(student.id, { title: "Read", readAt: new Date() });
+
+      const cookies = await loginAs(`stu-cnt-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/notifications/unread-count")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.count).toBe(2);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PATCH /api/notifications/:id/read
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("PATCH /api/notifications/:id/read", () => {
+    it("should mark notification as read → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `MK-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-mk-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const notification = await createNotification(student.id, { title: "To Read" });
+      const cookies = await loginAs(`stu-mk-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch(`/api/notifications/${notification.id}/read`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.readAt).not.toBeNull();
+
+      // Verify in DB
+      const updated = await prisma.notification.findUnique({
+        where: { id: notification.id },
+      });
+      expect(updated?.readAt).not.toBeNull();
+    });
+
+    it("should return 404 when marking another user's notification", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `OWN-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student1 = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu1-own-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const student2 = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu2-own-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const notification = await createNotification(student1.id, { title: "Private" });
+      const cookies = await loginAs(`stu2-own-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch(`/api/notifications/${notification.id}/read`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(404);
+    });
+
+    it("should handle already-read notification gracefully → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ALR-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-alr-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const notification = await createNotification(student.id, {
+        title: "Already Read",
+        readAt: new Date(),
+      });
+      const cookies = await loginAs(`stu-alr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch(`/api/notifications/${notification.id}/read`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.readAt).not.toBeNull();
+    });
+
+    it("should return 404 for non-existent notification", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NE-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-ne-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const cookies = await loginAs(`stu-ne-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notifications/999999/read")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(404);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PATCH /api/notifications/read-all
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("PATCH /api/notifications/read-all", () => {
+    it("should mark all notifications as read → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ALL-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-all-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      await createNotification(student.id, { title: "Notif 1" });
+      await createNotification(student.id, { title: "Notif 2" });
+      await createNotification(student.id, { title: "Notif 3" });
+
+      const cookies = await loginAs(`stu-all-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notifications/read-all")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.count).toBe(3);
+
+      // Verify all are read
+      const unread = await prisma.notification.count({
+        where: { userId: student.id, readAt: null },
+      });
+      expect(unread).toBe(0);
+    });
+
+    it("should return count 0 when no unread notifications", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NOUNR-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-nounr-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      await createNotification(student.id, { title: "Read", readAt: new Date() });
+
+      const cookies = await loginAs(`stu-nounr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notifications/read-all")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.count).toBe(0);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GET /api/notification-preferences
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("GET /api/notification-preferences", () => {
+    it("should return user's notification preferences → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `PREF-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-pref-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      // Create a preference
+      await createNotificationPreference(student.id, dept.serverId, {
+        scopeType: "SERVER",
+        isSubscribed: false,
+      });
+
+      const cookies = await loginAs(`stu-pref-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/notification-preferences")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(res.body.data[0].scopeType).toBe("SERVER");
+      expect(res.body.data[0].isSubscribed).toBe(false);
+      expect(res.body.data[0].server).toBeDefined();
+    });
+
+    it("should return empty array when no preferences exist → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NOPRF-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-noprf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const cookies = await loginAs(`stu-noprf-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/notification-preferences")
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([]);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PATCH /api/notification-preferences
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("PATCH /api/notification-preferences", () => {
+    it("should unsubscribe from a channel → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `UNSC-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-unsc-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, { name: `ch-${u}` });
+      const cookies = await loginAs(`stu-unsc-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "CHANNEL",
+          serverId: dept.serverId,
+          channelId: channel.id,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.isSubscribed).toBe(false);
+      expect(res.body.data.scopeType).toBe("CHANNEL");
+      expect(res.body.data.channelId).toBe(channel.id);
+    });
+
+    it("should unsubscribe from a server → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `UNSS-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-unss-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const cookies = await loginAs(`stu-unss-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "SERVER",
+          serverId: dept.serverId,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.isSubscribed).toBe(false);
+      expect(res.body.data.scopeType).toBe("SERVER");
+    });
+
+    it("should re-subscribe to a channel → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `RESUB-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-resub-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, { name: `ch-resub-${u}` });
+
+      // First unsubscribe
+      await createNotificationPreference(student.id, dept.serverId, {
+        scopeType: "CHANNEL",
+        channelId: channel.id,
+        isSubscribed: false,
+      });
+
+      const cookies = await loginAs(`stu-resub-${u}@test.com`, "Pass@1234");
+
+      // Then re-subscribe
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "CHANNEL",
+          serverId: dept.serverId,
+          channelId: channel.id,
+          isSubscribed: true,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.isSubscribed).toBe(true);
+    });
+
+    it("should return 403 when user is not a server member", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NMBR-${u}` });
+      // Create user who is NOT a member of this server's dept
+      const otherDept = await createDepartment({ code: `OTH-${u}` });
+      const program = await createProgram(otherDept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, otherDept.id, {
+        email: `stu-nmbr-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const cookies = await loginAs(`stu-nmbr-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "SERVER",
+          serverId: dept.serverId,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(403);
+    });
+
+    it("should return 400 when channelId missing for CHANNEL scope", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `VALD-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-vald-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const cookies = await loginAs(`stu-vald-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "CHANNEL",
+          serverId: dept.serverId,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("should return 404 when channel does not belong to server", async () => {
+      const u = uid();
+      const dept1 = await createDepartment({ code: `SV1-${u}` });
+      const dept2 = await createDepartment({ code: `SV2-${u}` });
+      const program = await createProgram(dept1.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept1.id, {
+        email: `stu-chsv-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      // Create channel in dept2's server
+      const channel = await createChannel(dept2.serverId, { name: `ch-other-${u}` });
+
+      const cookies = await loginAs(`stu-chsv-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "CHANNEL",
+          serverId: dept1.serverId,
+          channelId: channel.id,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(404);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Socket.IO Integration
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("Socket.IO integration", () => {
+    let httpServer: http.Server;
+    let clientSocket: ClientSocket;
+    let serverPort: number;
+
+    beforeAll((done) => {
+      httpServer = http.createServer(app);
+      initializeSocket(httpServer);
+      httpServer.listen(0, () => {
+        const addr = httpServer.address();
+        serverPort = typeof addr === "object" && addr ? addr.port : 0;
+        done();
+      });
+    });
+
+    afterEach(() => {
+      if (clientSocket?.connected) {
+        clientSocket.disconnect();
+      }
+    });
+
+    afterAll((done) => {
+      resetIO();
+      httpServer.close(done);
+    });
+
+    it("should emit notification:new when a post is created", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `SIO-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-sio-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-sio-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, {
+        name: `ann-sio-${u}`,
+        type: "ANNOUNCEMENT",
+      });
+
+      // Login as student to get cookies for Socket.IO auth
+      const cookies = await loginAs(`stu-sio-${u}@test.com`, "Pass@1234");
+      const accessToken = cookies
+        .find((c: string) => c.startsWith("access_token="))
+        ?.split(";")[0]
+        ?.split("=")
+        .slice(1)
+        .join("=");
+
+      // Connect Socket.IO client with JWT cookie
+      const notificationPromise = new Promise<unknown>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Timeout waiting for notification")), 5000);
+
+        clientSocket = ioClient(`http://localhost:${serverPort}`, {
+          extraHeaders: {
+            cookie: `access_token=${accessToken}`,
+          },
+        });
+
+        clientSocket.on("notification:new", (data: unknown) => {
+          clearTimeout(timeout);
+          resolve(data);
+        });
+
+        clientSocket.on("connect_error", (err: Error) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+
+      // Wait for socket to connect
+      await new Promise<void>((resolve) => {
+        clientSocket.on("connect", () => resolve());
+      });
+
+      // Create a post (as HOD) — this should trigger notification for the student
+      const hodCookies = await loginAs(`hod-sio-${u}@test.com`, "Pass@1234");
+      await request(app)
+        .post(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", hodCookies)
+        .send({ title: "Socket Test Post", content: "Socket.IO notification test" });
+
+      const notification = await notificationPromise;
+      expect(notification).toBeDefined();
+      expect((notification as { title: string }).title).toBe("Socket Test Post");
+    });
+
+    it("should reject connection without valid token", (done) => {
+      const badClient = ioClient(`http://localhost:${serverPort}`, {
+        extraHeaders: {
+          cookie: "access_token=invalid-token",
+        },
+      });
+
+      badClient.on("connect_error", (err: Error) => {
+        expect(err.message).toContain("Authentication required");
+        badClient.disconnect();
+        done();
+      });
+    });
+
+    it("should reject connection without any cookie", (done) => {
+      const noAuthClient = ioClient(`http://localhost:${serverPort}`);
+
+      noAuthClient.on("connect_error", (err: Error) => {
+        expect(err.message).toContain("Authentication required");
+        noAuthClient.disconnect();
+        done();
+      });
+    });
+  });
+});

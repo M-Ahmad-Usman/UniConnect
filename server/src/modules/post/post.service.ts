@@ -13,6 +13,7 @@ import {
 import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
+import { appEvents, APP_EVENTS } from "../../shared/events.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -366,7 +367,15 @@ export async function createPost(
       [withAttachments.author.id]
     );
 
-    // TODO: Emit Socket.IO event to channel members (Module 10)
+    appEvents.emit(APP_EVENTS.POST_CREATED, {
+      postId: post.id,
+      channelId,
+      serverId: channel.serverId,
+      authorId: caller.id,
+      title: data.title,
+      priority: data.priority ?? "NORMAL",
+      serverType: channel.server.type,
+    });
 
     return {
       ...withAttachments,
@@ -384,7 +393,15 @@ export async function createPost(
     [post.author.id]
   );
 
-  // TODO: Emit Socket.IO event to channel members (Module 10)
+  appEvents.emit(APP_EVENTS.POST_CREATED, {
+    postId: post.id,
+    channelId,
+    serverId: channel.serverId,
+    authorId: caller.id,
+    title: data.title,
+    priority: data.priority ?? "NORMAL",
+    serverType: channel.server.type,
+  });
 
   return {
     ...post,
