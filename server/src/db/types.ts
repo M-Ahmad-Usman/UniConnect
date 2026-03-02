@@ -7,7 +7,29 @@ import type {
   Updateable,
 } from 'kysely'
 
-// What are branded ID Types? I got suggestion to use them in my kysley types.
+// Branded ID Types — phantom tags for type-safe table IDs (zero runtime cost)
+type Brand<T, B> = T & { readonly __brand: B }
+
+export type DepartmentId = Brand<number, 'DepartmentId'>
+export type ProgramId = Brand<number, 'ProgramId'>
+export type ProgramCurriculumId = Brand<number, 'ProgramCurriculumId'>
+export type UserId = Brand<number, 'UserId'>
+export type StudentId = Brand<number, 'StudentId'>
+export type TeacherId = Brand<number, 'TeacherId'>
+export type ClassId = Brand<number, 'ClassId'>
+export type SocietyId = Brand<number, 'SocietyId'>
+export type ServerId = Brand<number, 'ServerId'>
+export type ChannelId = Brand<number, 'ChannelId'>
+export type SocietyMembershipRequestId = Brand<number, 'SocietyMembershipRequestId'>
+export type CourseId = Brand<number, 'CourseId'>
+export type PostId = Brand<number, 'PostId'>
+export type PostAttachmentId = Brand<number, 'PostAttachmentId'>
+export type RoleId = Brand<number, 'RoleId'>
+export type PermissionId = Brand<number, 'PermissionId'>
+export type ModeratorAssignmentId = Brand<number, 'ModeratorAssignmentId'>
+export type NotificationId = Brand<number, 'NotificationId'>
+export type NotificationPreferenceId = Brand<number, 'NotificationPreferenceId'>
+export type RefreshTokenId = Brand<number, 'RefreshTokenId'>
 
 // Literal Types
 export type DegreeLevel = 'bachelors' | 'masters' | 'phd'
@@ -84,9 +106,9 @@ export interface DepartmentTable {
   name: string
   code: string
 
-  hod_id: number | null
+  hod_id: UserId | null
 
-  server_id: number
+  server_id: ServerId
 }
 
 export type Department = Selectable<DepartmentTable>
@@ -96,11 +118,11 @@ export type UpdateDepartment = Updateable<DepartmentTable>
 export interface ProgramTable {
   id: Generated<number>
 
-  department_id: number
+  department_id: DepartmentId
   discipline: Discipline
   degree_level: DegreeLevel
 
-  program_director_id: number
+  program_director_id: UserId
 
   semesters: number
   code: string
@@ -113,8 +135,8 @@ export type UpdateProgram = Updateable<ProgramTable>
 export interface ProgramCurriculumTable {
   id: Generated<number>
 
-  program_id: number
-  course_id: number
+  program_id: ProgramId
+  course_id: CourseId
   semester_number: number
   batch_year: number
 }
@@ -137,7 +159,7 @@ export interface UserTable {
   bio: string | null
 
   type: UserType
-  department_id: number | null
+  department_id: DepartmentId | null
 
   is_active: Generated<boolean>
   created_at: CreatedAt
@@ -149,8 +171,8 @@ export type NewUser = Insertable<UserTable>
 export type UpdateUser = Updateable<UserTable>
 
 export interface StudentTable {
-  student_id: number
-  class_id: number
+  student_id: UserId
+  class_id: ClassId
   roll_number: number
 }
 
@@ -159,7 +181,7 @@ export type NewStudent = Insertable<StudentTable>
 export type UpdateStudent = Updateable<StudentTable>
 
 export interface TeacherTable {
-  teacher_id: number
+  teacher_id: UserId
   designation: TeacherDesignation
 }
 
@@ -171,16 +193,16 @@ export interface ClassTable {
   id: Generated<number>
   public_id: ColumnType<string, never, never>
 
-  program_id: number
+  program_id: ProgramId
   current_semester: number
   section: ClassSection
 
-  cr_id: number | null
+  cr_id: StudentId | null
 
   academic_year: number
   admission_year: number
 
-  server_id: number
+  server_id: ServerId
 }
 
 export type Class = Selectable<ClassTable>
@@ -194,10 +216,10 @@ export interface SocietyTable {
   name: string
   description: string | null
 
-  department_id: number
-  president_id: number
-  convenor_id: number
-  server_id: number
+  department_id: DepartmentId
+  president_id: StudentId
+  convenor_id: TeacherId
+  server_id: ServerId
 
   is_active: Generated<boolean>
   created_at: CreatedAt
@@ -218,7 +240,7 @@ export interface ServerTable {
   type: ServerType
 
   is_active: Generated<boolean>
-  created_by: number
+  created_by: UserId
   created_at: CreatedAt
 }
 
@@ -234,26 +256,26 @@ export interface ChannelTable {
   description: string | null
   type: ChannelType
 
-  server_id: number
+  server_id: ServerId
 
-  course_id: number | null
+  course_id: CourseId | null
 
-  program_id: number | null
+  program_id: ProgramId | null
 
   is_locked: Generated<boolean>
-  locked_by: number | null
+  locked_by: UserId | null
   locked_at: LockedAt
 
   is_archived: Generated<boolean>
-  archived_by: number | null
+  archived_by: UserId | null
   archived_at: ArchivedAt
 
   is_deleted: Generated<boolean>
-  deleted_by: number | null
+  deleted_by: UserId | null
   deleted_at: DeletedAt
 
   is_auto_created: Generated<boolean>
-  created_by: number | null
+  created_by: UserId | null
   created_at: CreatedAt
 }
 
@@ -262,8 +284,8 @@ export type NewChannel = Insertable<ChannelTable>
 export type UpdateChannel = Updateable<ChannelTable>
 
 export interface ServerMembershipTable {
-  user_id: number
-  server_id: number
+  user_id: UserId
+  server_id: ServerId
 
   joined_at: ServerJoinedAt
   is_auto_joined: boolean
@@ -277,13 +299,13 @@ export interface SocietyMembershipRequestTable {
   id: Generated<number>
   public_id: ColumnType<string, never, never>
 
-  society_id: number
-  user_id: number
+  society_id: SocietyId
+  user_id: UserId
 
   status: MembershipRequestStatus
 
   requested_at: MembershipRequestedAt
-  reviewed_by: number | null
+  reviewed_by: UserId | null
   reviewed_at: RequestReviewedAt
 }
 
@@ -298,7 +320,7 @@ export interface CourseTable {
   code: string
   credit_hours: number
 
-  department_id: number
+  department_id: DepartmentId
 }
 
 export type Course = Selectable<CourseTable>
@@ -306,9 +328,9 @@ export type NewCourse = Insertable<CourseTable>
 export type UpdateCourse = Updateable<CourseTable>
 
 export interface CourseAssignmentTable {
-  teacher_id: number
-  course_id: number
-  class_id: number
+  teacher_id: TeacherId
+  course_id: CourseId
+  class_id: ClassId
 }
 
 export type CourseAssignment = Selectable<CourseAssignmentTable>
@@ -322,22 +344,22 @@ export interface PostTable {
   title: string
   content: string
 
-  channel_id: number
+  channel_id: ChannelId
 
   priority: Generated<PostPriority>
 
   is_pinned: Generated<boolean>
-  pinned_by: number | null
+  pinned_by: UserId | null
   pinned_at: PostPinnedAt
 
   is_deleted: Generated<boolean>
-  deleted_by: number | null
+  deleted_by: UserId | null
   deleted_at: PostDeletedAt
 
-  created_by: number
+  created_by: UserId
   created_at: CreatedAt
 
-  updated_by: number | null
+  updated_by: UserId | null
   updated_at: UpdatedAt
 }
 
@@ -348,7 +370,7 @@ export type UpdatePost = Updateable<PostTable>
 export interface PostAttachmentTable {
   id: Generated<number>
 
-  post_id: number
+  post_id: PostId
 
   file_url: string
   file_type: FileAttachmentType
@@ -382,8 +404,8 @@ export type NewPermission = Insertable<PermissionTable>
 export type UpdatePermission = Updateable<PermissionTable>
 
 export interface RolePermissionTable {
-  role_id: number
-  permission_id: number
+  role_id: RoleId
+  permission_id: PermissionId
 }
 
 export type RolePermission = Selectable<RolePermissionTable>
@@ -393,14 +415,14 @@ export type UpdateRolePermission = Updateable<RolePermissionTable>
 export interface ModeratorAssignmentTable {
   id: Generated<number>
 
-  user_id: number
+  user_id: UserId
 
   scope_type: ModeratorScopeType
 
-  server_id: number
-  channel_id: number | null
+  server_id: ServerId
+  channel_id: ChannelId | null
 
-  assigned_by: number
+  assigned_by: UserId
   assigned_at: RoleAssignedAt
 }
 
@@ -417,9 +439,9 @@ export interface NotificationTable {
 
   type: NotificationType
 
-  user_id: number
+  user_id: UserId
 
-  post_id: number | null
+  post_id: PostId | null
 
   read_at: NotificationReadAt
   created_at: CreatedAt
@@ -432,12 +454,12 @@ export type UpdateNotification = Updateable<NotificationTable>
 export interface NotificationPreferenceTable {
   id: Generated<number>
 
-  user_id: number
+  user_id: UserId
 
   scope_type: NotificationPreferenceScope
 
-  server_id: number | null
-  channel_id: number | null
+  server_id: ServerId | null
+  channel_id: ChannelId | null
 
   is_subscribed: Generated<boolean>
 
@@ -451,7 +473,7 @@ export type UpdateNotificationPreference = Updateable<NotificationPreferenceTabl
 export interface RefreshTokenTable {
   id: Generated<number>
 
-  user_id: number
+  user_id: UserId
 
   token_hash: string
 
