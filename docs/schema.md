@@ -54,7 +54,9 @@ departments {
   id GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
+
   hod_id INTEGER FK // UNIQUE Enforce NOT NULL in application layer. Can't enforce in DB due to chicken egg problem.
+
   server_id INTEGER FK // UNIQUE NOT NULL
 }
 
@@ -63,13 +65,15 @@ departments.server_id - servers.id
 
 programs {
   id GENERATED ALWAYS AS IDENTITY PK
+
   department_id INTEGER FK // NOT NULL
-  discipline TEXT // NOT NULL enum ['Computer Science', 'Software Engineering', ...]
-  degree_level TEXT // NOT NULL enum ['Bachelors', 'Masters', 'PHD']
-  semesters INTEGER // NOT NULL
-  code VARCHAR(20) // NOT NULL UNIQUE
+  discipline TEXT // NOT NULL enum ['computer_science', 'software_engineering', ...]
+  degree_level TEXT // NOT NULL enum ['bachelors', 'masters', 'phd']
 
   program_director_id INTEGER FK // NOT NULL
+
+  semesters INTEGER // NOT NULL
+  code VARCHAR(20) // NOT NULL UNIQUE
 
   // UNIQUE(department_id, discipline, degree_level)
 }
@@ -81,10 +85,11 @@ departments.id < programs.department_id
 
 program_curricula {
   id GENERATED ALWAYS AS IDENTITY PK
+
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
   semester_number INTEGER  // NOT NULL
-  batch_year DATE  // NOT NULL (admission year this applies to)
+  batch_year INTEGER  // NOT NULL (admission year this applies to)
   // UNIQUE(program_id, course_id, batch_year)
 }
 
@@ -94,18 +99,22 @@ program_curricula.course_id > courses.id
 users {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
+
   full_name VARCHAR(100) // NOT NULL
   email VARCHAR(255) // NOT NULL UNIQUE
   phone VARCHAR(20) // NOT NULL
   password_hash VARCHAR(255) // NOT NULL
+
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
   profile_picture_url TEXT
   bio TEXT
-  type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
-  department_id INTEGER FK // Will be NULL only for admin user type
+
+  type VARCHAR(20) // NOT NULL enum ['student', 'teacher', 'admin']
+  department_id INTEGER FK // CHECK (type = 'admin' AND department_id IS NULL)
+
   is_active BOOLEAN // DEFAULT TRUE
-  created_at TIMESTAMPZ // DEFAULT NOW()
-  updated_at TIMESTAMPZ // DEFAULT NOW()
+  created_at TIMESTAMPTZ // DEFAULT NOW()
+  updated_at TIMESTAMPTZ // Populate when something is updated
 }
 
 // One department can have many users.
@@ -133,13 +142,18 @@ teachers.teacher_id - users.id
 classes {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
+
   program_id INTEGER FK // NOT NULL
   current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
+  section VARCHAR(1) // NOT NULL enum['a', 'b']
+
+  cr_id INTEGER FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
+
   academic_year INTEGER // NOT NULL. Represents current year
   admission_year INTEGER // NOT NULL. Represents the year this batch was admitted
-  section VARCHAR(1) // NOT NULL enum['A', 'B']
-  cr_id INTEGER FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
+
   server_id INTEGER FK // UNIQUE NOT NULL
+
   // Constraint CHECK (cr belongs to this class)
   // UNIQUE (program_id, current_semester, section, admission_year)
 }
@@ -153,14 +167,17 @@ classes.server_id - servers.id
 societies {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
+
   name VARCHAR(100) // UNIQUE NOT NULL
   description TEXT
+
   department_id INT FK // NOT NULL
   president_id INT FK // NOT NULL
   convenor_id INT FK // NOT NULL
   server_id INT FK // UNIQUE NOT NULL
+
   is_active BOOLEAN // DEFAULT TRUE
-  created_at TIMESTAMPZ // DEFAULT NOW()
+  created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
 // One department can contain many societies
@@ -179,14 +196,15 @@ societies.server_id - servers.id
 servers {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
+
   name VARCHAR(100) // NOT NULL
   description TEXT
-  type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
-
+  type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
   icon_url TEXT
+
   is_active BOOLEAN // DEFAULT TRUE
   created_by INTEGER FK // NOT NULL
-  created_at TIMESTAMPZ // DEFAULT NOW()
+  created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
 servers.created_by > users.id
@@ -194,11 +212,13 @@ servers.created_by > users.id
 channels {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
-  server_id INTEGER FK // NOT NULL
+
   name VARCHAR(100) // NOT NULL
   description TEXT
-  type VARCHAR(50) // NOT NULL enum ['announcement', 'course', 'general', 'program']
+  type VARCHAR(50) // NOT NULL enum ['announcements', 'course', 'general', 'program']
 
+  server_id INTEGER FK // NOT NULL
+ 
   // For course channels (in class server) 
   course_id INT FK
 
@@ -212,19 +232,19 @@ channels {
 
   is_locked BOOLEAN // DEFAULT FALSE
   locked_by INTEGER FK
-  locked_at TIMESTAMPZ
+  locked_at TIMESTAMPTZ // Populate when is_locked becomes true
 
   is_archived BOOLEAN // DEFAULT FALSE
-  archived_at TIMESTAMPZ
   archived_by INTEGER FK
+  archived_at TIMESTAMPTZ // Populate when is_archived becomes true
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_at TIMESTAMPZ
   deleted_by INTEGER FK
+  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
 
   is_auto_created BOOLEAN // DEFAULT FALSE
-  created_at TIMESTAMPZ
   created_by INTEGER FK
+  created_at TIMESTAMPTZ // DEFAULT NOW()
   
   // UNIQUE(server_id, name)
 }
@@ -245,7 +265,8 @@ channels.archived_by > users.id
 server_memberships {
   user_id PK FK
   server_id PK FK
-  joined_at TIMESTAMPZ // DEFAULT NOW()
+
+  joined_at TIMESTAMPTZ // DEFAULT NOW()
   is_auto_joined BOOLEAN // DEFAULT FALSE
 }
 
@@ -256,12 +277,16 @@ servers.id < server_memberships.server_id
 society_membership_requests {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
+
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
+
   status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
-  requested_at TIMESTAMPZ  // DEFAULT NOW()
+
+  requested_at TIMESTAMPTZ  // DEFAULT NOW()
   reviewed_by INTEGER FK
-  reviewed_at TIMESTAMPZ
+  reviewed_at TIMESTAMPTZ // Populate when status changes
+
   // UNIQUE(society_id, user_id)
 }
 
@@ -271,9 +296,11 @@ society_membership_requests.reviewed_by > users.id
 
 courses {
   id GENERATED ALWAYS AS IDENTITY PK
+
   title VARCHAR(50) // NOT NULL
   code VARCHAR(50) // UNIQUE NOT NULL
   credit_hours INTEGER // NOT NULL
+
   department_id INTEGER FK // NOT NULL
 }
 
@@ -295,30 +322,30 @@ course_assignments.class_id > classes.id
 posts {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
-  author_id INTEGER FK // NOT NULL
-
-  channel_id INTEGER FK // NOT NULL
 
   title VARCHAR(100) // NOT NULL
   content TEXT // NOT NULL
+
+  channel_id INTEGER FK // NOT NULL
 
   priority VARCHAR(50) // DEFAULT normal enum ['normal', 'important', 'urgent']
 
   is_pinned BOOLEAN // DEFAULT FALSE
   pinned_by INTEGER FK
-  pinned_at TIMESTAMPZ
+  pinned_at TIMESTAMPTZ // Populate when is_pinned becomes true
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_at TIMESTAMPZ
   deleted_by INTEGER FK
+  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
   
-  created_at TIMESTAMPZ // DEFAULT NOW()
+  created_by INTEGER FK // NOT NULL
+  created_at TIMESTAMPTZ // DEFAULT NOW()
   
-  updated_at TIMESTAMPZ 
   updated_by INTEGER FK
+  updated_at TIMESTAMPTZ // Populate when updated_by changes
 }
 
-posts.author_id > users.id
+posts.created_by > users.id
 posts.channel_id > channels.id
 
 posts.deleted_by > users.id
@@ -328,12 +355,16 @@ posts.pinned_by > users.id
 
 post_attachments {
   id GENERATED ALWAYS AS IDENTITY PK
+
   post_id INTEGER FK // NOT NULL
+
   file_url TEXT // NOT NULL
   file_type VARCHAR(50) // NOT NULL enum ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', ...]
   file_size INTEGER // NOT NULL, CHECK(file_size <= 5242880)  -- 5MB
+
   // Also enforce max attachment count (e.g., 5) at application layer
-  uploaded_at TIMESTAMPZ // DEFAULT NOW()
+
+  uploaded_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
 // One post can have many attachments
@@ -341,12 +372,15 @@ post_attachments.post_id > posts.id
 
 roles {
   id GENERATED ALWAYS AS IDENTITY PK
+
   name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
 }
 
 permissions {
-  id GENERATED ALWAYS AS IDENTITY PK
-  name VARCHAR(100) // NOT NULL enum['post:channel', 'create:channel', 'delete:channel', 'create:society', create:department', 'create:class' 'assign:program_director', 'assign:...other roles'] 
+  id: GENERATED ALWAYS AS IDENTITY PK
+
+  action: TEXT // NOT NULL enum['create', 'update', 'delete', 'post', 'assign']
+  resource: TEXT // NOT NULL enum['channel', 'society', 'class', 'role']
 }
 
 // This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
@@ -361,19 +395,22 @@ role_permissions.permission_id > permissions.id
 
 moderator_assignments {
   id GENERATED ALWAYS AS IDENTITY PK
-  user_id INTEGER FK
-  scope_type VARCHAR(20) // NOT NULL enum ['server' or 'channel']
+
+  user_id INTEGER FK // NOT NULL
+  scope_type VARCHAR(20) // NOT NULL enum ['server', 'channel']
+
   server_id INTEGER FK // NOT NULL Always required
   channel_id INTEGER FK
 
   // CONSTRAINT: CHECK (
-    // (scope_type='server' AND channel_id IS NULL)
+    // (scope_type='server' AND channel_id IS NULL) OR
+    // (scope_type='channel' AND server_id IS NOT NULL AND channel_id IS NOT NULL)
   // )
 
   // UNIQUE(user_id, server_id, COALESCE(channel_id, 0))
 
   assigned_by INTEGER FK // NOT NULL
-  assigned_at TIMESTAMPZ // DEFAULT NOW()
+  assigned_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
 moderator_assignments.user_id > users.id
@@ -384,13 +421,18 @@ moderator_assignments.assigned_by > users.id
 notifications {
   id GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
-  user_id INTEGER FK // NOT NULL
-  post_id INTEGER FK 
-  type VARCHAR(50) // enum ['new_post', 'role_assigned']
+
   title VARCHAR(200) // NOT NULL
   message TEXT
-  read_at TIMESTAMPZ
-  created_at TIMESTAMPZ // DEFAULT NOW()
+
+  type VARCHAR(50) // enum ['new_post', 'role_assigned']
+
+  user_id INTEGER FK // NOT NULL
+
+  post_id INTEGER FK 
+  
+  read_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
 notifications.user_id > users.id
@@ -398,12 +440,22 @@ notifications.post_id > posts.id
 
 notification_preferences {
   id GENERATED ALWAYS AS IDENTITY PK
-  user_id INTEGER FK
-  scope_type VARCHAR(20) // enum['server, 'channel']
+
+  user_id INTEGER FK // NOT NULL
+
+  scope_type VARCHAR(20) // enum['server', 'channel']
+
   server_id INTEGER FK
   channel_id INTEGER FK
+
+  // CONSTRAINT: CHECK (
+    // (scope_type='server' AND channel_id IS NULL) OR
+    // (scope_type='channel' AND server_id IS NOT NULL AND channel_id IS NOT NULL)
+  // )
+
   is_subscribed BOOLEAN // DEFAULT TRUE
-  updated_at TIMESTAMPZ
+
+  updated_at TIMESTAMPTZ // Populate on update
 
   // UNIQUE(user_id, scope_type, server_id, COALESCE(channel_id, 0))
 }
@@ -414,11 +466,14 @@ notification_preferences.channel_id > channels.id
 
 refresh_tokens {
   id GENERATED ALWAYS AS IDENTITY PK
+
   user_id INTEGER FK  // NOT NULL
+
   token_hash VARCHAR(255)  // NOT NULL UNIQUE
-  expires_at TIMESTAMPZ  // NOT NULL
-  created_at TIMESTAMPZ  // DEFAULT NOW()
-  revoked_at TIMESTAMPZ
+  
+  expires_at TIMESTAMPTZ  // NOT NULL
+  created_at TIMESTAMPTZ  // DEFAULT NOW()
+  revoked_at TIMESTAMPTZ
 }
 
 refresh_tokens.user_id > users.id
