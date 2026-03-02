@@ -377,10 +377,10 @@ roles {
 }
 
 permissions {
-  id: GENERATED ALWAYS AS IDENTITY PK
+  id GENERATED ALWAYS AS IDENTITY PK
 
-  action: TEXT // NOT NULL enum['create', 'update', 'delete', 'post', 'assign']
-  resource: TEXT // NOT NULL enum['channel', 'society', 'class', 'role']
+  action TEXT // NOT NULL enum['create', 'update', 'delete', 'post', 'assign']
+  resource TEXT // NOT NULL enum['channel', 'society', 'class', 'role']
 }
 
 // This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
