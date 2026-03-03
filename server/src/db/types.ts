@@ -95,7 +95,7 @@ type UploadedAt = ColumnType<Date, never, never>
 type RoleAssignedAt = ColumnType<Date, never, never>
 
 // Fields Controlled by App Layer
-type NotificationReadAt = ColumnType<Date | null, Date | undefined | null, Date>
+type NotificationReadAt = ColumnType<Date | null, Date | null, Date>
 type TokenExpiresAt = Date
 type TokenRevokedAt = ColumnType<Date | null, Date | null, Date>
 
