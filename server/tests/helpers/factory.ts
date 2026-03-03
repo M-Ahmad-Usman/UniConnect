@@ -50,30 +50,43 @@ export async function seedRolesAndPermissions() {
   ];
   const roleNames = Object.keys(ROLE_PERMISSIONS);
 
-  // Create roles and permissions
+  // Batch-create roles and permissions (skipDuplicates avoids upsert overhead)
   await Promise.all([
-    ...roleNames.map((name) =>
-      prisma.role.upsert({ where: { name }, update: {}, create: { name } })
-    ),
-    ...permNames.map((name) =>
-      prisma.permission.upsert({ where: { name }, update: {}, create: { name } })
-    ),
+    prisma.role.createMany({
+      data: roleNames.map((name) => ({ name })),
+      skipDuplicates: true,
+    }),
+    prisma.permission.createMany({
+      data: permNames.map((name) => ({ name })),
+      skipDuplicates: true,
+    }),
   ]);
 
-  // Create mappings
+  // Fetch all roles and permissions in two queries
+  const [roles, permissions] = await Promise.all([
+    prisma.role.findMany({ where: { name: { in: roleNames } } }),
+    prisma.permission.findMany({ where: { name: { in: permNames } } }),
+  ]);
+
+  const roleMap = new Map(roles.map((r) => [r.name, r.id]));
+  const permMap = new Map(permissions.map((p) => [p.name, p.id]));
+
+  // Build all mappings in memory, then batch-insert
+  const mappings: { roleId: number; permissionId: number }[] = [];
   for (const [roleName, perms] of Object.entries(ROLE_PERMISSIONS)) {
-    const role = await prisma.role.findUnique({ where: { name: roleName } });
-    if (!role) continue;
+    const roleId = roleMap.get(roleName);
+    if (!roleId) continue;
     for (const permName of perms) {
-      const perm = await prisma.permission.findUnique({ where: { name: permName } });
-      if (!perm) continue;
-      await prisma.rolePermission.upsert({
-        where: { roleId_permissionId: { roleId: role.id, permissionId: perm.id } },
-        update: {},
-        create: { roleId: role.id, permissionId: perm.id },
-      });
+      const permissionId = permMap.get(permName);
+      if (!permissionId) continue;
+      mappings.push({ roleId, permissionId });
     }
   }
+
+  await prisma.rolePermission.createMany({
+    data: mappings,
+    skipDuplicates: true,
+  });
 
   // Clear the cached role-permission map so it reloads from DB
   clearRolePermissionCache();
@@ -94,7 +107,7 @@ async function ensureCreatorUser(userId?: number): Promise<number> {
  * Create an admin user in the test database.
  */
 export async function createAdmin(overrides?: { email?: string; fullName?: string }) {
-  const passwordHash = await bcrypt.hash(`${TEMP_PASSWORD_PREFIX}admin123`, 10);
+  const passwordHash = await bcrypt.hash(`${TEMP_PASSWORD_PREFIX}admin123`, 1);
 
   return prisma.user.create({
     data: {
@@ -124,7 +137,7 @@ export async function createUser(overrides: {
   departmentId?: number | null;
 }) {
   const password = overrides.password ?? "Test@1234";
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 1);
 
   return prisma.user.create({
     data: {

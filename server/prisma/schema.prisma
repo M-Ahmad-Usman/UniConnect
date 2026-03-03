@@ -325,6 +325,7 @@ model Channel {
 
   @@unique([serverId, name])
   @@unique([serverId, courseId])
+  @@index([serverId, isDeleted, isArchived])
   @@map("channels")
 }
 
@@ -338,6 +339,7 @@ model ServerMembership {
   server Server @relation(fields: [serverId], references: [id])
 
   @@id([userId, serverId])
+  @@index([serverId])
   @@map("server_memberships")
 }
 
@@ -417,6 +419,8 @@ model Post {
   attachments   PostAttachment[]
   notifications Notification[]
 
+  @@index([channelId, isDeleted, isPinned, createdAt(sort: Desc)])
+  @@index([authorId])
   @@map("posts")
 }
 
@@ -430,6 +434,7 @@ model PostAttachment {
 
   post Post @relation(fields: [postId], references: [id])
 
+  @@index([postId])
   @@map("post_attachments")
 }
 
@@ -478,6 +483,7 @@ model ModeratorAssignment {
   assigner User    @relation("ModeratorAssigner", fields: [assignedBy], references: [id])
 
   @@unique([userId, serverId, channelId])
+  @@index([serverId])
   @@map("moderator_assignments")
 }
 
@@ -494,6 +500,8 @@ model Notification {
   user User  @relation(fields: [userId], references: [id])
   post Post? @relation(fields: [postId], references: [id])
 
+  @@index([userId, readAt])
+  @@index([postId])
   @@map("notifications")
 }
 
@@ -524,6 +532,7 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@index([userId])
   @@map("refresh_tokens")
 }
 

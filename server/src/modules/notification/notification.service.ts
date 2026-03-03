@@ -199,28 +199,39 @@ export async function createPostNotifications(
     })),
   });
 
-  // Fetch created notifications with userId for real-time delivery routing
-  const notifications = await prisma.notification.findMany({
-    where: { postId, userId: { in: subscribedIds } },
-    select: { ...notificationListSelect, userId: true },
-  });
+  // Compute unread counts for all recipients in a single query (avoids N+1)
+  const [unreadCounts, notifications] = await Promise.all([
+    prisma.notification.groupBy({
+      by: ["userId"],
+      where: { userId: { in: subscribedIds }, readAt: null },
+      _count: { _all: true },
+    }),
+    prisma.notification.findMany({
+      where: { postId, userId: { in: subscribedIds } },
+      select: { ...notificationListSelect, userId: true },
+    }),
+  ]);
 
-  // Emit real-time events to each recipient
-  await Promise.all(
-    notifications.map(async (notification) => {
-      emitToUser(notification.userId, "notification:new", {
-        id: notification.id,
-        type: notification.type,
-        title: notification.title,
-        message: notification.message,
-        readAt: notification.readAt,
-        createdAt: notification.createdAt,
-        postId: notification.postId,
-        post: notification.post,
-      });
-      await emitUnreadCount(notification.userId);
-    })
+  const unreadCountMap = new Map(
+    unreadCounts.map((r) => [r.userId, r._count._all])
   );
+
+  // Emit real-time events using pre-computed counts — no per-user DB queries
+  for (const notification of notifications) {
+    emitToUser(notification.userId, "notification:new", {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      readAt: notification.readAt,
+      createdAt: notification.createdAt,
+      postId: notification.postId,
+      post: notification.post,
+    });
+    emitToUser(notification.userId, "notification:unread-count", {
+      count: unreadCountMap.get(notification.userId) ?? 0,
+    });
+  }
 }
 
 export async function listNotifications(

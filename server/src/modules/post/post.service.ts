@@ -14,12 +14,14 @@ import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
+import type { UserRole } from "../../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 type CallerInfo = {
   id: number;
   userType: string;
+  userRoles?: UserRole[];
 };
 
 type CreatePostInput = {
@@ -279,18 +281,20 @@ async function uploadAttachments(
   postId: number,
   files: UploadedFile[]
 ): Promise<void> {
-  for (const file of files) {
-    const { url } = await cloudinaryService.uploadImage(file.buffer, "post-attachments");
+  // Upload all files to Cloudinary in parallel
+  const uploaded = await Promise.all(
+    files.map((file) => cloudinaryService.uploadImage(file.buffer, "post-attachments"))
+  );
 
-    await prisma.postAttachment.create({
-      data: {
-        postId,
-        fileUrl: url,
-        fileType: file.mimetype,
-        fileSize: file.size,
-      },
-    });
-  }
+  // Batch-insert all attachment records in one query
+  await prisma.postAttachment.createMany({
+    data: uploaded.map(({ url }, i) => ({
+      postId,
+      fileUrl: url,
+      fileType: files[i].mimetype,
+      fileSize: files[i].size,
+    })),
+  });
 }
 
 // ─── Exported Helpers ──────────────────────────────────────────────────────
@@ -330,7 +334,7 @@ export async function createPost(
   }
 
   // Check posting rights
-  const allowed = await canPostInChannel(caller.id, caller.userType, channelId);
+  const allowed = await canPostInChannel(caller.id, caller.userType, channelId, caller.userRoles);
   if (!allowed) {
     throw new ForbiddenError("You do not have permission to post in this channel");
   }

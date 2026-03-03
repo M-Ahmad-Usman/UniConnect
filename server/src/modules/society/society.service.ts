@@ -133,63 +133,45 @@ async function findSocietyOrThrow(id: number) {
 }
 
 async function assertStudentForSocietyOrThrow(userId: number, departmentId: number) {
-  const studentInfo = await prisma.studentInfo.findUnique({
-    where: { studentId: userId },
-    select: { studentId: true },
-  });
-
-  if (!studentInfo) {
-    throw new NotFoundError("Student not found for president role");
-  }
-
-  const student = await prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       id: userId,
       userType: "STUDENT",
       isActive: true,
     },
-    select: { id: true, departmentId: true },
+    select: { id: true, departmentId: true, studentInfo: { select: { studentId: true } } },
   });
 
-  if (!student) {
+  if (!user || !user.studentInfo) {
     throw new NotFoundError("Student not found for president role");
   }
 
-  if (student.departmentId !== departmentId) {
+  if (user.departmentId !== departmentId) {
     throw new ForbiddenError("President must belong to the same department as the society");
   }
 
-  return student;
+  return user;
 }
 
 async function assertTeacherForSocietyOrThrow(userId: number, departmentId: number) {
-  const teacherInfo = await prisma.teacherInfo.findUnique({
-    where: { teacherId: userId },
-    select: { teacherId: true },
-  });
-
-  if (!teacherInfo) {
-    throw new NotFoundError("Teacher not found for convenor role");
-  }
-
-  const teacher = await prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       id: userId,
       userType: "TEACHER",
       isActive: true,
     },
-    select: { id: true, departmentId: true },
+    select: { id: true, departmentId: true, teacherInfo: { select: { teacherId: true } } },
   });
 
-  if (!teacher) {
+  if (!user || !user.teacherInfo) {
     throw new NotFoundError("Teacher not found for convenor role");
   }
 
-  if (teacher.departmentId !== departmentId) {
+  if (user.departmentId !== departmentId) {
     throw new ForbiddenError("Convenor must belong to the same department as the society");
   }
 
-  return teacher;
+  return user;
 }
 
 function isCallerAuthorized(
@@ -231,9 +213,11 @@ export async function createSociety(data: CreateSocietyInput, caller: CallerInfo
     }
   }
 
-  // 3. Resolve and validate leadership users
-  await assertStudentForSocietyOrThrow(data.presidentId, data.departmentId);
-  await assertTeacherForSocietyOrThrow(data.convenorId, data.departmentId);
+  // 3. Resolve and validate leadership users (parallel — independent checks)
+  await Promise.all([
+    assertStudentForSocietyOrThrow(data.presidentId, data.departmentId),
+    assertTeacherForSocietyOrThrow(data.convenorId, data.departmentId),
+  ]);
 
   // 5. Create everything in a transaction
   return prisma.$transaction(async (tx) => {

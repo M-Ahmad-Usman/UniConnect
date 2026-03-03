@@ -17,6 +17,7 @@ export async function handleCreatePost(req: Request, res: Response): Promise<voi
   const post = await postService.createPost(channelId, req.body, uploadedFiles, {
     id: req.user!.id,
     userType: req.user!.userType,
+    userRoles: req.userRoles,
   });
 
   const response: ApiResponse<typeof post> = {

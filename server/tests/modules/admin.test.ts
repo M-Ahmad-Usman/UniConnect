@@ -15,9 +15,11 @@ import {
   createSociety,
   loginAs,
 } from "../helpers/factory.js";
+import { clearStatsCache } from "../../src/modules/admin/admin.service.js";
 
 beforeEach(async () => {
   await resetDB();
+  clearStatsCache();
 });
 
 afterEach(() => {

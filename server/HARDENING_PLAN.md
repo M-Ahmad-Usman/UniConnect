@@ -24,14 +24,14 @@ The codebase follows solid architectural patterns (layered architecture, domain 
 
 | Step | Phase | Title | Status |
 |------|-------|-------|--------|
-| 1 | Perf | Add missing database indexes | ⬜ Not started |
-| 2 | Perf | Fix notification fan-out N+1 | ⬜ Not started |
-| 3 | Perf | Cache `getUserRoles` per-request | ⬜ Not started |
-| 4 | Perf | Parallelize attachment uploads | ⬜ Not started |
-| 5 | Perf | Optimize `canPostInChannel` query waterfall | ⬜ Not started |
-| 6 | Perf | Eliminate double-fetch in channel mutations | ⬜ Not started |
-| 7 | Perf | Merge sequential validation queries in society service | ⬜ Not started |
-| 8 | Perf | Add short-TTL cache for `getSystemStats` | ⬜ Not started |
+| 1 | Perf | Add missing database indexes | ✅ Complete |
+| 2 | Perf | Fix notification fan-out N+1 | ✅ Complete |
+| 3 | Perf | Cache `getUserRoles` per-request | ✅ Complete |
+| 4 | Perf | Parallelize attachment uploads | ✅ Complete |
+| 5 | Perf | Optimize `canPostInChannel` query waterfall | ✅ Complete |
+| 6 | Perf | Eliminate double-fetch in channel mutations | ⏭️ Deferred |
+| 7 | Perf | Merge sequential validation queries in society service | ✅ Complete |
+| 8 | Perf | Add short-TTL cache for `getSystemStats` | ✅ Complete |
 | 9 | Sec  | Add rate limiting | ⬜ Not started |
 | 10 | Sec  | Validate file uploads using magic bytes | ⬜ Not started |
 | 11 | Sec  | Enforce JWT secret minimum length | ⬜ Not started |

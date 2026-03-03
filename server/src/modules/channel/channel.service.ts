@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma.js";
 import { NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { getUserRoles } from "../../middleware/authorize.js";
+import type { UserRole } from "../../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -162,12 +163,13 @@ export async function deleteChannel(channelId: number, caller: CallerInfo) {
 export async function canPostInChannel(
   userId: number,
   userType: string,
-  channelId: number
+  channelId: number,
+  preloadedRoles?: UserRole[]
 ): Promise<boolean> {
   // 1. Admin can post anywhere
   if (userType === "ADMIN") return true;
 
-  // 2. Fetch channel with server info
+  // 2. Fetch channel + server + membership in one round-trip
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
     select: {
@@ -179,24 +181,30 @@ export async function canPostInChannel(
       isArchived: true,
       courseId: true,
       programId: true,
-      server: { select: { type: true } },
+      server: {
+        select: {
+          type: true,
+          memberships: {
+            where: { userId },
+            select: { userId: true },
+            take: 1,
+          },
+          class: { select: { id: true } },
+        },
+      },
     },
   });
 
   if (!channel || channel.isDeleted || channel.isArchived) return false;
 
-  // 3. Must be a server member
-  const membership = await prisma.serverMembership.findUnique({
-    where: { userId_serverId: { userId, serverId: channel.serverId } },
-  });
-
-  if (!membership) return false;
+  // 3. Must be a server member (derived from the single query above)
+  if (channel.server.memberships.length === 0) return false;
 
   // 4. Locked channels: no one posts
   if (channel.isLocked) return false;
 
   // 5. Resolve user roles
-  const roles = await getUserRoles(userId);
+  const roles = preloadedRoles ?? await getUserRoles(userId);
 
   for (const role of roles) {
     if (role.serverId !== channel.serverId) continue;
@@ -239,10 +247,8 @@ export async function canPostInChannel(
 
   // 6. Teacher assigned to a course channel (FR-34)
   if (channel.type === "COURSE" && channel.courseId && userType === "TEACHER") {
-    const classRecord = await prisma.class.findUnique({
-      where: { serverId: channel.serverId },
-      select: { id: true },
-    });
+    // Class info already fetched from the combined query above
+    const classRecord = channel.server.class;
 
     if (classRecord) {
       const teaches = await prisma.teaches.findUnique({

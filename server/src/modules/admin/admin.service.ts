@@ -89,7 +89,27 @@ function parseAdminUserFilters(query: AdminListUsersQuery) {
 
 // ─── System Stats ──────────────────────────────────────────────────────────
 
+interface StatsCache {
+  data: SystemStats;
+  cachedAt: number;
+}
+
+const STATS_CACHE_TTL_MS = 60_000; // 60 seconds
+let statsCache: StatsCache | null = null;
+
+/**
+ * Clear the stats cache. Exported for test isolation.
+ */
+export function clearStatsCache(): void {
+  statsCache = null;
+}
+
 export async function getSystemStats(): Promise<SystemStats> {
+  const now = Date.now();
+  if (statsCache && now - statsCache.cachedAt < STATS_CACHE_TTL_MS) {
+    return statsCache.data;
+  }
+
   const [usersByType, activeUsers, serversByType, totalPosts] = await Promise.all([
     prisma.user.groupBy({
       by: ["userType"],
@@ -121,7 +141,7 @@ export async function getSystemStats(): Promise<SystemStats> {
     else if (group.type === "SOCIETY") serverCounts.society = count;
   }
 
-  return {
+  const result: SystemStats = {
     users: {
       total: userCounts.total,
       students: userCounts.students,
@@ -134,6 +154,9 @@ export async function getSystemStats(): Promise<SystemStats> {
       total: totalPosts,
     },
   };
+
+  statsCache = { data: result, cachedAt: Date.now() };
+  return result;
 }
 
 // ─── Admin User List ───────────────────────────────────────────────────────
