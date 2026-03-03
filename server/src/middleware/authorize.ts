@@ -55,9 +55,7 @@ async function resolveId(req: Request, resolver: IdResolver): Promise<number> {
   const rawValue =
     typeof resolver === "function"
       ? await resolver(req)
-      : req.params[resolver] ??
-        (req.body && typeof req.body === "object" ? req.body[resolver] : undefined) ??
-        req.query[resolver];
+      : req.params[resolver];
 
   const value = typeof rawValue === "string" ? Number.parseInt(rawValue, 10) : Number(rawValue);
 

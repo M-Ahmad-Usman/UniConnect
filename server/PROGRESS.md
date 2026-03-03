@@ -1,8 +1,8 @@
 # UniConnect — Backend Development Progress Tracker
 
-**Last Updated:** February 28, 2026
+**Last Updated:** March 3, 2026
 
-**Current Automated Test Status:** 446/446 passing (17 suites)
+**Current Automated Test Status:** 447/447 passing (17 suites)
 
 ---
 
@@ -899,3 +899,32 @@ npm run db:studio
 ## All Modules Complete
 
 All 13 modules (0–12) are implemented and tested. The backend API is feature-complete per the functional requirements.
+---
+
+## Post-Module Hardening
+
+### Phase 1 — Performance (Steps 0–8)
+**Completed:** March 3, 2026
+**Details:** See [HARDENING_LOG.md](./HARDENING_LOG.md) Steps 0–8
+
+Summary: Test suite optimization (163s → 68s), database indexing (9 indexes across 7 models), N+1 fix in notification fan-out, per-request role caching, parallel attachment uploads, query waterfall elimination, society service query merging, and stats caching. Step 6 deferred. Tests: 446/446.
+
+### Phase 2 — Security (Steps 9–16)
+**Completed:** March 3, 2026
+**Details:** See [HARDENING_LOG.md](./HARDENING_LOG.md) Steps 9–16
+
+Summary of changes:
+| Step | Title | Impact |
+|------|-------|--------|
+| 9 | Rate limiting | 3-tier rate limiters (auth: 5/15min, general: 100/min, upload: 10/min) |
+| 10 | Magic bytes validation | File uploads verified by content, not just extension (JPEG/PNG/GIF/WebP); binary-format CSVs rejected; test fixtures added for valid image buffers |
+| 11 | JWT secret min length | Secrets require ≥32 chars, expiry format validated |
+| 12 | Reset token invalidation | One-time use via SHA-256 hash storage (+1 new test) |
+| 13 | Error leakage plugged | Generic P2002 messages, debug field only in non-production |
+| 14 | resolveId hardened | Params-only for string resolvers (no body/query injection) |
+| 15 | Socket.IO hardening | Connection rate limiting (10/min/IP), auto-disconnect on token expiry |
+| 16 | Audit logging | Morgan HTTP logging + structured auth event logs |
+
+**New dependencies:** `express-rate-limit`, `file-type`, `morgan`, `@types/morgan`
+**New migration:** `add_password_reset_token_hash` (adds `passwordResetTokenHash` to User)
+**Final test count:** 447/447 passing (17 suites)

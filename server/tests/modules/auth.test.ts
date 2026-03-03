@@ -1,5 +1,6 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/prisma.js";
 import { env } from "../../src/config/env.js";
@@ -354,6 +355,13 @@ describe("POST /api/auth/reset-password", () => {
       { expiresIn: "1h" }
     );
 
+    // Simulate what forgotPassword does: store the token hash
+    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    await prisma.user.update({
+      where: { id: user!.id },
+      data: { passwordResetTokenHash: tokenHash },
+    });
+
     const res = await request(app)
       .post("/api/auth/reset-password")
       .send({ token: resetToken, newPassword: "NewReset@123" });
@@ -366,6 +374,10 @@ describe("POST /api/auth/reset-password", () => {
       .post("/api/auth/login")
       .send({ email: "reset@test.com", password: "NewReset@123" });
     expect(loginRes.status).toBe(200);
+
+    // Hash should be cleared after use
+    const updated = await prisma.user.findUnique({ where: { id: user!.id } });
+    expect(updated!.passwordResetTokenHash).toBeNull();
   });
 
   it("should return 401 for expired token", async () => {
@@ -394,6 +406,35 @@ describe("POST /api/auth/reset-password", () => {
 
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
+  });
+
+  it("should return 401 when using the same reset token twice", async () => {
+    const user = await prisma.user.findUnique({ where: { email: "reset@test.com" } });
+    const resetToken = jwt.sign(
+      { id: user!.id, email: user!.email },
+      env.RESET_PASSWORD_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Store token hash (simulating forgotPassword)
+    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    await prisma.user.update({
+      where: { id: user!.id },
+      data: { passwordResetTokenHash: tokenHash },
+    });
+
+    // First use — should succeed
+    const res1 = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ token: resetToken, newPassword: "FirstReset@123" });
+    expect(res1.status).toBe(200);
+
+    // Second use — should fail (token hash was cleared)
+    const res2 = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ token: resetToken, newPassword: "SecondReset@123" });
+    expect(res2.status).toBe(401);
+    expect(res2.body.success).toBe(false);
   });
 });
 

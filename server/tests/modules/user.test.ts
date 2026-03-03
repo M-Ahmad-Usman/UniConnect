@@ -13,6 +13,7 @@ import {
   loginAs,
 } from "../helpers/factory.js";
 import { emailService } from "../../src/config/email.js";
+import { VALID_PNG_BUFFER } from "../helpers/fixtures.js";
 import { cloudinaryService } from "../../src/config/cloudinary.js";
 
 beforeAll(async () => {
@@ -385,7 +386,7 @@ describe("Module 2 - User Management", () => {
       const res = await request(app)
         .patch("/api/users/me/profile-picture")
         .set("Cookie", cookies)
-        .attach("profilePicture", Buffer.from("fake-image"), {
+        .attach("profilePicture", VALID_PNG_BUFFER, {
           filename: "profile.png",
           contentType: "image/png",
         });

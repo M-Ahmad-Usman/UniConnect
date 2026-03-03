@@ -3,6 +3,7 @@ import { jest } from "@jest/globals";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/prisma.js";
 import { cloudinaryService } from "../../src/config/cloudinary.js";
+import { VALID_JPEG_BUFFER, VALID_PNG_BUFFER } from "../helpers/fixtures.js";
 import { resetDB } from "../helpers/db.helper.js";
 import {
   createUser,
@@ -309,11 +310,11 @@ describe("Module 9 - Posts & Announcements", () => {
         .field("title", "Post With Images")
         .field("content", "Check these images")
         .field("priority", "URGENT")
-        .attach("attachments", Buffer.from("fake-image-1"), {
+        .attach("attachments", VALID_JPEG_BUFFER, {
           filename: "image1.jpg",
           contentType: "image/jpeg",
         })
-        .attach("attachments", Buffer.from("fake-image-2"), {
+        .attach("attachments", VALID_PNG_BUFFER, {
           filename: "image2.png",
           contentType: "image/png",
         });
@@ -347,10 +348,10 @@ describe("Module 9 - Posts & Announcements", () => {
         .set("Cookie", cookies)
         .field("title", "Too Many Images")
         .field("content", "Overflow")
-        .attach("attachments", Buffer.from("img1"), { filename: "a.jpg", contentType: "image/jpeg" })
-        .attach("attachments", Buffer.from("img2"), { filename: "b.jpg", contentType: "image/jpeg" })
-        .attach("attachments", Buffer.from("img3"), { filename: "c.jpg", contentType: "image/jpeg" })
-        .attach("attachments", Buffer.from("img4"), { filename: "d.jpg", contentType: "image/jpeg" });
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "a.jpg", contentType: "image/jpeg" })
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "b.jpg", contentType: "image/jpeg" })
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "c.jpg", contentType: "image/jpeg" })
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "d.jpg", contentType: "image/jpeg" });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -1286,7 +1287,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const res = await request(app)
         .post(`/api/posts/${post.id}/attachments`)
         .set("Cookie", cookies)
-        .attach("attachments", Buffer.from("test-image"), {
+        .attach("attachments", VALID_JPEG_BUFFER, {
           filename: "test.jpg",
           contentType: "image/jpeg",
         });
@@ -1322,8 +1323,8 @@ describe("Module 9 - Posts & Announcements", () => {
       const res = await request(app)
         .post(`/api/posts/${post.id}/attachments`)
         .set("Cookie", cookies)
-        .attach("attachments", Buffer.from("img1"), { filename: "a.jpg", contentType: "image/jpeg" })
-        .attach("attachments", Buffer.from("img2"), { filename: "b.jpg", contentType: "image/jpeg" });
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "a.jpg", contentType: "image/jpeg" })
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "b.jpg", contentType: "image/jpeg" });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -1353,7 +1354,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const res = await request(app)
         .post(`/api/posts/${post.id}/attachments`)
         .set("Cookie", cookies)
-        .attach("attachments", Buffer.from("img"), { filename: "x.jpg", contentType: "image/jpeg" });
+        .attach("attachments", VALID_JPEG_BUFFER, { filename: "x.jpg", contentType: "image/jpeg" });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);

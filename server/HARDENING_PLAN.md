@@ -32,14 +32,14 @@ The codebase follows solid architectural patterns (layered architecture, domain 
 | 6 | Perf | Eliminate double-fetch in channel mutations | ⏭️ Deferred |
 | 7 | Perf | Merge sequential validation queries in society service | ✅ Complete |
 | 8 | Perf | Add short-TTL cache for `getSystemStats` | ✅ Complete |
-| 9 | Sec  | Add rate limiting | ⬜ Not started |
-| 10 | Sec  | Validate file uploads using magic bytes | ⬜ Not started |
-| 11 | Sec  | Enforce JWT secret minimum length | ⬜ Not started |
-| 12 | Sec  | Invalidate reset password tokens after use | ⬜ Not started |
-| 13 | Sec  | Plug error information leakage | ⬜ Not started |
-| 14 | Sec  | Harden `resolveId` against parameter injection | ⬜ Not started |
-| 15 | Sec  | Add Socket.IO connection rate limiting & token expiry | ⬜ Not started |
-| 16 | Sec  | Add request audit logging | ⬜ Not started |
+| 9 | Sec  | Add rate limiting | ✅ Complete |
+| 10 | Sec  | Validate file uploads using magic bytes | ✅ Complete |
+| 11 | Sec  | Enforce JWT secret minimum length | ✅ Complete |
+| 12 | Sec  | Invalidate reset password tokens after use | ✅ Complete |
+| 13 | Sec  | Plug error information leakage | ✅ Complete |
+| 14 | Sec  | Harden `resolveId` against parameter injection | ✅ Complete |
+| 15 | Sec  | Add Socket.IO connection rate limiting & token expiry | ✅ Complete |
+| 16 | Sec  | Add request audit logging | ✅ Complete |
 
 **Status legend:** ⬜ Not started · 🔄 In progress · ✅ Complete · ⚠️ Blocked
 

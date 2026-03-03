@@ -10,9 +10,23 @@ interface AccessTokenPayload {
   userType: string;
   departmentId: number | null;
   mustChangePassword: boolean;
+  exp: number;
 }
 
 let io: SocketIOServer | null = null;
+
+// ─── Connection Rate Limiting ────────────────────────────────────────────────
+
+const connectionCounts = new Map<string, { count: number; resetAt: number }>();
+const MAX_CONNECTIONS_PER_MINUTE = 10;
+let cleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Clear connection rate limit state (for testing).
+ */
+export function resetConnectionCounts(): void {
+  connectionCounts.clear();
+}
 
 /**
  * Initialize Socket.IO on the given HTTP server.
@@ -24,11 +38,37 @@ export function initializeSocket(server: http.Server): SocketIOServer {
     io.close();
   }
 
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+
   io = new SocketIOServer(server, {
     cors: {
       origin: env.CORS_ORIGIN,
       credentials: true,
     },
+  });
+
+  // ─── Connection Rate Limiting Middleware ────────────────────────────────
+  io.use((socket, next) => {
+    if (env.NODE_ENV === "test") {
+      return next();
+    }
+
+    const ip = socket.handshake.address;
+    const now = Date.now();
+    const entry = connectionCounts.get(ip);
+
+    if (!entry || now > entry.resetAt) {
+      connectionCounts.set(ip, { count: 1, resetAt: now + 60_000 });
+    } else if (entry.count >= MAX_CONNECTIONS_PER_MINUTE) {
+      return next(new Error("Too many connections"));
+    } else {
+      entry.count++;
+    }
+
+    next();
   });
 
   // ─── Authentication Middleware ──────────────────────────────────────────
@@ -60,6 +100,9 @@ export function initializeSocket(server: http.Server): SocketIOServer {
         mustChangePassword: payload.mustChangePassword,
       } satisfies AuthUser;
 
+      // Store token expiry for auto-disconnect
+      socket.data.tokenExp = payload.exp;
+
       next();
     } catch {
       next(new Error("Authentication required"));
@@ -73,10 +116,33 @@ export function initializeSocket(server: http.Server): SocketIOServer {
     // Join user-specific room for targeted notification delivery
     socket.join(`user:${user.id}`);
 
+    // Auto-disconnect when access token expires
+    const tokenExp = socket.data.tokenExp as number;
+    const msUntilExpiry = tokenExp * 1000 - Date.now();
+    const disconnectTimer = setTimeout(() => {
+      socket.emit("auth:expired");
+      socket.disconnect(true);
+    }, Math.max(msUntilExpiry, 0));
+
     socket.on("disconnect", () => {
-      // Cleanup handled by Socket.IO automatically
+      clearTimeout(disconnectTimer);
     });
   });
+
+  // Periodically prune expired rate-limit entries to prevent memory growth
+  cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [ip, entry] of connectionCounts) {
+      if (now > entry.resetAt) {
+        connectionCounts.delete(ip);
+      }
+    }
+  }, 60_000);
+
+  // Don't keep the process alive just for this cleanup
+  if (cleanupInterval.unref) {
+    cleanupInterval.unref();
+  }
 
   return io;
 }
@@ -98,6 +164,13 @@ export function resetIO(): void {
     io.close();
   }
   io = null;
+
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+
+  connectionCounts.clear();
 }
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────

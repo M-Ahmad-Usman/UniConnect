@@ -2,7 +2,8 @@ import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
 import { validate } from "../../middleware/validate.js";
-import { uploadCSV, uploadProfilePicture } from "../../middleware/upload.js";
+import { uploadCSV, uploadProfilePicture, validateImageMagicBytes, validateCSVNotBinary } from "../../middleware/upload.js";
+import { uploadLimiter } from "../../middleware/rateLimiter.js";
 import {
   createUserSchema,
   listUsersSchema,
@@ -35,7 +36,9 @@ router.post(
   "/bulk-import",
   authenticate,
   authorize({ userTypes: ["ADMIN"] }),
+  uploadLimiter,
   uploadCSV,
+  validateCSVNotBinary,
   handleBulkImport
 );
 
@@ -46,7 +49,9 @@ router.patch("/me", authenticate, validate(updateProfileSchema), handleUpdatePro
 router.patch(
   "/me/profile-picture",
   authenticate,
+  uploadLimiter,
   uploadProfilePicture,
+  validateImageMagicBytes,
   handleUpdateProfilePicture
 );
 

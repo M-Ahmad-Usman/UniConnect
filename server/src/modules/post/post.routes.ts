@@ -3,7 +3,8 @@ import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
 import { validate } from "../../middleware/validate.js";
-import { uploadPostAttachments } from "../../middleware/upload.js";
+import { uploadPostAttachments, validateImageMagicBytes } from "../../middleware/upload.js";
+import { uploadLimiter } from "../../middleware/rateLimiter.js";
 import {
   createPostSchema,
   listPostsSchema,
@@ -36,7 +37,9 @@ export const channelPostRoutes = Router();
 channelPostRoutes.post(
   "/:id/posts",
   authenticate,
+  uploadLimiter,
   uploadPostAttachments,
+  validateImageMagicBytes,
   validate(createPostSchema),
   handleCreatePost
 );
@@ -85,6 +88,8 @@ postRoutes.post(
   "/:id/attachments",
   authenticate,
   validate(postIdParamSchema),
+  uploadLimiter,
   uploadPostAttachments,
+  validateImageMagicBytes,
   handleAddAttachments
 );

@@ -60,11 +60,13 @@ export async function login(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !user.isActive) {
+    console.warn("[AUTH] Failed login attempt", { email, reason: "invalid_credentials", timestamp: new Date().toISOString() });
     throw new UnauthorizedError("Invalid credentials");
   }
 
   const passwordValid = await bcrypt.compare(password, user.passwordHash);
   if (!passwordValid) {
+    console.warn("[AUTH] Failed login attempt", { email, reason: "invalid_credentials", timestamp: new Date().toISOString() });
     throw new UnauthorizedError("Invalid credentials");
   }
 
@@ -176,6 +178,8 @@ export async function logout(refreshTokenCookie: string | undefined): Promise<vo
     where: { tokenHash, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+
+  console.info("[AUTH] Session revoked", { reason: "logout", timestamp: new Date().toISOString() });
 }
 
 // ─── Forgot Password ───────────────────────────────────────────────────────
@@ -192,6 +196,13 @@ export async function forgotPassword(email: string): Promise<void> {
     { expiresIn: env.RESET_PASSWORD_EXPIRY as StringValue }
   );
 
+  // Store hash for one-time-use validation
+  const tokenHash = hashToken(resetToken);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordResetTokenHash: tokenHash },
+  });
+
   await emailService.sendResetPasswordEmail(email, resetToken);
 }
 
@@ -205,11 +216,23 @@ export async function resetPassword(token: string, newPassword: string): Promise
     throw new UnauthorizedError("Invalid or expired reset token");
   }
 
+  // Verify token matches stored hash (one-time use)
+  const user = await prisma.user.findUnique({
+    where: { id: payload.id },
+    select: { passwordResetTokenHash: true },
+  });
+
+  const tokenHash = hashToken(token);
+  if (!user || user.passwordResetTokenHash !== tokenHash) {
+    throw new UnauthorizedError("Invalid or expired reset token");
+  }
+
   const passwordHash = await bcrypt.hash(newPassword, 10);
 
+  // Clear the hash after successful reset (one-time use)
   await prisma.user.update({
     where: { id: payload.id },
-    data: { passwordHash, mustChangePassword: false },
+    data: { passwordHash, mustChangePassword: false, passwordResetTokenHash: null },
   });
 
   // Revoke all refresh tokens for security (force re-login)
@@ -217,6 +240,8 @@ export async function resetPassword(token: string, newPassword: string): Promise
     where: { userId: payload.id, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+
+  console.info("[AUTH] Password reset completed", { userId: payload.id, timestamp: new Date().toISOString() });
 }
 
 // ─── Change Password ───────────────────────────────────────────────────────
@@ -249,4 +274,6 @@ export async function changePassword(
     where: { userId, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+
+  console.info("[AUTH] Password changed", { userId, timestamp: new Date().toISOString() });
 }

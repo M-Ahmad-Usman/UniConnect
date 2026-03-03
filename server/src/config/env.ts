@@ -6,13 +6,19 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().min(1, { error: "DATABASE_URL is required" }),
 
-  JWT_ACCESS_SECRET: z.string().min(1, { error: "JWT_ACCESS_SECRET is required" }),
-  JWT_REFRESH_SECRET: z.string().min(1, { error: "JWT_REFRESH_SECRET is required" }),
-  JWT_ACCESS_EXPIRY: z.string().default("15m"),
-  JWT_REFRESH_EXPIRY: z.string().default("7d"),
+  JWT_ACCESS_SECRET: z.string().min(32, { error: "JWT_ACCESS_SECRET must be at least 32 characters" }),
+  JWT_REFRESH_SECRET: z.string().min(32, { error: "JWT_REFRESH_SECRET must be at least 32 characters" }),
+  JWT_ACCESS_EXPIRY: z.string().regex(/^\d+[smhd]$/, {
+    error: "JWT_ACCESS_EXPIRY must be in format: <number><s|m|h|d> (e.g. 15m)",
+  }).default("15m"),
+  JWT_REFRESH_EXPIRY: z.string().regex(/^\d+[smhd]$/, {
+    error: "JWT_REFRESH_EXPIRY must be in format: <number><s|m|h|d> (e.g. 7d)",
+  }).default("7d"),
 
-  RESET_PASSWORD_SECRET: z.string().min(1, { error: "RESET_PASSWORD_SECRET is required" }),
-  RESET_PASSWORD_EXPIRY: z.string().default("1h"),
+  RESET_PASSWORD_SECRET: z.string().min(32, { error: "RESET_PASSWORD_SECRET must be at least 32 characters" }),
+  RESET_PASSWORD_EXPIRY: z.string().regex(/^\d+[smhd]$/, {
+    error: "RESET_PASSWORD_EXPIRY must be in format: <number><s|m|h|d> (e.g. 1h)",
+  }).default("1h"),
 
   RESEND_API_KEY: z.string().min(1, { error: "RESEND_API_KEY is required" }),
   RESEND_FROM_EMAIL: z.string().email({ error: "RESEND_FROM_EMAIL must be a valid email" }),

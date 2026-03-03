@@ -156,6 +156,7 @@ model User {
   departmentId     Int?      @map("department_id")
   isActive         Boolean   @default(true) @map("is_active")
   mustChangePassword Boolean @default(false) @map("must_change_password")
+  passwordResetTokenHash String? @map("password_reset_token_hash") @db.VarChar(255)
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 

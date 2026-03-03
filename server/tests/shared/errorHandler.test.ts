@@ -91,7 +91,7 @@ describe("Error Handler Middleware", () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe("CONFLICT");
-    expect(res.body.error.message).toContain("email");
+    expect(res.body.error.message).toBe("A record with these values already exists");
   });
 
   it("should handle Prisma not found error (P2025) → 404", async () => {
@@ -112,5 +112,7 @@ describe("Error Handler Middleware", () => {
     expect(res.status).toBe(500);
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe("INTERNAL_ERROR");
+    expect(res.body.error.message).toBe("An unexpected error occurred");
+    expect(res.body.error.debug).toBe("Something broke");
   });
 });

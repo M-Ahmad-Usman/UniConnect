@@ -147,6 +147,7 @@ export const UserScalarFieldEnum = {
   departmentId: 'departmentId',
   isActive: 'isActive',
   mustChangePassword: 'mustChangePassword',
+  passwordResetTokenHash: 'passwordResetTokenHash',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

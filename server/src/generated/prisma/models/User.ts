@@ -49,6 +49,7 @@ export type UserMinAggregateOutputType = {
   departmentId: number | null
   isActive: boolean | null
   mustChangePassword: boolean | null
+  passwordResetTokenHash: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -66,6 +67,7 @@ export type UserMaxAggregateOutputType = {
   departmentId: number | null
   isActive: boolean | null
   mustChangePassword: boolean | null
+  passwordResetTokenHash: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -83,6 +85,7 @@ export type UserCountAggregateOutputType = {
   departmentId: number
   isActive: number
   mustChangePassword: number
+  passwordResetTokenHash: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -112,6 +115,7 @@ export type UserMinAggregateInputType = {
   departmentId?: true
   isActive?: true
   mustChangePassword?: true
+  passwordResetTokenHash?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -129,6 +133,7 @@ export type UserMaxAggregateInputType = {
   departmentId?: true
   isActive?: true
   mustChangePassword?: true
+  passwordResetTokenHash?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -146,6 +151,7 @@ export type UserCountAggregateInputType = {
   departmentId?: true
   isActive?: true
   mustChangePassword?: true
+  passwordResetTokenHash?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -250,6 +256,7 @@ export type UserGroupByOutputType = {
   departmentId: number | null
   isActive: boolean
   mustChangePassword: boolean
+  passwordResetTokenHash: string | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -290,6 +297,7 @@ export type UserWhereInput = {
   departmentId?: Prisma.IntNullableFilter<"User"> | number | null
   isActive?: Prisma.BoolFilter<"User"> | boolean
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
+  passwordResetTokenHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
@@ -327,6 +335,7 @@ export type UserOrderByWithRelationInput = {
   departmentId?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
+  passwordResetTokenHash?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   department?: Prisma.DepartmentOrderByWithRelationInput
@@ -367,6 +376,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   departmentId?: Prisma.IntNullableFilter<"User"> | number | null
   isActive?: Prisma.BoolFilter<"User"> | boolean
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
+  passwordResetTokenHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
@@ -404,6 +414,7 @@ export type UserOrderByWithAggregationInput = {
   departmentId?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
+  passwordResetTokenHash?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -429,6 +440,7 @@ export type UserScalarWhereWithAggregatesInput = {
   departmentId?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   mustChangePassword?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  passwordResetTokenHash?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -444,6 +456,7 @@ export type UserCreateInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -481,6 +494,7 @@ export type UserUncheckedCreateInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -515,6 +529,7 @@ export type UserUpdateInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -552,6 +567,7 @@ export type UserUncheckedUpdateInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -588,6 +604,7 @@ export type UserCreateManyInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -603,6 +620,7 @@ export type UserUpdateManyMutationInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -620,6 +638,7 @@ export type UserUncheckedUpdateManyInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -647,6 +666,7 @@ export type UserCountOrderByAggregateInput = {
   departmentId?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
+  passwordResetTokenHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -669,6 +689,7 @@ export type UserMaxOrderByAggregateInput = {
   departmentId?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
+  passwordResetTokenHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -686,6 +707,7 @@ export type UserMinOrderByAggregateInput = {
   departmentId?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
+  passwordResetTokenHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1060,6 +1082,7 @@ export type UserCreateWithoutDepartmentInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
@@ -1095,6 +1118,7 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1160,6 +1184,7 @@ export type UserScalarWhereInput = {
   departmentId?: Prisma.IntNullableFilter<"User"> | number | null
   isActive?: Prisma.BoolFilter<"User"> | boolean
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
+  passwordResetTokenHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
@@ -1175,6 +1200,7 @@ export type UserCreateWithoutStudentInfoInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1211,6 +1237,7 @@ export type UserUncheckedCreateWithoutStudentInfoInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1260,6 +1287,7 @@ export type UserUpdateWithoutStudentInfoInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -1296,6 +1324,7 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -1329,6 +1358,7 @@ export type UserCreateWithoutTeacherInfoInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1365,6 +1395,7 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1414,6 +1445,7 @@ export type UserUpdateWithoutTeacherInfoInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -1450,6 +1482,7 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -1483,6 +1516,7 @@ export type UserCreateWithoutCreatedServersInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1519,6 +1553,7 @@ export type UserUncheckedCreateWithoutCreatedServersInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1568,6 +1603,7 @@ export type UserUpdateWithoutCreatedServersInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -1604,6 +1640,7 @@ export type UserUncheckedUpdateWithoutCreatedServersInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -1637,6 +1674,7 @@ export type UserCreateWithoutLockedChannelsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1673,6 +1711,7 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1711,6 +1750,7 @@ export type UserCreateWithoutDeletedChannelsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1747,6 +1787,7 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1785,6 +1826,7 @@ export type UserCreateWithoutCreatedChannelsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1821,6 +1863,7 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1859,6 +1902,7 @@ export type UserCreateWithoutArchivedChannelsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -1895,6 +1939,7 @@ export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -1944,6 +1989,7 @@ export type UserUpdateWithoutLockedChannelsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -1980,6 +2026,7 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2024,6 +2071,7 @@ export type UserUpdateWithoutDeletedChannelsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -2060,6 +2108,7 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2104,6 +2153,7 @@ export type UserUpdateWithoutCreatedChannelsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -2140,6 +2190,7 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2184,6 +2235,7 @@ export type UserUpdateWithoutArchivedChannelsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -2220,6 +2272,7 @@ export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2253,6 +2306,7 @@ export type UserCreateWithoutServerMembershipsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2289,6 +2343,7 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -2338,6 +2393,7 @@ export type UserUpdateWithoutServerMembershipsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -2374,6 +2430,7 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2407,6 +2464,7 @@ export type UserCreateWithoutSocietyMembershipRequestsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2443,6 +2501,7 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -2481,6 +2540,7 @@ export type UserCreateWithoutReviewedMembershipRequestsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2517,6 +2577,7 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -2566,6 +2627,7 @@ export type UserUpdateWithoutSocietyMembershipRequestsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -2602,6 +2664,7 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2646,6 +2709,7 @@ export type UserUpdateWithoutReviewedMembershipRequestsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -2682,6 +2746,7 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -2715,6 +2780,7 @@ export type UserCreateWithoutAuthoredPostsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2751,6 +2817,7 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -2789,6 +2856,7 @@ export type UserCreateWithoutDeletedPostsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2825,6 +2893,7 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -2863,6 +2932,7 @@ export type UserCreateWithoutUpdatedPostsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2899,6 +2969,7 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -2937,6 +3008,7 @@ export type UserCreateWithoutPinnedPostsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -2973,6 +3045,7 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -3022,6 +3095,7 @@ export type UserUpdateWithoutAuthoredPostsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3058,6 +3132,7 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3102,6 +3177,7 @@ export type UserUpdateWithoutDeletedPostsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3138,6 +3214,7 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3182,6 +3259,7 @@ export type UserUpdateWithoutUpdatedPostsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3218,6 +3296,7 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3262,6 +3341,7 @@ export type UserUpdateWithoutPinnedPostsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3298,6 +3378,7 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3331,6 +3412,7 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -3367,6 +3449,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -3405,6 +3488,7 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -3441,6 +3525,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -3490,6 +3575,7 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3526,6 +3612,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3570,6 +3657,7 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3606,6 +3694,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3639,6 +3728,7 @@ export type UserCreateWithoutNotificationsInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -3675,6 +3765,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -3724,6 +3815,7 @@ export type UserUpdateWithoutNotificationsInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3760,6 +3852,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3793,6 +3886,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -3829,6 +3923,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -3878,6 +3973,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -3914,6 +4010,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -3947,6 +4044,7 @@ export type UserCreateWithoutRefreshTokensInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
@@ -3983,6 +4081,7 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   departmentId?: number | null
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
@@ -4032,6 +4131,7 @@ export type UserUpdateWithoutRefreshTokensInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
@@ -4068,6 +4168,7 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -4102,6 +4203,7 @@ export type UserCreateManyDepartmentInput = {
   userType: $Enums.UserType
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -4117,6 +4219,7 @@ export type UserUpdateWithoutDepartmentInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
@@ -4152,6 +4255,7 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
@@ -4187,6 +4291,7 @@ export type UserUncheckedUpdateManyWithoutDepartmentInput = {
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -4379,6 +4484,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   departmentId?: boolean
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
@@ -4417,6 +4523,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   departmentId?: boolean
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
@@ -4435,6 +4542,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   departmentId?: boolean
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
@@ -4453,11 +4561,12 @@ export type UserSelectScalar = {
   departmentId?: boolean
   isActive?: boolean
   mustChangePassword?: boolean
+  passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fullName" | "email" | "phone" | "passwordHash" | "gender" | "profilePictureUrl" | "bio" | "userType" | "departmentId" | "isActive" | "mustChangePassword" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fullName" | "email" | "phone" | "passwordHash" | "gender" | "profilePictureUrl" | "bio" | "userType" | "departmentId" | "isActive" | "mustChangePassword" | "passwordResetTokenHash" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
   studentInfo?: boolean | Prisma.User$studentInfoArgs<ExtArgs>
@@ -4525,6 +4634,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     departmentId: number | null
     isActive: boolean
     mustChangePassword: boolean
+    passwordResetTokenHash: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -4982,6 +5092,7 @@ export interface UserFieldRefs {
   readonly departmentId: Prisma.FieldRef<"User", 'Int'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
   readonly mustChangePassword: Prisma.FieldRef<"User", 'Boolean'>
+  readonly passwordResetTokenHash: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

@@ -44,9 +44,8 @@ export function errorHandler(
   // Handle Prisma errors
   if (isPrismaKnownRequestError(err)) {
     if (err.code === PRISMA_UNIQUE_CONSTRAINT) {
-      const fields = err.meta?.target?.join(", ") || "unknown";
       const conflictError = new ConflictError(
-        `A record with this ${fields} already exists`
+        "A record with these values already exists"
       );
       res.status(conflictError.statusCode).json({
         success: false,
@@ -79,10 +78,8 @@ export function errorHandler(
     success: false,
     error: {
       code: "INTERNAL_ERROR",
-      message:
-        env.NODE_ENV === "production"
-          ? "An unexpected error occurred"
-          : err.message || "An unexpected error occurred",
+      message: "An unexpected error occurred",
+      ...(env.NODE_ENV !== "production" && { debug: err.message }),
     },
   });
 }

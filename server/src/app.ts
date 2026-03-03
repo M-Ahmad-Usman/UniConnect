@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import morgan from "morgan";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
 import { NotFoundError } from "./shared/errors/index.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/user/user.routes.js";
@@ -38,10 +40,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// ─── HTTP Request Logging ────────────────────────────────────────────────────
+if (env.NODE_ENV !== "test") {
+  app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
+}
+
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, message: "OK" });
 });
+
+// ─── Rate Limiting ──────────────────────────────────────────────────────────
+app.use("/api", generalLimiter);
 
 // ─── API Routes ─────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
