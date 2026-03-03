@@ -5,7 +5,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
-  DATABASE_URL: z.string().min(1, { error: 'DATABASE_URL is required' }),
+  POSTGRES_PASSWORD: z.string().min(5),
+  POSTGRES_USER: z.string().min(1),
+  POSTGRES_DB: z.string().min(1),
+  HOST: z.string().default('localhost'),
+  DB_PORT: z.string().transform(Number),
 })
 
 type Env = z.infer<typeof envSchema>
