@@ -15,19 +15,23 @@ interface AuthorizeOptions {
   adminBypass?: boolean;
 }
 
-// ─── Role-Permission Cache ─────────────────────────────────────────────────
+// ─── Role-Permission Cache (5-minute TTL) ──────────────────────────────────
+
+const ROLE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 let rolePermissionMap: Map<string, Set<string>> | null = null;
+let rolePermissionCachedAt = 0;
 
 /**
  * Clear the cached role-permission map. Useful in tests after re-seeding.
  */
 export function clearRolePermissionCache(): void {
   rolePermissionMap = null;
+  rolePermissionCachedAt = 0;
 }
 
 async function getRolePermissionMap(): Promise<Map<string, Set<string>>> {
-  if (rolePermissionMap) {
+  if (rolePermissionMap && Date.now() - rolePermissionCachedAt < ROLE_CACHE_TTL_MS) {
     return rolePermissionMap;
   }
 
@@ -45,6 +49,7 @@ async function getRolePermissionMap(): Promise<Map<string, Set<string>>> {
       new Set(role.permissions.map((relation) => relation.permission.name)),
     ])
   );
+  rolePermissionCachedAt = Date.now();
 
   return rolePermissionMap;
 }

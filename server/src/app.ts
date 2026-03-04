@@ -7,6 +7,7 @@ import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { NotFoundError } from "./shared/errors/index.js";
+import { prisma } from "./config/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/user/user.routes.js";
 import departmentRoutes from "./modules/department/department.routes.js";
@@ -28,17 +29,43 @@ import adminRoutes from "./modules/admin/admin.routes.js";
 
 const app = express();
 
+// ─── Reverse Proxy Trust ─────────────────────────────────────────────────────
+// Required for PaaS (Render, Railway, etc.) so req.ip and rate limiters
+// see the real client IP instead of the proxy's IP.
+app.set("trust proxy", 1);
+
 // ─── Security & Parsing Middleware ──────────────────────────────────────────
-app.use(helmet());
+app.use(
+  helmet({
+    // API-only server: disable HTML-focused headers that add no value
+    contentSecurityPolicy: false,
+    // Enforce HTTPS via HSTS when behind PaaS TLS termination
+    hsts: env.NODE_ENV === "production"
+      ? { maxAge: 63072000, includeSubDomains: true, preload: true } // 2 years
+      : false,
+  })
+);
 app.use(
   cors({
     origin: env.CORS_ORIGIN,
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
+
+// ─── Request Timeout ────────────────────────────────────────────────────────
+const REQUEST_TIMEOUT_MS = 30_000;
+app.use((_req, res, next) => {
+  const timer = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ success: false, message: "Request timeout" });
+    }
+  }, REQUEST_TIMEOUT_MS);
+  res.on("close", () => clearTimeout(timer));
+  next();
+});
 
 // ─── HTTP Request Logging ────────────────────────────────────────────────────
 if (env.NODE_ENV !== "test") {
@@ -46,8 +73,13 @@ if (env.NODE_ENV !== "test") {
 }
 
 // ─── Health Check ───────────────────────────────────────────────────────────
-app.get("/api/health", (_req, res) => {
-  res.json({ success: true, message: "OK" });
+app.get("/api/health", async (_req, res) => {
+  try {
+    await prisma.$queryRawUnsafe("SELECT 1");
+    res.json({ success: true, message: "OK", db: "ok" });
+  } catch {
+    res.status(503).json({ success: false, message: "Service unavailable", db: "down" });
+  }
 });
 
 // ─── Rate Limiting ──────────────────────────────────────────────────────────

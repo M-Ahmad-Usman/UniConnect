@@ -10,3 +10,8 @@ export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 // ─── User ───────────────────────────────────────────────────────────────────
 export const TEMP_PASSWORD_PREFIX = "TEMP_";
+
+// ─── Security ───────────────────────────────────────────────────────────────
+// OWASP recommends 12+. Existing bcrypt hashes remain compatible;
+// they keep their original cost factor and verify correctly.
+export const BCRYPT_ROUNDS = 12;

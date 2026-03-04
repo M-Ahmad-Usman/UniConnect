@@ -8,11 +8,3 @@ export const prisma = new PrismaClient({
   adapter,
   log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
 });
-
-// Graceful shutdown
-const shutdown = async () => {
-  await prisma.$disconnect();
-};
-
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);

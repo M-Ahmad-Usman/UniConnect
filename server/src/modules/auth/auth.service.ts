@@ -6,6 +6,8 @@ import { prisma } from "../../config/prisma.js";
 import { env } from "../../config/env.js";
 import { emailService } from "../../config/email.js";
 import { UnauthorizedError } from "../../shared/errors/index.js";
+import { parseExpiry } from "../../shared/utils/parseExpiry.js";
+import { BCRYPT_ROUNDS } from "../../shared/constants.js";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -29,20 +31,6 @@ function generateRefreshToken(userId: number): string {
   return jwt.sign({ id: userId, jti: crypto.randomUUID() }, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRY as StringValue,
   });
-}
-
-function parseExpiry(expiry: string): number {
-  const match = expiry.match(/^(\d+)([smhd])$/);
-  if (!match) return 15 * 60 * 1000; // fallback 15m
-  const value = parseInt(match[1], 10);
-  const unit = match[2];
-  const multipliers: Record<string, number> = {
-    s: 1000,
-    m: 60 * 1000,
-    h: 60 * 60 * 1000,
-    d: 24 * 60 * 60 * 1000,
-  };
-  return value * (multipliers[unit] ?? 60 * 1000);
 }
 
 async function storeRefreshToken(userId: number, token: string): Promise<void> {
@@ -203,7 +191,13 @@ export async function forgotPassword(email: string): Promise<void> {
     data: { passwordResetTokenHash: tokenHash },
   });
 
-  await emailService.sendResetPasswordEmail(email, resetToken);
+  try {
+    await emailService.sendResetPasswordEmail(email, resetToken);
+  } catch (error) {
+    // Log but don't throw — forgotPassword must always return silently
+    // to prevent user enumeration via error responses
+    console.error("Failed to send reset-password email:", error);
+  }
 }
 
 // ─── Reset Password ────────────────────────────────────────────────────────
@@ -227,7 +221,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
     throw new UnauthorizedError("Invalid or expired reset token");
   }
 
-  const passwordHash = await bcrypt.hash(newPassword, 10);
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
   // Clear the hash after successful reset (one-time use)
   await prisma.user.update({
@@ -262,7 +256,7 @@ export async function changePassword(
     throw new UnauthorizedError("Current password is incorrect");
   }
 
-  const passwordHash = await bcrypt.hash(newPassword, 10);
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
   await prisma.user.update({
     where: { id: userId },
@@ -276,4 +270,29 @@ export async function changePassword(
   });
 
   console.info("[AUTH] Password changed", { userId, timestamp: new Date().toISOString() });
+}
+
+// ─── Stale Token Cleanup ────────────────────────────────────────────────────
+
+/**
+ * Delete refresh tokens that are expired or revoked and older than the
+ * retention window. Call on a schedule (e.g., daily cron or after login).
+ */
+export async function purgeStaleRefreshTokens(retentionDays = 7): Promise<number> {
+  const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+
+  const { count } = await prisma.refreshToken.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: new Date() }, createdAt: { lt: cutoff } },
+        { revokedAt: { not: null }, createdAt: { lt: cutoff } },
+      ],
+    },
+  });
+
+  if (count > 0) {
+    console.info("[AUTH] Purged stale refresh tokens", { count, timestamp: new Date().toISOString() });
+  }
+
+  return count;
 }

@@ -27,7 +27,12 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().min(1, { error: "CLOUDINARY_API_KEY is required" }),
   CLOUDINARY_API_SECRET: z.string().min(1, { error: "CLOUDINARY_API_SECRET is required" }),
 
-  CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  CORS_ORIGIN: z
+    .string()
+    .default("http://localhost:5173")
+    .transform((val) =>
+      val.includes(",") ? val.split(",").map((s) => s.trim()) : val
+    ),
 });
 
 function validateEnv() {

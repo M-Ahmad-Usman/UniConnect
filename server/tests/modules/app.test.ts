@@ -12,7 +12,7 @@ describe("Express App Foundation", () => {
       const res = await request(app).get("/api/health");
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({ success: true, message: "OK" });
+      expect(res.body).toEqual({ success: true, message: "OK", db: "ok" });
     });
   });
 

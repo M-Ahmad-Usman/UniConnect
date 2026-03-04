@@ -130,17 +130,17 @@ export function initializeSocket(server: http.Server): SocketIOServer {
   });
 
   // Periodically prune expired rate-limit entries to prevent memory growth
-  cleanupInterval = setInterval(() => {
-    const now = Date.now();
-    for (const [ip, entry] of connectionCounts) {
-      if (now > entry.resetAt) {
-        connectionCounts.delete(ip);
+  // Skip in test env — rate limiting is bypassed and the interval can prevent clean Jest exit
+  if (env.NODE_ENV !== "test") {
+    cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      for (const [ip, entry] of connectionCounts) {
+        if (now > entry.resetAt) {
+          connectionCounts.delete(ip);
+        }
       }
-    }
-  }, 60_000);
+    }, 60_000);
 
-  // Don't keep the process alive just for this cleanup
-  if (cleanupInterval.unref) {
     cleanupInterval.unref();
   }
 

@@ -5,7 +5,7 @@ import { Readable } from "stream";
 import { prisma } from "../../config/prisma.js";
 import { emailService } from "../../config/email.js";
 import { cloudinaryService } from "../../config/cloudinary.js";
-import { TEMP_PASSWORD_PREFIX } from "../../shared/constants.js";
+import { BCRYPT_ROUNDS, TEMP_PASSWORD_PREFIX } from "../../shared/constants.js";
 import {
   ConflictError,
   ForbiddenError,
@@ -153,7 +153,7 @@ export async function createUser(input: CreateUserInput) {
   }
 
   const tempPassword = generateTempPassword();
-  const passwordHash = await bcrypt.hash(tempPassword, 10);
+  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
 
   const createdUser = await prisma.$transaction(async (tx) => {
     let departmentServerId: number | undefined;
@@ -259,6 +259,7 @@ export async function createUser(input: CreateUserInput) {
     await emailService.sendTempPasswordEmail(createdUser.email, tempPassword);
   } catch (error) {
     console.error("Failed to send temp-password email:", error);
+    return { ...createdUser, warning: "User created but welcome email could not be sent. Please share the credentials manually." };
   }
 
   return createdUser;
@@ -289,16 +290,29 @@ export async function bulkImportUsers(fileBuffer: Buffer): Promise<BulkImportRes
   });
 
   let successful = 0;
+  const BATCH_SIZE = 5;
 
-  for (const row of validRows) {
-    try {
-      await createUser(row.data);
-      successful += 1;
-    } catch (error) {
-      errors.push({
-        row: row.rowNumber,
-        message: error instanceof Error ? error.message : "Failed to import user",
-      });
+  for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+    const batch = validRows.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((row) =>
+        createUser(row.data).then(
+          () => ({ rowNumber: row.rowNumber, ok: true as const }),
+          (error: unknown) => ({ rowNumber: row.rowNumber, ok: false as const, error }),
+        ),
+      ),
+    );
+
+    for (const result of results) {
+      const value = result.status === "fulfilled" ? result.value : { rowNumber: 0, ok: false as const, error: result.reason };
+      if (value.ok) {
+        successful += 1;
+      } else {
+        errors.push({
+          row: value.rowNumber,
+          message: value.error instanceof Error ? value.error.message : "Failed to import user",
+        });
+      }
     }
   }
 
