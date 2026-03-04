@@ -84,7 +84,6 @@ export type FileAttachmentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'im
 export type UserRole = 'cr' | 'society_president' | 'society_convenor' | 'program_director' | 'hod' | 'moderator'
 export type Action = 'create' | 'update' | 'delete' | 'post' | 'assign'
 export type Resource = 'channel' | 'society' | 'class' | 'role'
-export type UserPermission = 'post:channel' | 'create:channel' | 'delete:channel' | 'update:channel' | 'create:society' | 'create:class' | 'assign:program_director' | 'assign:society_convenor' | 'assign:society_president' | 'assign:moderator' | 'assign:cr'
 export type ModeratorScopeType = 'channel' | 'server'
 export type NotificationType = 'new_post' | 'role_assigned'
 export type NotificationPreferenceScope = 'server' | 'channel'
