@@ -13,17 +13,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
-  migrate:
-    image: migrate/migrate
-    # Variables must be specified for local user
-    user: "${UID}:${GID}"
-    volumes:
-      - ./src/db/migrations:/migrations
-    depends_on:
-      - dev-db
-    profiles:
-      - tools
 
 volumes:
   postgres-dev-data:
