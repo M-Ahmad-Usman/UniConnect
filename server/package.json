@@ -6,9 +6,9 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "start:db": "UID=$(id -u) GID=$(id -g) docker-compose up",
-    "stop:db": "UID=$(id -u) GID=$(id -g) docker compose down",
-    "migrate:create": "UID=$(id -u) GID=$(id -g) docker compose --profile tools run --rm migrate create -ext sql -dir /migrations -seq",
+    "migrate:latest": "tsx src/db/migrator.ts latest",
+    "migrate:up": "tsx src/db/migrator.ts up",
+    "migrate:down": "tsx src/db/migrator.ts down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
