@@ -11,6 +11,7 @@ This service provides the UniConnect backend API, authentication, authorization,
 - Hardening implementation history: `HARDENING_LOG.md`
 - Frontend integration contract: `docs/FRONTEND_BACKEND_CONTRACT.md`
 - API error code catalog: `docs/API_ERROR_CODES.md`
+- Dependency version audit: `../docs/dependency_version_audit.md`
 
 ## Prerequisites
 - Node.js 20+
