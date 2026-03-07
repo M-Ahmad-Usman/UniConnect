@@ -1,0 +1,573 @@
+import type { Kysely } from 'kysely'
+import { sql } from 'kysely'
+
+// This migration will create all tables with the following constraints:
+// 1. PRIMARY KEY
+// 2. UNIQUE
+// 3. NOT NULL
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function up(db: Kysely<any>): Promise<void> {
+  await createDepartmentsTable(db)
+  await createProgramsTable(db)
+  await createProgramCurriculaTable(db)
+  await createUsersTable(db)
+  await createStudentsTable(db)
+  await createTeachersTable(db)
+  await createClassesTable(db)
+  await createSocietiesTable(db)
+  await createServersTable(db)
+  await createChannelsTable(db)
+  await createServerMembershipsTable(db)
+  await createSocietyMembershipRequestsTable(db)
+  await createCoursesTable(db)
+  await createCourseAssignmentsTable(db)
+  await createPostsTable(db)
+  await createPostAttachmentsTable(db)
+  await createRolesTable(db)
+  await createPermissionsTable(db)
+  await createRolePermissionsTable(db)
+  await createModeratorAssignmentsTable(db)
+  await createNotificationsTable(db)
+  await createNotificationPreferencesTable(db)
+  await createRefreshTokensTable(db)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function down(db: Kysely<any>): Promise<void> {
+  await db.schema.dropTable('refresh_tokens').ifExists().execute()
+  await db.schema.dropTable('notification_preferences').ifExists().execute()
+  await db.schema.dropTable('notifications').ifExists().execute()
+  await db.schema.dropTable('moderator_assignments').ifExists().execute()
+  await db.schema.dropTable('role_permissions').ifExists().execute()
+  await db.schema.dropTable('permissions').ifExists().execute()
+  await db.schema.dropTable('roles').ifExists().execute()
+  await db.schema.dropTable('post_attachments').ifExists().execute()
+  await db.schema.dropTable('posts').ifExists().execute()
+  await db.schema.dropTable('course_assignments').ifExists().execute()
+  await db.schema.dropTable('courses').ifExists().execute()
+  await db.schema.dropTable('society_membership_requests').ifExists().execute()
+  await db.schema.dropTable('server_memberships').ifExists().execute()
+  await db.schema.dropTable('channels').ifExists().execute()
+  await db.schema.dropTable('servers').ifExists().execute()
+  await db.schema.dropTable('societies').ifExists().execute()
+  await db.schema.dropTable('classes').ifExists().execute()
+  await db.schema.dropTable('teachers').ifExists().execute()
+  await db.schema.dropTable('students').ifExists().execute()
+  await db.schema.dropTable('users').ifExists().execute()
+  await db.schema.dropTable('program_curricula').ifExists().execute()
+  await db.schema.dropTable('programs').ifExists().execute()
+  await db.schema.dropTable('departments').ifExists().execute()
+}
+
+// Dedicated Table Creation Functions
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('departments')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_department', ['id'])
+
+    .addColumn('name', 'varchar(100)', col => col.notNull())
+    .addUniqueConstraint('uq_department_name', ['name'])
+
+    .addColumn('code', 'varchar(20)', col => col.notNull())
+    .addUniqueConstraint('uq_department_code', ['code'])
+
+    .addColumn('hod_id', 'integer')
+    .addUniqueConstraint('uq_department_hod_id', ['hod_id'])
+
+    .addColumn('server_id', 'integer', col => col.notNull())
+    .addUniqueConstraint('uq_department_server', ['server_id'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createProgramsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('programs')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_program', ['id'])
+
+    .addColumn('department_id', 'integer', col => col.notNull())
+    .addColumn('discipline', sql`discipline`, col => col.notNull())
+    .addColumn('degree_level', sql`degree_level`, col => col.notNull())
+
+    .addColumn('program_director_id', 'integer', col => col.notNull())
+
+    .addColumn('semesters', 'integer', col => col.notNull())
+
+    .addColumn('code', 'varchar(20)', col => col.notNull())
+    .addUniqueConstraint('uq_program_code', ['code'])
+
+    .addUniqueConstraint('uq_program', ['department_id', 'discipline', 'degree_level'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('program_curricula')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_program_curriculum', ['id'])
+
+    .addColumn('program_id', 'integer', col => col.notNull())
+    .addColumn('course_id', 'integer', col => col.notNull())
+    .addColumn('semester_number', 'integer', col => col.notNull())
+    .addColumn('batch_year', 'integer', col => col.notNull())
+
+    .addUniqueConstraint('uq_program_curriculum', ['program_id', 'course_id', 'semester_number', 'batch_year'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createUsersTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('users')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_user', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('full_name', 'varchar(100)', col => col.notNull())
+
+    .addColumn('email', 'varchar(255)', col => col.notNull())
+    .addUniqueConstraint('uq_user_email', ['email'])
+
+    .addColumn('phone', 'varchar(20)', col => col.notNull())
+    .addColumn('password_hash', 'varchar(255)', col => col.notNull())
+
+    .addColumn('gender', sql`gender`, col => col.notNull())
+    .addColumn('profile_picture_url', 'text')
+    .addColumn('bio', 'varchar(1000)')
+
+    .addColumn('type', sql`user_type`, col => col.notNull())
+    .addColumn('department_id', 'integer')
+
+    .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+    .addColumn('updated_at', 'timestamptz')
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createStudentsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('students')
+
+    .addColumn('student_id', 'integer')
+    .addPrimaryKeyConstraint('pk_student', ['student_id'])
+
+    .addColumn('class_id', 'integer', col => col.notNull())
+
+    .addColumn('roll_number', 'integer', col => col.notNull())
+    .addUniqueConstraint('uq_student_roll_number', ['roll_number'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createTeachersTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('teachers')
+
+    .addColumn('teacher_id', 'integer')
+    .addPrimaryKeyConstraint('pk_teacher', ['teacher_id'])
+
+    .addColumn('designation', sql`teacher_designation`, col => col.notNull())
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createClassesTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('classes')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_class', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('program_id', 'integer', col => col.notNull())
+    .addColumn('current_semester', 'integer', col => col.notNull())
+    .addColumn('section', sql`class_section`, col => col.notNull())
+
+    .addColumn('cr_id', 'integer')
+    .addUniqueConstraint('uq_class_cr', ['cr_id'])
+
+    .addColumn('academic_year', 'integer', col => col.notNull())
+    .addColumn('admission_year', 'integer', col => col.notNull())
+
+    .addColumn('server_id', 'integer', col => col.notNull())
+    .addUniqueConstraint('uq_class_server', ['server_id'])
+
+    .addUniqueConstraint('uq_class', ['program_id', 'current_semester', 'section', 'admission_year'])
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createSocietiesTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('societies')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_society', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('name', 'varchar(100)', col => col.notNull())
+    .addUniqueConstraint('uq_society_name', ['name'])
+
+    .addColumn('description', 'varchar(1000)')
+
+    .addColumn('department_id', 'integer', col => col.notNull())
+    .addColumn('president_id', 'integer', col => col.notNull())
+    .addColumn('convenor_id', 'integer', col => col.notNull())
+
+    .addColumn('server_id', 'integer', col => col.notNull())
+    .addUniqueConstraint('uq_society_server', ['server_id'])
+
+    .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createServersTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('servers')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_server', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('name', 'varchar(100)', col => col.notNull())
+    .addColumn('description', 'text')
+    .addColumn('icon_url', 'text')
+
+    .addColumn('type', sql`server_type`, col => col.notNull())
+
+    .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
+    .addColumn('created_by', 'integer', col => col.notNull())
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createChannelsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('channels')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_channel', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('name', 'varchar(100)', col => col.notNull())
+    .addColumn('description', 'varchar(200)')
+    .addColumn('type', sql`channel_type`, col => col.notNull())
+
+    .addColumn('server_id', 'integer', col => col.notNull())
+
+    .addColumn('course_id', 'integer')
+
+    .addColumn('program_id', 'integer')
+
+    .addColumn('is_locked', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('locked_by', 'integer')
+    .addColumn('locked_at', 'timestamptz')
+
+    .addColumn('is_archived', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('archived_by', 'integer')
+    .addColumn('archived_at', 'timestamptz')
+
+    .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('deleted_by', 'integer')
+    .addColumn('deleted_at', 'timestamptz')
+
+    .addColumn('is_auto_created', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('created_by', 'integer')
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .addUniqueConstraint('uq_channel_name_per_server', ['server_id', 'name'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('server_memberships')
+
+    .addColumn('user_id', 'integer')
+
+    .addColumn('server_id', 'integer')
+    .addPrimaryKeyConstraint('pk_server_membership', ['user_id', 'server_id'])
+
+    .addColumn('joined_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+    .addColumn('is_auto_joined', 'boolean', col => col.notNull())
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('society_membership_requests')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_society_membership_request', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('society_id', 'integer', col => col.notNull())
+    .addColumn('user_id', 'integer', col => col.notNull())
+
+    .addColumn('status', sql`membership_request_status`, col => col.notNull())
+
+    .addColumn('requested_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+    .addColumn('reviewed_by', 'integer')
+    .addColumn('reviewed_at', 'timestamptz')
+
+    .addUniqueConstraint('uq_society_membership_request', ['society_id', 'user_id'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createCoursesTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('courses')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_course', ['id'])
+
+    .addColumn('title', 'varchar(100)', col => col.notNull())
+
+    .addColumn('code', 'varchar(50)', col => col.notNull())
+    .addUniqueConstraint('uq_course_code', ['code'])
+
+    .addColumn('credit_hours', 'integer', col => col.notNull())
+
+    .addColumn('department_id', 'integer', col => col.notNull())
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('course_assignments')
+
+    .addColumn('teacher_id', 'integer')
+    .addColumn('course_id', 'integer')
+    .addColumn('class_id', 'integer')
+
+    .addPrimaryKeyConstraint('pk_course_assignment', ['teacher_id', 'course_id', 'class_id'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createPostsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('posts')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_post', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('title', 'varchar(100)', col => col.notNull())
+    .addColumn('content', 'text', col => col.notNull())
+
+    .addColumn('channel_id', 'integer', col => col.notNull())
+
+    .addColumn('priority', sql`post_priority`, col => col.notNull().defaultTo(sql`'normal'`))
+
+    .addColumn('is_pinned', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('pinned_by', 'integer')
+    .addColumn('pinned_at', 'timestamptz')
+
+    .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('deleted_by', 'integer')
+    .addColumn('deleted_at', 'timestamptz')
+
+    .addColumn('created_by', 'integer', col => col.notNull())
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .addColumn('updated_by', 'integer')
+    .addColumn('updated_at', 'timestamptz')
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('post_attachments')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_post_attachment', ['id'])
+
+    .addColumn('post_id', 'integer', col => col.notNull())
+
+    .addColumn('file_url', 'text', col => col.notNull())
+    .addColumn('file_type', sql`file_attachment_type`, col => col.notNull())
+    .addColumn('file_size', 'integer', col => col.notNull())
+
+    .addColumn('uploaded_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createRolesTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('roles')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_role', ['id'])
+
+    .addColumn('name', sql`user_role`, col => col.notNull())
+    .addUniqueConstraint('uq_role', ['name'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createPermissionsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('permissions')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_permission', ['id'])
+
+    .addColumn('action', sql`action`, col => col.notNull())
+    .addColumn('resource', sql`resource`, col => col.notNull())
+
+    .addUniqueConstraint('uq_permission', ['action', 'resource'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('role_permissions')
+
+    .addColumn('role_id', 'integer')
+    .addColumn('permission_id', 'integer')
+
+    .addPrimaryKeyConstraint('pk_role_permission', ['role_id', 'permission_id'])
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('moderator_assignments')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_moderator_assignment', ['id'])
+
+    .addColumn('user_id', 'integer', col => col.notNull())
+    .addColumn('scope_type', sql`moderator_scope_type`, col => col.notNull())
+
+    .addColumn('server_id', 'integer', col => col.notNull())
+    .addColumn('channel_id', 'integer')
+
+    .addColumn('assigned_by', 'integer', col => col.notNull())
+    .addColumn('assigned_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .execute()
+
+  await sql`ALTER TABLE moderator_assignments 
+  ADD CONSTRAINT uq_moderator_assignment 
+  UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id)`.execute(db)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createNotificationsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('notifications')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_notification', ['id'])
+
+    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
+
+    .addColumn('title', 'varchar(200)', col => col.notNull())
+    .addColumn('message', 'text')
+
+    .addColumn('type', sql`notification_type`, col => col.notNull())
+
+    .addColumn('user_id', 'integer', col => col.notNull())
+
+    .addColumn('post_id', 'integer')
+
+    .addColumn('read_at', 'timestamptz')
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .execute()
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('notification_preferences')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_notification_preference', ['id'])
+
+    .addColumn('user_id', 'integer', col => col.notNull())
+
+    .addColumn('scope_type', sql`notification_preference_scope`, col => col.notNull())
+
+    .addColumn('server_id', 'integer')
+    .addColumn('channel_id', 'integer')
+
+    .addColumn('is_subscribed', 'boolean', col => col.notNull().defaultTo(true))
+
+    .addColumn('updated_at', 'timestamptz')
+
+    .execute()
+
+  await sql`ALTER TABLE notification_preferences 
+  ADD CONSTRAINT uq_notification_preference 
+  UNIQUE NULLS NOT DISTINCT (user_id, scope_type, server_id, channel_id)`.execute(db)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('refresh_tokens')
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_refresh_token', ['id'])
+
+    .addColumn('user_id', 'integer', col => col.notNull())
+
+    .addColumn('token_hash', 'varchar(255)', col => col.notNull())
+    .addUniqueConstraint('uq_refresh_token_hash', ['token_hash'])
+
+    .addColumn('expires_at', 'timestamptz', col => col.notNull())
+    .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+    .addColumn('revoked_at', 'timestamptz')
+
+    .execute()
+}
