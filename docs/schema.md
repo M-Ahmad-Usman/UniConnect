@@ -410,7 +410,7 @@ moderator_assignments {
     // (scope_type='channel' AND server_id IS NOT NULL AND channel_id IS NOT NULL)
   // )
 
-  // UNIQUE(user_id, server_id, COALESCE(channel_id, 0))
+  // UNIQUE(user_id, server_id, channel_id NULLS NOT DISTINCT)
 
   assigned_by INTEGER FK // NOT NULL
   assigned_at TIMESTAMPTZ // DEFAULT NOW()
@@ -460,7 +460,7 @@ notification_preferences {
 
   updated_at TIMESTAMPTZ // Populate on update
 
-  // UNIQUE(user_id, scope_type, server_id, COALESCE(channel_id, 0))
+  // UNIQUE(user_id, scope_type, server_id, channel_id NULLS NOT DISTINCT)
 }
 
 notification_preferences.user_id > users.id
