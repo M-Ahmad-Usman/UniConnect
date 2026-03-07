@@ -54,6 +54,20 @@ function setupEnvironment(): { db: Kysely<Database>, migrator: Migrator } {
   }
 }
 
+// Creates Migration File of supplied name. Handles error and exits the process gracefully
+async function createMigrationFile(migrationFileName: string) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const migrationFilePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationFileName}.ts`)
+
+  try {
+    await fs.writeFile(migrationFilePath, '')
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error(`Failed to create migration ${migrationFileName}\nError: ${errorMessage}`)
+    process.exit(1)
+  }
+}
+
 async function main(): Promise<void> {
 
   const argumentResult = ARGUMENT_SCHEMA.safeParse(process.argv[2])
@@ -76,17 +90,9 @@ async function main(): Promise<void> {
 
     const migrationNameArgument = migrationNameArgumentResult.data
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const migrationFilePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationNameArgument}.ts`)
-
-    try {
-      await fs.writeFile(migrationFilePath, '')
-      process.exit(0)
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error(`Failed to create migration ${migrationNameArgument}\nError: ${errorMessage}`)
-      process.exit(1)
-    }
+    await createMigrationFile(migrationNameArgument)
+    console.log(`Migration ${migrationNameArgument} created successfuly.`)
+    return
   }
 
   const { db, migrator } = setupEnvironment()
