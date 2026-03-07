@@ -169,7 +169,7 @@ societies {
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // UNIQUE NOT NULL
-  description TEXT
+  description varchar(1000)
 
   department_id INT FK // NOT NULL
   president_id INT FK // NOT NULL
