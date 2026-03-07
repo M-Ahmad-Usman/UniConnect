@@ -69,7 +69,9 @@ function setupEnvironment(): { db: Kysely<Database>, migrator: Migrator } {
 
 // Creates Migration File of supplied name. Handles error and exits the process gracefully
 async function createMigrationFile(migrationFileName: string) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+
+  // Replace ':', '.' with '-' for cross-platform support. (Windows doesn't allow colons in filename)
+  const timestamp = new Date().toISOString().replace(/[:]/g, '-')
   const migrationFilePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationFileName}.ts`)
 
   try {
