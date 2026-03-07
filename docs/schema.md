@@ -51,7 +51,7 @@ typeface clean
 notation chen
 
 departments {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
 
@@ -64,7 +64,7 @@ departments.hod_id - teachers.teacher_id
 departments.server_id - servers.id
 
 programs {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   department_id INTEGER FK // NOT NULL
   discipline TEXT // NOT NULL enum ['computer_science', 'software_engineering', ...]
@@ -84,7 +84,7 @@ programs.program_director_id - teachers.teacher_id
 departments.id < programs.department_id
 
 program_curricula {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
@@ -97,7 +97,7 @@ program_curricula.program_id > programs.id
 program_curricula.course_id > courses.id
 
 users {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   full_name VARCHAR(100) // NOT NULL
@@ -140,7 +140,7 @@ teachers {
 teachers.teacher_id - users.id
 
 classes {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   program_id INTEGER FK // NOT NULL
@@ -165,7 +165,7 @@ classes.program_id > programs.id
 classes.server_id - servers.id
 
 societies {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // UNIQUE NOT NULL
@@ -194,7 +194,7 @@ societies.convenor_id - teachers.teacher_id
 societies.server_id - servers.id
 
 servers {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
@@ -210,7 +210,7 @@ servers {
 servers.created_by > users.id
 
 channels {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
@@ -275,7 +275,7 @@ servers.id < server_memberships.server_id
 
 // Track user requests to join societies
 society_membership_requests {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   society_id INTEGER FK  // NOT NULL
@@ -295,7 +295,7 @@ society_membership_requests.user_id > users.id
 society_membership_requests.reviewed_by > users.id
 
 courses {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   title VARCHAR(50) // NOT NULL
   code VARCHAR(50) // UNIQUE NOT NULL
@@ -320,7 +320,7 @@ course_assignments.course_id > courses.id
 course_assignments.class_id > classes.id
 
 posts {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   title VARCHAR(100) // NOT NULL
@@ -354,7 +354,7 @@ posts.updated_by > users.id
 posts.pinned_by > users.id
 
 post_attachments {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   post_id INTEGER FK // NOT NULL
 
@@ -371,13 +371,13 @@ post_attachments {
 post_attachments.post_id > posts.id
 
 roles {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
 }
 
 permissions {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   action TEXT // NOT NULL enum['create', 'update', 'delete', 'post', 'assign']
   resource TEXT // NOT NULL enum['channel', 'society', 'class', 'role']
@@ -394,7 +394,7 @@ role_permissions.role_id > roles.id
 role_permissions.permission_id > permissions.id
 
 moderator_assignments {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   user_id INTEGER FK // NOT NULL
   scope_type VARCHAR(20) // NOT NULL enum ['server', 'channel']
@@ -419,7 +419,7 @@ moderator_assignments.channel_id > channels.id
 moderator_assignments.assigned_by > users.id
 
 notifications {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   title VARCHAR(200) // NOT NULL
@@ -439,7 +439,7 @@ notifications.user_id > users.id
 notifications.post_id > posts.id
 
 notification_preferences {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   user_id INTEGER FK // NOT NULL
 
@@ -465,7 +465,7 @@ notification_preferences.server_id > servers.id
 notification_preferences.channel_id > channels.id
 
 refresh_tokens {
-  id GENERATED ALWAYS AS IDENTITY PK
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   user_id INTEGER FK  // NOT NULL
 
