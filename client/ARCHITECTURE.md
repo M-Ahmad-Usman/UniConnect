@@ -1,7 +1,7 @@
 # UniConnect Frontend Architecture
 
 **Version:** 1.0
-**Last Updated:** 2026-03-07
+**Last Updated:** 2026-03-08
 
 This document outlines the architectural decisions, patterns, and best practices for the UniConnect frontend application.
 
@@ -1057,12 +1057,40 @@ const queryClient = new QueryClient({
 - Use MSW for API-backed component and integration tests
 
 ### E2E Tests (Playwright)
-- Cover critical end-to-end flows after the core shell is stable
-- Prioritize login, forced password change, post creation, notifications, and admin CRUD smoke paths
+- Use Playwright as the runtime-behavior layer for browser-only concerns: cookie auth, redirects, route guards, token refresh, uploads, responsive layout, and eventual real-time flows
+- Start with the auth flows and other highest-risk cross-route scenarios before broadening to the full app surface
+- Default local project: Chromium only for speed and lower setup friction
+- Add Firefox and WebKit in CI or release-candidate gates rather than on every local run
+- Recommended config baseline:
+  - `webServer` for frontend and backend startup or reuse
+  - `use.baseURL` for relative navigation in tests
+  - `trace: 'on-first-retry'`
+  - `video: 'on-first-retry'`
+  - `screenshot: 'only-on-failure'`
+- Use a dedicated setup project plus `storageState` once authenticated multi-role flows become common
+
+### Runtime Testing Pyramid
+- Unit tests verify pure logic cheaply
+- Component and integration tests verify deterministic UI and API interactions with MSW
+- Playwright verifies full browser runtime behavior and is the final confidence layer before release
+
+### Agent-Assisted Browser Workflow
+- Treat committed Playwright tests as the canonical runtime artifacts
+- Use Playwright codegen or the VS Code extension to bootstrap selectors and flow skeletons, then refine the generated code by hand
+- Use the HTML report and trace viewer as the default debugging evidence for failures
+- Keep Playwright MCP optional for exploratory, stateful browser sessions where iterative page inspection is valuable
+- Prefer CLI-and-test-runner execution over MCP-first workflows for day-to-day coding-agent loops because it is more reproducible and usually more token-efficient
+
+### WSL2 Considerations
+- Ubuntu on WSL2 is a supported Playwright environment
+- Headless Chromium is the lowest-friction local default
+- Headed runs, UI Mode, and `codegen` require WSL2 GUI support such as WSLg or an equivalent working display setup
+- If headed browser launch is unreliable, keep test execution headless and rely on traces, screenshots, and the HTML report for investigation
 
 ### Recommended Quality Gate
 - Balanced coverage is the default: unit plus component or integration tests for each module before it is marked complete
-- Add Playwright coverage for the highest-risk flows before release candidates
+- Add Playwright coverage for the highest-risk flows as soon as those flows span real routing, cookies, or browser runtime behavior
+- Require at least one passing Playwright smoke path for each completed critical user journey before release candidates
 
 ---
 
@@ -1087,5 +1115,5 @@ const queryClient = new QueryClient({
 
 ---
 
-**Last Updated:** 2026-03-07
+**Last Updated:** 2026-03-08
 **Maintained By:** Frontend Team

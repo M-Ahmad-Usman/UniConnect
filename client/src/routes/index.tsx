@@ -1,4 +1,9 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { ChangePasswordPage } from '@/features/auth/pages/ChangePasswordPage';
+import { ForceChangePasswordPage } from '@/features/auth/pages/ForceChangePasswordPage';
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { AuthGuard } from './guards/AuthGuard';
 import { MustChangePasswordGuard } from './guards/MustChangePasswordGuard';
 import { AdminGuard } from './guards/AdminGuard';
@@ -14,18 +19,6 @@ function Placeholder({ label }: { label: string }) {
   );
 }
 
-function LoginPage() {
-  return <Placeholder label="Login" />;
-}
-function ForgotPasswordPage() {
-  return <Placeholder label="Forgot Password" />;
-}
-function ResetPasswordPage() {
-  return <Placeholder label="Reset Password" />;
-}
-function ForceChangePasswordPage() {
-  return <Placeholder label="Change Password" />;
-}
 function ServersPage() {
   return <Placeholder label="Servers" />;
 }
@@ -54,9 +47,6 @@ function MemberListPage() {
 }
 function ProfilePage() {
   return <Placeholder label="Profile" />;
-}
-function ChangePasswordPage() {
-  return <Placeholder label="Change Password" />;
 }
 function NotificationPreferencesPage() {
   return <Placeholder label="Notification Preferences" />;

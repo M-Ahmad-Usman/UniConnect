@@ -19,6 +19,7 @@ export type {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
+  EmptyAuthResponse,
 } from './auth.types';
 
 // Users

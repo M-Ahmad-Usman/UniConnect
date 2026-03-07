@@ -8,7 +8,12 @@ import type { UnreadCountPayload } from '@/types/notification.types';
 let socket: Socket | null = null;
 
 export function connectSocket(): void {
-  if (socket?.connected) return;
+  if (socket) {
+    if (!socket.connected) {
+      socket.connect();
+    }
+    return;
+  }
 
   socket = io({
     withCredentials: true,

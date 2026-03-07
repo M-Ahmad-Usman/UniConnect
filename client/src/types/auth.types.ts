@@ -17,9 +17,7 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  user: AuthUser;
-}
+export type LoginResponse = AuthUser;
 
 // ─── Password Reset ─────────────────────────────────────────────────────────
 
@@ -36,3 +34,5 @@ export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+export type EmptyAuthResponse = Record<string, never>;

@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 0 Complete
-**Current Phase:** Module 1 Ready
+**Status:** Module 1 Complete
+**Current Phase:** Runtime testing strategy definition and Playwright planning
 
 ---
 
@@ -18,7 +18,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module | Status | Start Date | Completion Date | Notes |
 |--------|--------|------------|-----------------|-------|
 | Module 0: Project Foundation | Complete | 2026-03-07 | 2026-03-08 | Verified with type-check, lint, format, production build, and Vite proxy health check |
-| Module 1: Authentication | Not Started | - | - | - |
+| Module 1: Authentication | Complete | 2026-03-08 | 2026-03-08 | Verified with format, type-check, lint, and production build; runtime browser behavior testing still to be added |
 | Module 2: Layout & Navigation | Not Started | - | - | - |
 | Module 3: Server & Channel Views | Not Started | - | - | - |
 | Module 4: Posts & Announcements | Not Started | - | - | - |
@@ -31,6 +31,33 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-03-08 - Module 1 Authentication Implemented and Hardened
+
+#### Delivered Authentication Module
+- ✅ Added real auth routes and pages for login, forgot password, reset password, forced password change, and voluntary password change
+- ✅ Added typed auth and user endpoint helpers under `src/api/endpoints`
+- ✅ Added auth mutation hooks for login, logout, forgot password, reset password, and change password
+- ✅ Added branded `AuthLayout`, shared `PasswordField`, and live `PasswordStrengthIndicator`
+- ✅ Added Zod-backed form schemas and inline API validation mapping helpers
+- ✅ Wired `AuthGuard` to the new users endpoint helper instead of an inline request
+
+#### Hardening Completed
+- ✅ Prevented token refresh attempts for public auth failures such as invalid login requests
+- ✅ Reused existing Socket.IO client instances more safely during auth transitions
+- ✅ Made password inputs explicit React Hook Form refs instead of relying on custom-component forwarding behavior
+- ✅ Split large frontend vendor chunks to remove the oversized bundle warning from the production build
+
+#### Verification Completed
+- ✅ Prettier passes: `npx prettier --check "src/**/*.{ts,tsx,css}"`
+- ✅ TypeScript build passes: `npx tsc -b --pretty false`
+- ✅ ESLint passes: `npx eslint .`
+- ✅ Production build passes: `npm run build`
+
+#### Runtime Testing Direction Chosen
+- ✅ Playwright selected as the browser-runtime testing layer once the harness is added
+- ✅ Auth flows identified as the first Playwright smoke suite
+- ✅ Ubuntu on WSL2 confirmed as a supported Playwright environment, with headless Chromium as the recommended starting point
 
 ### 2026-03-08 - Module 0 Complete and Verified
 
@@ -130,22 +157,27 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| LoginForm component | ⏳ Pending | - | email + password, Zod validation |
-| ForgotPasswordForm | ⏳ Pending | - | Silent success design |
-| ResetPasswordForm | ⏳ Pending | - | Token from URL, password strength |
-| ChangePasswordForm | ⏳ Pending | - | Shared between forced/voluntary |
-| PasswordStrengthIndicator | ⏳ Pending | - | Visual feedback, backend rules |
-| AuthLayout | ⏳ Pending | - | Centered card design |
-| Auth API integration | ⏳ Pending | - | Login, logout, refresh, password flows |
-| Auth store integration | ⏳ Pending | - | Set/clear user, socket connection |
-| mustChangePassword flow | ⏳ Pending | - | Redirect logic, guard implementation |
-| 401 interceptor testing | ⏳ Pending | - | Refresh retry, login redirect |
+| LoginForm component | ✅ Complete | 2026-03-08 | Email + password form with Zod validation and inline API error handling |
+| ForgotPasswordForm | ✅ Complete | 2026-03-08 | Silent-success email reset request flow |
+| ResetPasswordForm | ✅ Complete | 2026-03-08 | Token from URL, invalid-link handling, password strength feedback |
+| ChangePasswordForm | ✅ Complete | 2026-03-08 | Shared between forced and voluntary password change flows |
+| PasswordStrengthIndicator | ✅ Complete | 2026-03-08 | Combined strength bar and checklist aligned with backend rules |
+| AuthLayout | ✅ Complete | 2026-03-08 | Branded centered card with gradient background |
+| Auth API integration | ✅ Complete | 2026-03-08 | Login, logout, refresh, forgot-password, reset-password, and change-password endpoints |
+| Auth store integration | ✅ Complete | 2026-03-08 | Auth state updates, redirect handling, and socket lifecycle alignment |
+| mustChangePassword flow | ✅ Complete | 2026-03-08 | Forced redirect, special route guard, and post-change sign-in reset |
+| 401 interceptor hardening | ✅ Complete | 2026-03-08 | Public auth routes excluded from refresh logic; runtime Playwright coverage still pending |
 
 ### Key Decisions
-- (To be logged)
+- Shared `ChangePasswordForm` handles both forced and voluntary flows while keeping different page wrappers
+- Success feedback uses Sonner toasts, while validation and most API failures stay inline within forms
+- React Hook Form stays on the standard `@hookform/resolvers/zod` import path with Zod v4 in the current dependency set
+- Runtime browser verification will use Playwright instead of trying to overextend jsdom-based tests
 
 ### Challenges & Solutions
-- (To be logged)
+- Public auth requests originally risked triggering the global refresh interceptor; excluding login, forgot-password, reset-password, and refresh endpoints fixed that behavior
+- Socket initialization could duplicate across login and guarded-route transitions; reusing the existing socket instance fixed the race
+- Password inputs originally depended on implicit custom-component ref behavior; making the input ref path explicit removed that fragility
 
 ---
 
@@ -468,6 +500,24 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Avoids treating production diagnostics as an afterthought
 - Does not block local development if introduced after the app shell is stable
 
+### Decision 11: Playwright Owns Runtime Browser Verification
+**Date:** 2026-03-08
+**Context:** Choosing the correct tool for browser-runtime behavior such as cookie auth, redirects, token refresh, and guarded routes
+**Decision:** Use Playwright as the dedicated runtime behavior testing layer
+**Rationale:**
+- Browser cookies, navigation guards, and redirect chains are materially different from jsdom-based test environments
+- Playwright covers the exact runtime surface we need without turning every feature into a heavy E2E mandate
+- Trace viewer, HTML reports, screenshots, and videos provide strong post-failure evidence
+
+### Decision 12: Agentic Workflow Uses Tests First, MCP Second
+**Date:** 2026-03-08
+**Context:** Deciding how browser automation should fit into coding-agent workflows for this repo
+**Decision:** Prefer committed Playwright tests, CLI runs, codegen, and traces as the default workflow; keep Playwright MCP optional for exploratory sessions
+**Rationale:**
+- Versioned Playwright tests are reproducible locally and in CI
+- CLI-based test runs are usually more token-efficient for coding agents than rich interactive browser protocols
+- MCP still has value for exploratory or persistent stateful sessions, but it should not be the primary verification artifact
+
 ---
 
 ## Challenges & Solutions Log
@@ -496,11 +546,16 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 ### E2E Testing
 - [ ] Set up `@playwright/test` for E2E tests
-- [ ] Test critical user flows:
-  - Login → view servers → view posts
-  - Create post with attachments
-  - Admin CRUD operations
-  - Role assignment flow
+- [ ] Configure Playwright `webServer` for frontend and backend startup or reuse
+- [ ] Add Chromium-only local project
+- [ ] Add trace, screenshot, and video retention defaults for failure debugging
+- [ ] Test first critical runtime flows:
+  - Login success and invalid credentials
+  - Forced password change
+  - Forgot-password silent success
+  - Reset-password success and invalid token
+  - Logout and auth-expired redirect
+- [ ] Expand later to posts, notifications, admin CRUD, and role assignment flows
 
 ---
 
@@ -587,7 +642,9 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Module 0 completed and verified against the plan
 - Production build cleaned up to emit Geist font assets without unresolved warnings
 - Dev proxy confirmed via `http://127.0.0.1:5173/api/health`
-- Ready to begin Module 1: Authentication
+- Module 1 authentication implemented and statically verified
+- Runtime testing recommendation finalized: Playwright for browser-runtime behavior, Testing Library plus MSW for deterministic integration coverage
+- Ubuntu on WSL2 documented as a supported Playwright environment, with headless Chromium recommended as the local default
 
 ---
 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { usersApi } from '@/api/endpoints/users.api';
 import { useAuthStore } from '@/stores/auth.store';
-import { apiClient } from '@/api/client';
 import { ROUTES } from '@/lib/constants';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
@@ -30,10 +30,9 @@ export function AuthGuard() {
 
     async function checkSession() {
       try {
-        const response = await apiClient.get<UserProfile>('/users/me');
+        const profile: UserProfile = await usersApi.getMe();
         if (cancelled) return;
 
-        const profile = response.data;
         const authUser: AuthUser = {
           id: profile.id,
           fullName: profile.fullName,

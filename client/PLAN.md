@@ -1,7 +1,7 @@
 # UniConnect Frontend Development Plan
 
 **Version:** 1.0
-**Last Updated:** 2026-03-07
+**Last Updated:** 2026-03-08
 **Project:** UniConnect - University Communication Platform
 **Target Users:** Department of Computer Science, NTU (~1000 students, ~75 faculty)
 
@@ -254,6 +254,8 @@ All backend communication goes through a dedicated API layer:
 
 **Estimated Effort:** 2-3 days
 **Dependencies:** Module 0
+
+**Implementation Status:** Completed and statically verified on 2026-03-08. Runtime behavior testing is the next gate before considering the module fully runtime-verified.
 
 #### Routes
 | Route | Component | Auth Required |
@@ -1819,6 +1821,12 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Reset password → redirects to login
 ✅ 401 → auto-refresh → retry → login if refresh fails
 
+### Runtime Behavior Testing Gate
+✅ Module 1 is statically verified with format, type-check, lint, and production build
+⬜ Critical auth flows should be covered in Playwright before moving the runtime test strategy from planned to operational
+⬜ First Playwright wave should cover login, forced password change, forgot-password silent success, reset-password success/failure, and logout/session-expiry redirect
+⬜ Local default should be Chromium only; broader browser coverage should run on CI or release-candidate gates
+
 ### Module 2
 ✅ Three-column layout renders
 ✅ Server sidebar populates
@@ -1935,13 +1943,22 @@ export function Can({ action, serverId, children }: CanProps) {
 - Debounced search inputs
 - Optimistic UI updates
 
+### Runtime Testing Strategy
+- Use Testing Library plus MSW for deterministic component and integration coverage
+- Use Playwright for real browser runtime behavior, especially auth cookies, route guards, redirects, token refresh, uploads, and responsive navigation
+- Use Playwright `webServer` to manage frontend and backend startup during local and CI runs
+- Capture traces on first retry, screenshots only on failure, and videos on first retry
+- Prefer committed Playwright tests as the canonical runtime artifacts; use Playwright codegen and trace viewer to accelerate authoring and debugging
+- Keep Playwright MCP optional for exploratory agent workflows, not as the primary verification mechanism
+- In Ubuntu on WSL2, default to headless Chromium first; use headed mode only when WSLg or equivalent GUI support is known to work reliably
+
 ---
 
 ## Next Steps
 
-1. **Initialize Vite project** with React + TypeScript
-2. **Install dependencies** (Tailwind, shadcn/ui, TanStack Query, etc.)
-3. **Set up folder structure** following feature-based organization
-4. **Begin Module 0** implementation
+1. **Set up Playwright** in the client workspace and install Chromium with Linux dependencies
+2. **Add the first auth runtime tests** for login, password reset, and forced password change
+3. **Use traces and HTML reports** as the debugging baseline for runtime failures
+4. **Begin Module 2** implementation after the initial runtime smoke suite is stable
 5. **Use PROGRESS.md** to log decisions and track completion
 

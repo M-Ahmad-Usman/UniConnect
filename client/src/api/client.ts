@@ -5,6 +5,21 @@ import { queryClient } from '@/lib/query-client';
 import { disconnectSocket } from '@/lib/socket';
 import { ROUTES } from '@/lib/constants';
 
+const AUTH_REFRESH_EXCLUDED_PATHS = new Set([
+  '/auth/login',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/refresh',
+]);
+
+function shouldAttemptRefresh(status: number | undefined, requestUrl: string | undefined) {
+  if (status !== 401 || !requestUrl) {
+    return false;
+  }
+
+  return !AUTH_REFRESH_EXCLUDED_PATHS.has(requestUrl);
+}
+
 export const apiClient = axios.create({
   baseURL: '/api',
   withCredentials: true,
@@ -27,7 +42,11 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     // ─── 401 Unauthorized: Attempt token refresh ──────────────────────────
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      originalRequest &&
+      shouldAttemptRefresh(error.response?.status, originalRequest.url) &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       try {

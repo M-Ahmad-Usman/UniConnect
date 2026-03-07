@@ -2,7 +2,7 @@
 
 A Discord-like university communication platform for the Department of Computer Science at National Textile University.
 
-**Status:** Module 0 complete, verified, and ready for Module 1
+**Status:** Module 1 authentication complete, hardened, and ready for runtime behavior testing plus Module 2
 
 ---
 
@@ -113,9 +113,10 @@ client/
 ### User Features
 - Implemented foundation: cookie-based auth plumbing with refresh interceptor
 - Implemented foundation: protected route tree with auth, must-change-password, and admin guards
-- Implemented foundation: shared error boundary, toast system, and placeholder app shell
-- Implemented foundation: typed API client, Zustand stores, Socket.IO client, and backend-aligned type layer
-- Planned next: feature pages, forms, and data hooks for authentication and app workflows
+- Implemented authentication: login, forgot-password, reset-password, forced password change, and voluntary password change flows
+- Implemented authentication: typed auth and user endpoint helpers, React Query mutation hooks, password visibility toggles, and live password strength feedback
+- Implemented hardening: public auth 401 refresh exclusions, safer Socket.IO reuse, explicit form refs for React Hook Form, and bundle chunk splitting for cleaner production builds
+- Implemented foundation: shared error boundary, toast system, typed API client, Zustand stores, Socket.IO client, and backend-aligned type layer
 
 ### Admin Features
 - Planned: system dashboard with statistics
@@ -151,6 +152,101 @@ npm run test:coverage    # Coverage report
 npm run test:e2e         # Critical flow end-to-end tests
 ```
 
+Recommended Playwright bootstrap commands when the runtime test harness is added:
+
+```bash
+npm install -D @playwright/test
+npx playwright install --with-deps chromium
+```
+
+---
+
+## Runtime Testing Recommendation
+
+Use a three-layer approach rather than relying on one tool for everything.
+
+1. Use unit tests for pure utilities, stores, and permission logic.
+2. Use component and integration tests with Testing Library plus MSW for deterministic form and data-fetching behavior.
+3. Use Playwright for browser-runtime behavior that only becomes real in an actual browser: cookie auth, redirects, route guards, token refresh, file uploads, responsive layout, and eventual Socket.IO flows.
+
+Playwright is the right runtime layer for this project because UniConnect depends on browser cookies, navigation guards, network retries, and layout behavior that are difficult to validate reliably in jsdom-only tests.
+
+Recommended scope for the first Playwright wave:
+
+1. Login success and invalid-credentials flow.
+2. Forced password change flow.
+3. Forgot-password silent-success flow.
+4. Reset-password valid and invalid token flow.
+5. Logout and session-expiry redirect flow.
+
+Recommended execution policy:
+
+1. Run Chromium-only locally for fast feedback.
+2. Add Firefox and WebKit on CI or release-candidate gates.
+3. Record `trace: 'on-first-retry'`, `video: 'on-first-retry'`, and `screenshot: 'only-on-failure'`.
+4. Use Playwright `webServer` to start or reuse the frontend and backend automatically.
+
+---
+
+## Agentic Playwright Workflow
+
+For agent-driven development, use Playwright in two distinct modes.
+
+1. Use committed Playwright tests as the source of truth for reproducible runtime verification.
+2. Use Playwright codegen, VS Code Playwright tooling, and trace viewer to accelerate authoring and debugging.
+3. Use Playwright MCP only as an optional exploratory sidecar when persistent browser state and live page introspection help more than raw token efficiency.
+
+Recommended default for workflows like this one:
+
+1. Author or update Playwright tests in the repo.
+2. Run them from the terminal or VS Code test runner.
+3. Inspect failures through the HTML report and trace viewer.
+4. Use codegen to bootstrap locators or flow skeletons, then hand-clean the generated test.
+
+Why this default is better than MCP-first:
+
+1. Tests become versioned artifacts in the codebase.
+2. Terminal and test-runner execution is easier to repeat in CI.
+3. Trace files give better post-failure evidence than ad-hoc browser interaction logs.
+4. The Playwright MCP project itself recommends CLI-based workflows for many coding-agent scenarios because they are usually more token-efficient, while MCP is better suited to exploratory or long-running browser sessions.
+
+---
+
+## Playwright on WSL2
+
+Your environment, Ubuntu on WSL2, is a supported Playwright setup.
+
+Recommended baseline:
+
+1. Keep Node.js on a supported major version, which this repo already does with Node 20+.
+2. Install Playwright with browser dependencies from inside Ubuntu:
+
+```bash
+npm install -D @playwright/test
+npx playwright install --with-deps chromium
+```
+
+3. Start with Chromium in headless mode for the least friction.
+
+For headed mode, UI Mode, or `codegen` inside WSL2:
+
+1. Ensure the distro is actually running on WSL2, not WSL1.
+2. Update WSL from Windows PowerShell: `wsl --update`.
+3. Restart WSL: `wsl --shutdown`.
+4. Use WSLg-capable Windows 11 or a current Windows 10 build with GUI app support if you want browser windows to open from Ubuntu.
+5. If GUI apps fail with display errors, fall back to headless execution first and debug with HTML reports plus traces.
+
+Optional local quality-of-life commands:
+
+```bash
+npx playwright test --ui
+npx playwright codegen http://127.0.0.1:5173/login
+npx playwright show-report
+npx playwright show-trace path/to/trace.zip
+```
+
+---
+
 ---
 
 ## Environment Variables
@@ -173,7 +269,7 @@ VITE_SOCKET_URL=http://localhost:4000
 | Module | Status |
 |--------|--------|
 | Module 0: Project Foundation | ✅ Complete |
-| Module 1: Authentication | ⏳ Not Started |
+| Module 1: Authentication | ✅ Complete |
 | Module 2: Layout & Navigation | ⏳ Not Started |
 | Module 3: Server & Channel Views | ⏳ Not Started |
 | Module 4: Posts & Announcements | ⏳ Not Started |
@@ -183,7 +279,7 @@ VITE_SOCKET_URL=http://localhost:4000
 | Module 8: Society Management | ⏳ Not Started |
 | Module 9: Role Management | ⏳ Not Started |
 
-**Progress:** 1/10 modules complete
+**Progress:** 2/10 modules complete
 
 ---
 
@@ -209,12 +305,16 @@ Backend documentation:
    - Review [API_CONTRACT.md](./API_CONTRACT.md) for backend integration
    - Study [ARCHITECTURE.md](./ARCHITECTURE.md) for design patterns
 
-2. **Continue with Module 1:**
-   - Build login, forgot-password, reset-password, and change-password flows
-   - Add auth endpoint helpers and React Query hooks
-   - Connect login/logout flows to auth store and Socket.IO lifecycle
+2. **Set up runtime testing:**
+   - Add Playwright and browser binaries in the Ubuntu-on-WSL2 environment
+   - Create the first critical auth-flow runtime tests
+   - Configure trace capture and HTML reports for failure analysis
 
-3. **Track progress in [PROGRESS.md](./PROGRESS.md)**
+3. **Continue with Module 2:**
+   - Build AppShell, navigation, and notification entry points
+   - Keep expanding Playwright only for critical cross-route runtime flows
+
+4. **Track progress in [PROGRESS.md](./PROGRESS.md)**
 
 ---
 
