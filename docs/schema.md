@@ -107,7 +107,7 @@ users {
 
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
   profile_picture_url TEXT
-  bio TEXT
+  bio varchar(1000)
 
   type VARCHAR(20) // NOT NULL enum ['student', 'teacher', 'admin']
   department_id INTEGER FK // CHECK (type = 'admin' AND department_id IS NULL)
