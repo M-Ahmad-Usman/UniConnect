@@ -214,7 +214,7 @@ channels {
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
-  description TEXT
+  description varchar(200)
   type VARCHAR(50) // NOT NULL enum ['announcements', 'course', 'general', 'program']
 
   server_id INTEGER FK // NOT NULL
