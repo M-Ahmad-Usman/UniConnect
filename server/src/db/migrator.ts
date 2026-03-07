@@ -26,6 +26,19 @@ tsx migrator.ts latest`
 const ARGUMENT_SCHEMA = z.enum(['up', 'down', 'latest', 'create'])
 const MIGRATION_DIRECTORY = path.join(import.meta.dirname, './migrations')
 
+const migrationFileContentTemplate =`import type { Kysely } from 'kysely'
+import { sql } from 'kysely'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function up(db: Kysely<any>): Promise<void> {
+  
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function down(db: Kysely<any>): Promise<void> {
+  
+}`
+
 function setupEnvironment(): { db: Kysely<Database>, migrator: Migrator } {
 
   const dialect = new PostgresDialect({
@@ -60,7 +73,7 @@ async function createMigrationFile(migrationFileName: string) {
   const migrationFilePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationFileName}.ts`)
 
   try {
-    await fs.writeFile(migrationFilePath, '')
+    await fs.writeFile(migrationFilePath, migrationFileContentTemplate)
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error(`Failed to create migration ${migrationFileName}\nError: ${errorMessage}`)
