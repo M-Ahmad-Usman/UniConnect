@@ -200,7 +200,7 @@ servers {
   name VARCHAR(100) // NOT NULL
   description TEXT
   icon_url TEXT
-  
+
   type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
 
   is_active BOOLEAN // DEFAULT TRUE
@@ -374,7 +374,7 @@ post_attachments.post_id > posts.id
 roles {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
-  name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
+  name VARCHAR(100) // NOT NULL UNIQUE enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
 }
 
 permissions {
