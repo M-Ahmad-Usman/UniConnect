@@ -1,13 +1,13 @@
 services:
   dev-db:
     image: postgres:18.3-bookworm
-    container_name: postgres-dev
+    container_name: uniconnect-dev-pg
     ports:
       - 5433:5432
     env_file:
       - .env
     volumes:
-      - pgData:/var/lib/postgresql
+      - uniconnect-dev-pgData:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -15,4 +15,4 @@ services:
       retries: 5
 
 volumes:
-  pgData:
+  uniconnect-dev-pgData:
