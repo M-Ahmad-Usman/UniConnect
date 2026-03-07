@@ -54,7 +54,7 @@ This frontend implementation will satisfy **all 76 functional requirements** acr
 
 ### UI & Styling
 - **Tailwind CSS v4** - Utility-first CSS with JIT compilation
-- **shadcn/ui** - Accessible, composable component primitives (built on Radix UI)
+- **shadcn/ui** - Accessible, composable component primitives (current v4 stack uses Base UI)
 - **Lucide React** - Icon library
 - **Framer Motion** - Animations for modals, transitions, toasts
 
@@ -119,7 +119,7 @@ All backend communication goes through a dedicated API layer:
 - Background refetch on window focus for stale data
 
 ### 6. Accessible by Default
-- shadcn/ui components built on Radix UI primitives (WAI-ARIA compliant)
+- shadcn/ui components built on Base UI primitives in the current v4 stack (WAI-ARIA aligned)
 - Keyboard navigation for all interactive elements
 - Focus management in modals and dropdowns
 - Screen reader announcements for dynamic content
@@ -230,7 +230,7 @@ All backend communication goes through a dedicated API layer:
     - Shows friendly error UI with "Reload" button
     - Logs errors to console (future: send to error tracking service)
 
-11. **Toast System** (`src/components/ui/toaster.tsx`)
+11. **Toast System** (`src/components/ui/sonner.tsx`)
     - shadcn/ui Sonner integration
     - Global toast provider in `App.tsx`
     - TanStack Query `onError` callback fires toasts for unhandled API errors

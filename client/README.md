@@ -2,7 +2,7 @@
 
 A Discord-like university communication platform for the Department of Computer Science at National Textile University.
 
-**Status:** Planning complete, documentation aligned, implementation pending
+**Status:** Module 0 complete, verified, and ready for Module 1
 
 ---
 
@@ -24,6 +24,13 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
+### Verification Snapshot
+- `npx tsc -b --pretty false` passes
+- `npx eslint .` passes
+- `npx prettier --check "src/**/*.{ts,tsx,css}"` passes
+- `npm run build` passes
+- `http://127.0.0.1:5173/api/health` returns the backend health payload through the Vite proxy
+
 ---
 
 ## Documentation
@@ -44,6 +51,7 @@ Comprehensive documentation is available in this directory:
 
 - **Framework:** React 19 + Vite 7 + TypeScript 5.9
 - **UI:** shadcn/ui + Tailwind CSS v4
+- **Primitive layer:** Base UI via shadcn/ui v4
 - **State Management:** TanStack Query v5 (server state) + Zustand (client state)
 - **Routing:** React Router v7
 - **Forms:** React Hook Form + Zod
@@ -103,14 +111,11 @@ client/
 ## Key Features
 
 ### User Features
-- Planned: cookie-based authentication with auto-refresh
-- Planned: Discord-like server/channel navigation
-- Planned: rich text post creation with attachments
-- Planned: real-time notifications via Socket.IO
-- Planned: user profile with avatar upload
-- Planned: society join requests and membership
-- Planned: notification preferences per server/channel
-- Planned: search and filter posts by priority and date
+- Implemented foundation: cookie-based auth plumbing with refresh interceptor
+- Implemented foundation: protected route tree with auth, must-change-password, and admin guards
+- Implemented foundation: shared error boundary, toast system, and placeholder app shell
+- Implemented foundation: typed API client, Zustand stores, Socket.IO client, and backend-aligned type layer
+- Planned next: feature pages, forms, and data hooks for authentication and app workflows
 
 ### Admin Features
 - Planned: system dashboard with statistics
@@ -134,6 +139,8 @@ npm run preview          # Preview production build
 # Code Quality
 npm run lint             # Run ESLint
 npm run type-check       # TypeScript type checking
+npm run format           # Format source files
+npm run format:check     # Check formatting
 ```
 
 Planned after Module 0 foundation setup:
@@ -165,7 +172,7 @@ VITE_SOCKET_URL=http://localhost:4000
 
 | Module | Status |
 |--------|--------|
-| Module 0: Project Foundation | ⏳ Not Started |
+| Module 0: Project Foundation | ✅ Complete |
 | Module 1: Authentication | ⏳ Not Started |
 | Module 2: Layout & Navigation | ⏳ Not Started |
 | Module 3: Server & Channel Views | ⏳ Not Started |
@@ -176,7 +183,7 @@ VITE_SOCKET_URL=http://localhost:4000
 | Module 8: Society Management | ⏳ Not Started |
 | Module 9: Role Management | ⏳ Not Started |
 
-**Progress:** 0/10 modules complete
+**Progress:** 1/10 modules complete
 
 ---
 
@@ -202,12 +209,10 @@ Backend documentation:
    - Review [API_CONTRACT.md](./API_CONTRACT.md) for backend integration
    - Study [ARCHITECTURE.md](./ARCHITECTURE.md) for design patterns
 
-2. **Begin Module 0:**
-   - Replace the default Vite starter scaffold with the application foundation
-   - Set up Tailwind and shadcn/ui
-   - Configure axios with interceptors
-   - Set up TanStack Query and Zustand
-   - Create type definitions
+2. **Continue with Module 1:**
+   - Build login, forgot-password, reset-password, and change-password flows
+   - Add auth endpoint helpers and React Query hooks
+   - Connect login/logout flows to auth store and Socket.IO lifecycle
 
 3. **Track progress in [PROGRESS.md](./PROGRESS.md)**
 

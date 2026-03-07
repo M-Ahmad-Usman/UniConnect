@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Planning Phase Complete
-**Current Phase:** Foundation
+**Status:** Module 0 Complete
+**Current Phase:** Module 1 Ready
 
 ---
 
@@ -17,7 +17,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Module | Status | Start Date | Completion Date | Notes |
 |--------|--------|------------|-----------------|-------|
-| Module 0: Project Foundation | Not Started | - | - | - |
+| Module 0: Project Foundation | Complete | 2026-03-07 | 2026-03-08 | Verified with type-check, lint, format, production build, and Vite proxy health check |
 | Module 1: Authentication | Not Started | - | - | - |
 | Module 2: Layout & Navigation | Not Started | - | - | - |
 | Module 3: Server & Channel Views | Not Started | - | - | - |
@@ -31,6 +31,40 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-03-08 - Module 0 Complete and Verified
+
+#### Delivered Foundation
+- ✅ Replaced the Vite starter scaffold with the routed application shell
+- ✅ Added Prettier, format scripts, and ESLint/Prettier integration
+- ✅ Enabled stricter TypeScript checks with `noUncheckedIndexedAccess`
+- ✅ Initialized shadcn/ui v4 and added the Module 0 primitive component set
+- ✅ Implemented backend-aligned type definitions under `src/types`
+- ✅ Implemented the shared axios client with success unwrapping and 401 refresh retry
+- ✅ Configured TanStack Query with cache defaults and global unhandled-error toasts
+- ✅ Added Zustand auth and notification stores
+- ✅ Added Socket.IO client wiring for notification and auth-expiry events
+- ✅ Added `AuthGuard`, `MustChangePasswordGuard`, and `AdminGuard`
+- ✅ Added the initial route tree with placeholder pages and a fallback route
+- ✅ Added shared `ErrorBoundary`, `LoadingSpinner`, `EmptyState`, `ConfirmDialog`, and `RoleBadge`
+
+#### Verification Completed
+- ✅ TypeScript build passes: `npx tsc -b --pretty false`
+- ✅ ESLint passes: `npx eslint .`
+- ✅ Prettier passes: `npx prettier --check "src/**/*.{ts,tsx,css}"`
+- ✅ Production build passes: `npm run build`
+- ✅ Dev proxy verified: `http://127.0.0.1:5173/api/health` returns `{"success":true,"message":"OK","db":"ok"}`
+
+#### Key Decisions
+- shadcn/ui v4 is kept on its current Base UI stack instead of backporting to the older Radix-based templates
+- The font is loaded from `main.tsx` via `@fontsource-variable/geist/wght.css` so Vite emits the font files cleanly in production
+- TanStack Query now owns the default unhandled API error toast behavior required by the plan
+- The root route redirects to `/servers`, and `/servers` now resolves to a valid placeholder page instead of a dead path
+
+#### Challenges & Solutions
+- Build-time Geist font warnings were resolved by moving the font import out of `index.css` and into `main.tsx`
+- The toast wrapper originally depended on `next-themes` without a mounted provider; adding `ThemeProvider` fixed that runtime gap
+- The initial route tree redirected authenticated users to `/servers` before that route existed; a concrete `/servers` placeholder route and fallback page fixed navigation correctness
 
 ### 2026-03-07 - Planning Phase Complete
 
@@ -54,7 +88,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Maximum type safety (TypeScript + Zod)
 - Best-in-class server state management (TanStack Query)
 - Lightweight client state (Zustand)
-- Accessible UI primitives (shadcn/ui on Radix UI)
+- Accessible UI primitives (shadcn/ui v4 on Base UI)
 - Modern, fast development experience (Vite HMR)
 
 ---
@@ -65,24 +99,28 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| Replace Vite starter scaffold | ⏳ Pending | - | React 19 + TS + Tailwind v4 |
-| shadcn/ui setup | ⏳ Pending | - | Install Button, Card, Dialog, Input, etc. |
-| Folder structure creation | ⏳ Pending | - | Feature-based organization |
-| Axios instance + interceptors | ⏳ Pending | - | 401 refresh flow, error normalization |
-| TanStack Query configuration | ⏳ Pending | - | Default staleTime, retry logic |
-| Zustand stores (auth, notification) | ⏳ Pending | - | Client state management |
-| Socket.IO client setup | ⏳ Pending | - | httpOnly cookie auth |
-| Type definitions | ⏳ Pending | - | Mirror all backend types |
-| Route tree + guards | ⏳ Pending | - | AuthGuard, MustChangePasswordGuard, AdminGuard |
-| Error boundary + toast system | ⏳ Pending | - | Global error handling |
-| Shared components | ⏳ Pending | - | EmptyState, LoadingSpinner, ConfirmDialog, RoleBadge |
-| API endpoint functions | ⏳ Pending | - | All resources (auth, users, servers, etc.) |
+| Replace Vite starter scaffold | ✅ Complete | 2026-03-07 | Root rendering now goes through RouterProvider and app providers |
+| shadcn/ui setup | ✅ Complete | 2026-03-07 | Initialized shadcn/ui v4 and added the planned primitive set |
+| Folder structure creation | ✅ Complete | 2026-03-07 | Shared foundation folders and route guards are in place |
+| Axios instance + interceptors | ✅ Complete | 2026-03-07 | Success unwrap + refresh retry + normalized ApiError |
+| TanStack Query configuration | ✅ Complete | 2026-03-08 | Cache defaults plus global unhandled-error toasts |
+| Zustand stores (auth, notification) | ✅ Complete | 2026-03-07 | Auth/session and unread count state ready |
+| Socket.IO client setup | ✅ Complete | 2026-03-07 | Same-origin socket client with notification/auth listeners |
+| Type definitions | ✅ Complete | 2026-03-07 | Backend-aligned type layer implemented under `src/types` |
+| Route tree + guards | ✅ Complete | 2026-03-08 | Default route fixed, `/servers` placeholder added, wildcard fallback added |
+| Error boundary + toast system | ✅ Complete | 2026-03-08 | ErrorBoundary mounted globally and Sonner wired through ThemeProvider |
+| Shared components | ✅ Complete | 2026-03-07 | EmptyState, LoadingSpinner, ConfirmDialog, RoleBadge, ErrorBoundary |
+| API endpoint functions | ⏳ Deferred | - | Planned for feature modules; not a blocker for Module 0 foundation |
 
 ### Key Decisions
-- (To be logged as decisions are made during implementation)
+- shadcn/ui v4 uses Base UI primitives in this codebase; docs and implementation are aligned to that stack
+- Query-level and mutation-level unhandled API errors surface through Sonner to satisfy the global toast requirement
+- Same-origin deployment remains the target production topology, with Vite proxy used only for local development
 
 ### Challenges & Solutions
-- (To be logged as challenges are encountered)
+- Initial `/` navigation redirected to a non-existent `/servers` page; a concrete placeholder route fixed the mismatch
+- `next-themes` was installed for Sonner theming but no provider was mounted; the app now wraps routing in `ThemeProvider`
+- Vite emitted unresolved Geist font warnings during production build; importing `@fontsource-variable/geist/wght.css` from `main.tsx` resolved them
 
 ---
 
@@ -366,7 +404,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 **Rationale:**
 - Copy-paste approach: full control over components
 - No dependency lock-in (components are yours to modify)
-- Built on Radix UI (accessible by default)
+- Built on Base UI in the current shadcn/ui v4 stack (accessible by default)
 - Tailwind v4 offers best DX with JIT compilation
 - Lightweight (only include what you use)
 
@@ -544,7 +582,12 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - All 10 modules specified with detailed component breakdown
 - Technology stack finalized after evaluating trade-offs
 - Documentation structure established (PLAN.md, PROGRESS.md, API_CONTRACT.md, ARCHITECTURE.md)
-- Ready to begin Module 0: Project Foundation
+
+### 2026-03-08
+- Module 0 completed and verified against the plan
+- Production build cleaned up to emit Geist font assets without unresolved warnings
+- Dev proxy confirmed via `http://127.0.0.1:5173/api/health`
+- Ready to begin Module 1: Authentication
 
 ---
 

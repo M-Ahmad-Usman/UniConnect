@@ -95,7 +95,7 @@ UniConnect follows a **feature-based architecture** with clear separation of con
 
 **Approach:**
 - Components are in our codebase, not node_modules
-- Built on Radix UI primitives (WAI-ARIA compliant)
+- Built on Base UI primitives in shadcn/ui v4 (WAI-ARIA aligned)
 - Tailwind v4 for utility-first styling with JIT compilation
 
 ### TanStack Query v5
@@ -105,6 +105,7 @@ UniConnect follows a **feature-based architecture** with clear separation of con
 - 5-minute stale time (data refetched after 5 min)
 - Automatic retries on failure (1 retry)
 - Query key conventions for cache invalidation
+- Global query and mutation error toasts for unhandled API failures
 
 ### Zustand
 **Why:** Minimal client state management (auth, notification count), no provider boilerplate, tiny bundle (~1KB).
