@@ -382,6 +382,8 @@ permissions {
 
   action TEXT // NOT NULL enum['create', 'update', 'delete', 'post', 'assign']
   resource TEXT // NOT NULL enum['channel', 'society', 'class', 'role']
+
+  // UNIQUE(action, resource)
 }
 
 // This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
