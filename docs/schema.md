@@ -199,8 +199,9 @@ servers {
 
   name VARCHAR(100) // NOT NULL
   description TEXT
-  type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
   icon_url TEXT
+  
+  type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
 
   is_active BOOLEAN // DEFAULT TRUE
   created_by INTEGER FK // NOT NULL
