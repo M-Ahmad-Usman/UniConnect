@@ -298,7 +298,7 @@ society_membership_requests.reviewed_by > users.id
 courses {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
-  title VARCHAR(50) // NOT NULL
+  title VARCHAR(100) // NOT NULL
   code VARCHAR(50) // UNIQUE NOT NULL
   credit_hours INTEGER // NOT NULL
 
