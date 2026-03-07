@@ -88,7 +88,7 @@ export type ModeratorScopeType = 'channel' | 'server'
 export type NotificationType = 'new_post' | 'role_assigned'
 export type NotificationPreferenceScope = 'server' | 'channel'
 
-// Types for Audit Fields
+// Types for Timestamp related Audit fields
 
 // Fields Controlled By DB Triggers
 type CreatedAt = ColumnType<Date, never, never>
