@@ -88,9 +88,9 @@ program_curricula {
 
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
-  semester_number INTEGER  // NOT NULL
+  semester_number INTEGER  // NOT NULL CHECK (1 <= semester_number <= programs.semesters) - enforce at application layer
   batch_year INTEGER  // NOT NULL (admission year this applies to)
-  // UNIQUE(program_id, course_id, batch_year)
+  // UNIQUE(program_id, course_id, semester_number, batch_year)
 }
 
 program_curricula.program_id > programs.id
