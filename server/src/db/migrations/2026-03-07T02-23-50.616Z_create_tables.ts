@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 
@@ -6,7 +7,6 @@ import { sql } from 'kysely'
 // 2. UNIQUE
 // 3. NOT NULL
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function up(db: Kysely<any>): Promise<void> {
   await createDepartmentsTable(db)
   await createProgramsTable(db)
@@ -33,7 +33,6 @@ export async function up(db: Kysely<any>): Promise<void> {
   await createRefreshTokensTable(db)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable('refresh_tokens').ifExists().execute()
   await db.schema.dropTable('notification_preferences').ifExists().execute()
@@ -62,7 +61,6 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 // Dedicated Table Creation Functions
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('departments')
@@ -85,7 +83,6 @@ async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createProgramsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('programs')
@@ -109,7 +106,6 @@ async function createProgramsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('program_curricula')
@@ -127,7 +123,6 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createUsersTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('users')
@@ -159,7 +154,6 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createStudentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('students')
@@ -175,7 +169,6 @@ async function createStudentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createTeachersTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('teachers')
@@ -188,7 +181,6 @@ async function createTeachersTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createClassesTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('classes')
@@ -215,7 +207,6 @@ async function createClassesTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createSocietiesTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('societies')
@@ -243,7 +234,6 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createServersTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('servers')
@@ -266,7 +256,6 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createChannelsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('channels')
@@ -307,7 +296,6 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('server_memberships')
@@ -323,7 +311,6 @@ async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('society_membership_requests')
@@ -347,7 +334,6 @@ async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<vo
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createCoursesTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('courses')
@@ -367,7 +353,6 @@ async function createCoursesTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('course_assignments')
@@ -381,7 +366,6 @@ async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createPostsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('posts')
@@ -415,7 +399,6 @@ async function createPostsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('post_attachments')
@@ -434,7 +417,6 @@ async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createRolesTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('roles')
@@ -448,7 +430,6 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createPermissionsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('permissions')
@@ -464,7 +445,6 @@ async function createPermissionsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('role_permissions')
@@ -477,7 +457,6 @@ async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('moderator_assignments')
@@ -501,7 +480,6 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
   UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id)`.execute(db)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createNotificationsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('notifications')
@@ -526,7 +504,6 @@ async function createNotificationsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('notification_preferences')
@@ -552,7 +529,6 @@ async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void
   UNIQUE NULLS NOT DISTINCT (user_id, scope_type, server_id, channel_id)`.execute(db)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('refresh_tokens')
