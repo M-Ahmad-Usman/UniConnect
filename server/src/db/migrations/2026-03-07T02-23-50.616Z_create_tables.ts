@@ -34,36 +34,45 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.dropTable('refresh_tokens').ifExists().execute()
-  await db.schema.dropTable('notification_preferences').ifExists().execute()
-  await db.schema.dropTable('notifications').ifExists().execute()
-  await db.schema.dropTable('moderator_assignments').ifExists().execute()
-  await db.schema.dropTable('role_permissions').ifExists().execute()
-  await db.schema.dropTable('permissions').ifExists().execute()
-  await db.schema.dropTable('roles').ifExists().execute()
-  await db.schema.dropTable('post_attachments').ifExists().execute()
-  await db.schema.dropTable('posts').ifExists().execute()
-  await db.schema.dropTable('course_assignments').ifExists().execute()
-  await db.schema.dropTable('courses').ifExists().execute()
-  await db.schema.dropTable('society_membership_requests').ifExists().execute()
-  await db.schema.dropTable('server_memberships').ifExists().execute()
-  await db.schema.dropTable('channels').ifExists().execute()
-  await db.schema.dropTable('servers').ifExists().execute()
-  await db.schema.dropTable('societies').ifExists().execute()
-  await db.schema.dropTable('classes').ifExists().execute()
-  await db.schema.dropTable('teachers').ifExists().execute()
-  await db.schema.dropTable('students').ifExists().execute()
-  await db.schema.dropTable('users').ifExists().execute()
-  await db.schema.dropTable('program_curricula').ifExists().execute()
-  await db.schema.dropTable('programs').ifExists().execute()
-  await db.schema.dropTable('departments').ifExists().execute()
+
+  for (const tableName of Object.values(TABLENAMES).reverse())
+    await db.schema
+      .dropTable(tableName)
+      .ifExists()
+      .execute()
 }
+
+const TABLENAMES = {
+  departments: 'departments',
+  programs: 'programs',
+  programCurricula: 'program_curricula',
+  users: 'users',
+  students: 'students',
+  teachers: 'teachers',
+  classes: 'classes',
+  societies: 'societies',
+  servers: 'servers',
+  channels: 'channels',
+  serverMemberships: 'server_memberships',
+  societyMembershipRequests: 'society_membership_requests',
+  courses: 'courses',
+  courseAssignments: 'course_assignments',
+  posts: 'posts',
+  postAttachments: 'post_attachments',
+  roles: 'roles',
+  permissions: 'permissions',
+  rolePermissions: 'role_permissions',
+  moderatorAssignments: 'moderator_assignments',
+  notifications: 'notifications',
+  notificationPreferences: 'notification_preferences',
+  refreshTokens: 'refresh_tokens',
+} as const
 
 // Dedicated Table Creation Functions
 
 async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('departments')
+    .createTable(TABLENAMES.departments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_department', ['id'])
@@ -85,7 +94,7 @@ async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
 
 async function createProgramsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('programs')
+    .createTable(TABLENAMES.programs)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_program', ['id'])
@@ -108,7 +117,7 @@ async function createProgramsTable(db: Kysely<any>): Promise<void> {
 
 async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('program_curricula')
+    .createTable(TABLENAMES.programCurricula)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_program_curriculum', ['id'])
@@ -125,7 +134,7 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
 
 async function createUsersTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('users')
+    .createTable(TABLENAMES.users)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_user', ['id'])
@@ -156,7 +165,7 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
 
 async function createStudentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('students')
+    .createTable(TABLENAMES.students)
 
     .addColumn('student_id', 'integer')
     .addPrimaryKeyConstraint('pk_student', ['student_id'])
@@ -171,7 +180,7 @@ async function createStudentsTable(db: Kysely<any>): Promise<void> {
 
 async function createTeachersTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('teachers')
+    .createTable(TABLENAMES.teachers)
 
     .addColumn('teacher_id', 'integer')
     .addPrimaryKeyConstraint('pk_teacher', ['teacher_id'])
@@ -183,7 +192,7 @@ async function createTeachersTable(db: Kysely<any>): Promise<void> {
 
 async function createClassesTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('classes')
+    .createTable(TABLENAMES.classes)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_class', ['id'])
@@ -209,7 +218,7 @@ async function createClassesTable(db: Kysely<any>): Promise<void> {
 
 async function createSocietiesTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('societies')
+    .createTable(TABLENAMES.societies)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_society', ['id'])
@@ -236,7 +245,7 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
 
 async function createServersTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('servers')
+    .createTable(TABLENAMES.servers)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_server', ['id'])
@@ -258,7 +267,7 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
 
 async function createChannelsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('channels')
+    .createTable(TABLENAMES.channels)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_channel', ['id'])
@@ -298,7 +307,7 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
 
 async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('server_memberships')
+    .createTable(TABLENAMES.serverMemberships)
 
     .addColumn('user_id', 'integer')
 
@@ -313,7 +322,7 @@ async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
 
 async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('society_membership_requests')
+    .createTable(TABLENAMES.societyMembershipRequests)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_society_membership_request', ['id'])
@@ -336,7 +345,7 @@ async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<vo
 
 async function createCoursesTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('courses')
+    .createTable(TABLENAMES.courses)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_course', ['id'])
@@ -355,7 +364,7 @@ async function createCoursesTable(db: Kysely<any>): Promise<void> {
 
 async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('course_assignments')
+    .createTable(TABLENAMES.courseAssignments)
 
     .addColumn('teacher_id', 'integer')
     .addColumn('course_id', 'integer')
@@ -368,7 +377,7 @@ async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
 
 async function createPostsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('posts')
+    .createTable(TABLENAMES.posts)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_post', ['id'])
@@ -401,7 +410,7 @@ async function createPostsTable(db: Kysely<any>): Promise<void> {
 
 async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('post_attachments')
+    .createTable(TABLENAMES.postAttachments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_post_attachment', ['id'])
@@ -419,7 +428,7 @@ async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
 
 async function createRolesTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('roles')
+    .createTable(TABLENAMES.roles)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_role', ['id'])
@@ -432,7 +441,7 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
 
 async function createPermissionsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('permissions')
+    .createTable(TABLENAMES.permissions)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_permission', ['id'])
@@ -447,7 +456,7 @@ async function createPermissionsTable(db: Kysely<any>): Promise<void> {
 
 async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('role_permissions')
+    .createTable(TABLENAMES.rolePermissions)
 
     .addColumn('role_id', 'integer')
     .addColumn('permission_id', 'integer')
@@ -459,7 +468,7 @@ async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
 
 async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('moderator_assignments')
+    .createTable(TABLENAMES.moderatorAssignments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_moderator_assignment', ['id'])
@@ -482,7 +491,7 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
 
 async function createNotificationsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('notifications')
+    .createTable(TABLENAMES.notifications)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_notification', ['id'])
@@ -506,7 +515,7 @@ async function createNotificationsTable(db: Kysely<any>): Promise<void> {
 
 async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('notification_preferences')
+    .createTable(TABLENAMES.notificationPreferences)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_notification_preference', ['id'])
@@ -531,7 +540,7 @@ async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void
 
 async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('refresh_tokens')
+    .createTable(TABLENAMES.refreshTokens)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_refresh_token', ['id'])
