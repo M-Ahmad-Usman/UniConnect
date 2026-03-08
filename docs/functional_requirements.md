@@ -1,6 +1,6 @@
 # Functional Requirements - UniConnect
 
-**Version:** 2.1 (MVP Focused)  
+**Version:** 2.1  
 **Team:** Muhammad Ahmad, Awais Hanif, Wasif Ali
 **Supervisor:** Mr. Nasir Mahmood | **Co-Supervisor:** Dr. Hamid Ali
 
