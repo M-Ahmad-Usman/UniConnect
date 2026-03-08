@@ -6,10 +6,39 @@ import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
 
+  for (const [tableName, fkConstraints] of Object.entries(FK_CONSTRAINTS)) {
+    const snakeCasedTableName = convertCamelToSnakeCase(tableName)
+
+    for (const fkConstraint of Object.values(fkConstraints))
+
+      await db.schema
+        .alterTable(snakeCasedTableName)
+        .addForeignKeyConstraint(
+          fkConstraint.constraintName,
+          [fkConstraint.columnName],
+          fkConstraint.referencingTable,
+          [fkConstraint.referencingColumn],
+        )
+        .onDelete(fkConstraint.onDelete)
+        .execute()
+  }
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
 
+  for (const [tableName, fkConstraints] of Object.entries(FK_CONSTRAINTS).reverse()) {
+    const snakeCasedTableName = convertCamelToSnakeCase(tableName)
+
+    for (const fkConstraint of Object.values(fkConstraints))
+      await db.schema
+        .alterTable(snakeCasedTableName)
+        .dropConstraint(fkConstraint.constraintName)
+        .execute()
+  }
+}
+
+function convertCamelToSnakeCase(camelCase: string): string {
+  return camelCase.replace(/([A-Z])/g, '_$1').toLowerCase()
 }
 
 interface FkConstraint {
