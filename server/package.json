@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon",
+    "dev:e2e": "dotenv -e .env.e2e -- nodemon",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "dotenv -e .env.test -- node --experimental-vm-modules node_modules/.bin/jest --runInBand --detectOpenHandles",

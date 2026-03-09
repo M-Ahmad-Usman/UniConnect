@@ -1,7 +1,7 @@
 # UniConnect Frontend Development Plan
 
 **Version:** 1.0
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-10
 **Project:** UniConnect - University Communication Platform
 **Target Users:** Department of Computer Science, NTU (~1000 students, ~75 faculty)
 
@@ -255,7 +255,7 @@ All backend communication goes through a dedicated API layer:
 **Estimated Effort:** 2-3 days
 **Dependencies:** Module 0
 
-**Implementation Status:** Completed and statically verified on 2026-03-08. Runtime behavior testing is the next gate before considering the module fully runtime-verified.
+**Implementation Status:** Completed, hardened, and runtime-verified on 2026-03-10 with focused Playwright coverage for the highest-value auth journeys.
 
 #### Routes
 | Route | Component | Auth Required |
@@ -366,7 +366,7 @@ export const authApi = {
 ```typescript
 // src/features/auth/schemas.ts
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -386,7 +386,7 @@ export const changePasswordSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
 });
 
 export const resetPasswordSchema = z.object({
@@ -1816,16 +1816,21 @@ export function Can({ action, serverId, children }: CanProps) {
 
 ### Module 1
 ✅ Login with valid credentials → redirects to server list
+✅ Login with invalid credentials → shows inline error
 ✅ Login with temp password → forced to change password
-✅ Forgot password → email sent
-✅ Reset password → redirects to login
+✅ Forced-password user cannot navigate to protected routes before updating password
+✅ Forgot password → silent success confirmation shown
+✅ Reset password with valid token → redirects to login
+✅ Reset password with invalid token → shows error
+✅ Logout → protected routes redirect back to login
 ✅ 401 → auto-refresh → retry → login if refresh fails
 
 ### Runtime Behavior Testing Gate
 ✅ Module 1 is statically verified with format, type-check, lint, and production build
-⬜ Critical auth flows should be covered in Playwright before moving the runtime test strategy from planned to operational
-⬜ First Playwright wave should cover login, forced password change, forgot-password silent success, reset-password success/failure, and logout/session-expiry redirect
-⬜ Local default should be Chromium only; broader browser coverage should run on CI or release-candidate gates
+✅ Critical auth flows are covered in Playwright, so the runtime test strategy is now operational
+✅ First Playwright wave covers login, forced password change, forgot-password silent success, reset-password success/failure, and logout redirect
+✅ Local default is Chromium only; broader browser coverage can remain a CI or release-candidate concern
+⬜ Add explicit session-expiry/auth-expired redirect coverage in a later auth-hardening pass
 
 ### Module 2
 ✅ Three-column layout renders
@@ -1947,6 +1952,10 @@ export function Can({ action, serverId, children }: CanProps) {
 - Use Testing Library plus MSW for deterministic component and integration coverage
 - Use Playwright for real browser runtime behavior, especially auth cookies, route guards, redirects, token refresh, uploads, and responsive navigation
 - Use Playwright `webServer` to manage frontend and backend startup during local and CI runs
+- Keep the current Playwright setup in the frontend package, with `client/playwright.config.ts` orchestrating both frontend and backend startup
+- Launch the backend through `npm run dev:e2e`, which reads `server/.env.e2e` and targets the separate `uniconnect_test` database on an isolated backend port
+- Use `client/e2e/global-setup.ts` to rebuild the test schema from committed Prisma migrations and seed only the users needed for focused auth coverage
+- Override the frontend dev proxy with `VITE_PROXY_TARGET` during Playwright runs so browser traffic reaches the isolated E2E backend instead of any local development backend already running on port `4000`
 - Capture traces on first retry, screenshots only on failure, and videos on first retry
 - Prefer committed Playwright tests as the canonical runtime artifacts; use Playwright codegen and trace viewer to accelerate authoring and debugging
 - Keep Playwright MCP optional for exploratory agent workflows, not as the primary verification mechanism
@@ -1956,9 +1965,9 @@ export function Can({ action, serverId, children }: CanProps) {
 
 ## Next Steps
 
-1. **Set up Playwright** in the client workspace and install Chromium with Linux dependencies
-2. **Add the first auth runtime tests** for login, password reset, and forced password change
+1. **Keep Playwright focused on high-risk runtime behavior** rather than trying to E2E every path
+2. **Add explicit auth-expired/session-expiry redirect coverage** when that flow can be exercised deterministically
 3. **Use traces and HTML reports** as the debugging baseline for runtime failures
-4. **Begin Module 2** implementation after the initial runtime smoke suite is stable
+4. **Begin Module 2** implementation now that Module 1 has focused runtime verification
 5. **Use PROGRESS.md** to log decisions and track completion
 

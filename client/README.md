@@ -2,7 +2,7 @@
 
 A Discord-like university communication platform for the Department of Computer Science at National Textile University.
 
-**Status:** Module 1 authentication complete, hardened, and ready for runtime behavior testing plus Module 2
+**Status:** Module 1 authentication complete, hardened, and runtime-verified for critical auth flows; ready for Module 2
 
 ---
 
@@ -30,6 +30,7 @@ The app will be available at `http://localhost:5173`
 - `npx prettier --check "src/**/*.{ts,tsx,css}"` passes
 - `npm run build` passes
 - `http://127.0.0.1:5173/api/health` returns the backend health payload through the Vite proxy
+- `npm run test:e2e` passes with 13 Playwright tests covering critical Module 1 auth flows
 
 ---
 
@@ -142,17 +143,15 @@ npm run lint             # Run ESLint
 npm run type-check       # TypeScript type checking
 npm run format           # Format source files
 npm run format:check     # Check formatting
+
+# Playwright E2E
+npm run test:e2e         # Run Playwright tests headless
+npm run test:e2e:headed  # Run Playwright tests in headed mode
+npm run test:e2e:ui      # Open Playwright UI Mode
+npm run test:e2e:report  # Open the Playwright HTML report
 ```
 
-Planned after Module 0 foundation setup:
-
-```bash
-npm run test             # Unit and component tests
-npm run test:coverage    # Coverage report
-npm run test:e2e         # Critical flow end-to-end tests
-```
-
-Recommended Playwright bootstrap commands when the runtime test harness is added:
+Official Playwright install commands used for this setup:
 
 ```bash
 npm install -D @playwright/test
@@ -162,6 +161,12 @@ npx playwright install --with-deps chromium
 ---
 
 ## Runtime Testing Recommendation
+
+Current E2E prerequisite model:
+
+1. Playwright launches the frontend automatically.
+2. Playwright launches a dedicated backend automatically through `npm run dev:e2e`.
+3. That backend uses `server/.env.e2e` and the separate `uniconnect_test` database, not the normal development database.
 
 Use a three-layer approach rather than relying on one tool for everything.
 
@@ -177,7 +182,12 @@ Recommended scope for the first Playwright wave:
 2. Forced password change flow.
 3. Forgot-password silent-success flow.
 4. Reset-password valid and invalid token flow.
-5. Logout and session-expiry redirect flow.
+5. Logout redirect flow.
+
+Current implementation status of that first wave:
+
+1. Implemented in Playwright and passing: login success, invalid credentials, forced password change, forgot-password silent success, reset-password valid token, reset-password invalid token, logout redirect, protected-route redirect, and the public auth page smoke checks.
+2. Still deferred: explicit auth-expired/session-expiry redirect coverage.
 
 Recommended execution policy:
 
@@ -210,6 +220,14 @@ Why this default is better than MCP-first:
 3. Trace files give better post-failure evidence than ad-hoc browser interaction logs.
 4. The Playwright MCP project itself recommends CLI-based workflows for many coding-agent scenarios because they are usually more token-efficient, while MCP is better suited to exploratory or long-running browser sessions.
 
+Current project placement:
+
+1. Playwright lives in the frontend package at `client/playwright.config.ts`.
+2. Tests live in `client/e2e/`.
+3. This keeps browser-runtime verification next to the Vite app and its scripts while still allowing Playwright to launch the backend through `webServer`.
+4. Playwright starts a dedicated backend E2E process through `npm run dev:e2e`, which reads `server/.env.e2e` and uses the separate `uniconnect_test` database.
+5. The frontend proxy is pointed at the isolated E2E backend during test runs via `VITE_PROXY_TARGET`, so Playwright does not depend on or interfere with a normal local backend on port `4000`.
+
 ---
 
 ## Playwright on WSL2
@@ -227,6 +245,7 @@ npx playwright install --with-deps chromium
 ```
 
 3. Start with Chromium in headless mode for the least friction.
+4. The current setup follows that path and installs only Chromium initially.
 
 For headed mode, UI Mode, or `codegen` inside WSL2:
 
@@ -244,6 +263,22 @@ npx playwright codegen http://127.0.0.1:5173/login
 npx playwright show-report
 npx playwright show-trace path/to/trace.zip
 ```
+
+Current Playwright coverage included in the repo:
+
+1. Login page renders.
+2. Forgot-password page renders.
+3. Reset-password without a token shows the invalid-link state.
+4. Valid login redirects to `/servers`.
+5. Invalid credentials stay on `/login` and show an inline error.
+6. Logout clears the session and protected routes redirect to `/login`.
+7. Protected routes redirect unauthenticated users to `/login`.
+8. Temporary-password users are forced to `/change-password`.
+9. Forced users cannot continue into protected routes until they update the password.
+10. Changing a temporary password signs the user out and the new password works.
+11. Forgot-password shows silent success confirmation.
+12. Reset-password accepts a valid token and allows sign-in with the new password.
+13. Reset-password rejects an invalid token.
 
 ---
 
@@ -305,10 +340,10 @@ Backend documentation:
    - Review [API_CONTRACT.md](./API_CONTRACT.md) for backend integration
    - Study [ARCHITECTURE.md](./ARCHITECTURE.md) for design patterns
 
-2. **Set up runtime testing:**
-   - Add Playwright and browser binaries in the Ubuntu-on-WSL2 environment
-   - Create the first critical auth-flow runtime tests
-   - Configure trace capture and HTML reports for failure analysis
+2. **Expand runtime testing:**
+   - Add explicit auth-expired/session-expiry coverage
+   - Add authenticated setup and storage-state handling when server-backed user journeys are ready
+   - Keep trace capture and HTML reports as the default failure-debugging path
 
 3. **Continue with Module 2:**
    - Build AppShell, navigation, and notification entry points

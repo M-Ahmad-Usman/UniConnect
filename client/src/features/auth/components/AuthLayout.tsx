@@ -10,8 +10,8 @@ interface AuthLayoutProps {
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-10 text-slate-50">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.24),_transparent_45%),linear-gradient(160deg,_rgba(15,23,42,0.98),_rgba(2,6,23,1))]" />
-      <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,_rgba(14,165,233,0.10),_transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.24),transparent_45%),linear-gradient(160deg,rgba(15,23,42,0.98),rgba(2,6,23,1))]" />
+      <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(14,165,233,0.10),transparent)]" />
       <Card className="relative w-full max-w-md border border-white/10 bg-white/8 py-0 backdrop-blur-xl">
         <CardHeader className="gap-3 border-b border-white/10 px-6 py-6">
           <div className="space-y-1">

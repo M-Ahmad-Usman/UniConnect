@@ -598,14 +598,15 @@ POST /api/auth/login
 
 **Frontend Action:**
 ```typescript
-const { data } = await apiClient.post('/auth/login', { email, password });
+const user = await authApi.login({ email, password });
 
-authStore.setUser(data);
-connectSocket();
+authStore.setUser(user);
 
-if (data.mustChangePassword) {
+if (user.mustChangePassword) {
+  // Do NOT connect Socket.IO — backend blocks all routes except change-password
   navigate('/change-password');
 } else {
+  connectSocket();
   navigate('/');
 }
 ```

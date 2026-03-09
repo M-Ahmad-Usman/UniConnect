@@ -1,13 +1,37 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import { ChangePasswordPage } from '@/features/auth/pages/ChangePasswordPage';
-import { ForceChangePasswordPage } from '@/features/auth/pages/ForceChangePasswordPage';
-import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AuthGuard } from './guards/AuthGuard';
 import { MustChangePasswordGuard } from './guards/MustChangePasswordGuard';
 import { AdminGuard } from './guards/AdminGuard';
 import { ForceChangePasswordGuard } from './guards/ForceChangePasswordGuard';
+import { GuestGuard } from './guards/GuestGuard';
+
+// ─── Lazy-loaded page components ────────────────────────────────────────────
+
+const LoginPage = lazy(() =>
+  import('@/features/auth/pages/LoginPage').then((m) => ({ default: m.LoginPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import('@/features/auth/pages/ForgotPasswordPage').then((m) => ({
+    default: m.ForgotPasswordPage,
+  })),
+);
+const ResetPasswordPage = lazy(() =>
+  import('@/features/auth/pages/ResetPasswordPage').then((m) => ({
+    default: m.ResetPasswordPage,
+  })),
+);
+const ForceChangePasswordPage = lazy(() =>
+  import('@/features/auth/pages/ForceChangePasswordPage').then((m) => ({
+    default: m.ForceChangePasswordPage,
+  })),
+);
+const ChangePasswordPage = lazy(() =>
+  import('@/features/auth/pages/ChangePasswordPage').then((m) => ({
+    default: m.ChangePasswordPage,
+  })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -27,7 +51,9 @@ function ServersPage() {
 function AppShell() {
   return (
     <div className="min-h-screen">
-      <Outlet />
+      <Suspense fallback={<LoadingSpinner fullPage />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }
@@ -61,13 +87,33 @@ function NotFoundPage() {
   return <Placeholder label="Page Not Found" />;
 }
 
+// ─── Suspense wrapper for lazy-loaded routes ───────────────────────────────
+
+function SuspenseOutlet() {
+  return (
+    <Suspense fallback={<LoadingSpinner fullPage />}>
+      <Outlet />
+    </Suspense>
+  );
+}
+
 // ─── Router ─────────────────────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
-  // Public routes
-  { path: '/login', element: <LoginPage /> },
-  { path: '/forgot-password', element: <ForgotPasswordPage /> },
-  { path: '/reset-password', element: <ResetPasswordPage /> },
+  // Public routes — redirect authenticated users to /servers
+  {
+    element: <GuestGuard />,
+    children: [
+      {
+        element: <SuspenseOutlet />,
+        children: [
+          { path: '/login', element: <LoginPage /> },
+          { path: '/forgot-password', element: <ForgotPasswordPage /> },
+          { path: '/reset-password', element: <ResetPasswordPage /> },
+        ],
+      },
+    ],
+  },
 
   // Protected routes
   {
@@ -122,7 +168,12 @@ export const router = createBrowserRouter([
       // Force change password — inside AuthGuard but outside MustChangePasswordGuard
       {
         element: <ForceChangePasswordGuard />,
-        children: [{ path: '/change-password', element: <ForceChangePasswordPage /> }],
+        children: [
+          {
+            element: <SuspenseOutlet />,
+            children: [{ path: '/change-password', element: <ForceChangePasswordPage /> }],
+          },
+        ],
       },
     ],
   },

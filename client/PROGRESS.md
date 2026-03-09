@@ -3,7 +3,7 @@
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
 **Status:** Module 1 Complete
-**Current Phase:** Runtime testing strategy definition and Playwright planning
+**Current Phase:** Module 1 runtime verification complete, ready for Module 2
 
 ---
 
@@ -18,7 +18,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module | Status | Start Date | Completion Date | Notes |
 |--------|--------|------------|-----------------|-------|
 | Module 0: Project Foundation | Complete | 2026-03-07 | 2026-03-08 | Verified with type-check, lint, format, production build, and Vite proxy health check |
-| Module 1: Authentication | Complete | 2026-03-08 | 2026-03-08 | Verified with format, type-check, lint, and production build; runtime browser behavior testing still to be added |
+| Module 1: Authentication | Complete | 2026-03-08 | 2026-03-10 | Verified with format, type-check, lint, production build, and focused Playwright runtime coverage for critical auth flows |
 | Module 2: Layout & Navigation | Not Started | - | - | - |
 | Module 3: Server & Channel Views | Not Started | - | - | - |
 | Module 4: Posts & Announcements | Not Started | - | - | - |
@@ -31,6 +31,89 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-03-10 - Module 1 Post-Audit Hardening
+
+#### Unit Test Infrastructure Added
+- ✅ Installed Vitest and configured it in `vite.config.ts` (with e2e exclusion)
+- ✅ Added `npm run test` (vitest run) and `npm run test:watch` (vitest) scripts
+- ✅ Added 32 unit tests across 3 test suites:
+  - `src/features/auth/__tests__/schemas.test.ts` — 19 tests covering all Zod schemas (login, password, forgot-password, reset-password, change-password)
+  - `src/features/auth/__tests__/utils.test.ts` — 8 tests covering `getApiErrorMessage` and `applyApiValidationErrors`
+  - `src/stores/__tests__/auth.store.test.ts` — 5 tests covering setUser, clearUser, markPasswordChangeRequired state transitions
+
+#### Route-Level Lazy Loading Implemented
+- ✅ Converted all auth page imports to `React.lazy()` with dynamic imports
+- ✅ Added `SuspenseOutlet` wrapper and `Suspense` fallbacks in AppShell and route guards
+- ✅ Production build now code-splits auth pages into separate chunks (main bundle reduced from 54KB to 42KB)
+
+#### GuestGuard Added for Public Routes
+- ✅ Created `GuestGuard` that redirects already-authenticated users away from `/login`, `/forgot-password`, `/reset-password` to `/servers`
+- ✅ Wrapped public routes under `GuestGuard` → `SuspenseOutlet` in the router
+
+#### Documentation Alignment Completed
+- ✅ ARCHITECTURE.md: Replaced stale `AuthGuard` code example (was TanStack Query, now matches actual useEffect + Zustand pattern)
+- ✅ ARCHITECTURE.md: Documented all 5 route guards (`GuestGuard`, `AuthGuard`, `MustChangePasswordGuard`, `ForceChangePasswordGuard`, `AdminGuard`)
+- ✅ ARCHITECTURE.md: Updated Socket.IO section to reflect centralized listeners in `socket.ts` and connection lifecycle in `AuthGuard` (was incorrectly attributed to AppShell)
+- ✅ ARCHITECTURE.md: Updated Socket.IO connection pattern to match actual same-origin setup
+- ✅ ARCHITECTURE.md: Updated QueryClient error handling to show actual `QueryCache`/`MutationCache` pattern with `suppressErrorToast` meta
+- ✅ ARCHITECTURE.md: Updated code splitting description to reflect `React.lazy()` with `Suspense`
+- ✅ API_CONTRACT.md: Fixed login Frontend Action to check `mustChangePassword` before calling `connectSocket()`
+- ✅ PLAN.md: Fixed Zod schema examples to use Zod v4 syntax (`z.email()` instead of `z.string().email()`)
+
+#### Verification Completed
+- ✅ TypeScript type-check passes
+- ✅ ESLint passes
+- ✅ Prettier passes
+- ✅ 32 Vitest unit tests pass
+- ✅ Production build succeeds with lazy-loaded chunks
+
+### 2026-03-10 - Module 1 Runtime Verification Completed
+
+#### E2E Infrastructure Completed
+- ✅ Added a dedicated backend E2E startup path via `server/.env.e2e` and `npm run dev:e2e`
+- ✅ Isolated Playwright backend execution on port `4100` to avoid collisions with a local development backend on port `4000`
+- ✅ Added `client/e2e/global-setup.ts` to rebuild the `uniconnect_test` schema from committed Prisma migrations before each Playwright run
+- ✅ Added Playwright DB and auth helpers for direct test-data setup and valid password-reset token generation
+- ✅ Kept runtime tests on the separate `uniconnect_test` database instead of the development database
+
+#### Auth Runtime Coverage Added
+- ✅ Added server-backed login success coverage
+- ✅ Added invalid-credentials coverage
+- ✅ Added logout coverage with protected-route redirect verification
+- ✅ Added forced password change redirect and completion coverage
+- ✅ Added forgot-password silent-success coverage
+- ✅ Added reset-password valid-token and invalid-token coverage
+
+#### Verification Completed
+- ✅ `npm run test:e2e` passes with 13 Playwright tests in Chromium
+- ✅ Module 1 now has focused runtime browser verification for the highest-value auth journeys
+
+#### Remaining Follow-up
+- ⏳ Add explicit auth-expired/session-expiry redirect coverage when that behavior becomes easier to exercise deterministically
+
+### 2026-03-09 - Playwright Set Up in Frontend Package
+
+#### Placement Decision
+- ✅ Placed Playwright in `client/` rather than the repo root
+- ✅ Kept runtime browser tests adjacent to the Vite frontend package, scripts, and auth routes
+- ✅ Used Playwright `webServer` to coordinate both frontend and backend startup instead of creating a separate top-level test workspace
+
+#### Setup Completed
+- ✅ Installed `@playwright/test` in the frontend package
+- ✅ Installed Chromium and Linux dependencies with the official command `npx playwright install --with-deps chromium`
+- ✅ Added `client/playwright.config.ts` with official-style `webServer`, `baseURL`, retries, and failure-artifact settings
+- ✅ Added Playwright npm scripts for headless, headed, UI mode, and HTML report access
+- ✅ Added initial smoke coverage for the public auth pages under `client/e2e/auth-public-pages.spec.ts`
+
+#### Verification Completed
+- ✅ Playwright smoke suite passes: `npx playwright test e2e/auth-public-pages.spec.ts --workers=1 --reporter=list`
+- ✅ Prettier remains clean after Playwright setup
+
+#### Next Runtime Targets
+- ⏳ Add server-backed login success and invalid-credentials coverage
+- ⏳ Add forced password change flow coverage
+- ⏳ Add logout and auth-expired redirect coverage
 
 ### 2026-03-08 - Module 1 Authentication Implemented and Hardened
 
@@ -166,7 +249,9 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Auth API integration | ✅ Complete | 2026-03-08 | Login, logout, refresh, forgot-password, reset-password, and change-password endpoints |
 | Auth store integration | ✅ Complete | 2026-03-08 | Auth state updates, redirect handling, and socket lifecycle alignment |
 | mustChangePassword flow | ✅ Complete | 2026-03-08 | Forced redirect, special route guard, and post-change sign-in reset |
-| 401 interceptor hardening | ✅ Complete | 2026-03-08 | Public auth routes excluded from refresh logic; runtime Playwright coverage still pending |
+| 401 interceptor hardening | ✅ Complete | 2026-03-08 | Public auth routes excluded from refresh logic; focused runtime auth coverage added on 2026-03-10 |
+| Playwright E2E infrastructure | ✅ Complete | 2026-03-10 | Dedicated backend E2E env, isolated test DB bootstrap, DB helpers, and reset-token utilities added |
+| Critical auth Playwright flows | ✅ Complete | 2026-03-10 | Login, invalid credentials, logout, forced password change, forgot-password, and reset-password covered |
 
 ### Key Decisions
 - Shared `ChangePasswordForm` handles both forced and voluntary flows while keeping different page wrappers
@@ -545,16 +630,18 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - [ ] Test API integrations with MSW (Mock Service Worker)
 
 ### E2E Testing
-- [ ] Set up `@playwright/test` for E2E tests
-- [ ] Configure Playwright `webServer` for frontend and backend startup or reuse
-- [ ] Add Chromium-only local project
-- [ ] Add trace, screenshot, and video retention defaults for failure debugging
-- [ ] Test first critical runtime flows:
+- [x] Set up `@playwright/test` for E2E tests
+- [x] Configure Playwright `webServer` for frontend and backend startup or reuse
+- [x] Add Chromium-only local project
+- [x] Add trace, screenshot, and video retention defaults for failure debugging
+- [x] Add initial public auth smoke coverage
+- [x] Test first critical runtime flows:
   - Login success and invalid credentials
   - Forced password change
   - Forgot-password silent success
   - Reset-password success and invalid token
-  - Logout and auth-expired redirect
+  - Logout redirect
+- [ ] Add explicit auth-expired redirect coverage
 - [ ] Expand later to posts, notifications, admin CRUD, and role assignment flows
 
 ---
@@ -645,6 +732,15 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Module 1 authentication implemented and statically verified
 - Runtime testing recommendation finalized: Playwright for browser-runtime behavior, Testing Library plus MSW for deterministic integration coverage
 - Ubuntu on WSL2 documented as a supported Playwright environment, with headless Chromium recommended as the local default
+
+### 2026-03-09
+- Playwright installed in the frontend package and configured with frontend plus backend `webServer` entries
+- Initial public auth smoke suite added and passing in Chromium
+
+### 2026-03-10
+- Module 1 runtime verification completed with a 13-test Playwright auth suite
+- Playwright now boots the backend through a dedicated E2E environment and targets the separate `uniconnect_test` database
+- Global Playwright setup rebuilds the test schema from committed Prisma migrations and seeds only the users required for focused auth coverage
 
 ---
 

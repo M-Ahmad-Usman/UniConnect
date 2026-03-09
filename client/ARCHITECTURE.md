@@ -544,60 +544,79 @@ export const router = createBrowserRouter([
 
 ### Route Guards
 
-**AuthGuard:**
+Five guards protect different areas of the route tree:
+
+**GuestGuard** — wraps public routes (`/login`, `/forgot-password`, `/reset-password`). If the Zustand store already holds an authenticated session, the user is redirected to `/servers` instead of seeing the public page.
+
+**AuthGuard** — wraps all protected routes. On mount it calls `GET /api/users/me` directly (not via TanStack Query) and populates the Zustand auth store. It also manages Socket.IO lifecycle: connects the socket after authentication (unless the user must change their password) and disconnects on teardown.
+
 ```typescript
 export function AuthGuard() {
-  const { isAuthenticated, isLoading } = useAuthStore();
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: () => usersApi.getProfile(),
-    retry: false,
-  });
+  const { user, isAuthenticated, isLoading, requiresPasswordChange, setUser, clearUser, markPasswordChangeRequired } = useAuthStore();
 
-  if (isLoading || userLoading) return <LoadingSpinner />;
+  // Session check on mount — populates auth store from cookie session
+  useEffect(() => {
+    if (isAuthenticated || requiresPasswordChange) return;
+    let cancelled = false;
+    async function checkSession() {
+      try {
+        const profile = await usersApi.getMe();
+        if (cancelled) return;
+        setUser({ id: profile.id, fullName: profile.fullName, email: profile.email, userType: profile.userType, mustChangePassword: profile.mustChangePassword });
+      } catch (error) {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.statusCode === 403 && error.message.includes('Password change required')) {
+          markPasswordChangeRequired();
+          return;
+        }
+        clearUser();
+      }
+    }
+    void checkSession();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, requiresPasswordChange, setUser, clearUser, markPasswordChangeRequired]);
 
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
+  // Socket lifecycle — connect only for fully authenticated, non-forced-change users
+  useEffect(() => {
+    if (isAuthenticated && !user?.mustChangePassword && !requiresPasswordChange) {
+      connectSocket();
+      return () => { disconnectSocket(); };
+    }
+    disconnectSocket();
+  }, [isAuthenticated, user?.mustChangePassword, requiresPasswordChange]);
+
+  if (isLoading) return <LoadingSpinner fullPage />;
+  if (requiresPasswordChange) {
+    return location.pathname === ROUTES.CHANGE_PASSWORD
+      ? <Outlet />
+      : <Navigate to={ROUTES.CHANGE_PASSWORD} replace />;
   }
-
+  if (!isAuthenticated) return <Navigate to={ROUTES.LOGIN} replace />;
   return <Outlet />;
 }
 ```
 
-**MustChangePasswordGuard:**
+**MustChangePasswordGuard** — nested inside AuthGuard. Redirects to `/change-password` if the user object has `mustChangePassword === true`.
+
 ```typescript
 export function MustChangePasswordGuard() {
-  const { user } = useAuthStore();
-  const location = useLocation();
-
-  if (user?.mustChangePassword && location.pathname !== '/change-password') {
-    return <Navigate to="/change-password" replace />;
-  }
-
+  const user = useAuthStore((state) => state.user);
+  if (user?.mustChangePassword) return <Navigate to={ROUTES.CHANGE_PASSWORD} replace />;
   return <Outlet />;
 }
 ```
 
-**AdminGuard:**
+**ForceChangePasswordGuard** — ensures that only users who are required to change their password can access `/change-password`. Authenticated users who do not need a password change are redirected to the voluntary change-password page at `/settings/password`.
+
 ```typescript
-export function AdminGuard() {
-  const { user } = useAuthStore();
-
-  if (user?.userType !== 'ADMIN') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to access this page.</p>
-        <Button asChild className="mt-4">
-          <Link to="/">Go Home</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  return <Outlet />;
+export function ForceChangePasswordGuard() {
+  const { user, requiresPasswordChange } = useAuthStore();
+  if (requiresPasswordChange || user?.mustChangePassword) return <Outlet />;
+  return <Navigate to={ROUTES.SETTINGS_PASSWORD} replace />;
 }
 ```
+
+**AdminGuard** — checks `user.userType === UserType.ADMIN`. Non-admins see an "Access Denied" page with a link back to the home route.
 
 ---
 
@@ -863,75 +882,63 @@ export function Can({ action, serverId, channelId, children }: CanProps) {
 
 ### Socket.IO Setup
 
+The socket client is managed centrally in `src/lib/socket.ts`. The module keeps a singleton `Socket` instance and exposes `connectSocket()`, `disconnectSocket()`, and `getSocket()` helpers. All core event listeners are registered inside `connectSocket()` so that every connection automatically handles notifications and auth-expiry events.
+
 ```typescript
 // src/lib/socket.ts
 import { io, type Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-export function connectSocket(): Socket {
-  if (socket?.connected) return socket;
+export function connectSocket(): void {
+  if (socket) {
+    if (!socket.connected) socket.connect();
+    return;
+  }
 
-  socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
-    path: '/socket.io',
-    withCredentials: true,
-    transports: ['websocket', 'polling'],
+  socket = io({ withCredentials: true });  // Same-origin, path defaults to /socket.io
+
+  socket.on('notification:new', () => {
+    useNotificationStore.getState().incrementUnread();
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
   });
 
-  return socket;
-}
-
-export function disconnectSocket(): void {
-  socket?.disconnect();
-  socket = null;
-}
-
-export function getSocket(): Socket | null {
-  return socket;
-}
-```
-
-Recommended default: keep the socket on the same origin as the frontend and backend. Use `VITE_SOCKET_URL` only if deployment later requires a separate socket origin.
-
-### Event Listeners (in AppShell)
-
-```typescript
-// In AppShell.tsx
-useEffect(() => {
-  if (!isAuthenticated || user?.mustChangePassword) return;
-
-  const socket = connectSocket();
-
-  socket.on('notification:new', (notification: Notification) => {
-    queryClient.setQueryData(['notifications'], (old: any) => ({
-      ...old,
-      data: [notification, ...(old?.data || [])],
-    }));
-
-    notificationStore.incrementUnread();
-
-    if (notification.post?.priority === 'URGENT') {
-      toast.error(notification.title);
-    }
-  });
-
-  socket.on('notification:unread-count', ({ count }: { count: number }) => {
-    notificationStore.setUnreadCount(count);
+  socket.on('notification:unread-count', (payload: UnreadCountPayload) => {
+    useNotificationStore.getState().setUnreadCount(payload.count);
   });
 
   socket.on('auth:expired', () => {
-    authStore.clearUser();
-    queryClient.clear();
     disconnectSocket();
-    navigate('/login');
+    useAuthStore.getState().clearUser();
+    queryClient.clear();
+    window.location.href = ROUTES.LOGIN;
   });
+}
 
-  return () => {
-    socket.off('notification:new');
-    socket.off('notification:unread-count');
-    socket.off('auth:expired');
-  };
-}, [isAuthenticated]);
+export function disconnectSocket(): void {
+  if (socket) {
+    socket.removeAllListeners();
+    socket.disconnect();
+    socket = null;
+  }
+}
+```
+
+Recommended default: keep the socket on the same origin as the frontend and backend. The Vite proxy handles `/socket.io` in development.
+
+### Connection Lifecycle
+
+Socket connection is managed by `AuthGuard`, **not** `AppShell`. The guard connects the socket after the session check succeeds (skipping users who must change passwords) and disconnects on teardown. This keeps socket management co-located with authentication state.
+
+```typescript
+// Inside AuthGuard
+useEffect(() => {
+  if (isAuthenticated && !user?.mustChangePassword && !requiresPasswordChange) {
+    connectSocket();
+    return () => { disconnectSocket(); };
+  }
+  disconnectSocket();
+}, [isAuthenticated, user?.mustChangePassword, requiresPasswordChange]);
 ```
 
 ---
@@ -1018,16 +1025,29 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
 ### Toast Notifications
 
+Global error toasts are handled by `QueryCache` and `MutationCache` callbacks (not `defaultOptions.mutations.onError`). This catches **all** unhandled query and mutation errors in one place. Individual mutations can opt out by setting `meta.suppressErrorToast = true`.
+
 ```typescript
-// TanStack Query global error handler
-const queryClient = new QueryClient({
+// src/lib/query-client.ts
+export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      if (query.meta?.suppressErrorToast) return;
+      toast.error(getErrorMessage(error));
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      if (mutation.meta?.suppressErrorToast) return;
+      toast.error(getErrorMessage(error));
+    },
+  }),
   defaultOptions: {
-    mutations: {
-      onError: (error: ApiError) => {
-        if (error.code !== 'VALIDATION_ERROR') {
-          toast.error(error.message);
-        }
-      },
+    queries: {
+      staleTime: 5 * 60 * 1000,  // 5 minutes
+      gcTime: 10 * 60 * 1000,    // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -1037,7 +1057,7 @@ const queryClient = new QueryClient({
 
 ## Performance Optimization
 
-1. **Code Splitting**: Routes are lazy-loaded
+1. **Code Splitting**: Page components are lazy-loaded via `React.lazy()` with `Suspense` fallbacks, producing separate chunks per route
 2. **Image Optimization**: Use `loading="lazy"` on images
 3. **Debounced Search**: 500ms debounce on search inputs
 4. **Optimistic Updates**: Update UI immediately, rollback on error
@@ -1061,6 +1081,10 @@ const queryClient = new QueryClient({
 - Start with the auth flows and other highest-risk cross-route scenarios before broadening to the full app surface
 - Default local project: Chromium only for speed and lower setup friction
 - Add Firefox and WebKit in CI or release-candidate gates rather than on every local run
+- Keep Playwright scoped to the frontend package in this repo so runtime browser tests stay coupled to the Vite app and frontend scripts, while the backend is launched as an additional `webServer`
+- The current setup launches the backend via `npm run dev:e2e`, which reads `server/.env.e2e` and keeps Playwright on the separate `uniconnect_test` database rather than the development database
+- The current setup isolates the Playwright backend on port `4100` and points the frontend dev proxy at it through `VITE_PROXY_TARGET`, so browser tests do not collide with a developer's normal backend on port `4000`
+- `client/e2e/global-setup.ts` rebuilds the test schema from committed Prisma migrations before a run and seeds only the focused auth users needed by the suite
 - Recommended config baseline:
   - `webServer` for frontend and backend startup or reuse
   - `use.baseURL` for relative navigation in tests
@@ -1068,6 +1092,8 @@ const queryClient = new QueryClient({
   - `video: 'on-first-retry'`
   - `screenshot: 'only-on-failure'`
 - Use a dedicated setup project plus `storageState` once authenticated multi-role flows become common
+- The current setup lives in `client/playwright.config.ts` with tests under `client/e2e/`
+- The current auth suite covers page rendering, login success and failure, forced password change, forgot-password silent success, reset-password success and failure, logout, and protected-route redirects
 
 ### Runtime Testing Pyramid
 - Unit tests verify pure logic cheaply
@@ -1086,11 +1112,13 @@ const queryClient = new QueryClient({
 - Headless Chromium is the lowest-friction local default
 - Headed runs, UI Mode, and `codegen` require WSL2 GUI support such as WSLg or an equivalent working display setup
 - If headed browser launch is unreliable, keep test execution headless and rely on traces, screenshots, and the HTML report for investigation
+- The current local setup follows the official install path with `@playwright/test` plus `npx playwright install --with-deps chromium`
 
 ### Recommended Quality Gate
 - Balanced coverage is the default: unit plus component or integration tests for each module before it is marked complete
 - Add Playwright coverage for the highest-risk flows as soon as those flows span real routing, cookies, or browser runtime behavior
 - Require at least one passing Playwright smoke path for each completed critical user journey before release candidates
+- Module 1 now satisfies that gate with focused Playwright runtime verification; broader auth-expiry and token-refresh edge cases can stay as targeted follow-up coverage rather than blocking Module 2
 
 ---
 
@@ -1115,5 +1143,5 @@ const queryClient = new QueryClient({
 
 ---
 
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-10
 **Maintained By:** Frontend Team
