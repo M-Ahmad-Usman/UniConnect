@@ -171,7 +171,10 @@ export interface UserTable {
   type: UserType
   departmentId: DepartmentId | null
 
-  isActive: Generated<boolean>
+  isDeleted: Generated<boolean>
+  deletedBy: UserId | null
+  deletedAt: DeletedAt
+
   createdAt: CreatedAt
   updatedAt: UpdatedAt
 }
