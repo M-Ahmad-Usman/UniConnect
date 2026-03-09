@@ -6,11 +6,10 @@ import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
 
-  for (const [tableName, fkConstraints] of Object.entries(FK_CONSTRAINTS)) {
-    const snakeCasedTableName = convertCamelToSnakeCase(tableName)
+  for (const [camelCasedTableName, fkConstraints] of Object.entries(FK_CONSTRAINTS)) {
+    const snakeCasedTableName = convertCamelToSnakeCase(camelCasedTableName)
 
     for (const fkConstraint of Object.values(fkConstraints))
-
       await db.schema
         .alterTable(snakeCasedTableName)
         .addForeignKeyConstraint(
@@ -26,8 +25,8 @@ export async function up(db: Kysely<any>): Promise<void> {
 
 export async function down(db: Kysely<any>): Promise<void> {
 
-  for (const [tableName, fkConstraints] of Object.entries(FK_CONSTRAINTS).reverse()) {
-    const snakeCasedTableName = convertCamelToSnakeCase(tableName)
+  for (const [camelCasedTableName, fkConstraints] of Object.entries(FK_CONSTRAINTS).reverse()) {
+    const snakeCasedTableName = convertCamelToSnakeCase(camelCasedTableName)
 
     for (const fkConstraint of Object.values(fkConstraints))
       await db.schema
