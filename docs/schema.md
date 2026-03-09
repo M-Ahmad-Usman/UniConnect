@@ -110,7 +110,7 @@ users {
   bio varchar(1000)
 
   type VARCHAR(20) // NOT NULL enum ['student', 'teacher', 'admin']
-  department_id INTEGER FK // CHECK (type = 'admin' AND department_id IS NULL)
+  department_id INTEGER FK // CHECK (department_id IS NOT NULL OR type = 'admin')
 
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_by INTEGER FK
