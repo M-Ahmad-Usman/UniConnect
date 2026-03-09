@@ -60,8 +60,8 @@ departments {
   server_id INTEGER FK // UNIQUE NOT NULL
 }
 
-departments.hod_id - teachers.teacher_id
-departments.server_id - servers.id
+departments.hod_id - teachers.teacher_id // ON DELETE RESTRICT
+departments.server_id - servers.id // ON DELETE RESTRICT
 
 programs {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -78,10 +78,10 @@ programs {
   // UNIQUE(department_id, discipline, degree_level)
 }
 
-programs.program_director_id - teachers.teacher_id
+programs.program_director_id - teachers.teacher_id // ON DELETE RESTRICT
 
 // One department can have many programs
-departments.id < programs.department_id
+departments.id < programs.department_id // ON DELETE RESTRICT
 
 program_curricula {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -93,8 +93,8 @@ program_curricula {
   // UNIQUE(program_id, course_id, semester_number, batch_year)
 }
 
-program_curricula.program_id > programs.id
-program_curricula.course_id > courses.id
+program_curricula.program_id > programs.id // ON DELETE CASCADE
+program_curricula.course_id > courses.id // ON DELETE RESTRICT
 
 users {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -119,7 +119,7 @@ users {
 
 // One department can have many users.
 // One user can be in only one department
-departments.id < users.department_id
+departments.id < users.department_id // ON DELETE RESTRICT
 
 // For users who have student role
 students {
@@ -128,8 +128,8 @@ students {
   roll_number INTEGER // UNIQUE NOT NULL
 }
 
-students.student_id - users.id
-students.class_id > classes.id
+students.student_id - users.id // ON DELETE CASCADE
+students.class_id > classes.id // ON DELETE RESTRICT
 
 teachers {
   teacher_id INTEGER PK FK
@@ -137,7 +137,7 @@ teachers {
   // Add more fields as required
 }
 
-teachers.teacher_id - users.id
+teachers.teacher_id - users.id // ON DELETE CASCADE
 
 classes {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -158,11 +158,11 @@ classes {
   // UNIQUE (program_id, current_semester, section, admission_year)
 }
 
-classes.cr_id - students.student_id
-classes.program_id > programs.id
+classes.cr_id - students.student_id // ON DELETE RESTRICT
+classes.program_id > programs.id // ON DELETE RESTRICT
 
 // Class must have only one server
-classes.server_id - servers.id
+classes.server_id - servers.id // ON DELETE RESTRICT
 
 societies {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -182,16 +182,16 @@ societies {
 
 // One department can contain many societies
 // One society can be in only one department
-societies.department_id > departments.id
+societies.department_id > departments.id // ON DELETE RESTRICT
 
 // One Society can have only one president which must be a student
-societies.president_id - students.student_id
+societies.president_id - students.student_id // ON DELETE RESTRICT
 
 // One Society can have only one convenor which must be a teacher
-societies.convenor_id - teachers.teacher_id
+societies.convenor_id - teachers.teacher_id // ON DELETE RESTRICT
 
 // Society must have only one server
-societies.server_id - servers.id
+societies.server_id - servers.id // ON DELETE RESTRICT
 
 servers {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -208,7 +208,7 @@ servers {
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
-servers.created_by > users.id
+servers.created_by > users.id // ON DELETE SET NULL
 
 channels {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -252,15 +252,15 @@ channels {
 
 // One server can contain many channels
 // One channel can be in only one server
-channels.server_id > servers.id
-channels.course_id - courses.id
-channels.program_id - programs.id
+channels.server_id > servers.id // ON DELETE RESTRICT
+channels.course_id - courses.id // ON DELETE RESTRICT
+channels.program_id - programs.id // ON DELETE CASCADE 
 
-channels.locked_by > users.id
-channels.deleted_by > users.id
-channels.created_by > users.id
+channels.locked_by > users.id // ON DELETE SET NULL
+channels.deleted_by > users.id // ON DELETE SET NULL
+channels.created_by > users.id // ON DELETE SET NULL
 
-channels.archived_by > users.id
+channels.archived_by > users.id // ON DELETE SET NULL
 
 // Associative entity for server members as this is a many to many relationship 
 server_memberships {
@@ -271,8 +271,8 @@ server_memberships {
   is_auto_joined BOOLEAN // DEFAULT FALSE
 }
 
-users.id < server_memberships.user_id
-servers.id < server_memberships.server_id
+users.id < server_memberships.user_id // ON DELETE CASCADE
+servers.id < server_memberships.server_id // ON DELETE CASCADE
 
 // Track user requests to join societies
 society_membership_requests {
@@ -291,9 +291,9 @@ society_membership_requests {
   // UNIQUE(society_id, user_id)
 }
 
-society_membership_requests.society_id > societies.id
-society_membership_requests.user_id > users.id
-society_membership_requests.reviewed_by > users.id
+society_membership_requests.society_id > societies.id // ON DELETE CASCADE
+society_membership_requests.user_id > users.id // ON DELETE CASCADE
+society_membership_requests.reviewed_by > users.id // ON DELETE SET NULL
 
 courses {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -306,7 +306,7 @@ courses {
 }
 
 // One department offers many courses in its programs
-courses.department_id > departments.id
+courses.department_id > departments.id // ON DELETE SET CASCADE
 
 // Associative Entity
 course_assignments {
@@ -316,9 +316,9 @@ course_assignments {
 }
 
 // One teacher can teach many courses to many classes
-course_assignments.teacher_id > teachers.teacher_id
-course_assignments.course_id > courses.id
-course_assignments.class_id > classes.id
+course_assignments.teacher_id > teachers.teacher_id // ON DELETE RESTRICT
+course_assignments.course_id > courses.id // ON DELETE RESTRICT
+course_assignments.class_id > classes.id // ON DELETE RESTRICT
 
 posts {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -346,13 +346,13 @@ posts {
   updated_at TIMESTAMPTZ // Populate when updated_by changes
 }
 
-posts.created_by > users.id
-posts.channel_id > channels.id
+posts.created_by > users.id // ON DELETE RESTRICT
+posts.channel_id > channels.id // ON DELETE CASCADE
 
-posts.deleted_by > users.id
-posts.updated_by > users.id
+posts.deleted_by > users.id // ON DELETE SET NULL
+posts.updated_by > users.id // ON DELETE SET NULL
 
-posts.pinned_by > users.id
+posts.pinned_by > users.id // ON DELETE SET NULL
 
 post_attachments {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -369,7 +369,7 @@ post_attachments {
 }
 
 // One post can have many attachments
-post_attachments.post_id > posts.id
+post_attachments.post_id > posts.id // ON DELETE CASCADE
 
 roles {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -393,8 +393,8 @@ role_permissions {
   permission_id INTEGER PK FK // NOT NULL
 }
 
-role_permissions.role_id > roles.id
-role_permissions.permission_id > permissions.id
+role_permissions.role_id > roles.id // ON DELETE CASCADE
+role_permissions.permission_id > permissions.id // ON DELETE CASCADE
 
 moderator_assignments {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -416,10 +416,10 @@ moderator_assignments {
   assigned_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
-moderator_assignments.user_id > users.id
-moderator_assignments.server_id > servers.id
-moderator_assignments.channel_id > channels.id
-moderator_assignments.assigned_by > users.id
+moderator_assignments.user_id > users.id // ON DELETE CASCADE
+moderator_assignments.server_id > servers.id // ON DELETE CASCADE
+moderator_assignments.channel_id > channels.id // ON DELETE CASCADE
+moderator_assignments.assigned_by > users.id // ON DELETE SET NULL
 
 notifications {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -438,8 +438,8 @@ notifications {
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
-notifications.user_id > users.id
-notifications.post_id > posts.id
+notifications.user_id > users.id // ON DELETE CASCADE
+notifications.post_id > posts.id // ON DELETE CASCADE
 
 notification_preferences {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -463,9 +463,9 @@ notification_preferences {
   // UNIQUE(user_id, scope_type, server_id, channel_id NULLS NOT DISTINCT)
 }
 
-notification_preferences.user_id > users.id
-notification_preferences.server_id > servers.id
-notification_preferences.channel_id > channels.id
+notification_preferences.user_id > users.id // ON DELETE CASCADE
+notification_preferences.server_id > servers.id // ON DELETE CASCADE
+notification_preferences.channel_id > channels.id // ON DELETE CASCADE
 
 refresh_tokens {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -479,5 +479,5 @@ refresh_tokens {
   revoked_at TIMESTAMPTZ
 }
 
-refresh_tokens.user_id > users.id
+refresh_tokens.user_id > users.id // ON DELETE CASCADE
 ```
