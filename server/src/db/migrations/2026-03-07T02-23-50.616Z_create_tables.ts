@@ -259,7 +259,7 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
     .addColumn('type', sql`server_type`, col => col.notNull())
 
     .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
-    .addColumn('created_by', 'integer', col => col.notNull())
+    .addColumn('created_by', 'integer')
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
     .execute()
@@ -479,7 +479,7 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
     .addColumn('server_id', 'integer', col => col.notNull())
     .addColumn('channel_id', 'integer')
 
-    .addColumn('assigned_by', 'integer', col => col.notNull())
+    .addColumn('assigned_by', 'integer')
     .addColumn('assigned_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
     .execute()

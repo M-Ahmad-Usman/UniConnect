@@ -204,7 +204,7 @@ servers {
   type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
 
   is_active BOOLEAN // DEFAULT TRUE
-  created_by INTEGER FK // NOT NULL
+  created_by INTEGER FK
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
@@ -412,7 +412,7 @@ moderator_assignments {
 
   // UNIQUE(user_id, server_id, channel_id NULLS NOT DISTINCT)
 
-  assigned_by INTEGER FK // NOT NULL
+  assigned_by INTEGER FK
   assigned_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
