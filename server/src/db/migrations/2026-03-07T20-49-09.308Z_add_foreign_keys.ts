@@ -120,6 +120,14 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Users must be cleaned up or moved to another department first
       onDelete: 'restrict',
     },
+    deletedBy: {
+      constraintName: 'fk_users_deleted_by',
+      columnName: 'deleted_by',
+      referencingColumn: 'id',
+      referencingTable: 'users',
+      // Nullable audit column. User remains soft-deleted; only the actor identity is lost in case of hard delete.
+      onDelete: 'set null',
+    },
   },
   students: {
     studentId: {
