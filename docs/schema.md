@@ -311,7 +311,7 @@ courses {
 }
 
 // One department offers many courses in its programs
-courses.department_id > departments.id // ON DELETE SET CASCADE
+courses.department_id > departments.id // ON DELETE CASCADE
 
 // Associative Entity
 course_assignments {
