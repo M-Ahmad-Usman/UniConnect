@@ -156,7 +156,10 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .addColumn('type', sql`user_type`, col => col.notNull())
     .addColumn('department_id', 'integer')
 
-    .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
+    .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('deleted_by', 'integer')
+    .addColumn('deleted_at', 'timestamptz')
+
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
     .addColumn('updated_at', 'timestamptz')
 

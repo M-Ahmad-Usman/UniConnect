@@ -112,7 +112,10 @@ users {
   type VARCHAR(20) // NOT NULL enum ['student', 'teacher', 'admin']
   department_id INTEGER FK // CHECK (type = 'admin' AND department_id IS NULL)
 
-  is_active BOOLEAN // DEFAULT TRUE
+  is_deleted BOOLEAN // DEFAULT FALSE
+  deleted_by INTEGER FK
+  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+
   created_at TIMESTAMPTZ // DEFAULT NOW()
   updated_at TIMESTAMPTZ // Populate when something is updated
 }
@@ -120,6 +123,8 @@ users {
 // One department can have many users.
 // One user can be in only one department
 departments.id < users.department_id // ON DELETE RESTRICT
+
+users.deleted_by > users.id // ON DELETE SET NULL
 
 // For users who have student role
 students {
