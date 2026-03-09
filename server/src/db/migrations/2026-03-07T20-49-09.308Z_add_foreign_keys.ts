@@ -59,7 +59,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'hod_id',
       referencingColumn: 'teacher_id',
       referencingTable: 'teachers',
-      // Prevent teacher deletion if he is HOD. New HOD must be assigned first.
+      // Prevent teacher deletion if he is HOD.
+      // New HOD must be assigned first.
       onDelete: 'restrict',
     },
     serverId: {
@@ -67,7 +68,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
-      // Department owns its server. Department will delete the server.
+      // Department owns its server not vice versa.
       onDelete: 'restrict',
     },
   },
@@ -77,7 +78,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'department_id',
       referencingColumn: 'id',
       referencingTable: 'departments',
-      // Prevent department deletion if it has programs. Programs must be cleaned up first.
+      // Prevent department deletion if it has programs.
+      // Programs must be cleaned up first.
       onDelete: 'restrict',
     },
     programDirectorId: {
@@ -85,7 +87,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'program_director_id',
       referencingColumn: 'teacher_id',
       referencingTable: 'teachers',
-      // Prevent teacher deletion if teacher is a Program Director. New director must be assigned first.
+      // Prevent teacher deletion if teacher is a Program Director.
+      // New director must be assigned first.
       onDelete: 'restrict',
     },
   },
@@ -113,7 +116,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'department_id',
       referencingColumn: 'id',
       referencingTable: 'departments',
-      // Prevent department deletion if department has any user. Users must be cleaned up first
+      // Prevent department deletion if department has any user.
+      // Users must be cleaned up or moved to another department first
       onDelete: 'restrict',
     },
   },
@@ -123,7 +127,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'student_id',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Delete student if user is being deleted
+      // Delete student if referencing user row is being deleted
       onDelete: 'cascade',
     },
     classId: {
@@ -141,7 +145,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'teacher_id',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Delete teacher if user is being deleted
+      // Delete teacher if referencing user row is being deleted
       onDelete: 'cascade',
     },
   },
@@ -159,7 +163,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'cr_id',
       referencingColumn: 'student_id',
       referencingTable: 'students',
-      // Prevent student deletion if student is cr. New CR must be assigned first
+      // Prevent student deletion if student is cr.
+      // New CR must be assigned first
       onDelete: 'restrict',
     },
     serverId: {
@@ -167,7 +172,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
-      // Class owns its server. Class will delete the server.
+      // Class owns its server not vice versa.
       onDelete: 'restrict',
     },
   },
@@ -178,6 +183,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'departments',
       // Prevent department deletion if department is managing some society.
+      // Society must be moved to other department first.
       onDelete: 'restrict',
     },
     presidentId: {
@@ -186,6 +192,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'student_id',
       referencingTable: 'students',
       // Prevent student deletion if student is president of some society.
+      // New president must be assigned first.
       onDelete: 'restrict',
     },
     convenorId: {
@@ -194,6 +201,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'teacher_id',
       referencingTable: 'teachers',
       // Prevent teacher deletion if teacher is convenor of some society.
+      // New Society Convenor must be assigned first.
       onDelete: 'restrict',
     },
     serverId: {
@@ -201,7 +209,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
-      // Society owns its server. Server will be deleted alongside the society.
+      // Society owns its server not vice versa.
       onDelete: 'restrict',
     },
   },
@@ -211,9 +219,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'created_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // need more consideration
-      // Prevent user deletion if user has created some server
-      onDelete: 'restrict',
+      // Nullable audit column. Server remains intact; only the creator identity is lost in case of hard delete.
+      onDelete: 'set null',
     },
   },
   channels: {
@@ -222,7 +229,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
-      // Prevent server deletion if it has a channel. Channel must be deleted first.
+      // Prevent server deletion if it has a channel.
+      // Channel must be deleted first.
       onDelete: 'restrict',
     },
     courseId: {
@@ -230,7 +238,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'course_id',
       referencingColumn: 'id',
       referencingTable: 'courses',
-      // Prevent course deletion if some server has a course channel for that course
+      // Prevent course deletion if that course is being taught to some class (class server has course channel)
+      // Same rule as course_assignments.course_id ON DELETE RESTRICT
       onDelete: 'restrict',
     },
     programId: {
@@ -246,7 +255,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'locked_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Need more consideration
+      // Nullable audit column. Channel remains locked; only the actor identity is lost in case of hard delete.
       onDelete: 'set null',
     },
     archivedBy: {
@@ -254,7 +263,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'archived_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Need more consideration
+      // Nullable audit column. Channel remains archived; only the actor identity is lost in case of hard delete.
       onDelete: 'set null',
     },
     deletedBy: {
@@ -262,7 +271,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'deleted_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Need more consideration
+      // Nullable audit column. Channel remains soft-deleted; only the actor identity is lost in case of hard delete.
       onDelete: 'set null',
     },
     createdBy: {
@@ -270,7 +279,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'created_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Need more consideration
+      // Nullable audit column. Channel remains intact; only the creator identity is lost in case of hard delete.
       onDelete: 'set null',
     },
   },
@@ -280,7 +289,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'user_id',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Clear membership record if user is being deleted
+      // Clear membership record if user is being deleted.
       onDelete: 'cascade',
     },
     serverId: {
@@ -288,7 +297,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
-      // Clear membership record if server is being deleted
+      // Clear membership record if server is being deleted.
       onDelete: 'cascade',
     },
   },
@@ -298,7 +307,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'society_id',
       referencingColumn: 'id',
       referencingTable: 'societies',
-      // Clear record if society is being deleted
+      // Clear record if society is being deleted.
       onDelete: 'cascade',
     },
     userId: {
@@ -306,7 +315,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'user_id',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Clear record if user is being deleted
+      // Clear record if user is being deleted.
       onDelete: 'cascade',
     },
     reviewedBy: {
@@ -314,7 +323,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'reviewed_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Seems good
+      // Nullable audit column. status remains intact; only the reviewer identity is lost in case of hard delete.
       onDelete: 'set null',
     },
   },
@@ -324,8 +333,13 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'department_id',
       referencingColumn: 'id',
       referencingTable: 'departments',
-      // Prevent department deletion if some courses are affilitated to it. Courses must be removed first.
-      onDelete: 'restrict',
+      // Remove courses if department is being deleted.
+      // This will remove only those courses which aren't taught to any class.
+      /* If a class has enrolled a course then that course cannot be deleted due to:
+        1. channels.course_id is set to 'restrict'
+        2. course_assignments.course_id is set to 'restrict'
+      */
+      onDelete: 'cascade',
     },
   },
   courseAssignments: {
@@ -335,7 +349,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'teacher_id',
       referencingTable: 'teachers',
       // Prevent teacher deletion if teacher is teaching some course.
-      // Assign new teacher first to the course and class first.
+      // Assign new teacher to the course and class first.
       onDelete: 'restrict',
     },
     courseId: {
@@ -362,6 +376,12 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'channels',
       // Clear all posts if a channel is being deleted.
+      /* Cascade chain:
+        DELETE channel
+          → CASCADE → posts deleted
+            → CASCADE → notifications deleted (via notifications.post_id)
+            → CASCADE → post_attachments deleted
+      */
       onDelete: 'cascade',
     },
     pinnedBy: {
@@ -369,7 +389,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'pinned_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Need more consideration.
+      // Nullable audit column. Post remains pinned; only the actor identity is lost in case of hard delete.
       onDelete: 'set null',
     },
     deletedBy: {
@@ -377,7 +397,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'deleted_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Seems good.
+      // Nullable audit column. Post remains soft-deleted; only the actor identity is lost in case of hard delete.
       onDelete: 'set null',
     },
     createdBy: {
@@ -385,15 +405,16 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'created_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Seems good.
-      onDelete: 'no action',
+      // Prevent user hard-deletion if user has created posts.
+      // On soft-delete: post retains created_by since user row still exists. UI shows "Deactivated User".
+      onDelete: 'restrict',
     },
     updatedBy: {
       constraintName: 'fk_posts_updated_by',
       columnName: 'updated_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Need more consideration.
+      // Nullable audit column. Post remains intact; only the last-editor identity is lost in case of hard delete.
       onDelete: 'set null',
     },
   },
@@ -455,8 +476,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'assigned_by',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Prevent user deletion if he has assigned moderator role to someone.
-      onDelete: 'restrict',
+      // Nullable audit column. Assignment remains intact; only the assigner identity is lost in case of hard delete.
+      onDelete: 'set null',
     },
   },
   notifications: {
