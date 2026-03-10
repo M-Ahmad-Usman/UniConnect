@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 1 Complete
-**Current Phase:** Module 1 runtime verification complete, ready for Module 2
+**Status:** Module 2 Complete
+**Current Phase:** Module 2 implementation hardened and verified with unit tests, lint, type-check, production build, and focused Playwright coverage
 
 ---
 
@@ -19,7 +19,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 |--------|--------|------------|-----------------|-------|
 | Module 0: Project Foundation | Complete | 2026-03-07 | 2026-03-08 | Verified with type-check, lint, format, production build, and Vite proxy health check |
 | Module 1: Authentication | Complete | 2026-03-08 | 2026-03-10 | Verified with format, type-check, lint, production build, and focused Playwright runtime coverage for critical auth flows |
-| Module 2: Layout & Navigation | Not Started | - | - | - |
+| Module 2: Layout & Navigation | Complete | 2026-03-10 | 2026-03-10 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 3: Server & Channel Views | Not Started | - | - | - |
 | Module 4: Posts & Announcements | Not Started | - | - | - |
 | Module 5: Notifications | Not Started | - | - | - |
@@ -31,6 +31,58 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-03-10 - Module 2 Layout & Navigation Implemented
+
+#### Delivered Shell and Navigation
+- ✅ Replaced the placeholder protected shell with a real `AppShell` layout under `src/components/layout/`
+- ✅ Added `ServerSidebar`, `ChannelSidebar`, `TopBar`, `NotificationBell`, `UserDropdown`, `MobileDrawer`, and `AdminLayout`
+- ✅ Added a responsive authenticated layout with desktop sidebars and a drawer-based sub-`lg` navigation flow
+- ✅ Added route-aware breadcrumbs, contextual channel search input wiring, and authenticated user menu actions
+
+#### Data Layer and Route Behavior
+- ✅ Added typed frontend endpoint helpers for servers, notifications, and channel-post search-backed feed loading
+- ✅ Added React Query hooks for servers, server detail, server channels, unread-count sync, notification preview, mark-read, and channel posts
+- ✅ Implemented `/servers` landing page with active server cards
+- ✅ Implemented `/servers/:serverId` redirect behavior with fallback order: first announcement channel, then general, then first visible channel, else empty state
+- ✅ Implemented `/servers/:serverId/channels/:channelId` as a shell-ready channel page with channel-scoped search and feed preview wiring
+- ✅ Implemented the admin route shell with stable navigation targets for later CRUD modules
+
+#### Notification and Search Scope Decisions Applied
+- ✅ Kept Socket.IO ownership in `AuthGuard` and extended shell behavior to consume the existing auth/socket lifecycle instead of moving it into `AppShell`
+- ✅ Added a lightweight notification preview dropdown instead of prematurely implementing the full notifications module
+- ✅ Scoped Module 2 search to the active channel because the backend contract currently supports search via `GET /api/channels/:id/posts`
+- ✅ Kept future server/channel management actions as disabled placeholders rather than dead clickable UI
+
+#### Tests and Verification
+- ✅ Added unit tests for channel grouping, default-channel selection, route-param parsing, and search-param normalization utilities
+- ✅ `npm run test` passes with 47 Vitest tests
+- ✅ `npm run type-check` passes
+- ✅ `npm run lint` passes
+- ✅ `npm run build` passes
+
+#### Focused Runtime Coverage Added
+- ✅ Added `client/e2e/module2-shell.spec.ts` with focused Playwright coverage for:
+  - direct `/servers/:serverId` redirect to the default announcement channel
+  - channel-scoped search URL sync and filtered feed results
+  - mobile drawer server-to-channel navigation with back-navigation
+  - notification preview unread-count display and linked-channel navigation
+- ✅ Verified the Module 2 Playwright spec passes against the isolated backend on port `4100` and the separate `uniconnect_test` database
+
+#### Runtime Issues Caught and Fixed
+- ✅ Fixed paginated API response unwrapping in `src/api/client.ts` so frontend consumers retain pagination metadata instead of losing it at runtime
+- ✅ Reduced the server list query limit to stay within backend validation bounds during shell loading
+- ✅ Adjusted the mobile drawer dialog mode so drawer navigation controls remain interactable during runtime use
+
+#### Post-Implementation Hardening Applied
+- ✅ Centralized numeric route-param parsing to remove duplicated parsing logic across shell and page components
+- ✅ Normalized channel-post query params before both request dispatch and React Query cache-key generation to prevent cache fragmentation
+- ✅ Hardened notification read and realtime update flows with broader, safer notifications cache invalidation
+- ✅ Added explicit shell and page-level error and retry states for server lists, channel lists, channel pages, and notification preview loading
+- ✅ Re-ran unit tests after hardening additions; the suite now passes with 47 Vitest tests
+
+#### Remaining Follow-up
+- ⏳ Consider folding the focused Module 2 Playwright spec into the default release-check suite if runtime shell coverage should remain mandatory
 
 ### 2026-03-10 - Module 1 Post-Audit Hardening
 

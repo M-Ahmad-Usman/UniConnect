@@ -2,7 +2,7 @@
 
 A Discord-like university communication platform for the Department of Computer Science at National Textile University.
 
-**Status:** Module 1 authentication complete, hardened, and runtime-verified for critical auth flows; ready for Module 2
+**Status:** Module 2 layout and navigation shell complete, with auth plus the responsive application shell verified through tests, lint, type-check, and production build
 
 ---
 

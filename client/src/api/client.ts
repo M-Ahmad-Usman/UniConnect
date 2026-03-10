@@ -32,8 +32,18 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.response.use(
   (response) => {
-    // Unwrap { success: true, data } → return data directly
+    // Unwrap standard payloads while preserving pagination metadata.
     if (response.data?.success === true && 'data' in response.data) {
+      if ('pagination' in response.data) {
+        return {
+          ...response,
+          data: {
+            data: response.data.data,
+            pagination: response.data.pagination,
+          },
+        };
+      }
+
       return { ...response, data: response.data.data };
     }
     return response;

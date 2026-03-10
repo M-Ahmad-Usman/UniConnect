@@ -43,6 +43,18 @@ export const e2eUsers = {
     fullName: 'E2E Reset Password',
     mustChangePassword: false,
   },
+  moduleShell: {
+    email: 'e2e.module.shell@uniconnect.test',
+    password: 'Shell@1234',
+    fullName: 'E2E Module Shell',
+    mustChangePassword: false,
+  },
+  moduleNotifications: {
+    email: 'e2e.module.notifications@uniconnect.test',
+    password: 'Notify@1234',
+    fullName: 'E2E Module Notifications',
+    mustChangePassword: false,
+  },
 } as const;
 
 export function generateResetToken(userId: number, email: string) {

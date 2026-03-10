@@ -1,11 +1,15 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { AppShell } from '@/components/layout/AppShell';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { AdminSectionPage } from '@/features/admin/pages/AdminSectionPage';
 import { AuthGuard } from './guards/AuthGuard';
 import { MustChangePasswordGuard } from './guards/MustChangePasswordGuard';
 import { AdminGuard } from './guards/AdminGuard';
 import { ForceChangePasswordGuard } from './guards/ForceChangePasswordGuard';
 import { GuestGuard } from './guards/GuestGuard';
+import { ROUTES } from '@/lib/constants';
 
 // ─── Lazy-loaded page components ────────────────────────────────────────────
 
@@ -32,6 +36,20 @@ const ChangePasswordPage = lazy(() =>
     default: m.ChangePasswordPage,
   })),
 );
+const ServersPage = lazy(() =>
+  import('@/features/servers/pages/ServersPage').then((m) => ({ default: m.ServersPage })),
+);
+const ServerPage = lazy(() =>
+  import('@/features/servers/pages/ServerPage').then((m) => ({ default: m.ServerPage })),
+);
+const ChannelPage = lazy(() =>
+  import('@/features/channels/pages/ChannelPage').then((m) => ({ default: m.ChannelPage })),
+);
+const AdminDashboardPage = lazy(() =>
+  import('@/features/admin/pages/AdminDashboardPage').then((m) => ({
+    default: m.AdminDashboardPage,
+  })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -43,31 +61,6 @@ function Placeholder({ label }: { label: string }) {
   );
 }
 
-function ServersPage() {
-  return <Placeholder label="Servers" />;
-}
-
-// Minimal AppShell placeholder — real layout in Module 2
-function AppShell() {
-  return (
-    <div className="min-h-screen">
-      <Suspense fallback={<LoadingSpinner fullPage />}>
-        <Outlet />
-      </Suspense>
-    </div>
-  );
-}
-
-function ServerLayout() {
-  return <Outlet />;
-}
-
-function ServerPage() {
-  return <Placeholder label="Server" />;
-}
-function ChannelPage() {
-  return <Placeholder label="Channel" />;
-}
 function MemberListPage() {
   return <Placeholder label="Members" />;
 }
@@ -76,12 +69,6 @@ function ProfilePage() {
 }
 function NotificationPreferencesPage() {
   return <Placeholder label="Notification Preferences" />;
-}
-function AdminLayout() {
-  return <Outlet />;
-}
-function AdminDashboardPage() {
-  return <Placeholder label="Admin Dashboard" />;
 }
 function NotFoundPage() {
   return <Placeholder label="Page Not Found" />;
@@ -133,7 +120,6 @@ export const router = createBrowserRouter([
                   { index: true, element: <ServersPage /> },
                   {
                     path: ':serverId',
-                    element: <ServerLayout />,
                     children: [
                       { index: true, element: <ServerPage /> },
                       { path: 'channels/:channelId', element: <ChannelPage /> },
@@ -156,7 +142,82 @@ export const router = createBrowserRouter([
                   {
                     path: 'admin',
                     element: <AdminLayout />,
-                    children: [{ path: 'dashboard', element: <AdminDashboardPage /> }],
+                    children: [
+                      { index: true, element: <Navigate to={ROUTES.ADMIN_DASHBOARD} replace /> },
+                      { path: 'dashboard', element: <AdminDashboardPage /> },
+                      {
+                        path: 'users',
+                        element: (
+                          <AdminSectionPage
+                            title="Users"
+                            description="User management will plug into this new admin shell in a later module."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'departments',
+                        element: (
+                          <AdminSectionPage
+                            title="Departments"
+                            description="Department CRUD will land on top of the current admin navigation structure."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'programs',
+                        element: (
+                          <AdminSectionPage
+                            title="Programs"
+                            description="Program management screens are intentionally deferred beyond Module 2."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'disciplines',
+                        element: (
+                          <AdminSectionPage
+                            title="Disciplines"
+                            description="Discipline management will reuse this admin shell once its CRUD flows are implemented."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'classes',
+                        element: (
+                          <AdminSectionPage
+                            title="Classes"
+                            description="Class management is deferred, but its route and navigation slot are now in place."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'courses',
+                        element: (
+                          <AdminSectionPage
+                            title="Courses"
+                            description="Course management and channel generation will land in later modules."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'societies',
+                        element: (
+                          <AdminSectionPage
+                            title="Societies"
+                            description="Society administration is queued for later modules, not Module 2."
+                          />
+                        ),
+                      },
+                      {
+                        path: 'roles',
+                        element: (
+                          <AdminSectionPage
+                            title="Roles"
+                            description="Role assignment and permission management will build on this shell later."
+                          />
+                        ),
+                      },
+                    ],
                   },
                 ],
               },

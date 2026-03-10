@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useNotificationStore } from '@/stores/notification.store';
 import { queryClient } from '@/lib/query-client';
 import { queryKeys, ROUTES } from '@/lib/constants';
-import type { UnreadCountPayload } from '@/types/notification.types';
+import type { NewNotificationPayload, PaginatedResponse, Notification, UnreadCountPayload } from '@/types';
 
 let socket: Socket | null = null;
 
@@ -20,10 +20,20 @@ export function connectSocket(): void {
     // Same-origin — path defaults to /socket.io
   });
 
-  socket.on('notification:new', () => {
+  socket.on('notification:new', (payload: NewNotificationPayload) => {
     useNotificationStore.getState().incrementUnread();
-    // Invalidate notifications list so it refetches when viewed
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+    const preview = queryClient.getQueryData<PaginatedResponse<Notification>>(
+      queryKeys.notifications.preview(),
+    );
+
+    if (preview) {
+      queryClient.setQueryData(queryKeys.notifications.preview(), {
+        ...preview,
+        data: [payload, ...preview.data].slice(0, 6),
+      });
+    }
+
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all(), refetchType: 'inactive' });
   });
 
   socket.on('notification:unread-count', (payload: UnreadCountPayload) => {

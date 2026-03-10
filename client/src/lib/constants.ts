@@ -27,6 +27,14 @@ export const ROUTES = {
   SETTINGS_PASSWORD: '/settings/password',
   SETTINGS_NOTIFICATIONS: '/settings/notifications',
   ADMIN_DASHBOARD: '/admin/dashboard',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_DEPARTMENTS: '/admin/departments',
+  ADMIN_PROGRAMS: '/admin/programs',
+  ADMIN_DISCIPLINES: '/admin/disciplines',
+  ADMIN_CLASSES: '/admin/classes',
+  ADMIN_COURSES: '/admin/courses',
+  ADMIN_SOCIETIES: '/admin/societies',
+  ADMIN_ROLES: '/admin/roles',
   ADMIN: '/admin',
 } as const;
 
@@ -43,7 +51,8 @@ export const queryKeys = {
   servers: {
     list: (params?: Record<string, unknown>) => ['servers', params] as const,
     detail: (serverId: number) => ['servers', serverId] as const,
-    channels: (serverId: number) => ['servers', serverId, 'channels'] as const,
+    channels: (serverId: number, params?: Record<string, unknown>) =>
+      ['servers', serverId, 'channels', params] as const,
     members: (serverId: number, params?: Record<string, unknown>) =>
       ['servers', serverId, 'members', params] as const,
   },
@@ -56,7 +65,9 @@ export const queryKeys = {
     detail: (postId: number) => ['posts', 'detail', postId] as const,
   },
   notifications: {
+    all: () => ['notifications'] as const,
     list: (params?: Record<string, unknown>) => ['notifications', params] as const,
+    preview: () => ['notifications', 'preview'] as const,
     unreadCount: () => ['notifications', 'unread-count'] as const,
     preferences: () => ['notifications', 'preferences'] as const,
   },
