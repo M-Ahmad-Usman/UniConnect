@@ -173,7 +173,7 @@ societies {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
-  name VARCHAR(100) // UNIQUE NOT NULL
+  name VARCHAR(100) // NOT NULL
   description varchar(1000)
 
   department_id INT FK // NOT NULL
@@ -184,6 +184,8 @@ societies {
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_by INTEGER FK
   deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+
+  // UNIQUE ('name') WHERE is_deleted = false
 
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
@@ -258,7 +260,7 @@ channels {
   created_by INTEGER FK
   created_at TIMESTAMPTZ // DEFAULT NOW()
   
-  // UNIQUE(server_id, name)
+  // UNIQUE(server_id, name) WHERE is_deleted = false;
 }
 
 // One server can contain many channels
@@ -299,7 +301,7 @@ society_membership_requests {
   reviewed_by INTEGER FK
   reviewed_at TIMESTAMPTZ // Populate when status changes
 
-  // UNIQUE(society_id, user_id)
+  // UNIQUE(society_id, user_id) WHERE status IN ('pending', 'approved')
 }
 
 society_membership_requests.society_id > societies.id // ON DELETE CASCADE

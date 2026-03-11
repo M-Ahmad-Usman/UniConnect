@@ -204,7 +204,6 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
     .addColumn('name', 'varchar(100)', col => col.notNull())
-    .addUniqueConstraint('uq_society_name', ['name'])
 
     .addColumn('description', 'varchar(1000)')
 
@@ -221,6 +220,16 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
+    .execute()
+
+  // Societies are soft deleteable entities.
+  // Soft deleted socity names can be reused
+  await db.schema
+    .createIndex('uidx_active_society_name')
+    .unique()
+    .on(TABLE_NAMES.societies)
+    .column('name')
+    .where(sql<boolean>`is_deleted = false`)
     .execute()
 }
 
@@ -284,8 +293,18 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
     .addColumn('created_by', 'integer')
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
-    .addUniqueConstraint('uq_channel_name_per_server', ['server_id', 'name'])
+    .addUniqueConstraint('uq_active_channel_name_per_server', ['server_id', 'name'])
 
+    .execute()
+
+  // Channels are soft-deletable entities.
+  // Deleted channel names can be reused.
+  await db.schema
+    .createIndex('uidx_active_channel_name_per_server')
+    .unique()
+    .on(TABLE_NAMES.channels)
+    .columns(['server_id', 'name'])
+    .where(sql<boolean>`is_deleted = false`)
     .execute()
 }
 
@@ -322,8 +341,17 @@ async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<vo
     .addColumn('reviewed_by', 'integer')
     .addColumn('reviewed_at', 'timestamptz')
 
-    .addUniqueConstraint('uq_society_membership_request', ['society_id', 'user_id'])
+    .execute()
 
+
+  // Allow users with rejected requests to apply again
+
+  await db.schema
+    .createIndex('uidx_society_membership_request_not_approved')
+    .unique()
+    .on(TABLE_NAMES.societyMembershipRequests)
+    .columns(['society_id', 'user_id'])
+    .where(sql<boolean>`status IN ('pending', 'approved')`)
     .execute()
 }
 
