@@ -363,7 +363,7 @@ export interface ServerMembershipTable {
   serverId: ServerId
 
   joinedAt: ServerJoinedAt
-  isAutoJoined: boolean
+  isAutoJoined: Generated<boolean>
 }
 
 export type ServerMembership = Selectable<ServerMembershipTable>

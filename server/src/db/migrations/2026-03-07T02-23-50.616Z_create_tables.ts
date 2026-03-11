@@ -293,7 +293,7 @@ async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_server_membership', ['user_id', 'server_id'])
 
     .addColumn('joined_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
-    .addColumn('is_auto_joined', 'boolean', col => col.notNull())
+    .addColumn('is_auto_joined', 'boolean', col => col.notNull().defaultTo(false))
 
     .execute()
 }
