@@ -118,8 +118,10 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('full_name', 'varchar(100)', col => col.notNull())
 
-    .addColumn('email', 'varchar(255)', col => col.notNull())
-    .addUniqueConstraint('uq_user_email', ['email'])
+    .addColumn('personal_email', 'varchar(255)', col => col.notNull())
+    .addUniqueConstraint('uq_user_email', ['personal_email'])
+
+    .addColumn('university_email', 'varchar(255)')
 
     .addColumn('phone', 'varchar(20)', col => col.notNull())
     .addColumn('password_hash', 'varchar(255)', col => col.notNull())
@@ -138,6 +140,15 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
     .addColumn('updated_at', 'timestamptz')
 
+    .execute()
+
+  // Allow reuse of university email for soft-deleted users
+  await db.schema
+    .createIndex('uidx_users_active_university_email')
+    .unique()
+    .on(TABLE_NAMES.users)
+    .column('university_email')
+    .where(sql<boolean>`is_deleted = false`)
     .execute()
 }
 

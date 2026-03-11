@@ -101,7 +101,8 @@ users {
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   full_name VARCHAR(100) // NOT NULL
-  email VARCHAR(255) // NOT NULL UNIQUE
+  personal_email VARCHAR(255) // NOT NULL UNIQUE
+  university_email VARCHAR(255)
   phone VARCHAR(20) // NOT NULL
   password_hash VARCHAR(255) // NOT NULL
 
@@ -118,6 +119,8 @@ users {
 
   created_at TIMESTAMPTZ // DEFAULT NOW()
   updated_at TIMESTAMPTZ // Populate when something is updated
+
+  // UNIQUE (university_email) WHERE is_deleted = false
 }
 
 // One department can have many users.
