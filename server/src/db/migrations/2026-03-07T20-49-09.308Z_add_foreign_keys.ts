@@ -3,11 +3,13 @@
 // This migration will define all foreign key constraints
 
 import type { Kysely } from 'kysely'
+import { TABLE_NAMES } from '../types.js'
 
 export async function up(db: Kysely<any>): Promise<void> {
 
   for (const [camelCasedTableName, fkConstraints] of Object.entries(FK_CONSTRAINTS)) {
-    const snakeCasedTableName = convertCamelToSnakeCase(camelCasedTableName)
+
+    const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
     for (const fkConstraint of Object.values(fkConstraints))
       await db.schema
@@ -26,7 +28,8 @@ export async function up(db: Kysely<any>): Promise<void> {
 export async function down(db: Kysely<any>): Promise<void> {
 
   for (const [camelCasedTableName, fkConstraints] of Object.entries(FK_CONSTRAINTS).reverse()) {
-    const snakeCasedTableName = convertCamelToSnakeCase(camelCasedTableName)
+
+    const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
     for (const fkConstraint of Object.values(fkConstraints))
       await db.schema
@@ -34,10 +37,6 @@ export async function down(db: Kysely<any>): Promise<void> {
         .dropConstraint(fkConstraint.constraintName)
         .execute()
   }
-}
-
-function convertCamelToSnakeCase(camelCase: string): string {
-  return camelCase.replace(/([A-Z])/g, '_$1').toLowerCase()
 }
 
 interface FkConstraint {
@@ -48,7 +47,7 @@ interface FkConstraint {
   onDelete: 'restrict' | 'cascade' | 'set null' | 'set default' | 'no action'
 }
 
-type TableFkConstraints = Record<string, Record<string, FkConstraint>>
+type TableFkConstraints = Partial<Record<keyof typeof TABLE_NAMES, Record<string, FkConstraint>>>
 
 // Single source of truth for everything related about foreign key constraints
 const FK_CONSTRAINTS: TableFkConstraints = {
