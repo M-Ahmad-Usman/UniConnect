@@ -127,7 +127,7 @@ async function main(): Promise<void> {
   }
 
   await db.destroy()
-  if (areMigrationsSuccessful) {
+  if (!areMigrationsSuccessful) {
     process.exit(1)
   }
 
