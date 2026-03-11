@@ -27,14 +27,13 @@ const ARGUMENT_SCHEMA = z.enum(['up', 'down', 'latest', 'create'])
 const MIGRATION_DIRECTORY = path.join(import.meta.dirname, './migrations')
 
 const migrationFileContentTemplate =`import type { Kysely } from 'kysely'
-import { sql } from 'kysely'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function up(db: Kysely<any>): Promise<void> {
   
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function down(db: Kysely<any>): Promise<void> {
   
 }`
