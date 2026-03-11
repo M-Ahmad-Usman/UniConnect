@@ -315,7 +315,7 @@ export interface ServerTable {
   type: ServerType
 
   isActive: Generated<boolean>
-  createdBy: UserId
+  createdBy: UserId | null
   createdAt: CreatedAt
 }
 
@@ -497,7 +497,7 @@ export interface ModeratorAssignmentTable {
   serverId: ServerId
   channelId: ChannelId | null
 
-  assignedBy: UserId
+  assignedBy: UserId | null
   assignedAt: RoleAssignedAt
 }
 
