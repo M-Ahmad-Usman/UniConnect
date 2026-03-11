@@ -50,6 +50,34 @@ export interface Database {
   refreshTokens: RefreshTokenTable
 }
 
+// Snake cased Table names derived from database.
+// This object is used by create tables migration.
+export const TABLE_NAMES: Record<keyof Database, string> = {
+  departments: 'departments',
+  programs: 'programs',
+  programCurricula: 'program_curricula',
+  users: 'users',
+  students: 'students',
+  teachers: 'teachers',
+  classes: 'classes',
+  societies: 'societies',
+  servers: 'servers',
+  channels: 'channels',
+  serverMemberships: 'server_memberships',
+  societyMembershipRequests: 'society_membership_requests',
+  courses: 'courses',
+  courseAssignments: 'course_assignments',
+  posts: 'posts',
+  postAttachments: 'post_attachments',
+  roles: 'roles',
+  permissions: 'permissions',
+  rolePermissions: 'role_permissions',
+  moderatorAssignments: 'moderator_assignments',
+  notifications: 'notifications',
+  notificationPreferences: 'notification_preferences',
+  refreshTokens: 'refresh_tokens',
+} as const
+
 
 
 // Branded ID Types — phantom tags for type-safe table IDs (zero runtime cost)
