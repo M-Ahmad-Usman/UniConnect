@@ -181,7 +181,10 @@ societies {
   convenor_id INT FK // NOT NULL
   server_id INT FK // UNIQUE NOT NULL
 
-  is_active BOOLEAN // DEFAULT TRUE
+  is_deleted BOOLEAN // DEFAULT FALSE
+  deleted_by INTEGER FK
+  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
@@ -208,7 +211,10 @@ servers {
 
   type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
 
-  is_active BOOLEAN // DEFAULT TRUE
+  is_deleted BOOLEAN // DEFAULT FALSE
+  deleted_by INTEGER FK
+  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+
   created_by INTEGER FK
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }

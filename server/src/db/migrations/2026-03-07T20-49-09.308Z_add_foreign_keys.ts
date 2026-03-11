@@ -210,6 +210,14 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // New Society Convenor must be assigned first.
       onDelete: 'restrict',
     },
+    deletedBy: {
+      constraintName: 'fk_societies_deleted_by',
+      columnName: 'deleted_by',
+      referencingColumn: 'id',
+      referencingTable: 'users',
+      // Nullable audit column. Society remains soft-deleted; only the actor identity is lost in case of hard delete.
+      onDelete: 'set null',
+    },
     serverId: {
       constraintName: 'fk_societies_server_id',
       columnName: 'server_id',
@@ -220,6 +228,14 @@ const FK_CONSTRAINTS: TableFkConstraints = {
     },
   },
   servers: {
+    deletedBy: {
+      constraintName: 'fk_servers_deleted_by',
+      columnName: 'deleted_by',
+      referencingColumn: 'id',
+      referencingTable: 'users',
+      // Nullable audit column. Server remains soft-deleted; only the actor identity is lost in case of hard delete.
+      onDelete: 'set null',
+    },
     createdBy: {
       constraintName: 'fk_servers_created_by',
       columnName: 'created_by',

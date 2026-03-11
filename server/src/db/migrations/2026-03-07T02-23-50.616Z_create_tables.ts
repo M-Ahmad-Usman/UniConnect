@@ -215,7 +215,10 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .addColumn('server_id', 'integer', col => col.notNull())
     .addUniqueConstraint('uq_society_server', ['server_id'])
 
-    .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
+    .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('deleted_by', 'integer')
+    .addColumn('deleted_at', 'timestamptz')
+
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
     .execute()
@@ -236,7 +239,10 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('type', sql`server_type`, col => col.notNull())
 
-    .addColumn('is_active', 'boolean', col => col.notNull().defaultTo(true))
+    .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('deleted_by', 'integer')
+    .addColumn('deleted_at', 'timestamptz')
+
     .addColumn('created_by', 'integer')
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 

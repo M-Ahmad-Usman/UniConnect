@@ -296,7 +296,10 @@ export interface SocietyTable {
   convenorId: TeacherId
   serverId: ServerId
 
-  isActive: Generated<boolean>
+  isDeleted: Generated<boolean>
+  deletedBy: UserId | null
+  deletedAt: DeletedAt
+
   createdAt: CreatedAt
 }
 
@@ -314,7 +317,10 @@ export interface ServerTable {
 
   type: ServerType
 
-  isActive: Generated<boolean>
+  isDeleted: Generated<boolean>
+  deletedBy: UserId | null
+  deletedAt: DeletedAt
+
   createdBy: UserId | null
   createdAt: CreatedAt
 }
