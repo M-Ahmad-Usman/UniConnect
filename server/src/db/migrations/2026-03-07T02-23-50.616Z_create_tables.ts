@@ -341,8 +341,6 @@ async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<vo
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_society_membership_request', ['id'])
 
-    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
-
     .addColumn('society_id', 'integer', col => col.notNull())
     .addColumn('user_id', 'integer', col => col.notNull())
 
@@ -518,8 +516,6 @@ async function createNotificationsTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_notification', ['id'])
-
-    .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
     .addColumn('title', 'varchar(200)', col => col.notNull())
     .addColumn('message', 'text')

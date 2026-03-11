@@ -293,7 +293,6 @@ servers.id < server_memberships.server_id // ON DELETE CASCADE
 // Track user requests to join societies
 society_membership_requests {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
-  public_id UUID // NOT NULL DEFAULT uuidv7()
 
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
@@ -439,7 +438,6 @@ moderator_assignments.assigned_by > users.id // ON DELETE SET NULL
 
 notifications {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
-  public_id UUID // NOT NULL DEFAULT uuidv7()
 
   title VARCHAR(200) // NOT NULL
   message TEXT
