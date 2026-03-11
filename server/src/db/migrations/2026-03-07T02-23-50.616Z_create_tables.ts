@@ -53,16 +53,16 @@ async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_department', ['id'])
 
     .addColumn('name', 'varchar(100)', col => col.notNull())
-    .addUniqueConstraint('uq_department_name', ['name'])
+    .addUniqueConstraint('uq_departments_name', ['name'])
 
     .addColumn('code', 'varchar(20)', col => col.notNull())
-    .addUniqueConstraint('uq_department_code', ['code'])
+    .addUniqueConstraint('uq_departments_code', ['code'])
 
     .addColumn('hod_id', 'integer')
-    .addUniqueConstraint('uq_department_hod_id', ['hod_id'])
+    .addUniqueConstraint('uq_departments_hod_id', ['hod_id'])
 
     .addColumn('server_id', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_department_server', ['server_id'])
+    .addUniqueConstraint('uq_departments_server', ['server_id'])
 
     .execute()
 }
@@ -83,9 +83,9 @@ async function createProgramsTable(db: Kysely<any>): Promise<void> {
     .addColumn('semesters', 'integer', col => col.notNull())
 
     .addColumn('code', 'varchar(20)', col => col.notNull())
-    .addUniqueConstraint('uq_program_code', ['code'])
+    .addUniqueConstraint('uq_programs_code', ['code'])
 
-    .addUniqueConstraint('uq_program', ['department_id', 'discipline', 'degree_level'])
+    .addUniqueConstraint('uq_programs', ['department_id', 'discipline', 'degree_level'])
 
     .execute()
 }
@@ -102,7 +102,7 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
     .addColumn('semester_number', 'integer', col => col.notNull())
     .addColumn('batch_year', 'integer', col => col.notNull())
 
-    .addUniqueConstraint('uq_program_curriculum', ['program_id', 'course_id', 'semester_number', 'batch_year'])
+    .addUniqueConstraint('uq_programs_curriculum', ['program_id', 'course_id', 'semester_number', 'batch_year'])
 
     .execute()
 }
@@ -119,7 +119,7 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .addColumn('full_name', 'varchar(100)', col => col.notNull())
 
     .addColumn('personal_email', 'varchar(255)', col => col.notNull())
-    .addUniqueConstraint('uq_user_email', ['personal_email'])
+    .addUniqueConstraint('uq_users_email', ['personal_email'])
 
     .addColumn('university_email', 'varchar(255)')
 
@@ -162,7 +162,7 @@ async function createStudentsTable(db: Kysely<any>): Promise<void> {
     .addColumn('class_id', 'integer', col => col.notNull())
 
     .addColumn('roll_number', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_student_roll_number', ['roll_number'])
+    .addUniqueConstraint('uq_students_roll_number', ['roll_number'])
 
     .execute()
 }
@@ -193,15 +193,15 @@ async function createClassesTable(db: Kysely<any>): Promise<void> {
     .addColumn('section', sql`class_section`, col => col.notNull())
 
     .addColumn('cr_id', 'integer')
-    .addUniqueConstraint('uq_class_cr', ['cr_id'])
+    .addUniqueConstraint('uq_classes_cr', ['cr_id'])
 
     .addColumn('academic_year', 'integer', col => col.notNull())
     .addColumn('admission_year', 'integer', col => col.notNull())
 
     .addColumn('server_id', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_class_server', ['server_id'])
+    .addUniqueConstraint('uq_classes_server', ['server_id'])
 
-    .addUniqueConstraint('uq_class', ['program_id', 'current_semester', 'section', 'admission_year'])
+    .addUniqueConstraint('uq_classes', ['program_id', 'current_semester', 'section', 'admission_year'])
     .execute()
 }
 
@@ -223,7 +223,7 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .addColumn('convenor_id', 'integer', col => col.notNull())
 
     .addColumn('server_id', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_society_server', ['server_id'])
+    .addUniqueConstraint('uq_societies_server', ['server_id'])
 
     .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('deleted_by', 'integer')
@@ -304,7 +304,7 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
     .addColumn('created_by', 'integer')
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
-    .addUniqueConstraint('uq_active_channel_name_per_server', ['server_id', 'name'])
+    .addUniqueConstraint('uq_active_channels_name_per_server', ['server_id', 'name'])
 
     .execute()
 
@@ -376,7 +376,7 @@ async function createCoursesTable(db: Kysely<any>): Promise<void> {
     .addColumn('title', 'varchar(100)', col => col.notNull())
 
     .addColumn('code', 'varchar(50)', col => col.notNull())
-    .addUniqueConstraint('uq_course_code', ['code'])
+    .addUniqueConstraint('uq_courses_code', ['code'])
 
     .addColumn('credit_hours', 'integer', col => col.notNull())
 
@@ -457,7 +457,7 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_role', ['id'])
 
     .addColumn('name', sql`user_role`, col => col.notNull())
-    .addUniqueConstraint('uq_role', ['name'])
+    .addUniqueConstraint('uq_rolea', ['name'])
 
     .execute()
 }
@@ -472,7 +472,7 @@ async function createPermissionsTable(db: Kysely<any>): Promise<void> {
     .addColumn('action', sql`action`, col => col.notNull())
     .addColumn('resource', sql`resource`, col => col.notNull())
 
-    .addUniqueConstraint('uq_permission', ['action', 'resource'])
+    .addUniqueConstraint('uq_permissions', ['action', 'resource'])
 
     .execute()
 }
@@ -571,7 +571,7 @@ async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
     .addColumn('user_id', 'integer', col => col.notNull())
 
     .addColumn('token_hash', 'varchar(255)', col => col.notNull())
-    .addUniqueConstraint('uq_refresh_token_hash', ['token_hash'])
+    .addUniqueConstraint('uq_refresh_tokens_hash', ['token_hash'])
 
     .addColumn('expires_at', 'timestamptz', col => col.notNull())
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
