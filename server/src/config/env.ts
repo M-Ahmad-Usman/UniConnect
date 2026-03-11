@@ -9,7 +9,7 @@ const envSchema = z.object({
   POSTGRES_USER: z.string().min(1),
   POSTGRES_DB: z.string().min(1),
   HOST: z.string().default('localhost'),
-  DB_PORT: z.string().transform(Number),
+  DB_PORT: z.coerce.number().int().positive(),
 })
 
 type Env = z.infer<typeof envSchema>
