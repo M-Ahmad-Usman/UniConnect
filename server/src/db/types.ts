@@ -52,7 +52,7 @@ export interface Database {
 
 // Snake cased Table names derived from database.
 // This object is used by create tables migration.
-export const TABLE_NAMES: Record<keyof Database, string> = {
+export const TABLE_NAMES = {
   departments: 'departments',
   programs: 'programs',
   programCurricula: 'program_curricula',
@@ -76,7 +76,7 @@ export const TABLE_NAMES: Record<keyof Database, string> = {
   notifications: 'notifications',
   notificationPreferences: 'notification_preferences',
   refreshTokens: 'refresh_tokens',
-} as const
+} as const satisfies Record<keyof Database, string>
 
 
 
@@ -107,7 +107,7 @@ export type RefreshTokenId = Brand<number, 'RefreshTokenId'>
 
 
 // Single source of truth for all enum values
-export const  ENUMS= {
+export const  ENUMS = {
   degreeLevel: ['bachelors', 'masters', 'phd'],
   discipline: ['computer_science', 'software_engineering', 'artificial_intelligence', 'computer_engineering'],
   userType: ['student', 'teacher', 'admin'],
