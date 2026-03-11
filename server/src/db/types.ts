@@ -8,17 +8,22 @@ import type {
 } from 'kysely'
 
 /* Developer Notes
-Table and Column Naming:
-  Tables and Field names use camelCase naming convention in this file.
-  The actual casing in DB is snake_case.
-  This project uses camelCase plugin to transform the naming.
 
-Raw SQL Queries
-  The camelCase plugin willn't transform camelCase names into snake_case on queries
-  written in raw sql. Use actual snake_case names in raw queries.
+ Table and Column Naming:
+  - Tables and Field names use camelCase naming convention in this file.
+  - This project uses Kysley's camel case plugin to convert camel casing into snake casing.
+
+ Manual snake case conversion:
+  - Migrations have to make sure to use snake_case naming (Postgres convention). Camel Case plugin willn't work there.
+  - Camel Case plugin willn't convert casing for raw sql queries. Will have to use actual snake case
 */
 
-// Main Database Interface
+
+
+/* Main Database Interface Object
+ - Keys represent table names (snake cased in DB)
+ - Values represent structure of tables
+*/
 export interface Database {
   departments: DepartmentTable
   programs: ProgramTable
@@ -45,6 +50,8 @@ export interface Database {
   refreshTokens: RefreshTokenTable
 }
 
+
+
 // Branded ID Types — phantom tags for type-safe table IDs (zero runtime cost)
 type Brand<T, B> = T & { readonly __brand: B }
 
@@ -69,24 +76,49 @@ export type NotificationId = Brand<number, 'NotificationId'>
 export type NotificationPreferenceId = Brand<number, 'NotificationPreferenceId'>
 export type RefreshTokenId = Brand<number, 'RefreshTokenId'>
 
-// Literal Types
-export type DegreeLevel = 'bachelors' | 'masters' | 'phd'
-export type Discipline = 'computer_science' | 'software_engineering' | 'artificial_intelligence' | 'computer_engineering'
-export type UserType = 'student' | 'teacher' | 'admin'
-export type Gender = 'male' | 'female'
-export type TeacherDesignation = 'lab_incharge' | 'lecturer' | 'assistant_professor' | 'associate_professor' | 'professor'
-export type ClassSection = 'a' | 'b'
-export type ServerType = 'class' | 'society' | 'department'
-export type ChannelType = 'announcements' | 'program' | 'course' | 'general'
-export type MembershipRequestStatus = 'pending' | 'rejected' | 'approved'
-export type PostPriority = 'normal' | 'important' | 'urgent'
-export type FileAttachmentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/jpg' | 'application/pdf' | 'application/msword'
-export type UserRole = 'cr' | 'society_president' | 'society_convenor' | 'program_director' | 'hod' | 'moderator'
-export type Action = 'create' | 'update' | 'delete' | 'post' | 'assign'
-export type Resource = 'channel' | 'society' | 'class' | 'role'
-export type ModeratorScopeType = 'channel' | 'server'
-export type NotificationType = 'new_post' | 'role_assigned'
-export type NotificationPreferenceScope = 'server' | 'channel'
+
+
+// Single source of truth for all enum values
+export const  ENUMS= {
+  degreeLevel: ['bachelors', 'masters', 'phd'],
+  discipline: ['computer_science', 'software_engineering', 'artificial_intelligence', 'computer_engineering'],
+  userType: ['student', 'teacher', 'admin'],
+  gender: ['male', 'female'],
+  teacherDesignation: ['lab_incharge', 'lecturer', 'assistant_professor', 'associate_professor', 'professor'],
+  classSection: ['a', 'b'],
+  serverType: ['class', 'society', 'department'],
+  channelType: ['announcements', 'program', 'course', 'general'],
+  membershipRequestStatus: ['pending', 'approved', 'rejected'],
+  postPriority: ['normal', 'important', 'urgent'],
+  fileAttachmentType: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'application/pdf', 'application/msword'],
+  userRole: ['cr', 'society_president', 'society_convenor', 'program_director', 'hod', 'moderator'],
+  action: ['create', 'update', 'delete', 'post', 'assign'],
+  resource: ['channel', 'society', 'class', 'role'],
+  moderatorScopeType: ['channel', 'server'],
+  notificationType: ['new_post', 'role_assigned'],
+  notificationPreferenceScope: ['server', 'channel'],
+} as const
+
+// Literal Types - Derived from ENUMS
+export type DegreeLevel = typeof ENUMS.degreeLevel[number]
+export type Discipline = typeof ENUMS.discipline[number]
+export type UserType = typeof ENUMS.userType[number]
+export type Gender = typeof ENUMS.gender[number]
+export type TeacherDesignation = typeof ENUMS.teacherDesignation[number]
+export type ClassSection = typeof ENUMS.classSection[number]
+export type ServerType = typeof ENUMS.serverType[number]
+export type ChannelType = typeof ENUMS.channelType[number]
+export type MembershipRequestStatus = typeof ENUMS.membershipRequestStatus[number]
+export type PostPriority = typeof ENUMS.postPriority[number]
+export type FileAttachmentType = typeof ENUMS.fileAttachmentType[number]
+export type UserRole = typeof ENUMS.userRole[number]
+export type Action = typeof ENUMS.action[number]
+export type Resource = typeof ENUMS.resource[number]
+export type ModeratorScopeType = typeof ENUMS.moderatorScopeType[number]
+export type NotificationType = typeof ENUMS.notificationType[number]
+export type NotificationPreferenceScope = typeof ENUMS.notificationPreferenceScope[number]
+
+
 
 // Types for Timestamp related Audit fields
 
@@ -110,13 +142,15 @@ type TokenExpiresAt = Date
 type TokenRevokedAt = ColumnType<Date | null, Date | null, Date>
 
 
+
 // Table Interfaces: Each interface describes one table in DB
+
 export interface DepartmentTable {
-  id: Generated<number>
+  id: Generated<DepartmentId>
   name: string
   code: string
 
-  hodId: UserId | null
+  hodId: TeacherId | null
 
   serverId: ServerId
 }
@@ -126,13 +160,13 @@ export type NewDepartment = Insertable<DepartmentTable>
 export type UpdateDepartment = Updateable<DepartmentTable>
 
 export interface ProgramTable {
-  id: Generated<number>
+  id: Generated<ProgramId>
 
   departmentId: DepartmentId
   discipline: Discipline
   degreeLevel: DegreeLevel
 
-  programDirectorId: UserId
+  programDirectorId: TeacherId
 
   semesters: number
   code: string
@@ -143,7 +177,7 @@ export type NewProgram = Insertable<ProgramTable>
 export type UpdateProgram = Updateable<ProgramTable>
 
 export interface ProgramCurriculumTable {
-  id: Generated<number>
+  id: Generated<ProgramCurriculumId>
 
   programId: ProgramId
   courseId: CourseId
@@ -156,7 +190,7 @@ export type NewProgramCurriculum = Insertable<ProgramCurriculumTable>
 export type UpdateProgramCurriculum = Updateable<ProgramCurriculumTable>
 
 export interface UserTable {
-  id: Generated<number>
+  id: Generated<UserId>
   publicId: ColumnType<string, never, never>
 
   fullName: string
@@ -184,7 +218,7 @@ export type NewUser = Insertable<UserTable>
 export type UpdateUser = Updateable<UserTable>
 
 export interface StudentTable {
-  studentId: UserId
+  studentId: StudentId
   classId: ClassId
   rollNumber: number
 }
@@ -194,7 +228,7 @@ export type NewStudent = Insertable<StudentTable>
 export type UpdateStudent = Updateable<StudentTable>
 
 export interface TeacherTable {
-  teacherId: UserId
+  teacherId: TeacherId
   designation: TeacherDesignation
 }
 
@@ -203,7 +237,7 @@ export type NewTeacher = Insertable<TeacherTable>
 export type UpdateTeacher = Updateable<TeacherTable>
 
 export interface ClassTable {
-  id: Generated<number>
+  id: Generated<ClassId>
   publicId: ColumnType<string, never, never>
 
   programId: ProgramId
@@ -223,7 +257,7 @@ export type NewClass = Insertable<ClassTable>
 export type UpdateClass = Updateable<ClassTable>
 
 export interface SocietyTable {
-  id: Generated<number>
+  id: Generated<SocietyId>
   publicId: ColumnType<string, never, never>
 
   name: string
@@ -243,7 +277,7 @@ export type NewSociety = Insertable<SocietyTable>
 export type UpdateSociety = Updateable<SocietyTable>
 
 export interface ServerTable {
-  id: Generated<number>
+  id: Generated<ServerId>
   publicId: ColumnType<string, never, never>
 
   name: string
@@ -262,7 +296,7 @@ export type NewServer = Insertable<ServerTable>
 export type UpdateServer = Updateable<ServerTable>
 
 export interface ChannelTable {
-  id: Generated<number>
+  id: Generated<ChannelId>
   publicId: ColumnType<string, never, never>
 
   name: string
@@ -309,7 +343,7 @@ export type NewServerMembership = Insertable<ServerMembershipTable>
 export type UpdateServerMembership = Updateable<ServerMembershipTable>
 
 export interface SocietyMembershipRequestTable {
-  id: Generated<number>
+  id: Generated<SocietyMembershipRequestId>
   publicId: ColumnType<string, never, never>
 
   societyId: SocietyId
@@ -327,7 +361,7 @@ export type NewSocietyMembershipRequest = Insertable<SocietyMembershipRequestTab
 export type UpdateSocietyMembershipRequest = Updateable<SocietyMembershipRequestTable>
 
 export interface CourseTable {
-  id: Generated<number>
+  id: Generated<CourseId>
 
   title: string
   code: string
@@ -351,7 +385,7 @@ export type NewCourseAssignment = Insertable<CourseAssignmentTable>
 export type UpdateCourseAssignment = Updateable<CourseAssignmentTable>
 
 export interface PostTable {
-  id: Generated<number>
+  id: Generated<PostId>
   publicId: ColumnType<string, never, never>
 
   title: string
@@ -381,7 +415,7 @@ export type NewPost = Insertable<PostTable>
 export type UpdatePost = Updateable<PostTable>
 
 export interface PostAttachmentTable {
-  id: Generated<number>
+  id: Generated<PostAttachmentId>
 
   postId: PostId
 
@@ -397,7 +431,7 @@ export type NewPostAttachment = Insertable<PostAttachmentTable>
 export type UpdatePostAttachment = Updateable<PostAttachmentTable>
 
 export interface RoleTable {
-  id: Generated<number>
+  id: Generated<RoleId>
   name: UserRole
 }
 
@@ -406,7 +440,7 @@ export type NewRole = Insertable<RoleTable>
 export type UpdateRole = Updateable<RoleTable>
 
 export interface PermissionTable {
-  id: Generated<number>
+  id: Generated<PermissionId>
 
   action: Action
   resource: Resource
@@ -426,7 +460,7 @@ export type NewRolePermission = Insertable<RolePermissionTable>
 export type UpdateRolePermission = Updateable<RolePermissionTable>
 
 export interface ModeratorAssignmentTable {
-  id: Generated<number>
+  id: Generated<ModeratorAssignmentId>
 
   userId: UserId
 
@@ -444,7 +478,7 @@ export type NewModeratorAssignment = Insertable<ModeratorAssignmentTable>
 export type UpdateModeratorAssignment = Updateable<ModeratorAssignmentTable>
 
 export interface NotificationTable {
-  id: Generated<number>
+  id: Generated<NotificationId>
   publicId: ColumnType<string, never, never>
 
   title: string
@@ -465,7 +499,7 @@ export type NewNotification = Insertable<NotificationTable>
 export type UpdateNotification = Updateable<NotificationTable>
 
 export interface NotificationPreferenceTable {
-  id: Generated<number>
+  id: Generated<NotificationPreferenceId>
 
   userId: UserId
 
@@ -484,7 +518,7 @@ export type NewNotificationPreference = Insertable<NotificationPreferenceTable>
 export type UpdateNotificationPreference = Updateable<NotificationPreferenceTable>
 
 export interface RefreshTokenTable {
-  id: Generated<number>
+  id: Generated<RefreshTokenId>
 
   userId: UserId
 
