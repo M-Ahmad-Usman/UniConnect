@@ -59,6 +59,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingTable: 'teachers',
       // Prevent teacher deletion if he is HOD.
       // New HOD must be assigned first.
+      // Rule is same for both soft and hard deletes
       onDelete: 'restrict',
     },
     serverId: {
@@ -67,6 +68,10 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Department owns its server not vice versa.
+      // Server will be deleted alongside the hard deletion of department
+      /* For hard deletion of server, first all channels associated with it must be hard deleted
+          (hard deletion of channels would trigger its own cascade chain. See posts.channel_id)
+      */
       onDelete: 'restrict',
     },
   },
@@ -76,8 +81,13 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'department_id',
       referencingColumn: 'id',
       referencingTable: 'departments',
-      // Prevent department deletion if it has programs.
-      // Programs must be cleaned up first.
+      // Prevent hard delete of department if it has programs.
+      // Programs must be cleaned up manually first.
+      /* For hard deletion of program, the following manual hard clean up is required.
+        DELETE program -> Remove classes enrolled in that program. Either HARD DELETE them or enroll them in some new program.
+          DELETE classes -> DELETE students enrolled in that class.
+            DELETE students -> re-assign student roles (society_president, cr) if any student has these.
+      */
       onDelete: 'restrict',
     },
     programDirectorId: {
@@ -87,6 +97,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingTable: 'teachers',
       // Prevent teacher deletion if teacher is a Program Director.
       // New director must be assigned first.
+      // Rule is same for both soft and hard deletes
       onDelete: 'restrict',
     },
   },
@@ -114,7 +125,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'department_id',
       referencingColumn: 'id',
       referencingTable: 'departments',
-      // Prevent department deletion if department has any user.
+      // Prevent hard deletion of department if it has any user.
       // Users must be cleaned up or moved to another department first
       onDelete: 'restrict',
     },
@@ -124,6 +135,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. User remains soft-deleted; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
   },
@@ -134,6 +146,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Delete student if referencing user row is being deleted
+      // Hard Delete: CASCADE, Soft Delete: leave intact
       onDelete: 'cascade',
     },
     classId: {
@@ -151,7 +164,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'teacher_id',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Delete teacher if referencing user row is being deleted
+      // Delete teacher if referencing user row is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact
       onDelete: 'cascade',
     },
   },
@@ -170,7 +184,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'student_id',
       referencingTable: 'students',
       // Prevent student deletion if student is cr.
-      // New CR must be assigned first
+      // New CR must be assigned first.
+      // Rule is same for both soft and hard deletes.
       onDelete: 'restrict',
     },
     serverId: {
@@ -179,6 +194,10 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Class owns its server not vice versa.
+      // Server will be deleted alongside the deletion of class
+      /* For hard deletion of server, first all channels associated with it must be hard deleted
+          (hard deletion of channels would trigger its own cascade chain. See posts.channel_id)
+      */
       onDelete: 'restrict',
     },
   },
@@ -189,7 +208,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'departments',
       // Prevent department deletion if department is managing some society.
-      // Society must be moved to other department first.
+      // Society must be moved to other department or deleted first.
       onDelete: 'restrict',
     },
     presidentId: {
@@ -199,6 +218,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingTable: 'students',
       // Prevent student deletion if student is president of some society.
       // New president must be assigned first.
+      // Rule is same for both soft and hard deletes
       onDelete: 'restrict',
     },
     convenorId: {
@@ -216,6 +236,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Society remains soft-deleted; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     serverId: {
@@ -224,6 +245,9 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Society owns its server not vice versa.
+      /* For hard deletion of server, first all channels associated with it must be hard deleted
+          (hard deletion of channels would trigger its own cascade chain. See posts.channel_id)
+      */
       onDelete: 'restrict',
     },
   },
@@ -234,6 +258,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Server remains soft-deleted; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     createdBy: {
@@ -242,6 +267,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Server remains intact; only the creator identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
   },
@@ -252,7 +278,9 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Prevent server deletion if it has a channel.
-      // Channel must be deleted first.
+      /* Channel must be hard deleted first.
+        hard deletion of channels would trigger its own cascade chain. See posts.channel_id
+      */
       onDelete: 'restrict',
     },
     courseId: {
@@ -261,7 +289,6 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'courses',
       // Prevent course deletion if that course is being taught to some class (class server has course channel)
-      // Same rule as course_assignments.course_id ON DELETE RESTRICT
       onDelete: 'restrict',
     },
     programId: {
@@ -278,6 +305,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Channel remains locked; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     archivedBy: {
@@ -286,6 +314,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Channel remains archived; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     deletedBy: {
@@ -294,6 +323,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Channel remains soft-deleted; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     createdBy: {
@@ -302,6 +332,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Channel remains intact; only the creator identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
   },
@@ -312,6 +343,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear membership record if user is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     serverId: {
@@ -320,6 +352,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Clear membership record if server is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
   },
@@ -330,6 +363,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'societies',
       // Clear record if society is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     userId: {
@@ -338,6 +372,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear record if user is being deleted.
+      // CASCADE for both hard and soft deletes.
       onDelete: 'cascade',
     },
     reviewedBy: {
@@ -346,6 +381,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. status remains intact; only the reviewer identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
   },
@@ -361,6 +397,10 @@ const FK_CONSTRAINTS: TableFkConstraints = {
         1. channels.course_id is set to 'restrict'
         2. course_assignments.course_id is set to 'restrict'
       */
+      /* For hard deletion of courses being taught to some class, the following manual cleanup would be required:
+        - Remove course assignment of that course from the course_assignments
+        - Delete course channels of that from the class servers
+      */
       onDelete: 'cascade',
     },
   },
@@ -372,6 +412,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingTable: 'teachers',
       // Prevent teacher deletion if teacher is teaching some course.
       // Assign new teacher to the course and class first.
+      // Same rule for both soft and hard deletions
       onDelete: 'restrict',
     },
     courseId: {
@@ -380,6 +421,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'courses',
       // Prevent course deletion if course is being taught to a class.
+      // First un assign the course
       onDelete: 'restrict',
     },
     classId: {
@@ -388,6 +430,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'classes',
       // Prevent class deletion if a teacher is teaching some course to the class.
+      // First remove the course_assignment
       onDelete: 'restrict',
     },
   },
@@ -398,11 +441,11 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'channels',
       // Clear all posts if a channel is being deleted.
-      /* Cascade chain:
-        DELETE channel
-          → CASCADE → posts deleted
-            → CASCADE → notifications deleted (via notifications.post_id)
-            → CASCADE → post_attachments deleted
+      // Hard delete: CASCADE, Soft delete: leave intact
+      /* The following cascade chain will be executed automatically on hard delete
+        DELETE channel -> posts deleted
+          posts deleted -> notifications deleted
+          posts deleted -> post_attachements deleted
       */
       onDelete: 'cascade',
     },
@@ -412,6 +455,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Post remains pinned; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     deletedBy: {
@@ -420,6 +464,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Post remains soft-deleted; only the actor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
     createdBy: {
@@ -428,7 +473,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Prevent user hard-deletion if user has created posts.
-      // On soft-delete: post retains created_by since user row still exists. UI shows "Deactivated User".
+      // Hard Delete: RESTRICT, Soft Delete: leave intact.
       onDelete: 'restrict',
     },
     updatedBy: {
@@ -437,6 +482,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Post remains intact; only the last-editor identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
   },
@@ -447,6 +493,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'posts',
       // Clear post attachements if a post is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
   },
@@ -475,6 +522,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear role if a user is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     serverId: {
@@ -483,6 +531,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Clear moderators if server is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     channelId: {
@@ -491,6 +540,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'channels',
       // Clear moderators if channel is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     assignedBy: {
@@ -499,6 +549,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Nullable audit column. Assignment remains intact; only the assigner identity is lost in case of hard delete.
+      // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
     },
   },
@@ -509,6 +560,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear notifications if a user is being deleted.
+      // CASCADE both soft and hard deletions
       onDelete: 'cascade',
     },
     postId: {
@@ -517,6 +569,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'posts',
       // Clear notifications if a post is being deleted.
+      // CASCADE for both soft and hard deletions
       onDelete: 'cascade',
     },
   },
@@ -527,6 +580,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear preferences if a user is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     serverId: {
@@ -535,6 +589,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'servers',
       // Clear preferences for the server which is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     channelId: {
@@ -543,6 +598,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'channels',
       // Clear preferences for the channel which is being deleted.
+      // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
   },
@@ -553,6 +609,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear tokens for the user being deleted.
+      // CASCADE for both soft and hard deletions
       onDelete: 'cascade',
     },
   },
