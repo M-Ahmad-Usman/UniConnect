@@ -304,8 +304,6 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
     .addColumn('created_by', 'integer')
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
-    .addUniqueConstraint('uq_active_channels_name_per_server', ['server_id', 'name'])
-
     .execute()
 
   // Channels are soft-deletable entities.
