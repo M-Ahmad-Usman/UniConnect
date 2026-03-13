@@ -85,7 +85,7 @@ async function createProgramsTable(db: Kysely<any>): Promise<void> {
     .addColumn('code', 'varchar(20)', col => col.notNull())
     .addUniqueConstraint('uq_programs_code', ['code'])
 
-    .addUniqueConstraint('uq_programs', ['department_id', 'discipline', 'degree_level'])
+    .addUniqueConstraint('uq_programs', ['discipline', 'degree_level', 'department_id'])
 
     .execute()
 }
@@ -102,7 +102,7 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
     .addColumn('semester_number', 'integer', col => col.notNull())
     .addColumn('batch_year', 'integer', col => col.notNull())
 
-    .addUniqueConstraint('uq_programs_curriculum', ['program_id', 'course_id', 'semester_number', 'batch_year'])
+    .addUniqueConstraint('uq_programs_curriculum', ['program_id', 'batch_year', 'semester_number', 'course_id'])
 
     .execute()
 }
@@ -389,7 +389,7 @@ async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
     .addColumn('course_id', 'integer')
     .addColumn('class_id', 'integer')
 
-    .addPrimaryKeyConstraint('pk_course_assignment', ['teacher_id', 'course_id', 'class_id'])
+    .addPrimaryKeyConstraint('pk_course_assignment', ['class_id', 'course_id', 'teacher_id'])
 
     .execute()
 }
@@ -505,7 +505,7 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
 
   await sql`ALTER TABLE moderator_assignments 
   ADD CONSTRAINT uq_moderator_assignment 
-  UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id)`.execute(db)
+  UNIQUE NULLS NOT DISTINCT (server_id, channel_id, user_id)`.execute(db)
 }
 
 async function createNotificationsTable(db: Kysely<any>): Promise<void> {
@@ -552,7 +552,7 @@ async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void
 
   await sql`ALTER TABLE notification_preferences 
   ADD CONSTRAINT uq_notification_preference 
-  UNIQUE NULLS NOT DISTINCT (user_id, scope_type, server_id, channel_id)`.execute(db)
+  UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id, scope_type)`.execute(db)
 }
 
 async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
