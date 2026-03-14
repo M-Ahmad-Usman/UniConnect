@@ -1,4 +1,4 @@
-import type { Kysely } from 'kysely'
+import type { Kysely, Expression, SqlBool } from 'kysely'
 import { TABLE_NAMES } from '../types.js'
 import { sql } from 'kysely'
 
@@ -22,7 +22,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .on(snakeCasedTableName)
         .columns(index.columns)
 
-      if (index.where) query = query.where(sql<boolean>`${index.where}`)
+      if (index.where) query = query.where(index.where)
 
       await query.execute()
     }
@@ -40,7 +40,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 interface Index {
   name: string
   columns: string[]
-  where?: string
+  where?: Expression<SqlBool>
 }
 
 type TableIndexes = Partial<Record<keyof typeof TABLE_NAMES, Record<string, Index>>>
@@ -91,7 +91,7 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_users_public_id',
       columns: ['public_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onDepartmentIdType: {
       name: 'idx_users_department_id_type',
@@ -136,22 +136,22 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_societies_public_id',
       columns: ['public_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onDepartmentId: {
       name: 'idx_societies_department_id',
       columns: ['department_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onPresidentId: {
       name: 'idx_societies_president_id',
       columns: ['president_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onConvenorId: {
       name: 'idx_societies_convenor_id',
       columns: ['convenor_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
   },
 
@@ -159,7 +159,7 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_servers_public_id',
       columns: ['public_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
   },
 
@@ -171,17 +171,17 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_channels_public_id',
       columns: ['public_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onServerIdCourseId: {
       name: 'idx_channels_server_id_course_id',
       columns: ['server_id', 'course_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onServerIdProgramId: {
       name: 'idx_channels_server_id_program_id',
       columns: ['server_id', 'program_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
   },
 
@@ -206,7 +206,7 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_posts_public_id',
       columns: ['public_id'],
-      where: 'is_deleted = false',
+      where: sql<boolean>`is_deleted = false`,
     },
     onChannelIdPriority: {
       name: 'idx_posts_channel_id_priority',
@@ -243,7 +243,7 @@ const TABLE_INDEXES: TableIndexes = {
     onUnreadByUser: {
       name: 'idx_notifications_unread_by_user',
       columns: ['user_id', 'created_at'],
-      where: 'read_at IS NULL',
+      where: sql<boolean>`read_at IS NULL`,
     },
   },
 
