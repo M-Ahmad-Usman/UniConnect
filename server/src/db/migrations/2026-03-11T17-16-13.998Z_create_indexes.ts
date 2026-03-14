@@ -17,13 +17,12 @@ export async function up(db: Kysely<any>): Promise<void> {
     const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
     for (const index of Object.values(indexes) ) {
-      const query = db.schema
+      let query = db.schema
         .createIndex(index.name)
         .on(snakeCasedTableName)
         .columns(index.columns)
 
-      if (index.type) query.using(index.type)
-      if (index.where) query.where(sql<boolean>`${index.where}`)
+      if (index.where) query = query.where(sql<boolean>`${index.where}`)
 
       await query.execute()
     }
@@ -41,7 +40,6 @@ export async function down(db: Kysely<any>): Promise<void> {
 interface Index {
   name: string
   columns: string[]
-  type?: 'b-tree' | 'hash'
   where?: string
 }
 
