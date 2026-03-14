@@ -453,7 +453,7 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_role', ['id'])
 
     .addColumn('name', sql`user_role`, col => col.notNull())
-    .addUniqueConstraint('uq_rolea', ['name'])
+    .addUniqueConstraint('uq_roles', ['name'])
 
     .execute()
 }
