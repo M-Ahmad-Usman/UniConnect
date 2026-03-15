@@ -134,7 +134,7 @@ To delete a user having **Teacher** role then the application must check:
 
 Same as `teachers` — a 1:1 profile table removed via CASCADE on parent user hard-delete. Direct student deletion should not be exposed as an API operation.
 
-To delete a user having **Teacher** role then the application must check:
+To delete a user having **Student** role then the application must check:
 
 | Check | Constraint |
 |---|---|
