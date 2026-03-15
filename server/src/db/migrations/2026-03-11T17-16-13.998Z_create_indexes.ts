@@ -16,7 +16,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
-    for (const index of Object.values(indexes) ) {
+    for (const index of Object.values(indexes)) {
       let query = db.schema
         .createIndex(index.name)
         .on(snakeCasedTableName)
@@ -33,7 +33,10 @@ export async function down(db: Kysely<any>): Promise<void> {
 
   for (const indexes of Object.values(TABLE_INDEXES))
     for (const index of Object.values(indexes))
-      await db.schema.dropIndex(index.name).execute()
+      await db.schema
+        .dropIndex(index.name)
+        .ifExists()
+        .execute()
 
 }
 
@@ -120,10 +123,6 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_classes_public_id',
       columns: ['public_id'],
-    },
-    onServerId: {
-      name: 'idx_classes_server_id',
-      columns: ['server_id'],
     },
   },
 
