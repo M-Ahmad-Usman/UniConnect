@@ -51,7 +51,7 @@ type TableIndexes = Partial<Record<keyof typeof TABLE_NAMES, Record<string, Inde
 const TABLE_INDEXES: TableIndexes = {
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onHodId: unique constraint
    * - onServerId: unique constraint
    * - onName: unique constraint
@@ -60,7 +60,7 @@ const TABLE_INDEXES: TableIndexes = {
   departments: {},
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onCode: unique constraint
    * - onDisciplineDegreeLevelDepartmentId: unique constraint
    */
@@ -77,13 +77,13 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onProgramIdBatchYearSemesterNumberCourseId: unique constraint
    */
   programCurricula: {},
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onPersonalEmail: unique constraint
    * - onUniversityEmail: partial unique constraint for active users
    */
@@ -100,7 +100,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onRollNumber: unique constraint
    */
   students: {
@@ -111,7 +111,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onCr: unique constraint
    * - onServerId: unique constraint
    * - onProgramIdCurrentSemesterSectionAdmissionYear: unique constraint
@@ -128,7 +128,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onServerId: unique constraint
    * - onSocietyName: partial unique constraint for active societies
    */
@@ -164,7 +164,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onChannelName: partial unique constraint for active channels
    */
   channels: {
@@ -186,7 +186,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onUserIdServerId: primary key constraint
    */
   serverMemberships: {
@@ -197,13 +197,13 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onSocietyIdUserId: partial unique constraint for approved and pending requests
    */
   societyMembershipRequests: {},
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onCourseCode: unique constraint
    */
   courses: {
@@ -214,7 +214,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onClassIdCourseIdTeacherId: primary key constraint
    */
   courseAssignments: {
@@ -248,13 +248,13 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onRoleIdPermissionId: primary key constraint
    */
   rolePermissions: {},
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onServerIdChannelIdUserId: NULLS NOT DISTINCT unique constraint
    */
   moderatorAssignments: {},
@@ -276,7 +276,7 @@ const TABLE_INDEXES: TableIndexes = {
   },
 
   /**
-   * constraints already defined in create_tables
+   * constraints (indexes) already defined in create_tables
    * - onUserIdServerIdChannelIdScopeType: unique constraint
    */
   notificationPreferences: {},
