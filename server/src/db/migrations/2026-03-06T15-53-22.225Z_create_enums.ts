@@ -27,6 +27,7 @@ export async function down(db: Kysely<any>): Promise<void> {
     const snakeCasedEnumName = convertCamelToSnakeCase(camelCasedEnumName)
     await db.schema
       .dropType(snakeCasedEnumName)
+      .ifExists()
       .execute()
   }
 }
