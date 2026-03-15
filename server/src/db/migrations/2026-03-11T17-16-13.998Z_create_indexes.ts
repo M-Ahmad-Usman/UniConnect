@@ -213,6 +213,17 @@ const TABLE_INDEXES: TableIndexes = {
     },
   },
 
+  /**
+   * constraints already defined in create_tables
+   * - onClassIdCourseIdTeacherId: primary key constraint
+   */
+  courseAssignments: {
+    onTeacherId: {
+      name: 'idx_course_assignments_teacher_id',
+      columns: ['teacher_id'],
+    },
+  },
+
   posts: {
     onPublicId: {
       name: 'idx_posts_public_id',
@@ -235,6 +246,12 @@ const TABLE_INDEXES: TableIndexes = {
       columns: ['post_id'],
     },
   },
+
+  /**
+   * constraints already defined in create_tables
+   * - onRoleIdPermissionId: primary key constraint
+   */
+  rolePermissions: {},
 
   /**
    * constraints already defined in create_tables
