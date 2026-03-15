@@ -65,7 +65,7 @@ const TABLE_INDEXES: TableIndexes = {
    * - onDisciplineDegreeLevelDepartmentId: unique constraint
    */
   programs: {
-    // Should I add this index. This field is already covered by unique program index
+    // Need further consideration on whether to keep this index or remove it.
     onDepartmentId: {
       name: 'idx_programs_department_id',
       columns: ['department_id'],
