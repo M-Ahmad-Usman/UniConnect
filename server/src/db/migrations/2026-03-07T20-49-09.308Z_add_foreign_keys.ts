@@ -35,6 +35,7 @@ export async function down(db: Kysely<any>): Promise<void> {
       await db.schema
         .alterTable(snakeCasedTableName)
         .dropConstraint(fkConstraint.constraintName)
+        .ifExists()
         .execute()
   }
 }
