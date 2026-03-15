@@ -63,7 +63,7 @@ async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
     .addUniqueConstraint('uq_departments_hod_id', ['hod_id'])
 
     .addColumn('server_id', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_departments_server', ['server_id'])
+    .addUniqueConstraint('uq_departments_server_id', ['server_id'])
 
     .execute()
 }
@@ -103,7 +103,7 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
     .addColumn('semester_number', 'integer', col => col.notNull())
     .addColumn('batch_year', 'integer', col => col.notNull())
 
-    .addUniqueConstraint('uq_programs_curriculum', ['program_id', 'batch_year', 'semester_number', 'course_id'])
+    .addUniqueConstraint('uq_program_curriculum', ['program_id', 'batch_year', 'semester_number', 'course_id'])
 
     .execute()
 }
@@ -120,7 +120,7 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .addColumn('full_name', 'varchar(100)', col => col.notNull())
 
     .addColumn('personal_email', 'varchar(255)', col => col.notNull())
-    .addUniqueConstraint('uq_users_email', ['personal_email'])
+    .addUniqueConstraint('uq_users_personal_email', ['personal_email'])
 
     .addColumn('university_email', 'varchar(255)')
 
@@ -194,13 +194,13 @@ async function createClassesTable(db: Kysely<any>): Promise<void> {
     .addColumn('section', sql`class_section`, col => col.notNull())
 
     .addColumn('cr_id', 'integer')
-    .addUniqueConstraint('uq_classes_cr', ['cr_id'])
+    .addUniqueConstraint('uq_classes_cr_id', ['cr_id'])
 
     .addColumn('academic_year', 'integer', col => col.notNull())
     .addColumn('admission_year', 'integer', col => col.notNull())
 
     .addColumn('server_id', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_classes_server', ['server_id'])
+    .addUniqueConstraint('uq_classes_server_id', ['server_id'])
 
     .addUniqueConstraint('uq_classes', ['program_id', 'current_semester', 'section', 'admission_year'])
     .execute()
@@ -224,7 +224,7 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .addColumn('convenor_id', 'integer', col => col.notNull())
 
     .addColumn('server_id', 'integer', col => col.notNull())
-    .addUniqueConstraint('uq_societies_server', ['server_id'])
+    .addUniqueConstraint('uq_societies_server_id', ['server_id'])
 
     .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('deleted_by', 'integer')
@@ -325,6 +325,7 @@ async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
     .addColumn('user_id', 'integer')
 
     .addColumn('server_id', 'integer')
+
     .addPrimaryKeyConstraint('pk_server_memberships', ['user_id', 'server_id'])
 
     .addColumn('joined_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
@@ -355,7 +356,7 @@ async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<vo
   // Allow users with rejected requests to apply again
 
   await db.schema
-    .createIndex('uidx_society_membership_request_not_approved')
+    .createIndex('uidx_society_membership_requests_not_approved')
     .unique()
     .on(TABLE_NAMES.societyMembershipRequests)
     .columns(['society_id', 'user_id'])
@@ -454,7 +455,7 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_roles', ['id'])
 
     .addColumn('name', sql`user_role`, col => col.notNull())
-    .addUniqueConstraint('uq_roles', ['name'])
+    .addUniqueConstraint('uq_roles_name', ['name'])
 
     .execute()
 }
@@ -505,7 +506,7 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 
   await sql`ALTER TABLE moderator_assignments 
-  ADD CONSTRAINT uq_moderator_assignment 
+  ADD CONSTRAINT uq_moderator_assignments
   UNIQUE NULLS NOT DISTINCT (server_id, channel_id, user_id)`.execute(db)
 }
 
@@ -552,7 +553,7 @@ async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void
     .execute()
 
   await sql`ALTER TABLE notification_preferences 
-  ADD CONSTRAINT uq_notification_preference 
+  ADD CONSTRAINT uq_notification_preferences
   UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id, scope_type)`.execute(db)
 }
 
@@ -566,7 +567,7 @@ async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
     .addColumn('user_id', 'integer', col => col.notNull())
 
     .addColumn('token_hash', 'varchar(255)', col => col.notNull())
-    .addUniqueConstraint('uq_refresh_tokens_hash', ['token_hash'])
+    .addUniqueConstraint('uq_refresh_tokens_token_hash', ['token_hash'])
 
     .addColumn('expires_at', 'timestamptz', col => col.notNull())
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
