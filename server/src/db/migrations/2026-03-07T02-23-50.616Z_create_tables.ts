@@ -36,7 +36,8 @@ export async function up(db: Kysely<any>): Promise<void> {
 
 export async function down(db: Kysely<any>): Promise<void> {
 
-  for (const tableName of Object.values(TABLE_NAMES).reverse())
+  // Since foreign keys are in separate migration so dropping order of tables doesn't matter
+  for (const tableName of Object.values(TABLE_NAMES))
     await db.schema
       .dropTable(tableName)
       .ifExists()
