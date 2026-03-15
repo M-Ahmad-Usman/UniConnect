@@ -187,6 +187,17 @@ const TABLE_INDEXES: TableIndexes = {
 
   /**
    * constraints already defined in create_tables
+   * - onUserIdServerId: primary key constraint
+   */
+  serverMemberships: {
+    onServerId: {
+      name: 'idx_server_memberships_server_id',
+      columns: ['server_id'],
+    },
+  },
+
+  /**
+   * constraints already defined in create_tables
    * - onSocietyIdUserId: partial unique constraint for approved and pending requests
    */
   societyMembershipRequests: {},
