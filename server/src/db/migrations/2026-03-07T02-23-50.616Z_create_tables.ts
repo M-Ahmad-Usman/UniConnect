@@ -50,7 +50,7 @@ async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.departments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_department', ['id'])
+    .addPrimaryKeyConstraint('pk_departments', ['id'])
 
     .addColumn('name', 'varchar(100)', col => col.notNull())
     .addUniqueConstraint('uq_departments_name', ['name'])
@@ -72,7 +72,7 @@ async function createProgramsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.programs)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_program', ['id'])
+    .addPrimaryKeyConstraint('pk_programs', ['id'])
 
     .addColumn('department_id', 'integer', col => col.notNull())
     .addColumn('discipline', sql`discipline`, col => col.notNull())
@@ -95,7 +95,7 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.programCurricula)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_program_curriculum', ['id'])
+    .addPrimaryKeyConstraint('pk_program_curricula', ['id'])
 
     .addColumn('program_id', 'integer', col => col.notNull())
     .addColumn('course_id', 'integer', col => col.notNull())
@@ -112,7 +112,7 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.users)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_user', ['id'])
+    .addPrimaryKeyConstraint('pk_users', ['id'])
 
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
@@ -157,7 +157,7 @@ async function createStudentsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.students)
 
     .addColumn('student_id', 'integer')
-    .addPrimaryKeyConstraint('pk_student', ['student_id'])
+    .addPrimaryKeyConstraint('pk_students', ['student_id'])
 
     .addColumn('class_id', 'integer', col => col.notNull())
 
@@ -172,7 +172,7 @@ async function createTeachersTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.teachers)
 
     .addColumn('teacher_id', 'integer')
-    .addPrimaryKeyConstraint('pk_teacher', ['teacher_id'])
+    .addPrimaryKeyConstraint('pk_teachers', ['teacher_id'])
 
     .addColumn('designation', sql`teacher_designation`, col => col.notNull())
 
@@ -184,7 +184,7 @@ async function createClassesTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.classes)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_class', ['id'])
+    .addPrimaryKeyConstraint('pk_classes', ['id'])
 
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
@@ -210,7 +210,7 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.societies)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_society', ['id'])
+    .addPrimaryKeyConstraint('pk_societies', ['id'])
 
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
@@ -249,7 +249,7 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.servers)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_server', ['id'])
+    .addPrimaryKeyConstraint('pk_servers', ['id'])
 
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
@@ -274,7 +274,7 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.channels)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_channel', ['id'])
+    .addPrimaryKeyConstraint('pk_channels', ['id'])
 
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
@@ -324,7 +324,7 @@ async function createServerMembershipsTable(db: Kysely<any>): Promise<void> {
     .addColumn('user_id', 'integer')
 
     .addColumn('server_id', 'integer')
-    .addPrimaryKeyConstraint('pk_server_membership', ['user_id', 'server_id'])
+    .addPrimaryKeyConstraint('pk_server_memberships', ['user_id', 'server_id'])
 
     .addColumn('joined_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
     .addColumn('is_auto_joined', 'boolean', col => col.notNull().defaultTo(false))
@@ -337,7 +337,7 @@ async function createSocietyMembershipRequestsTable(db: Kysely<any>): Promise<vo
     .createTable(TABLE_NAMES.societyMembershipRequests)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_society_membership_request', ['id'])
+    .addPrimaryKeyConstraint('pk_society_membership_requests', ['id'])
 
     .addColumn('society_id', 'integer', col => col.notNull())
     .addColumn('user_id', 'integer', col => col.notNull())
@@ -367,7 +367,7 @@ async function createCoursesTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.courses)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_course', ['id'])
+    .addPrimaryKeyConstraint('pk_courses', ['id'])
 
     .addColumn('title', 'varchar(100)', col => col.notNull())
 
@@ -389,7 +389,7 @@ async function createCourseAssignmentsTable(db: Kysely<any>): Promise<void> {
     .addColumn('course_id', 'integer')
     .addColumn('class_id', 'integer')
 
-    .addPrimaryKeyConstraint('pk_course_assignment', ['class_id', 'course_id', 'teacher_id'])
+    .addPrimaryKeyConstraint('pk_course_assignments', ['class_id', 'course_id', 'teacher_id'])
 
     .execute()
 }
@@ -399,7 +399,7 @@ async function createPostsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.posts)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_post', ['id'])
+    .addPrimaryKeyConstraint('pk_posts', ['id'])
 
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
@@ -432,7 +432,7 @@ async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.postAttachments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_post_attachment', ['id'])
+    .addPrimaryKeyConstraint('pk_post_attachments', ['id'])
 
     .addColumn('post_id', 'integer', col => col.notNull())
 
@@ -450,7 +450,7 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.roles)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_role', ['id'])
+    .addPrimaryKeyConstraint('pk_roles', ['id'])
 
     .addColumn('name', sql`user_role`, col => col.notNull())
     .addUniqueConstraint('uq_roles', ['name'])
@@ -463,7 +463,7 @@ async function createPermissionsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.permissions)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_permission', ['id'])
+    .addPrimaryKeyConstraint('pk_permissions', ['id'])
 
     .addColumn('action', sql`action`, col => col.notNull())
     .addColumn('resource', sql`resource`, col => col.notNull())
@@ -480,7 +480,7 @@ async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
     .addColumn('role_id', 'integer')
     .addColumn('permission_id', 'integer')
 
-    .addPrimaryKeyConstraint('pk_role_permission', ['role_id', 'permission_id'])
+    .addPrimaryKeyConstraint('pk_role_permissions', ['role_id', 'permission_id'])
 
     .execute()
 }
@@ -490,7 +490,7 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.moderatorAssignments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_moderator_assignment', ['id'])
+    .addPrimaryKeyConstraint('pk_moderator_assignments', ['id'])
 
     .addColumn('user_id', 'integer', col => col.notNull())
     .addColumn('scope_type', sql`moderator_scope_type`, col => col.notNull())
@@ -513,7 +513,7 @@ async function createNotificationsTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.notifications)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_notification', ['id'])
+    .addPrimaryKeyConstraint('pk_notifications', ['id'])
 
     .addColumn('title', 'varchar(200)', col => col.notNull())
     .addColumn('message', 'text')
@@ -535,7 +535,7 @@ async function createNotificationPreferencesTable(db: Kysely<any>): Promise<void
     .createTable(TABLE_NAMES.notificationPreferences)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_notification_preference', ['id'])
+    .addPrimaryKeyConstraint('pk_notification_preferences', ['id'])
 
     .addColumn('user_id', 'integer', col => col.notNull())
 
@@ -560,7 +560,7 @@ async function createRefreshTokensTable(db: Kysely<any>): Promise<void> {
     .createTable(TABLE_NAMES.refreshTokens)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_refresh_token', ['id'])
+    .addPrimaryKeyConstraint('pk_refresh_tokens', ['id'])
 
     .addColumn('user_id', 'integer', col => col.notNull())
 
