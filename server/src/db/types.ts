@@ -222,7 +222,8 @@ export interface UserTable {
   publicId: ColumnType<string, never, never>
 
   fullName: string
-  email: string
+  personalEmail: string
+  universityEmail: string | null
   phone: string
   passwordHash: string
 
@@ -378,7 +379,6 @@ export type UpdateServerMembership = Updateable<ServerMembershipTable>
 
 export interface SocietyMembershipRequestTable {
   id: Generated<SocietyMembershipRequestId>
-  publicId: ColumnType<string, never, never>
 
   societyId: SocietyId
   userId: UserId
@@ -513,7 +513,6 @@ export type UpdateModeratorAssignment = Updateable<ModeratorAssignmentTable>
 
 export interface NotificationTable {
   id: Generated<NotificationId>
-  publicId: ColumnType<string, never, never>
 
   title: string
   message: string | null
