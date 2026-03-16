@@ -422,7 +422,7 @@ moderator_assignments {
 
   // CONSTRAINT: CHECK (
     // (scope_type='server' AND channel_id IS NULL) OR
-    // (scope_type='channel' AND server_id IS NOT NULL AND channel_id IS NOT NULL)
+    // (scope_type='channel' AND channel_id IS NOT NULL)
   // )
 
   // UNIQUE(user_id, server_id, channel_id NULLS NOT DISTINCT)
@@ -466,8 +466,8 @@ notification_preferences {
   channel_id INTEGER FK
 
   // CONSTRAINT: CHECK (
-    // (scope_type='server' AND channel_id IS NULL) OR
-    // (scope_type='channel' AND server_id IS NOT NULL AND channel_id IS NOT NULL)
+    // (scope_type='server' AND server_id IS NOT NULL AND channel_id IS NULL) OR
+    // (scope_type='channel' AND channel_id IS NOT NULL AND server_id IS NULL)
   // )
 
   is_subscribed BOOLEAN // DEFAULT TRUE
