@@ -500,7 +500,7 @@ export interface ModeratorAssignmentTable {
 
   scopeType: ModeratorScopeType
 
-  serverId: ServerId
+  serverId: ServerId | null
   channelId: ChannelId | null
 
   assignedBy: UserId | null

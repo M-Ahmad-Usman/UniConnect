@@ -417,12 +417,12 @@ moderator_assignments {
   user_id INTEGER FK // NOT NULL
   scope_type VARCHAR(20) // NOT NULL enum ['server', 'channel']
 
-  server_id INTEGER FK // NOT NULL Always required
+  server_id INTEGER FK
   channel_id INTEGER FK
 
   // CONSTRAINT: CHECK (
-    // (scope_type='server' AND channel_id IS NULL) OR
-    // (scope_type='channel' AND channel_id IS NOT NULL)
+    // (scope_type='server' AND server_id IS NOT NULL AND channel_id IS NULL) OR
+    // (scope_type='channel' AND channel_id IS NOT NULL AND server_id IS NULL)
   // )
 
   // UNIQUE(user_id, server_id, channel_id NULLS NOT DISTINCT)

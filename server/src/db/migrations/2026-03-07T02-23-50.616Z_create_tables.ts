@@ -497,7 +497,7 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
     .addColumn('user_id', 'integer', col => col.notNull())
     .addColumn('scope_type', sql`moderator_scope_type`, col => col.notNull())
 
-    .addColumn('server_id', 'integer', col => col.notNull())
+    .addColumn('server_id', 'integer')
     .addColumn('channel_id', 'integer')
 
     .addColumn('assigned_by', 'integer')
