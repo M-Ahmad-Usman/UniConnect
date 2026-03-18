@@ -10,25 +10,33 @@ import { TABLE_NAMES } from '../types.js'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await createDepartmentsTable(db)
+  await createDisciplinesTable(db)
+  await createDegreeLevelsTable(db)
   await createProgramsTable(db)
   await createProgramCurriculaTable(db)
+  await createUserTypesTable(db)
   await createUsersTable(db)
   await createStudentsTable(db)
+  await createDesignationsTable(db)
   await createTeachersTable(db)
   await createClassesTable(db)
   await createSocietiesTable(db)
+  await createServerTypesTable(db)
   await createServersTable(db)
+  await createChannelTypesTable(db)
   await createChannelsTable(db)
   await createServerMembershipsTable(db)
   await createSocietyMembershipRequestsTable(db)
   await createCoursesTable(db)
   await createCourseAssignmentsTable(db)
   await createPostsTable(db)
+  await createFileAttachmentTypesTable(db)
   await createPostAttachmentsTable(db)
   await createRolesTable(db)
   await createPermissionsTable(db)
   await createRolePermissionsTable(db)
   await createModeratorAssignmentsTable(db)
+  await createNotificationTypesTable(db)
   await createNotificationsTable(db)
   await createNotificationPreferencesTable(db)
   await createRefreshTokensTable(db)
@@ -68,6 +76,34 @@ async function createDepartmentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
+async function createDisciplinesTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.disciplines)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_disciplines', ['value'])
+
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .execute()
+
+}
+
+async function createDegreeLevelsTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.degreeLevels)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_degree_levels', ['value'])
+
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .execute()
+
+}
+
 async function createProgramsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.programs)
@@ -76,8 +112,10 @@ async function createProgramsTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_programs', ['id'])
 
     .addColumn('department_id', 'integer', col => col.notNull())
-    .addColumn('discipline', sql`discipline`, col => col.notNull())
-    .addColumn('degree_level', sql`degree_level`, col => col.notNull())
+    // data type must be same from 'disciplines'
+    .addColumn('discipline', 'varchar(50)', col => col.notNull())
+    // data type must be same from 'degree_levels'
+    .addColumn('degree_level', 'varchar(50)', col => col.notNull())
 
     .addColumn('program_director_id', 'integer', col => col.notNull())
 
@@ -108,6 +146,22 @@ async function createProgramCurriculaTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
+async function createUserTypesTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.userTypes)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_user_types', ['value'])
+
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .addColumn('description', 'varchar(500)')
+
+    .execute()
+
+}
+
 async function createUsersTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.users)
@@ -131,7 +185,8 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .addColumn('profile_picture_url', 'text')
     .addColumn('bio', 'varchar(1000)')
 
-    .addColumn('type', sql`user_type`, col => col.notNull())
+    // data type must be same from 'user_types'
+    .addColumn('type', 'varchar(50)', col => col.notNull())
     .addColumn('department_id', 'integer')
 
     .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
@@ -168,6 +223,22 @@ async function createStudentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
+async function createDesignationsTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.designations)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_designations', ['value'])
+
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .addColumn('description', 'varchar(500)')
+
+    .execute()
+
+}
+
 async function createTeachersTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.teachers)
@@ -175,7 +246,8 @@ async function createTeachersTable(db: Kysely<any>): Promise<void> {
     .addColumn('teacher_id', 'integer')
     .addPrimaryKeyConstraint('pk_teachers', ['teacher_id'])
 
-    .addColumn('designation', sql`teacher_designation`, col => col.notNull())
+    // data type must be same from the 'designations'
+    .addColumn('designation', 'varchar(50)', col => col.notNull())
 
     .execute()
 }
@@ -245,6 +317,22 @@ async function createSocietiesTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
+async function createServerTypesTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.serverTypes)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_server_types', ['value'])
+
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .addColumn('designation', 'varchar(500)')
+
+    .execute()
+
+}
+
 async function createServersTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.servers)
@@ -258,7 +346,8 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
     .addColumn('description', 'text')
     .addColumn('icon_url', 'text')
 
-    .addColumn('type', sql`server_type`, col => col.notNull())
+    // data type must be same from 'server_types'
+    .addColumn('type', 'varchar(50)', col => col.notNull())
 
     .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('deleted_by', 'integer')
@@ -268,6 +357,22 @@ async function createServersTable(db: Kysely<any>): Promise<void> {
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
     .execute()
+}
+
+async function createChannelTypesTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.channelTypes)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_channel_types', ['value'])
+
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .addColumn('description', 'varchar(500)')
+
+    .execute()
+
 }
 
 async function createChannelsTable(db: Kysely<any>): Promise<void> {
@@ -281,7 +386,9 @@ async function createChannelsTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('name', 'varchar(100)', col => col.notNull())
     .addColumn('description', 'varchar(200)')
-    .addColumn('type', sql`channel_type`, col => col.notNull())
+
+    // data type must be same from the 'channel_types'
+    .addColumn('type', 'varchar(50)', col => col.notNull())
 
     .addColumn('server_id', 'integer', col => col.notNull())
 
@@ -429,6 +536,22 @@ async function createPostsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
+async function createFileAttachmentTypesTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.fileAttachmentTypes)
+
+    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
+    .addPrimaryKeyConstraint('pk_file_attachment_types', ['id'])
+
+    .addColumn('type', 'varchar(150)', col => col.notNull())
+
+    .addColumn('max_size_bytes', 'integer', col => col.notNull())
+
+    .execute()
+
+}
+
 async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.postAttachments)
@@ -439,8 +562,8 @@ async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
     .addColumn('post_id', 'integer', col => col.notNull())
 
     .addColumn('file_url', 'text', col => col.notNull())
-    .addColumn('file_type', sql`file_attachment_type`, col => col.notNull())
-    .addColumn('file_size', 'integer', col => col.notNull())
+
+    .addColumn('attachment_type_id', 'integer', col => col.notNull())
 
     .addColumn('uploaded_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
@@ -451,11 +574,12 @@ async function createRolesTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.roles)
 
-    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_roles', ['id'])
+    .addColumn('value', 'varchar(50)', col => col.notNull())
+    .addPrimaryKeyConstraint('pk_roles', ['value'])
 
-    .addColumn('name', sql`user_role`, col => col.notNull())
-    .addUniqueConstraint('uq_roles_name', ['name'])
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    .addColumn('description', 'varchar(500)')
 
     .execute()
 }
@@ -467,8 +591,8 @@ async function createPermissionsTable(db: Kysely<any>): Promise<void> {
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint('pk_permissions', ['id'])
 
-    .addColumn('action', sql`action`, col => col.notNull())
-    .addColumn('resource', sql`resource`, col => col.notNull())
+    .addColumn('action', 'text', col => col.notNull())
+    .addColumn('resource', 'text', col => col.notNull())
 
     .addUniqueConstraint('uq_permissions', ['action', 'resource'])
 
@@ -479,10 +603,11 @@ async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.rolePermissions)
 
-    .addColumn('role_id', 'integer')
+    // data type must be the same from 'roles'
+    .addColumn('role', 'varchar(50)')
     .addColumn('permission_id', 'integer')
 
-    .addPrimaryKeyConstraint('pk_role_permissions', ['role_id', 'permission_id'])
+    .addPrimaryKeyConstraint('pk_role_permissions', ['role', 'permission_id'])
 
     .execute()
 }
@@ -510,6 +635,18 @@ async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
   UNIQUE NULLS NOT DISTINCT (server_id, channel_id, user_id)`.execute(db)
 }
 
+async function createNotificationTypesTable(db: Kysely<any>): Promise<void> {
+
+  await db.schema
+    .createTable(TABLE_NAMES.notificationTypes)
+
+    .addColumn('value', 'varchar(50)')
+    .addPrimaryKeyConstraint('pk_notification_types', ['value'])
+
+    .execute()
+
+}
+
 async function createNotificationsTable(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(TABLE_NAMES.notifications)
@@ -520,7 +657,8 @@ async function createNotificationsTable(db: Kysely<any>): Promise<void> {
     .addColumn('title', 'varchar(200)', col => col.notNull())
     .addColumn('message', 'text')
 
-    .addColumn('type', sql`notification_type`, col => col.notNull())
+    // data type must be same from 'notification_types'
+    .addColumn('type', 'varchar(50)', col => col.notNull())
 
     .addColumn('user_id', 'integer', col => col.notNull())
 

@@ -26,25 +26,33 @@ import type {
 */
 export interface Database {
   departments: DepartmentTable
+  disciplines: DisciplineTable
+  degreeLevels: DegreeLevelTable
   programs: ProgramTable
   programCurricula: ProgramCurriculumTable
+  userTypes: UserTypeTable
   users: UserTable
   students: StudentTable
+  designations: DesignationTable
   teachers: TeacherTable
   classes: ClassTable
   societies: SocietyTable
+  serverTypes: ServerTypeTable
   servers: ServerTable
+  channelTypes: ChannelTypeTable
   channels: ChannelTable
   serverMemberships: ServerMembershipTable
   societyMembershipRequests: SocietyMembershipRequestTable
   courses: CourseTable
   courseAssignments: CourseAssignmentTable
   posts: PostTable
+  fileAttachmentTypes: FileAttachmentTypeTable
   postAttachments: PostAttachmentTable
   roles: RoleTable
   permissions: PermissionTable
   rolePermissions: RolePermissionTable
   moderatorAssignments: ModeratorAssignmentTable
+  notificationTypes: NotificationTypeTable
   notifications: NotificationTable
   notificationPreferences: NotificationPreferenceTable
   refreshTokens: RefreshTokenTable
@@ -54,25 +62,33 @@ export interface Database {
 // This object is used by create tables migration.
 export const TABLE_NAMES = {
   departments: 'departments',
+  disciplines: 'disciplines',
+  degreeLevels: 'degree_levels',
   programs: 'programs',
   programCurricula: 'program_curricula',
+  userTypes: 'user_types',
   users: 'users',
   students: 'students',
+  designations: 'designations',
   teachers: 'teachers',
   classes: 'classes',
   societies: 'societies',
+  serverTypes: 'server_types',
   servers: 'servers',
+  channelTypes: 'channel_types',
   channels: 'channels',
   serverMemberships: 'server_memberships',
   societyMembershipRequests: 'society_membership_requests',
   courses: 'courses',
   courseAssignments: 'course_assignments',
   posts: 'posts',
+  fileAttachmentTypes: 'file_attachment_types',
   postAttachments: 'post_attachments',
   roles: 'roles',
   permissions: 'permissions',
   rolePermissions: 'role_permissions',
   moderatorAssignments: 'moderator_assignments',
+  notificationTypes: 'notification_types',
   notifications: 'notifications',
   notificationPreferences: 'notification_preferences',
   refreshTokens: 'refresh_tokens',
@@ -84,66 +100,52 @@ export const TABLE_NAMES = {
 type Brand<T, B> = T & { readonly __brand: B }
 
 export type DepartmentId = Brand<number, 'DepartmentId'>
+export type DisciplineValue = Brand<string, 'DisciplineValue'>
+export type DegreeLevelValue = Brand<string, 'DegreeLevelValue'>
 export type ProgramId = Brand<number, 'ProgramId'>
 export type ProgramCurriculumId = Brand<number, 'ProgramCurriculumId'>
+export type UserTypeValue = Brand<string, 'UserTypeValue'>
 export type UserId = Brand<number, 'UserId'>
 export type StudentId = Brand<number, 'StudentId'>
+export type DesignationValue = Brand<string, 'DesignationValue'>
 export type TeacherId = Brand<number, 'TeacherId'>
 export type ClassId = Brand<number, 'ClassId'>
 export type SocietyId = Brand<number, 'SocietyId'>
+export type ServerTypeValue = Brand<string, 'ServerTypeValue'>
 export type ServerId = Brand<number, 'ServerId'>
+export type ChannelTypeValue = Brand<string, 'ChannelTypeValue'>
 export type ChannelId = Brand<number, 'ChannelId'>
 export type SocietyMembershipRequestId = Brand<number, 'SocietyMembershipRequestId'>
 export type CourseId = Brand<number, 'CourseId'>
 export type PostId = Brand<number, 'PostId'>
+export type FileAttachmentTypeId = Brand<number, 'FileAttachmentTypeId'>
 export type PostAttachmentId = Brand<number, 'PostAttachmentId'>
-export type RoleId = Brand<number, 'RoleId'>
+export type RoleValue = Brand<string, 'RoleValue'>
 export type PermissionId = Brand<number, 'PermissionId'>
 export type ModeratorAssignmentId = Brand<number, 'ModeratorAssignmentId'>
+export type NotificationTypeValue = Brand<string, 'NotificationTypeValue'>
 export type NotificationId = Brand<number, 'NotificationId'>
 export type NotificationPreferenceId = Brand<number, 'NotificationPreferenceId'>
 export type RefreshTokenId = Brand<number, 'RefreshTokenId'>
 
 
 
-// Single source of truth for all enum values
-export const  ENUMS = {
-  degreeLevel: ['bachelors', 'masters', 'phd'],
-  discipline: ['computer_science', 'software_engineering', 'artificial_intelligence', 'computer_engineering'],
-  userType: ['student', 'teacher', 'admin'],
+// Single source of truth for all closed enum values
+export const ENUMS = {
   gender: ['male', 'female'],
-  teacherDesignation: ['lab_incharge', 'lecturer', 'assistant_professor', 'associate_professor', 'professor'],
   classSection: ['a', 'b'],
-  serverType: ['class', 'society', 'department'],
-  channelType: ['announcements', 'program', 'course', 'general'],
   membershipRequestStatus: ['pending', 'approved', 'rejected'],
   postPriority: ['normal', 'important', 'urgent'],
-  fileAttachmentType: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'application/pdf', 'application/msword'],
-  userRole: ['cr', 'society_president', 'society_convenor', 'program_director', 'hod', 'moderator'],
-  action: ['create', 'update', 'delete', 'post', 'assign'],
-  resource: ['channel', 'society', 'class', 'role'],
   moderatorScopeType: ['channel', 'server'],
-  notificationType: ['new_post', 'role_assigned'],
   notificationPreferenceScope: ['server', 'channel'],
 } as const
 
 // Literal Types - Derived from ENUMS
-export type DegreeLevel = typeof ENUMS.degreeLevel[number]
-export type Discipline = typeof ENUMS.discipline[number]
-export type UserType = typeof ENUMS.userType[number]
 export type Gender = typeof ENUMS.gender[number]
-export type TeacherDesignation = typeof ENUMS.teacherDesignation[number]
 export type ClassSection = typeof ENUMS.classSection[number]
-export type ServerType = typeof ENUMS.serverType[number]
-export type ChannelType = typeof ENUMS.channelType[number]
 export type MembershipRequestStatus = typeof ENUMS.membershipRequestStatus[number]
 export type PostPriority = typeof ENUMS.postPriority[number]
-export type FileAttachmentType = typeof ENUMS.fileAttachmentType[number]
-export type UserRole = typeof ENUMS.userRole[number]
-export type Action = typeof ENUMS.action[number]
-export type Resource = typeof ENUMS.resource[number]
 export type ModeratorScopeType = typeof ENUMS.moderatorScopeType[number]
-export type NotificationType = typeof ENUMS.notificationType[number]
 export type NotificationPreferenceScope = typeof ENUMS.notificationPreferenceScope[number]
 
 
@@ -187,12 +189,30 @@ export type Department = Selectable<DepartmentTable>
 export type NewDepartment = Insertable<DepartmentTable>
 export type UpdateDepartment = Updateable<DepartmentTable>
 
+export interface DisciplineTable {
+  value: DisciplineValue
+  label: string
+}
+
+export type Discipline = Selectable<DisciplineTable>
+export type NewDiscipline = Insertable<DisciplineTable>
+export type UpdateDiscipline = Updateable<DisciplineTable>
+
+export interface DegreeLevelTable {
+  value: DegreeLevelValue
+  label: string
+}
+
+export type DegreeLevel = Selectable<DegreeLevelTable>
+export type NewDegreeLevel = Insertable<DegreeLevelTable>
+export type UpdateDegreeLevel = Updateable<DegreeLevelTable>
+
 export interface ProgramTable {
   id: Generated<ProgramId>
 
   departmentId: DepartmentId
-  discipline: Discipline
-  degreeLevel: DegreeLevel
+  discipline: DisciplineValue
+  degreeLevel: DegreeLevelValue
 
   programDirectorId: TeacherId
 
@@ -217,6 +237,16 @@ export type ProgramCurriculum = Selectable<ProgramCurriculumTable>
 export type NewProgramCurriculum = Insertable<ProgramCurriculumTable>
 export type UpdateProgramCurriculum = Updateable<ProgramCurriculumTable>
 
+export interface UserTypeTable {
+  value: UserTypeValue
+  label: string
+  description: string | null
+}
+
+export type UserType = Selectable<UserTypeTable>
+export type NewUserType = Insertable<UserTypeTable>
+export type UpdateUserType = Updateable<UserTypeTable>
+
 export interface UserTable {
   id: Generated<UserId>
   publicId: ColumnType<string, never, never>
@@ -231,7 +261,8 @@ export interface UserTable {
   profilePictureUrl: string | null
   bio: string | null
 
-  type: UserType
+  type: UserTypeValue
+
   departmentId: DepartmentId | null
 
   isDeleted: Generated<boolean>
@@ -256,9 +287,19 @@ export type Student = Selectable<StudentTable>
 export type NewStudent = Insertable<StudentTable>
 export type UpdateStudent = Updateable<StudentTable>
 
+export interface DesignationTable {
+  value: DesignationValue
+  label: string
+  description: string | null
+}
+
+export type Designation = Selectable<DesignationTable>
+export type NewDesignation = Insertable<DesignationTable>
+export type UpdateDesignation = Updateable<DesignationTable>
+
 export interface TeacherTable {
   teacherId: TeacherId
-  designation: TeacherDesignation
+  designation: DesignationValue
 }
 
 export type Teacher = Selectable<TeacherTable>
@@ -308,6 +349,16 @@ export type Society = Selectable<SocietyTable>
 export type NewSociety = Insertable<SocietyTable>
 export type UpdateSociety = Updateable<SocietyTable>
 
+export interface ServerTypeTable {
+  value: ServerTypeValue
+  label: string
+  description: string | null
+}
+
+export type ServerType = Selectable<ServerTypeTable>
+export type NewServerType = Insertable<ServerTypeTable>
+export type UpdateServerType = Updateable<ServerTypeTable>
+
 export interface ServerTable {
   id: Generated<ServerId>
   publicId: ColumnType<string, never, never>
@@ -316,7 +367,7 @@ export interface ServerTable {
   description: string | null
   iconUrl: string | null
 
-  type: ServerType
+  type: ServerTypeValue
 
   isDeleted: Generated<boolean>
   deletedBy: UserId | null
@@ -330,13 +381,24 @@ export type Server = Selectable<ServerTable>
 export type NewServer = Insertable<ServerTable>
 export type UpdateServer = Updateable<ServerTable>
 
+export interface ChannelTypeTable {
+  value: ChannelTypeValue
+  label: string
+  description: string | null
+}
+
+export type ChannelType = Selectable<ChannelTypeTable>
+export type NewChannelType = Insertable<ChannelTypeTable>
+export type UpdateChannelType = Updateable<ChannelTypeTable>
+
 export interface ChannelTable {
   id: Generated<ChannelId>
   publicId: ColumnType<string, never, never>
 
   name: string
   description: string | null
-  type: ChannelType
+
+  type: ChannelTypeValue
 
   serverId: ServerId
 
@@ -448,14 +510,24 @@ export type Post = Selectable<PostTable>
 export type NewPost = Insertable<PostTable>
 export type UpdatePost = Updateable<PostTable>
 
+export interface FileAttachmentTypeTable {
+  id: Generated<FileAttachmentTypeId>
+  type: string
+  maxSizeBytes: number
+}
+
+export type FileAttachmentType = Selectable<FileAttachmentTypeTable>
+export type NewFileAttachmentType = Insertable<FileAttachmentTypeTable>
+export type UpdateFileAttachmentType = Updateable<FileAttachmentTypeTable>
+
 export interface PostAttachmentTable {
   id: Generated<PostAttachmentId>
 
   postId: PostId
 
   fileUrl: string
-  fileType: FileAttachmentType
-  fileSize: number
+
+  attachment_type_id: FileAttachmentTypeId
 
   uploadedAt: UploadedAt
 }
@@ -465,8 +537,9 @@ export type NewPostAttachment = Insertable<PostAttachmentTable>
 export type UpdatePostAttachment = Updateable<PostAttachmentTable>
 
 export interface RoleTable {
-  id: Generated<RoleId>
-  name: UserRole
+  value: RoleValue
+  label: string
+  description: string | null
 }
 
 export type Role = Selectable<RoleTable>
@@ -476,8 +549,8 @@ export type UpdateRole = Updateable<RoleTable>
 export interface PermissionTable {
   id: Generated<PermissionId>
 
-  action: Action
-  resource: Resource
+  action: string
+  resource: string
 }
 
 export type Permission = Selectable<PermissionTable>
@@ -485,7 +558,7 @@ export type NewPermission = Insertable<PermissionTable>
 export type UpdatePermission = Updateable<PermissionTable>
 
 export interface RolePermissionTable {
-  roleId: RoleId
+  role: RoleValue
   permissionId: PermissionId
 }
 
@@ -511,13 +584,21 @@ export type ModeratorAssignment = Selectable<ModeratorAssignmentTable>
 export type NewModeratorAssignment = Insertable<ModeratorAssignmentTable>
 export type UpdateModeratorAssignment = Updateable<ModeratorAssignmentTable>
 
+export interface NotificationTypeTable {
+  value: NotificationTypeValue
+}
+
+export type NotificationType = Selectable<NotificationTypeTable>
+export type NewNotificationType = Insertable<NotificationTypeTable>
+export type UpdateNotificationType = Updateable<NotificationTypeTable>
+
 export interface NotificationTable {
   id: Generated<NotificationId>
 
   title: string
   message: string | null
 
-  type: NotificationType
+  type: NotificationTypeValue
 
   userId: UserId
 

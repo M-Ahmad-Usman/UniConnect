@@ -46,6 +46,7 @@ interface FkConstraint {
   referencingColumn: string
   referencingTable: string
   onDelete: 'restrict' | 'cascade' | 'set null' | 'set default' | 'no action'
+  onUpdate?: 'restrict' | 'cascade' | 'set null' | 'set default' | 'no action'
 }
 
 type TableFkConstraints = Partial<Record<keyof typeof TABLE_NAMES, Record<string, FkConstraint>>>
@@ -91,6 +92,24 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       */
       onDelete: 'restrict',
     },
+    discipline: {
+      constraintName: 'fk_programs_discipline',
+      columnName: 'discipline',
+      referencingColumn: 'value',
+      referencingTable: 'disciplines',
+      // Prevent hard deletion of discipline if it is already offered by department at some degree level
+      onDelete: 'restrict',
+      onUpdate: 'cascade',
+    },
+    degreeLevel: {
+      constraintName: 'fk_programs_degree_level',
+      columnName: 'degree_level',
+      referencingColumn: 'value',
+      referencingTable: 'degree_levels',
+      // Prevent hard deletion of degree level if it is already offered by department in some discipline
+      onDelete: 'restrict',
+      onUpdate: 'cascade',
+    },
     programDirectorId: {
       constraintName: 'fk_programs_program_director_id',
       columnName: 'program_director_id',
@@ -121,6 +140,15 @@ const FK_CONSTRAINTS: TableFkConstraints = {
     },
   },
   users: {
+    type: {
+      constraintName: 'fk_users_type',
+      columnName: 'type',
+      referencingColumn: 'value',
+      referencingTable: 'user_types',
+      // Prevent hard deletion of user type if some user in the system has that type
+      onDelete: 'restrict',
+      onUpdate: 'cascade',
+    },
     departmentId: {
       constraintName: 'fk_users_department_id',
       columnName: 'department_id',
@@ -168,6 +196,15 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Delete teacher if referencing user row is being deleted.
       // Hard Delete: CASCADE, Soft Delete: leave intact
       onDelete: 'cascade',
+    },
+    designation: {
+      constraintName: 'fk_teachers_designation',
+      columnName: 'designation',
+      referencingColumn: 'value',
+      referencingTable: 'designations',
+      // Since designations are purely informational in the system
+      onDelete: 'set null',
+      onUpdate: 'cascade',
     },
   },
   classes: {
@@ -253,6 +290,15 @@ const FK_CONSTRAINTS: TableFkConstraints = {
     },
   },
   servers: {
+    type: {
+      constraintName: 'fk_servers_type',
+      columnName: 'type',
+      referencingColumn: 'value',
+      referencingTable: 'server_types',
+      // Prevent hard deletion of server type if there is any server in the system with that type
+      onDelete: 'restrict',
+      onUpdate: 'cascade',
+    },
     deletedBy: {
       constraintName: 'fk_servers_deleted_by',
       columnName: 'deleted_by',
@@ -273,6 +319,15 @@ const FK_CONSTRAINTS: TableFkConstraints = {
     },
   },
   channels: {
+    type: {
+      constraintName: 'fk_channels_type',
+      columnName: 'type',
+      referencingColumn: 'value',
+      referencingTable: 'channel_types',
+      // Prevent hard deletion of channel type if there is already any channel in the system with that type
+      onDelete: 'restrict',
+      onUpdate: 'cascade',
+    },
     serverId: {
       constraintName: 'fk_channels_server_id',
       columnName: 'server_id',
@@ -497,15 +552,25 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
+    attachmentTypeId: {
+      constraintName: 'fk_post_attachments_attachment_type_id',
+      columnName: 'attachment_type_id',
+      referencingColumn: 'id',
+      referencingTable: 'file_attachment_types',
+      // Prevent hard deletion and updation of a file type if its already used
+      onDelete: 'restrict',
+      onUpdate: 'restrict',
+    },
   },
   rolePermissions: {
-    roleId: {
-      constraintName: 'fk_role_permissions_role_id',
-      columnName: 'role_id',
-      referencingColumn: 'id',
+    role: {
+      constraintName: 'fk_role_permissions_role',
+      columnName: 'role',
+      referencingColumn: 'value',
       referencingTable: 'roles',
       // Clear permissions for the role which is being deleted.
       onDelete: 'cascade',
+      onUpdate: 'cascade',
     },
     permissionId: {
       constraintName: 'fk_role_permissions_permission_id',
@@ -555,6 +620,15 @@ const FK_CONSTRAINTS: TableFkConstraints = {
     },
   },
   notifications: {
+    type: {
+      constraintName: 'fk_notifications_type',
+      columnName: 'type',
+      referencingColumn: 'value',
+      referencingTable: 'notification_types',
+      // Remove all notifications if notification type is being deleted
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    },
     userId: {
       constraintName: 'fk_notifications_user_id',
       columnName: 'user_id',

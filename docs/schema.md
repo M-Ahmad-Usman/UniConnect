@@ -63,12 +63,24 @@ departments {
 departments.hod_id - teachers.teacher_id // ON DELETE RESTRICT
 departments.server_id - servers.id // ON DELETE RESTRICT
 
+// lookup table
+disciplines {
+  value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
+}
+
+// lookup table
+degree_levels {
+  value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
+}
+
 programs {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   department_id INTEGER FK // NOT NULL
-  discipline TEXT // NOT NULL enum ['computer_science', 'software_engineering', ...]
-  degree_level TEXT // NOT NULL enum ['bachelors', 'masters', 'phd']
+  discipline VARCHAR(50) FK // NOT NULL 
+  degree_level VARCHAR(50) FK // NOT NULL 
 
   program_director_id INTEGER FK // NOT NULL
 
@@ -78,10 +90,17 @@ programs {
   // UNIQUE(department_id, discipline, degree_level)
 }
 
-programs.program_director_id - teachers.teacher_id // ON DELETE RESTRICT
-
 // One department can have many programs
 departments.id < programs.department_id // ON DELETE RESTRICT
+
+// One degree level in a program can be offered in many disciplines
+programs.discipline < disciplines.value // ON DELETE RESTRICT ON UPDATE CASCADE
+
+// One discipline in a program can be offered in many degree levels
+programs.degree_level < degree_levels.value // ON DELETE RESTRICT ON UPDATE CASCADE
+
+// One program can have only one director
+programs.program_director_id - teachers.teacher_id // ON DELETE RESTRICT
 
 program_curricula {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -95,6 +114,13 @@ program_curricula {
 
 program_curricula.program_id > programs.id // ON DELETE CASCADE
 program_curricula.course_id > courses.id // ON DELETE RESTRICT
+
+// lookup table
+user_types {
+  value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
+  description VARCHAR(500)
+}
 
 users {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -110,7 +136,9 @@ users {
   profile_picture_url TEXT
   bio varchar(1000)
 
-  type VARCHAR(20) // NOT NULL enum ['student', 'teacher', 'admin']
+  type VARCHAR(50) FK // NOT NULL
+
+  // Need more work
   department_id INTEGER FK // CHECK (department_id IS NOT NULL OR type = 'admin')
 
   is_deleted BOOLEAN // DEFAULT FALSE
@@ -127,6 +155,8 @@ users {
 // One user can be in only one department
 departments.id < users.department_id // ON DELETE RESTRICT
 
+users.type - user_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
+
 users.deleted_by > users.id // ON DELETE SET NULL
 
 // For users who have student role
@@ -139,13 +169,21 @@ students {
 students.student_id - users.id // ON DELETE CASCADE
 students.class_id > classes.id // ON DELETE RESTRICT
 
+// lookup table
+designations {
+  value VARCHAR(50) PK
+  label VARCHAR(100)
+  description VARCHAR(500)
+}
+
 teachers {
   teacher_id INTEGER PK FK
-  designation VARCHAR(100) // NOT NULL
+  designation VARCHAR(50) FK // NOT NULL
   // Add more fields as required
 }
 
 teachers.teacher_id - users.id // ON DELETE CASCADE
+teachers.designation - designations.value // ON DELETE SET NULL ON UPDATE CASCADE
 
 classes {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -206,6 +244,13 @@ societies.convenor_id - teachers.teacher_id // ON DELETE RESTRICT
 // Society must have only one server
 societies.server_id - servers.id // ON DELETE RESTRICT
 
+// lookup table
+server_types {
+  value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
+  description VARCHAR(500)
+}
+
 servers {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
   public_id UUID // NOT NULL DEFAULT uuidv7()
@@ -214,7 +259,7 @@ servers {
   description TEXT
   icon_url TEXT
 
-  type VARCHAR(50) // NOT NULL enum ['department', 'class', 'society']
+  type VARCHAR(50) FK // NOT NULL
 
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_by INTEGER FK
@@ -224,7 +269,15 @@ servers {
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
+servers.type - server_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
 servers.created_by > users.id // ON DELETE SET NULL
+
+// lookup table
+channel_types {
+  value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
+  description VARCHAR(500)
+}
 
 channels {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
@@ -232,7 +285,8 @@ channels {
 
   name VARCHAR(100) // NOT NULL
   description varchar(200)
-  type VARCHAR(50) // NOT NULL enum ['announcements', 'course', 'general', 'program']
+
+  type VARCHAR(50) FK // NOT NULL
 
   server_id INTEGER FK // NOT NULL
  
@@ -265,6 +319,8 @@ channels {
   
   // UNIQUE(server_id, name) WHERE is_deleted = false;
 }
+
+channels.type - channel_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
 
 // One server can contain many channels
 // One channel can be in only one server
@@ -369,16 +425,22 @@ posts.updated_by > users.id // ON DELETE SET NULL
 
 posts.pinned_by > users.id // ON DELETE SET NULL
 
+file_attachment_types {
+  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  type VARCHAR(150) // NOT NULL MIME types
+  max_size_bytes INTEGER // NOT NULL
+}
+
 post_attachments {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   post_id INTEGER FK // NOT NULL
 
   file_url TEXT // NOT NULL
-  file_type VARCHAR(50) // NOT NULL enum ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', ...]
-  file_size INTEGER // NOT NULL, CHECK(file_size <= 5242880)  -- 5MB
 
-  // Also enforce max attachment count (e.g., 5) at application layer
+  attachment_type_id INTEGER FK // NOT NULL 
+
+  // Enforce max attachment count (e.g., 5) at application layer
 
   uploaded_at TIMESTAMPTZ // DEFAULT NOW()
 }
@@ -386,17 +448,19 @@ post_attachments {
 // One post can have many attachments
 post_attachments.post_id > posts.id // ON DELETE CASCADE
 
-roles {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+post_attachments.attachment_type_id - file_attachment_types.id // ON DELETE RESTRICT ON UPDATE RESTRICT
 
-  name VARCHAR(100) // NOT NULL UNIQUE enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
+roles {
+  value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
+  description VARCHAR(500)
 }
 
 permissions {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
-  action TEXT // NOT NULL enum['create', 'update', 'delete', 'post', 'assign']
-  resource TEXT // NOT NULL enum['channel', 'society', 'class', 'role']
+  action TEXT // NOT NULL
+  resource TEXT // NOT NULL
 
   // UNIQUE(action, resource)
 }
@@ -404,11 +468,11 @@ permissions {
 // This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
 // For example: HOD can create/post/delete channels only in his department. Can create society and class servers only within his department. Can assign society president and convenor only for societies associated with his department
 role_permissions {
-  role_id INTEGER PK FK // NOT NULL
-  permission_id INTEGER PK FK // NOT NULL
+  role varchar(50) PK FK
+  permission_id INTEGER PK FK
 }
 
-role_permissions.role_id > roles.id // ON DELETE CASCADE
+role_permissions.role > roles.value // ON DELETE CASCADE ON UPDATE CASCADE
 role_permissions.permission_id > permissions.id // ON DELETE CASCADE
 
 moderator_assignments {
@@ -436,13 +500,17 @@ moderator_assignments.server_id > servers.id // ON DELETE CASCADE
 moderator_assignments.channel_id > channels.id // ON DELETE CASCADE
 moderator_assignments.assigned_by > users.id // ON DELETE SET NULL
 
+notification_types {
+  value VARCHAR(50) PK
+}
+
 notifications {
   id INTEGER GENERATED ALWAYS AS IDENTITY PK
 
   title VARCHAR(200) // NOT NULL
   message TEXT
 
-  type VARCHAR(50) // enum ['new_post', 'role_assigned']
+  type VARCHAR(50) FK // NOT NULL
 
   user_id INTEGER FK // NOT NULL
 
@@ -452,6 +520,7 @@ notifications {
   created_at TIMESTAMPTZ // DEFAULT NOW()
 }
 
+notifications.type - notification_types.value // ON DELETE CASCADE ON UPDATE CASCADE
 notifications.user_id > users.id // ON DELETE CASCADE
 notifications.post_id > posts.id // ON DELETE CASCADE
 
