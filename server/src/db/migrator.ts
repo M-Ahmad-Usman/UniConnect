@@ -11,6 +11,7 @@ import {
 import type {
   MigrationResult,
   MigrationResultSet,
+  MigrationInfo,
 } from 'kysely'
 
 import { env } from '../config/env.js'
@@ -18,15 +19,16 @@ import type { Database } from './types.js'
 
 const USAGE = `
 USAGE: tsx migrator.ts create <migration_name>
+tsx migrator.ts get:migrations
 tsx migrator.ts up
 tsx migrator.ts down
 tsx migrator.ts latest`
 
 // Allowed Command Line arguments for argv[2]
-const ARGUMENT_SCHEMA = z.enum(['up', 'down', 'latest', 'create'])
+const ARGUMENT_SCHEMA = z.enum(['up', 'down', 'latest', 'create', 'get:migrations'])
 const MIGRATION_DIRECTORY = path.join(import.meta.dirname, './migrations')
 
-const migrationFileContentTemplate =`import type { Kysely } from 'kysely'
+const migrationFileContentTemplate = `import type { Kysely } from 'kysely'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -69,7 +71,7 @@ function setupEnvironment(): { db: Kysely<Database>, migrator: Migrator } {
 // Creates Migration File of supplied name. Handles error and exits the process gracefully
 async function createMigrationFile(migrationFileName: string) {
 
-  // Replace ':', '.' with '-' for cross-platform support. (Windows doesn't allow colons in filename)
+  // Replace ':' with '-' for cross-platform support. (Windows doesn't allow colons in filename)
   const timestamp = new Date().toISOString().replace(/[:]/g, '-')
   const migrationFilePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationFileName}.ts`)
 
@@ -123,6 +125,11 @@ async function main(): Promise<void> {
     case 'latest':
       areMigrationsSuccessful = handleResults(await migrator.migrateToLatest())
       break
+    case 'get:migrations': {
+      logMigrations(await migrator.getMigrations())
+      await db.destroy()
+      return
+    }
   }
 
   await db.destroy()
@@ -165,6 +172,19 @@ function handleResults(migrationResultSet: MigrationResultSet): boolean {
   }
 
   return true
+}
+
+function logMigrations(migrationInfo: readonly MigrationInfo[]): void {
+  const formattedLog = migrationInfo.map(mi => {
+    // Strip the timestamp from migration name
+    const name = mi.name.replace(/20.*Z_/, '')
+    return {
+      name,
+      executedAt: mi.executedAt ?? 'not executed yet',
+    }
+  })
+
+  console.info(formattedLog)
 }
 
 main().catch((e: unknown) => {
