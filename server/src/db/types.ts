@@ -262,8 +262,6 @@ export interface UserTable {
 
   type: UserTypeValue
 
-  departmentId: DepartmentId | null
-
   isDeleted: Generated<boolean>
   deletedBy: UserId | null
   deletedAt: DeletedAt
@@ -298,6 +296,7 @@ export type UpdateDesignation = Updateable<DesignationTable>
 
 export interface TeacherTable {
   teacherId: TeacherId
+  departmentId: DepartmentId
   designation: DesignationValue
 }
 

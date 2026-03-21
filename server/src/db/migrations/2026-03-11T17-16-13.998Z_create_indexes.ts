@@ -103,9 +103,9 @@ const TABLE_INDEXES: TableIndexes = {
       columns: ['public_id'],
       where: sql<boolean>`is_deleted = false`,
     },
-    onDepartmentIdType: {
-      name: 'idx_users_department_id_type',
-      columns: ['department_id', 'type'],
+    onType: {
+      name: 'idx_users_type',
+      columns: ['type'],
       where: sql<boolean>`is_deleted = false`,
     },
   },
@@ -118,6 +118,13 @@ const TABLE_INDEXES: TableIndexes = {
     onClassId: {
       name: 'idx_students_class_id',
       columns: ['class_id'],
+    },
+  },
+
+  teachers: {
+    onDepartmentId: {
+      name: 'idx_teachers_department_id',
+      columns: ['department_id'],
     },
   },
 

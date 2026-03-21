@@ -73,7 +73,7 @@ These constraints are marked CASCADE for both soft and hard deletes, so the appl
 |---|---|
 | `students` / `teachers` | Profile rows stay since the user row still physically exists; removed via CASCADE only on hard-delete |
 | `server_memberships` | Membership history preserved |
-| `moderator_assignments` | Soft-delete is reversible — preserved so roles are restored automatically if the user is reactivated. RBAC queries must filter `users.deleted_at IS NULL` when resolving active moderators |
+| `role_assignments` | Soft-delete is reversible — preserved so roles are restored automatically if the user is reactivated. Authorization queries must filter `users.is_deleted = false` when resolving active role holders |
 | `notification_preferences` | Preserved for potential reactivation |
 
 ---
@@ -102,7 +102,7 @@ Hard deletion is destructive and irreversible.
 | `students` | `CASCADE` |
 | `teachers` | `CASCADE` |
 | `server_memberships` | `CASCADE` |
-| `moderator_assignments` | `CASCADE` |
+| `role_assignments` | `CASCADE` |
 | `notifications` | `CASCADE` |
 | `notification_preferences` | `CASCADE` |
 | `refresh_tokens` | `CASCADE` |
@@ -112,7 +112,7 @@ Hard deletion is destructive and irreversible.
 | `servers.deleted_by` / `created_by` | `SET NULL` |
 | `channels.deleted_by` / `created_by` / `locked_by` / `archived_by` | `SET NULL` |
 | `posts.deleted_by` / `pinned_by` / `updated_by` | `SET NULL` |
-| `moderator_assignments.assigned_by` | `SET NULL` |
+| `role_assignments.assigned_by` | `SET NULL` |
 | `society_membership_requests.reviewed_by` | `SET NULL` |
 
 ---
@@ -129,6 +129,8 @@ To delete a user having **Teacher** role the application must check:
 | Teacher is Program Director of any program | `programs.program_director_id RESTRICT` |
 | Teacher is Convenor of any society | `societies.convenor_id RESTRICT` |
 | Teacher has active course assignments | `course_assignments.teacher_id RESTRICT` |
+
+Note: `teachers.department_id` references `departments` with `ON DELETE RESTRICT`. This means a department cannot be deleted while it still has teachers — it does not mean a teacher cannot be deleted. Teacher deletion is blocked only by the four constraints above.
 
 ---
 
@@ -154,16 +156,18 @@ Rare/admin-only hard-delete operation.
 | Check | Constraint | App action |
 |---|---|---|
 | Department has programs | `programs.department_id RESTRICT` | Return list of programs; each must be cleaned up first (see chain below) |
-| Department has users | `users.department_id RESTRICT` | Return user count; users must be moved or deleted first |
+| Department has teachers | `teachers.department_id RESTRICT` | Return teacher list; teachers must be reassigned to another department or deleted first |
 | Department has societies | `societies.department_id RESTRICT` | Return list of societies; each must be moved to another department first |
+
+> **Note on students:** Students are not directly linked to departments via a FK. They are indirectly protected through the `programs.department_id RESTRICT → classes.program_id RESTRICT → students.class_id RESTRICT` chain. You cannot delete a department that has programs, and you cannot delete a program that has enrolled classes, so students in those classes are implicitly protected. Handle students as part of the program/class cleanup chain below.
 
 **Cleanup chain when programs exist:**
 
 ```
 DELETE department
   → must first DELETE OR reassign programs to new department
-      → must first DELETE OR re-enroll classes to new programs
-          → must first DELETE students
+      if (DELETE programs) → must first DELETE OR re-enroll classes to new programs
+          if (DELETE classes) → must first DELETE students
               → must first unassign student roles (CR, Society President)
 ```
 
@@ -175,21 +179,19 @@ Courses owned by the department that have no active `course_assignments` or `cha
 
 **Server:**
 
-`departments.server_id` references `servers` — this restricts server deletion, not department deletion. The server is not auto-deleted when the department is deleted.
-
 `departments.server_id` is `NOT NULL` with `RESTRICT`, meaning the server cannot be deleted while the department row still references it. The department row must be deleted first to drop the reference, after which the server can be deleted. Required order (all in one transaction):
 
 ```
 DELETE channels (each cascades to posts → notifications + post_attachments)
   → DELETE department (cascades to courses with no active assignments; server_id reference dropped)
-      → DELETE server (cascades to server_memberships, moderator_assignments, notification_preferences)
+      → DELETE server (cascades to server_memberships, role_assignments, notification_preferences)
 ```
 
 #### The HOD Circular Dependency
 
-Deleting a department requires deleting all its users first. But the HOD is a user in that department, and `departments.hod_id` is `RESTRICT` — the HOD cannot be deleted while they are HOD. This creates a circular dependency: the department cannot be deleted without removing the HOD, but the HOD cannot be deleted while they are still HOD of the department.
+Deleting a department requires reassigning or deleting all its teachers first (`teachers.department_id RESTRICT`). But the HOD is one of those teachers, and `departments.hod_id` is `RESTRICT` — the HOD teacher cannot be deleted while they are still HOD of that department. This creates a circular dependency: the department cannot be deleted without clearing its teachers, but the HOD teacher cannot be deleted while they are still HOD.
 
-**Resolution:** The application must set `hod_id = NULL` before proceeding with user cleanup and department deletion. `departments.hod_id` is made nullable to resolve this chicken-and-egg problem.
+**Resolution:** The application must set `hod_id = NULL` before proceeding with teacher cleanup and department deletion. `departments.hod_id` is made nullable only to resolve this chicken-and-egg problem during insertion and deletion.
 
 ---
 
@@ -230,14 +232,14 @@ Same as departments — `classes.server_id` references `servers` and does not au
 ```
 DELETE channels (each cascades to posts → notifications + post_attachments)
   → DELETE class (server_id reference dropped)
-      → DELETE server (cascades to server_memberships, moderator_assignments, notification_preferences)
+      → DELETE server (cascades to server_memberships, role_assignments, notification_preferences)
 ```
 
 #### The CR Circular Dependency
 
 Deleting a class requires deleting or moving its students first. But the student with the CR role cannot be deleted (`classes.cr_id RESTRICT`) and cannot be moved to another class while they are CR (a CR must belong to their own class — business rule).
 
-**Resolution:** The application must set `cr_id = NULL` before proceeding with student cleanup and class deletion. `classes.cr_id` is made nullable to solve this chicken-and-egg problem.
+**Resolution:** The application must set `cr_id = NULL` before proceeding with student cleanup and class deletion. `classes.cr_id` is made nullable only to solve this chicken-and-egg problem during insertion and deletion.
 
 ---
 
@@ -280,7 +282,7 @@ Soft-delete society
 
 Posts become inaccessible naturally because their channel is soft-deleted. Any query fetching posts already filters on `channels.deleted_at IS NULL`, so posts do not need to be explicitly soft-deleted. Soft-deleting posts here would pollute the post audit trail by attributing deletion to the society lifecycle rather than a deliberate moderation action.
 
-`moderator_assignments`, `server_memberships`, and `notification_preferences` are left intact — soft-delete is reversible, and these are restored automatically if the society is reactivated.
+`role_assignments`, `server_memberships`, and `notification_preferences` are left intact — soft-delete is reversible, and these are restored automatically if the society is reactivated.
 
 #### Hard-Delete
 
@@ -297,7 +299,7 @@ Posts become inaccessible naturally because their channel is soft-deleted. Any q
 ```
 DELETE channels (each cascades to posts → notifications + post_attachments)
   → DELETE society (cascades to society_membership_requests; server_id reference dropped)
-      → DELETE server (cascades to server_memberships, moderator_assignments, notification_preferences)
+      → DELETE server (cascades to server_memberships, role_assignments, notification_preferences)
 ```
 
 ---
@@ -319,7 +321,7 @@ Triggered as part of deleting a department, class, or society. Channels must be 
 | Table | Behaviour |
 |---|---|
 | `server_memberships` | `CASCADE` |
-| `moderator_assignments` | `CASCADE` |
+| `role_assignments` | `CASCADE` |
 | `notification_preferences` | `CASCADE` |
 | `servers.deleted_by` / `created_by` | `SET NULL` |
 
@@ -340,7 +342,7 @@ No application pre-checks required. The DB cascade chain handles everything:
 | `posts` | `CASCADE` |
 | `posts` → `notifications` | `CASCADE` (chain) |
 | `posts` → `post_attachments` | `CASCADE` (chain) |
-| `moderator_assignments` | `CASCADE` |
+| `role_assignments` | `CASCADE` |
 | `notification_preferences` | `CASCADE` |
 
 ---
@@ -366,7 +368,7 @@ No application pre-checks required.
 
 No downstream FK dependents. The DB handles nothing automatically on deletion.
 
-**Application responsibility:** The corresponding course channel in the class server must be deleted as part of the same operation. This is a business logic concern the DB cannot enforce.
+**Application responsibility:** The corresponding course channel in the class server must be deleted as part of the same operation. This is a business logic concern the DB cannot enforce. Note that deleting that channel cascades automatically to its posts → notifications and post_attachments.
 
 ---
 
@@ -376,7 +378,7 @@ System/seed-data managed. Deletion is an administrative concern.
 
 | Trigger | Behaviour |
 |---|---|
-| Role deleted | `role_permissions CASCADE` |
+| Role deleted | `role_permissions CASCADE`, `role_assignments CASCADE` |
 | Permission deleted | `role_permissions CASCADE` |
 
 ---
@@ -408,7 +410,7 @@ No application-side handling required for these columns.
 |---|---|---|
 | **Soft-delete user** | HOD, Program Director, CR, Society President, Society Convenor, active course assignments | Delete notifications + membership requests + refresh tokens in same transaction |
 | **Hard-delete user** | Same six blockers + post count warning with explicit confirmation | Delete posts first, then user — single transaction |
-| **Delete department** | Has programs, has users, has societies, courses with active assignments | Set `hod_id = NULL` → clear blockers → delete channels → delete department → delete server |
+| **Delete department** | Has programs, has teachers, has societies, courses with active assignments | Set `hod_id = NULL` → reassign/delete teachers → clear program/class/student chain → delete channels → delete department → delete server |
 | **Delete program** | Has enrolled classes | — |
 | **Delete class** | Has students, has course assignments | Set `cr_id = NULL` → clear blockers → delete channels → delete class → delete server |
 | **Delete course** | In a program curriculum, has active assignment, has a channel | — |

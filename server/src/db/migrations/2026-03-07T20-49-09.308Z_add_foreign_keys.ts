@@ -154,15 +154,6 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'restrict',
       onUpdate: 'cascade',
     },
-    departmentId: {
-      constraintName: 'fk_users_department_id',
-      columnName: 'department_id',
-      referencingColumn: 'id',
-      referencingTable: 'departments',
-      // Prevent hard deletion of department if it has any user.
-      // Users must be cleaned up or moved to another department first
-      onDelete: 'restrict',
-    },
     deletedBy: {
       constraintName: 'fk_users_deleted_by',
       columnName: 'deleted_by',
@@ -201,6 +192,15 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Delete teacher if referencing user row is being deleted.
       // Hard Delete: CASCADE, Soft Delete: leave intact
       onDelete: 'cascade',
+    },
+    departmentId: {
+      constraintName: 'fk_teachers_department_id',
+      columnName: 'department_id',
+      referencingColumn: 'id',
+      referencingTable: 'departments',
+      // Prevent hard deletion of department if it has any teacher.
+      // Teachers must be cleaned up or moved to another department first
+      onDelete: 'restrict',
     },
     designation: {
       constraintName: 'fk_teachers_designation',

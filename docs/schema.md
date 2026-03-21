@@ -138,9 +138,6 @@ users {
 
   type VARCHAR(50) FK // NOT NULL
 
-  // Need more work
-  department_id INTEGER FK // CHECK (department_id IS NOT NULL OR type = 'admin')
-
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_by INTEGER FK
   deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
@@ -150,10 +147,6 @@ users {
 
   // UNIQUE (university_email) WHERE is_deleted = false
 }
-
-// One department can have many users.
-// One user can be in only one department
-departments.id < users.department_id // ON DELETE RESTRICT
 
 users.type - user_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
 
@@ -179,10 +172,12 @@ designations {
 teachers {
   teacher_id INTEGER PK FK
   designation VARCHAR(50) FK // NOT NULL
+  department_id INTEGER FK // NOT NULL
   // Add more fields as required
 }
 
 teachers.teacher_id - users.id // ON DELETE CASCADE
+teachers.department_id > departments.id
 teachers.designation - designations.value // ON DELETE SET NULL ON UPDATE CASCADE
 
 classes {

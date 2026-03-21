@@ -187,7 +187,6 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
 
     // data type must be same from 'user_types'
     .addColumn('type', 'varchar(50)', col => col.notNull())
-    .addColumn('department_id', 'integer')
 
     .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('deleted_by', 'integer')
@@ -245,6 +244,8 @@ async function createTeachersTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('teacher_id', 'integer')
     .addPrimaryKeyConstraint('pk_teachers', ['teacher_id'])
+
+    .addColumn('department_id', 'integer', col => col.notNull())
 
     // data type must be same from the 'designations'
     .addColumn('designation', 'varchar(50)', col => col.notNull())
