@@ -11,8 +11,8 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
-    for (const fkConstraint of Object.values(fkConstraints))
-      await db.schema
+    for (const fkConstraint of Object.values(fkConstraints)) {
+      let query = db.schema
         .alterTable(snakeCasedTableName)
         .addForeignKeyConstraint(
           fkConstraint.constraintName,
@@ -21,7 +21,12 @@ export async function up(db: Kysely<any>): Promise<void> {
           [fkConstraint.referencingColumn],
         )
         .onDelete(fkConstraint.onDelete)
-        .execute()
+
+      if (fkConstraint.onUpdate)
+        query = query.onUpdate(fkConstraint.onUpdate)
+
+      await query.execute()
+    }
   }
 }
 
@@ -202,8 +207,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'designation',
       referencingColumn: 'value',
       referencingTable: 'designations',
-      // Since designations are purely informational in the system
-      onDelete: 'set null',
+      // Restrct deletion of designation if some user has been assigned to it
+      onDelete: 'restrict',
       onUpdate: 'cascade',
     },
   },
@@ -581,36 +586,45 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'cascade',
     },
   },
-  moderatorAssignments: {
+  roleAssignments: {
     userId: {
-      constraintName: 'fk_moderator_assignments_user_id',
+      constraintName: 'fk_role_assignments_user_id',
       columnName: 'user_id',
       referencingColumn: 'id',
       referencingTable: 'users',
-      // Clear role if a user is being deleted.
+      // Clear assignment if a user is being deleted.
       // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
+    role: {
+      constraintName: 'fk_role_assignments_role',
+      columnName: 'role',
+      referencingColumn: 'value',
+      referencingTable: 'roles',
+      // Clear assignment if role is being deleted
+      onDelete: 'cascade',
+      onUpdate: 'cascade',
+    },
     serverId: {
-      constraintName: 'fk_moderator_assignments_server_id',
+      constraintName: 'fk_role_assignments_server_id',
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
-      // Clear moderators if server is being deleted.
+      // Clear assignments for server if server is being deleted.
       // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     channelId: {
-      constraintName: 'fk_moderator_assignments_channel_id',
+      constraintName: 'fk_role_assignments_channel_id',
       columnName: 'channel_id',
       referencingColumn: 'id',
       referencingTable: 'channels',
-      // Clear moderators if channel is being deleted.
+      // Clear assignment for channel if channel is being deleted.
       // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
     assignedBy: {
-      constraintName: 'fk_moderator_assignments_assigned_by',
+      constraintName: 'fk_role_assignments_assigned_by',
       columnName: 'assigned_by',
       referencingColumn: 'id',
       referencingTable: 'users',

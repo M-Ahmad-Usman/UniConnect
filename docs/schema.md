@@ -450,6 +450,12 @@ post_attachments.post_id > posts.id // ON DELETE CASCADE
 
 post_attachments.attachment_type_id - file_attachment_types.id // ON DELETE RESTRICT ON UPDATE RESTRICT
 
+// RBAC Model Design
+
+// The roles/permissions/role_permissions tables are exclusively for configurable platform roles — things like moderators, where the capability set could reasonably be adjusted without a code deployment, and where the same role applies to many different scopes. These are capabilities within the communication layer. They can be assigned to many users, scoped to servers or channels, and can expire. The scope is always a communication entity.
+
+// Academic role permissions are not stored in the database at all. They are hard-coded business rules in service layer derived from functional requirements. The entity ownership columns (departments.hod_id, programs.program_director_id, etc.) are source of truth for who holds those roles — not the roles or role_permissions tables.
+
 roles {
   value VARCHAR(50) PK
   label VARCHAR(100) // NOT NULL
@@ -465,8 +471,6 @@ permissions {
   // UNIQUE(action, resource)
 }
 
-// This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
-// For example: HOD can create/post/delete channels only in his department. Can create society and class servers only within his department. Can assign society president and convenor only for societies associated with his department
 role_permissions {
   role varchar(50) PK FK
   permission_id INTEGER PK FK
@@ -475,30 +479,31 @@ role_permissions {
 role_permissions.role > roles.value // ON DELETE CASCADE ON UPDATE CASCADE
 role_permissions.permission_id > permissions.id // ON DELETE CASCADE
 
-moderator_assignments {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+// Capture platform-specific configurable role assignments
+role_assignments {
+  id INTEGER PK // GENERATED ALWAYS AS IDENTITY
 
   user_id INTEGER FK // NOT NULL
-  scope_type VARCHAR(20) // NOT NULL enum ['server', 'channel']
+  role VARCHAR(50) FK // NOT NULL
 
+  // Scope
   server_id INTEGER FK
   channel_id INTEGER FK
 
-  // CONSTRAINT: CHECK (
-    // (scope_type='server' AND server_id IS NOT NULL AND channel_id IS NULL) OR
-    // (scope_type='channel' AND channel_id IS NOT NULL AND server_id IS NULL)
-  // )
-
-  // UNIQUE(user_id, server_id, channel_id NULLS NOT DISTINCT)
+  // CHECK ((server_id IS NULL AND channel_id IS NOT NULL) OR (channel_id IS NULL AND server_id IS NOT NULL))
 
   assigned_by INTEGER FK
-  assigned_at TIMESTAMPTZ // DEFAULT NOW()
+  assigned_at TIMESTAMPTZ // NOT NULL DEFAULT NOW()
+  expires_at TIMESTAMPTZ
+
+  // Unique role assignment per user per role per (server, channel) combination
+  // UNIQUE NULLS NOT DISTINCT (user_id, role, server_id, channel_id)
 }
 
-moderator_assignments.user_id > users.id // ON DELETE CASCADE
-moderator_assignments.server_id > servers.id // ON DELETE CASCADE
-moderator_assignments.channel_id > channels.id // ON DELETE CASCADE
-moderator_assignments.assigned_by > users.id // ON DELETE SET NULL
+role_assignments.user_id > users.id // ON DELETE CASCADE
+role_assignments.server_id > servers.id // ON DELETE CASCADE
+role_assignments.channel_id > channels.id // ON DELETE CASCADE
+role_assignments.assigned_by > users.id // ON DELETE SET NULL
 
 notification_types {
   value VARCHAR(50) PK

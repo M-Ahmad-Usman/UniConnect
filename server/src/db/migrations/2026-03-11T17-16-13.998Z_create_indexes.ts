@@ -1,6 +1,7 @@
 import type { Kysely, Expression, SqlBool } from 'kysely'
 import { TABLE_NAMES } from '../types.js'
 import { sql } from 'kysely'
+import type { LOOKUP_DATA } from './2026-03-07T12-40-00.000Z_seed_lookup_tables.js'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -40,6 +41,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 }
 
+// Types and constants
 interface Index {
   name: string
   columns: string[]
@@ -47,6 +49,8 @@ interface Index {
 }
 
 type TableIndexes = Partial<Record<keyof typeof TABLE_NAMES, Record<string, Index>>>
+
+type CHANNEL_TYPES = typeof LOOKUP_DATA.channelTypes[number]['value']
 
 /**
  * Centralized performance index definitions (Single Source of Truth).
@@ -68,7 +72,10 @@ const TABLE_INDEXES: TableIndexes = {
    * - onDisciplineDegreeLevelDepartmentId: unique constraint
    */
   programs: {
-    // Need further consideration on whether to keep this index or remove it.
+    /**
+     * Need further consideration onDepartmentId
+     ** Almost all queries would probably search for only discipline or discipline + degreeLevel
+    */
     onDepartmentId: {
       name: 'idx_programs_department_id',
       columns: ['department_id'],
@@ -99,6 +106,7 @@ const TABLE_INDEXES: TableIndexes = {
     onDepartmentIdType: {
       name: 'idx_users_department_id_type',
       columns: ['department_id', 'type'],
+      where: sql<boolean>`is_deleted = false`,
     },
   },
 
@@ -160,6 +168,11 @@ const TABLE_INDEXES: TableIndexes = {
       columns: ['public_id'],
       where: sql<boolean>`is_deleted = false`,
     },
+    onType: {
+      name: 'idx_servers_type',
+      columns: ['type'],
+      where: sql<boolean>`is_deleted = false`,
+    },
   },
 
   /**
@@ -175,11 +188,16 @@ const TABLE_INDEXES: TableIndexes = {
     onServerIdCourseId: {
       name: 'idx_channels_server_id_course_id',
       columns: ['server_id', 'course_id'],
-      where: sql<boolean>`is_deleted = false`,
+      where: sql<boolean>`is_deleted = false AND type = ${'CRS' as CHANNEL_TYPES}`,
     },
     onServerIdProgramId: {
       name: 'idx_channels_server_id_program_id',
       columns: ['server_id', 'program_id'],
+      where: sql<boolean>`is_deleted = false AND type = ${'PROG' as CHANNEL_TYPES}`,
+    },
+    onType: {
+      name: 'idx_channels_type',
+      columns: ['type'],
       where: sql<boolean>`is_deleted = false`,
     },
   },
@@ -232,10 +250,12 @@ const TABLE_INDEXES: TableIndexes = {
     onChannelIdPriority: {
       name: 'idx_posts_channel_id_priority',
       columns: ['channel_id', 'priority'],
+      where: sql<boolean>`is_deleted = false`,
     },
     onChannelIdCreatedAt: {
       name: 'idx_posts_channel_id_created_at',
       columns: ['channel_id', 'created_at'],
+      where: sql<boolean>`is_deleted = false`,
     },
   },
 
@@ -248,15 +268,30 @@ const TABLE_INDEXES: TableIndexes = {
 
   /**
    * constraints (indexes) already defined in create_tables
-   * - onRoleIdPermissionId: primary key constraint
+   * onActionResource: unique constraint
+   */
+  permissions: {},
+
+  /**
+   * constraints (indexes) already defined in create_tables
+   * - onRolePermissionId: primary key constraint
    */
   rolePermissions: {},
 
   /**
    * constraints (indexes) already defined in create_tables
-   * - onServerIdChannelIdUserId: NULLS NOT DISTINCT unique constraint
+   * - onUserIdRoleServerIdChannelId: NULLS NOT DISTINCT unique constraint
    */
-  moderatorAssignments: {},
+  roleAssignments: {
+    onServerId: {
+      name: 'idx_role_assignments_server_id',
+      columns: ['server_id'],
+    },
+    onChannelId: {
+      name: 'idx_role_assignments_channel_id',
+      columns: ['channel_id'],
+    },
+  },
 
   notifications: {
     onPostIdUserId: {

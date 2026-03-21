@@ -35,7 +35,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await createRolesTable(db)
   await createPermissionsTable(db)
   await createRolePermissionsTable(db)
-  await createModeratorAssignmentsTable(db)
+  await createRoleAssignmentsTable(db)
   await createNotificationTypesTable(db)
   await createNotificationsTable(db)
   await createNotificationPreferencesTable(db)
@@ -327,7 +327,7 @@ async function createServerTypesTable(db: Kysely<any>): Promise<void> {
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
 
-    .addColumn('designation', 'varchar(500)')
+    .addColumn('description', 'varchar(500)')
 
     .execute()
 
@@ -545,6 +545,7 @@ async function createFileAttachmentTypesTable(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('pk_file_attachment_types', ['id'])
 
     .addColumn('type', 'varchar(150)', col => col.notNull())
+    .addUniqueConstraint('uq_file_attachment_types_type', ['type'])
 
     .addColumn('max_size_bytes', 'integer', col => col.notNull())
 
@@ -612,27 +613,31 @@ async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-async function createModeratorAssignmentsTable(db: Kysely<any>): Promise<void> {
+async function createRoleAssignmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable(TABLE_NAMES.moderatorAssignments)
+    .createTable(TABLE_NAMES.roleAssignments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_moderator_assignments', ['id'])
+    .addPrimaryKeyConstraint('pk_role_assignments', ['id'])
 
     .addColumn('user_id', 'integer', col => col.notNull())
-    .addColumn('scope_type', sql`moderator_scope_type`, col => col.notNull())
+    .addColumn('role', 'varchar(50)', col => col.notNull())
 
     .addColumn('server_id', 'integer')
     .addColumn('channel_id', 'integer')
 
     .addColumn('assigned_by', 'integer')
     .addColumn('assigned_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+    .addColumn('expires_at', 'timestamptz')  // null = permanent
 
     .execute()
 
-  await sql`ALTER TABLE moderator_assignments 
-  ADD CONSTRAINT uq_moderator_assignments
-  UNIQUE NULLS NOT DISTINCT (server_id, channel_id, user_id)`.execute(db)
+  // One role assignment per user per role per (server, channel) combination
+  await sql`
+    ALTER TABLE role_assignments
+    ADD CONSTRAINT uq_role_assignments
+    UNIQUE NULLS NOT DISTINCT (user_id, role, server_id, channel_id)
+  `.execute(db)
 }
 
 async function createNotificationTypesTable(db: Kysely<any>): Promise<void> {

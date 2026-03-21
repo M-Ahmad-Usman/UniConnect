@@ -51,7 +51,7 @@ export interface Database {
   roles: RoleTable
   permissions: PermissionTable
   rolePermissions: RolePermissionTable
-  moderatorAssignments: ModeratorAssignmentTable
+  roleAssignments: RoleAssignmentTable
   notificationTypes: NotificationTypeTable
   notifications: NotificationTable
   notificationPreferences: NotificationPreferenceTable
@@ -87,7 +87,7 @@ export const TABLE_NAMES = {
   roles: 'roles',
   permissions: 'permissions',
   rolePermissions: 'role_permissions',
-  moderatorAssignments: 'moderator_assignments',
+  roleAssignments: 'role_assignments',
   notificationTypes: 'notification_types',
   notifications: 'notifications',
   notificationPreferences: 'notification_preferences',
@@ -122,7 +122,6 @@ export type FileAttachmentTypeId = Brand<number, 'FileAttachmentTypeId'>
 export type PostAttachmentId = Brand<number, 'PostAttachmentId'>
 export type RoleValue = Brand<string, 'RoleValue'>
 export type PermissionId = Brand<number, 'PermissionId'>
-export type ModeratorAssignmentId = Brand<number, 'ModeratorAssignmentId'>
 export type NotificationTypeValue = Brand<string, 'NotificationTypeValue'>
 export type NotificationId = Brand<number, 'NotificationId'>
 export type NotificationPreferenceId = Brand<number, 'NotificationPreferenceId'>
@@ -168,7 +167,7 @@ type RoleAssignedAt = ColumnType<Date, never, never>
 
 // Fields Controlled by App Layer
 type NotificationReadAt = ColumnType<Date | null, Date | null, Date>
-type TokenExpiresAt = Date
+type TokenExpiresAt = Date | null
 type TokenRevokedAt = ColumnType<Date | null, Date | null, Date>
 
 
@@ -527,7 +526,7 @@ export interface PostAttachmentTable {
 
   fileUrl: string
 
-  attachment_type_id: FileAttachmentTypeId
+  attachmentTypeId: FileAttachmentTypeId
 
   uploadedAt: UploadedAt
 }
@@ -566,23 +565,23 @@ export type RolePermission = Selectable<RolePermissionTable>
 export type NewRolePermission = Insertable<RolePermissionTable>
 export type UpdateRolePermission = Updateable<RolePermissionTable>
 
-export interface ModeratorAssignmentTable {
-  id: Generated<ModeratorAssignmentId>
+export interface RoleAssignmentTable {
+  id: Generated<number>
 
   userId: UserId
-
-  scopeType: ModeratorScopeType
+  role: RoleValue
 
   serverId: ServerId | null
   channelId: ChannelId | null
 
   assignedBy: UserId | null
   assignedAt: RoleAssignedAt
+  expiresAt: Date
 }
 
-export type ModeratorAssignment = Selectable<ModeratorAssignmentTable>
-export type NewModeratorAssignment = Insertable<ModeratorAssignmentTable>
-export type UpdateModeratorAssignment = Updateable<ModeratorAssignmentTable>
+export type RoleAssignment = Selectable<RoleAssignmentTable>
+export type NewRoleAssignment = Insertable<RoleAssignmentTable>
+export type UpdateRoleAssignment = Updateable<RoleAssignmentTable>
 
 export interface NotificationTypeTable {
   value: NotificationTypeValue
