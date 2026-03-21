@@ -9,7 +9,8 @@
     "migrate:latest": "tsx src/db/migrator.ts latest",
     "migrate:up": "tsx src/db/migrator.ts up",
     "migrate:down": "tsx src/db/migrator.ts down",
-    "migrate:create": "tsx src/db/migrator.ts create",
+    "create:migration": "tsx src/db/migrator.ts create",
+    "get:migrations": "tsx src/db/migrator.ts get:migrations",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
