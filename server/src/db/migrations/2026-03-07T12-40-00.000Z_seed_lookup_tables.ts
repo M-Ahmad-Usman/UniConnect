@@ -23,23 +23,18 @@ export async function down(db: Kysely<any>): Promise<void> {
   }
 }
 
-// Types & Constants
+// types & constants
 
 const FIVE_MB = 5_242_880
 const TEN_MB = 10_485_760
 
-interface LookupRow {
-  value: string
-  label: string
-  description?: string
-  max_size_bytes?: number
-}
-
-type TableSeedData = Partial<Record<keyof typeof TABLE_NAMES, LookupRow[]>>
-
-// Single Source of Truth for Lookup Data
-
-const LOOKUP_DATA: TableSeedData = {
+/**
+ * These lookup tables works just as enum types.
+ * They were converted into tables to follow scalable and extensible design.
+ * The following values were decided during development and the system is built assuming these values exists.
+ * If in future new values are entered then make sure that the application layer is aware of the new data.
+ */
+export const LOOKUP_DATA = {
   disciplines: [
     { value: 'CS', label: 'Computer Science' },
     { value: 'SE', label: 'Software Engineering' },
@@ -95,11 +90,11 @@ const LOOKUP_DATA: TableSeedData = {
     { value: 'GEN', label: 'General', description: 'General discussion' },
   ],
   fileAttachmentTypes: [
-    { value: 'image/jpeg', label: 'JPEG Image', max_size_bytes: FIVE_MB },
-    { value: 'image/jpg', label: 'JPG Image', max_size_bytes: FIVE_MB },
-    { value: 'image/png', label: 'PNG Image', max_size_bytes: FIVE_MB },
-    { value: 'image/webp', label: 'WebP Image', max_size_bytes: FIVE_MB },
-    { value: 'application/pdf', label: 'PDF Document', max_size_bytes: TEN_MB },
-    { value: 'application/msword', label: 'Word Document', max_size_bytes: FIVE_MB },
+    { type: 'image/jpeg', max_size_bytes: FIVE_MB },
+    { type: 'image/jpg', max_size_bytes: FIVE_MB },
+    { type: 'image/png', max_size_bytes: FIVE_MB },
+    { type: 'image/webp', max_size_bytes: FIVE_MB },
+    { type: 'application/pdf', max_size_bytes: TEN_MB },
+    { type: 'application/msword', max_size_bytes: FIVE_MB },
   ],
-} as const satisfies TableSeedData
+} as const
