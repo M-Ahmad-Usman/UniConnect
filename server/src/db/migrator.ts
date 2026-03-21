@@ -17,18 +17,20 @@ import type {
 import { env } from '../config/env.js'
 import type { Database } from './types.js'
 
+// Constants
+
 const USAGE = `
 USAGE: tsx migrator.ts create <migration_name>
-tsx migrator.ts get:migrations
-tsx migrator.ts up
-tsx migrator.ts down
-tsx migrator.ts latest`
+       tsx migrator.ts get:migrations
+       tsx migrator.ts up
+       tsx migrator.ts down
+       tsx migrator.ts latest`
 
-// Allowed Command Line arguments for argv[2]
-const ARGUMENT_SCHEMA = z.enum(['up', 'down', 'latest', 'create', 'get:migrations'])
+const COMMAND_SCHEMA = z.enum(['up', 'down', 'latest', 'create', 'get:migrations'])
+
 const MIGRATION_DIRECTORY = path.join(import.meta.dirname, './migrations')
 
-const migrationFileContentTemplate = `import type { Kysely } from 'kysely'
+const MIGRATION_FILE_TEMPLATE = `import type { Kysely } from 'kysely'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -40,8 +42,101 @@ export async function down(db: Kysely<any>): Promise<void> {
   
 }`
 
-function setupEnvironment(): { db: Kysely<Database>, migrator: Migrator } {
+// Types
 
+interface CreateCommand {
+  type: 'create'
+  migrationName: string
+}
+
+interface DbCommand {
+  type: 'up' | 'down' | 'latest' | 'get:migrations'
+}
+
+type Command = CreateCommand | DbCommand
+
+// Entry Point
+
+async function main(): Promise<void> {
+  const command = parseCommand()
+
+  if (command.type === 'create') {
+    await runCreateCommand(command.migrationName)
+    return
+  }
+
+  await runDatabaseCommand(command.type)
+}
+
+main().catch((error: unknown) => {
+  console.error(`\n❌ Fatal error: ${toMessage(error)}`)
+  process.exit(1)
+})
+
+// Command Runners
+
+async function runCreateCommand(migrationName: string): Promise<void> {
+  await createMigrationFile(migrationName)
+  console.log(`✅ Migration "${migrationName}" created successfully.`)
+}
+
+async function runDatabaseCommand(command: DbCommand['type']): Promise<void> {
+  const { db, migrator } = createMigratorInstance()
+
+  try {
+    const success = await executeMigration(migrator, command)
+    if (!success) {
+      throw new Error('One or more migrations failed. See output above for details.')
+    }
+  } finally {
+    // Always release the connection pool, even if an error was thrown above
+    await db.destroy()
+  }
+}
+
+// Argument Parsing
+
+/**
+ * Parses and validates CLI arguments into a typed Command.
+ * Throws with a usage message if the arguments are invalid.
+ */
+function parseCommand(): Command {
+  const verbResult = COMMAND_SCHEMA.safeParse(process.argv[2])
+
+  if (!verbResult.success) {
+    throw new Error(`Invalid command.\n${USAGE}`)
+  }
+
+  if (verbResult.data === 'create') {
+    const migrationName = process.argv[3]?.trim()
+    if (!migrationName) {
+      throw new Error(`Migration name is required.\n${USAGE}`)
+    }
+    return { type: 'create', migrationName }
+  }
+
+  return { type: verbResult.data }
+}
+
+// Migration Execution
+
+async function executeMigration(migrator: Migrator, command: DbCommand['type']): Promise<boolean> {
+  switch (command) {
+    case 'up':
+      return handleResults(await migrator.migrateUp())
+    case 'down':
+      return handleResults(await migrator.migrateDown())
+    case 'latest':
+      return handleResults(await migrator.migrateToLatest())
+    case 'get:migrations':
+      logMigrations(await migrator.getMigrations())
+      return true
+  }
+}
+
+// Environment Setup
+
+function createMigratorInstance(): { db: Kysely<Database>; migrator: Migrator } {
   const dialect = new PostgresDialect({
     pool: new Pool({
       database: env.POSTGRES_DB,
@@ -62,94 +157,41 @@ function setupEnvironment(): { db: Kysely<Database>, migrator: Migrator } {
     }),
   })
 
-  return {
-    db,
-    migrator,
-  }
+  return { db, migrator }
 }
 
-// Creates Migration File of supplied name. Handles error and exits the process gracefully
-async function createMigrationFile(migrationFileName: string) {
+// File Creation
 
-  // Replace ':' with '-' for cross-platform support. (Windows doesn't allow colons in filename)
-  const timestamp = new Date().toISOString().replace(/[:]/g, '-')
-  const migrationFilePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationFileName}.ts`)
+/**
+ * Creates a timestamped migration file in the migrations directory.
+ * Throws if the file cannot be written.
+ */
+async function createMigrationFile(migrationName: string): Promise<void> {
+  // Replace ':' with '-' for cross-platform support (Windows disallows colons in filenames)
+  const timestamp = new Date().toISOString().replace(/:/g, '-')
+  const filePath = path.join(MIGRATION_DIRECTORY, `${timestamp}_${migrationName}.ts`)
 
   try {
-    await fs.writeFile(migrationFilePath, migrationFileContentTemplate)
+    await fs.writeFile(filePath, MIGRATION_FILE_TEMPLATE)
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error(`Failed to create migration ${migrationFileName}\nError: ${errorMessage}`)
-    process.exit(1)
+    throw new Error(`Failed to create migration file "${migrationName}"`, { cause: error })
   }
 }
 
-async function main(): Promise<void> {
+// Result Logging
 
-  const argumentResult = ARGUMENT_SCHEMA.safeParse(process.argv[2])
-
-  if (!argumentResult.success) {
-    console.error(USAGE)
-    process.exit(1)
-  }
-
-  const argument = argumentResult.data
-
-  if (argument === 'create') {
-
-    const migrationNameArgumentResult = z.string().safeParse(process.argv[3])
-
-    if (!migrationNameArgumentResult.success) {
-      console.error(USAGE)
-      process.exit(1)
-    }
-
-    const migrationNameArgument = migrationNameArgumentResult.data
-
-    await createMigrationFile(migrationNameArgument)
-    console.log(`Migration ${migrationNameArgument} created successfuly.`)
-    return
-  }
-
-  const { db, migrator } = setupEnvironment()
-
-  let areMigrationsSuccessful: boolean
-
-  switch (argument) {
-    case 'up':
-      areMigrationsSuccessful = handleResults(await migrator.migrateUp())
-      break
-    case 'down':
-      areMigrationsSuccessful = handleResults(await migrator.migrateDown())
-      break
-    case 'latest':
-      areMigrationsSuccessful = handleResults(await migrator.migrateToLatest())
-      break
-    case 'get:migrations': {
-      logMigrations(await migrator.getMigrations())
-      await db.destroy()
-      return
-    }
-  }
-
-  await db.destroy()
-  if (!areMigrationsSuccessful) {
-    process.exit(1)
-  }
-
-}
-
-// Logs the results and returns boolean to signal whether any error has occurred or not
+/**
+ * Logs each migration result and returns false if any error occurred.
+ *
+ * The `results` array from Kysely follows these rules:
+ *   - All successful migrations have status 'Success'.
+ *   - The first failed migration has status 'Error'; all subsequent ones are 'NotExecuted'.
+ *   - `results` is undefined if an error occurred before Kysely could determine which
+ *     migrations to run.
+ *   - An empty array means there were no pending migrations.
+ */
 function handleResults(migrationResultSet: MigrationResultSet): boolean {
-
   const { error, results } = migrationResultSet
-
-  /* results property:
-      - If all went well, each result's status is Success.
-      - If some migration failed, the failed migration's result's status is Error and all results after that one have status ´NotExecuted`.
-      - This property can be undefined if an error occurred before Kysely was able to figure out which migrations should be executed.
-      - If this list is empty, there were no migrations to execute.
-  */
 
   if (results && results.length > 0) {
     results.forEach((migration: MigrationResult) => {
@@ -162,11 +204,11 @@ function handleResults(migrationResultSet: MigrationResultSet): boolean {
       }
     })
   } else {
-    console.log('✅ No migrations to run')
+    console.log('✅ No migrations to run.')
   }
 
   if (error) {
-    console.error('\n❌ Migration failed:')
+    console.error('\n❌ Migration error details:')
     console.error(error)
     return false
   }
@@ -175,20 +217,17 @@ function handleResults(migrationResultSet: MigrationResultSet): boolean {
 }
 
 function logMigrations(migrationInfo: readonly MigrationInfo[]): void {
-  const formattedLog = migrationInfo.map(mi => {
-    // Strip the timestamp from migration name
-    const name = mi.name.replace(/20.*Z_/, '')
-    return {
-      name,
-      executedAt: mi.executedAt ?? 'not executed yet',
-    }
-  })
+  const formatted = migrationInfo.map((mi) => ({
+    // Strip the ISO timestamp prefix from the migration name for readability
+    name: mi.name.replace(/20.*Z_/, ''),
+    executedAt: mi.executedAt ?? 'not executed yet',
+  }))
 
-  console.info(formattedLog)
+  console.info(formatted)
 }
 
-main().catch((e: unknown) => {
-  const errorMessage = e instanceof Error ? e.message : String(e)
-  console.error(`Fatal error: ${errorMessage}`)
-  process.exit(1)
-})
+// Utilities
+
+function toMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
