@@ -582,7 +582,7 @@ export interface UserRoleAssignmentTable {
 
   assignedBy: UserId | null
   assignedAt: RoleAssignedAt
-  expiresAt: Date
+  expiresAt: Date | null
 }
 
 export type UserRoleAssignment = Selectable<UserRoleAssignmentTable>
