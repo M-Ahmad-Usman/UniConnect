@@ -161,6 +161,8 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'user_id',
       referencingColumn: 'id',
       referencingTable: 'users',
+      // Clear assignments if user is hard deleted
+      // Hard Delete: CASCADE, Soft Delete: leave intact
       onDelete: 'cascade',
     },
     type: {
@@ -442,7 +444,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       referencingColumn: 'id',
       referencingTable: 'users',
       // Clear record if user is being deleted.
-      // CASCADE for both hard and soft deletes.
+      // Hard Delete: CASCADE, Soft DELETE: delete pending requests only
       onDelete: 'cascade',
     },
     reviewedBy: {
