@@ -571,9 +571,9 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       columnName: 'attachment_type_id',
       referencingColumn: 'id',
       referencingTable: 'file_attachment_types',
-      // Prevent hard deletion and updation of a file type if its already used
+      // Prevent hard deletion of file type if its already used
       onDelete: 'restrict',
-      onUpdate: 'restrict',
+      onUpdate: 'cascade',
     },
   },
   userRolePermissions: {

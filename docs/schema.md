@@ -448,7 +448,7 @@ post_attachments {
 // One post can have many attachments
 post_attachments.post_id > posts.id // ON DELETE CASCADE
 
-post_attachments.attachment_type_id - file_attachment_types.id // ON DELETE RESTRICT ON UPDATE RESTRICT
+post_attachments.attachment_type_id - file_attachment_types.id // ON DELETE RESTRICT ON UPDATE CASCADE
 
 // RBAC Model Design
 
