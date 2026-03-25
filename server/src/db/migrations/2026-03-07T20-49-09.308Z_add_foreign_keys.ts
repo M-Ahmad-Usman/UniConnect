@@ -576,18 +576,18 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onUpdate: 'restrict',
     },
   },
-  rolePermissions: {
+  userRolePermissions: {
     role: {
-      constraintName: 'fk_role_permissions_role',
+      constraintName: 'fk_user_role_permissions_role',
       columnName: 'role',
       referencingColumn: 'value',
-      referencingTable: 'roles',
+      referencingTable: 'user_roles',
       // Clear permissions for the role which is being deleted.
       onDelete: 'cascade',
       onUpdate: 'cascade',
     },
     permissionId: {
-      constraintName: 'fk_role_permissions_permission_id',
+      constraintName: 'fk_user_role_permissions_permission_id',
       columnName: 'permission_id',
       referencingColumn: 'id',
       referencingTable: 'permissions',
@@ -595,9 +595,9 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'cascade',
     },
   },
-  roleAssignments: {
+  userRoleAssignments: {
     userId: {
-      constraintName: 'fk_role_assignments_user_id',
+      constraintName: 'fk_user_role_assignments_user_id',
       columnName: 'user_id',
       referencingColumn: 'id',
       referencingTable: 'users',
@@ -606,16 +606,16 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'cascade',
     },
     role: {
-      constraintName: 'fk_role_assignments_role',
+      constraintName: 'fk_user_role_assignments_role',
       columnName: 'role',
       referencingColumn: 'value',
-      referencingTable: 'roles',
+      referencingTable: 'user_roles',
       // Clear assignment if role is being deleted
       onDelete: 'cascade',
       onUpdate: 'cascade',
     },
     serverId: {
-      constraintName: 'fk_role_assignments_server_id',
+      constraintName: 'fk_user_role_assignments_server_id',
       columnName: 'server_id',
       referencingColumn: 'id',
       referencingTable: 'servers',
@@ -624,7 +624,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'cascade',
     },
     channelId: {
-      constraintName: 'fk_role_assignments_channel_id',
+      constraintName: 'fk_user_role_assignments_channel_id',
       columnName: 'channel_id',
       referencingColumn: 'id',
       referencingTable: 'channels',
@@ -633,7 +633,7 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'cascade',
     },
     assignedBy: {
-      constraintName: 'fk_role_assignments_assigned_by',
+      constraintName: 'fk_user_role_assignments_assigned_by',
       columnName: 'assigned_by',
       referencingColumn: 'id',
       referencingTable: 'users',

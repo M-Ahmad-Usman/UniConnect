@@ -49,10 +49,10 @@ export interface Database {
   posts: PostTable
   fileAttachmentTypes: FileAttachmentTypeTable
   postAttachments: PostAttachmentTable
-  roles: RoleTable
+  userRoles: UserRoleTable
   permissions: PermissionTable
-  rolePermissions: RolePermissionTable
-  roleAssignments: RoleAssignmentTable
+  userRolePermissions: UserRolePermissionTable
+  userRoleAssignments: UserRoleAssignmentTable
   notificationTypes: NotificationTypeTable
   notifications: NotificationTable
   notificationPreferences: NotificationPreferenceTable
@@ -86,10 +86,10 @@ export const TABLE_NAMES = {
   posts: 'posts',
   fileAttachmentTypes: 'file_attachment_types',
   postAttachments: 'post_attachments',
-  roles: 'roles',
+  userRoles: 'user_roles',
   permissions: 'permissions',
-  rolePermissions: 'role_permissions',
-  roleAssignments: 'role_assignments',
+  userRolePermissions: 'user_role_permissions',
+  userRoleAssignments: 'user_role_assignments',
   notificationTypes: 'notification_types',
   notifications: 'notifications',
   notificationPreferences: 'notification_preferences',
@@ -122,7 +122,7 @@ export type CourseId = Brand<number, 'CourseId'>
 export type PostId = Brand<number, 'PostId'>
 export type FileAttachmentTypeId = Brand<number, 'FileAttachmentTypeId'>
 export type PostAttachmentId = Brand<number, 'PostAttachmentId'>
-export type RoleValue = Brand<string, 'RoleValue'>
+export type UserRoleValue = Brand<string, 'UserRoleValue'>
 export type PermissionId = Brand<number, 'PermissionId'>
 export type NotificationTypeValue = Brand<string, 'NotificationTypeValue'>
 export type NotificationId = Brand<number, 'NotificationId'>
@@ -541,15 +541,15 @@ export type PostAttachment = Selectable<PostAttachmentTable>
 export type NewPostAttachment = Insertable<PostAttachmentTable>
 export type UpdatePostAttachment = Updateable<PostAttachmentTable>
 
-export interface RoleTable {
-  value: RoleValue
+export interface UserRoleTable {
+  value: UserRoleValue
   label: string
   description: string | null
 }
 
-export type Role = Selectable<RoleTable>
-export type NewRole = Insertable<RoleTable>
-export type UpdateRole = Updateable<RoleTable>
+export type UserRole = Selectable<UserRoleTable>
+export type NewUserRole = Insertable<UserRoleTable>
+export type UpdateUserRole = Updateable<UserRoleTable>
 
 export interface PermissionTable {
   id: Generated<PermissionId>
@@ -562,20 +562,20 @@ export type Permission = Selectable<PermissionTable>
 export type NewPermission = Insertable<PermissionTable>
 export type UpdatePermission = Updateable<PermissionTable>
 
-export interface RolePermissionTable {
-  role: RoleValue
+export interface UserRolePermissionTable {
+  role: UserRoleValue
   permissionId: PermissionId
 }
 
-export type RolePermission = Selectable<RolePermissionTable>
-export type NewRolePermission = Insertable<RolePermissionTable>
-export type UpdateRolePermission = Updateable<RolePermissionTable>
+export type UserRolePermission = Selectable<UserRolePermissionTable>
+export type NewUserRolePermission = Insertable<UserRolePermissionTable>
+export type UpdateUserRolePermission = Updateable<UserRolePermissionTable>
 
-export interface RoleAssignmentTable {
+export interface UserRoleAssignmentTable {
   id: Generated<number>
 
   userId: UserId
-  role: RoleValue
+  role: UserRoleValue
 
   serverId: ServerId | null
   channelId: ChannelId | null
@@ -585,9 +585,9 @@ export interface RoleAssignmentTable {
   expiresAt: Date
 }
 
-export type RoleAssignment = Selectable<RoleAssignmentTable>
-export type NewRoleAssignment = Insertable<RoleAssignmentTable>
-export type UpdateRoleAssignment = Updateable<RoleAssignmentTable>
+export type UserRoleAssignment = Selectable<UserRoleAssignmentTable>
+export type NewUserRoleAssignment = Insertable<UserRoleAssignmentTable>
+export type UpdateUserRoleAssignment = Updateable<UserRoleAssignmentTable>
 
 export interface NotificationTypeTable {
   value: NotificationTypeValue

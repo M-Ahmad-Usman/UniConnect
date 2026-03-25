@@ -289,19 +289,19 @@ const TABLE_INDEXES: TableIndexes = {
    * constraints (indexes) already defined in create_tables
    * - onRolePermissionId: primary key constraint
    */
-  rolePermissions: {},
+  userRolePermissions: {},
 
   /**
    * constraints (indexes) already defined in create_tables
    * - onUserIdRoleServerIdChannelId: NULLS NOT DISTINCT unique constraint
    */
-  roleAssignments: {
+  userRoleAssignments: {
     onServerId: {
-      name: 'idx_role_assignments_server_id',
+      name: 'idx_user_role_assignments_server_id',
       columns: ['server_id'],
     },
     onChannelId: {
-      name: 'idx_role_assignments_channel_id',
+      name: 'idx_user_role_assignments_channel_id',
       columns: ['channel_id'],
     },
   },

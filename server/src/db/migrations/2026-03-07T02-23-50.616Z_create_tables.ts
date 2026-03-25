@@ -33,10 +33,10 @@ export async function up(db: Kysely<any>): Promise<void> {
   await createPostsTable(db)
   await createFileAttachmentTypesTable(db)
   await createPostAttachmentsTable(db)
-  await createRolesTable(db)
+  await createUserRolesTable(db)
   await createPermissionsTable(db)
-  await createRolePermissionsTable(db)
-  await createRoleAssignmentsTable(db)
+  await createUserRolePermissionsTable(db)
+  await createUserRoleAssignmentsTable(db)
   await createNotificationTypesTable(db)
   await createNotificationsTable(db)
   await createNotificationPreferencesTable(db)
@@ -583,12 +583,12 @@ async function createPostAttachmentsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-async function createRolesTable(db: Kysely<any>): Promise<void> {
+async function createUserRolesTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable(TABLE_NAMES.roles)
+    .createTable(TABLE_NAMES.userRoles)
 
     .addColumn('value', 'varchar(50)', col => col.notNull())
-    .addPrimaryKeyConstraint('pk_roles', ['value'])
+    .addPrimaryKeyConstraint('pk_user_roles', ['value'])
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
 
@@ -612,25 +612,25 @@ async function createPermissionsTable(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-async function createRolePermissionsTable(db: Kysely<any>): Promise<void> {
+async function createUserRolePermissionsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable(TABLE_NAMES.rolePermissions)
+    .createTable(TABLE_NAMES.userRolePermissions)
 
     // data type must be the same from 'roles'
     .addColumn('role', 'varchar(50)')
     .addColumn('permission_id', 'integer')
 
-    .addPrimaryKeyConstraint('pk_role_permissions', ['role', 'permission_id'])
+    .addPrimaryKeyConstraint('pk_user_role_permissions', ['role', 'permission_id'])
 
     .execute()
 }
 
-async function createRoleAssignmentsTable(db: Kysely<any>): Promise<void> {
+async function createUserRoleAssignmentsTable(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable(TABLE_NAMES.roleAssignments)
+    .createTable(TABLE_NAMES.userRoleAssignments)
 
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint('pk_role_assignments', ['id'])
+    .addPrimaryKeyConstraint('pk_user_role_assignments', ['id'])
 
     .addColumn('user_id', 'integer', col => col.notNull())
     .addColumn('role', 'varchar(50)', col => col.notNull())
@@ -646,8 +646,8 @@ async function createRoleAssignmentsTable(db: Kysely<any>): Promise<void> {
 
   // One role assignment per user per role per (server, channel) combination
   await sql`
-    ALTER TABLE role_assignments
-    ADD CONSTRAINT uq_role_assignments
+    ALTER TABLE user_role_assignments
+    ADD CONSTRAINT uq_user_role_assignments
     UNIQUE NULLS NOT DISTINCT (user_id, role, server_id, channel_id)
   `.execute(db)
 }

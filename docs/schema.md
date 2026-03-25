@@ -452,11 +452,11 @@ post_attachments.attachment_type_id - file_attachment_types.id // ON DELETE REST
 
 // RBAC Model Design
 
-// The roles/permissions/role_permissions tables are exclusively for configurable platform roles — things like moderators, where the capability set could reasonably be adjusted without a code deployment, and where the same role applies to many different scopes. These are capabilities within the communication layer. They can be assigned to many users, scoped to servers or channels, and can expire. The scope is always a communication entity.
+// The user_roles/permissions/user_role_permissions tables are exclusively for configurable platform roles — things like moderators, where the capability set could reasonably be adjusted without a code deployment, and where the same role applies to many different scopes. These are capabilities within the communication layer. They can be assigned to many users, scoped to servers or channels, and can expire. The scope is always a communication entity.
 
-// Academic role permissions are not stored in the database at all. They are hard-coded business rules in service layer derived from functional requirements. The entity ownership columns (departments.hod_id, programs.program_director_id, etc.) are source of truth for who holds those roles — not the roles or role_permissions tables.
+// Academic role permissions are not stored in the database at all. They are hard-coded business rules in service layer derived from functional requirements. The entity ownership columns (departments.hod_id, programs.program_director_id, etc.) are source of truth for who holds those roles — not the user_roles or user_role_permissions tables.
 
-roles {
+user_roles {
   value VARCHAR(50) PK
   label VARCHAR(100) // NOT NULL
   description VARCHAR(500)
@@ -471,16 +471,16 @@ permissions {
   // UNIQUE(action, resource)
 }
 
-role_permissions {
+user_role_permissions {
   role varchar(50) PK FK
   permission_id INTEGER PK FK
 }
 
-role_permissions.role > roles.value // ON DELETE CASCADE ON UPDATE CASCADE
-role_permissions.permission_id > permissions.id // ON DELETE CASCADE
+user_role_permissions.role > user_roles.value // ON DELETE CASCADE ON UPDATE CASCADE
+user_role_permissions.permission_id > permissions.id // ON DELETE CASCADE
 
 // Capture platform-specific configurable role assignments
-role_assignments {
+user_role_assignments {
   id INTEGER PK // GENERATED ALWAYS AS IDENTITY
 
   user_id INTEGER FK // NOT NULL
@@ -500,10 +500,11 @@ role_assignments {
   // UNIQUE NULLS NOT DISTINCT (user_id, role, server_id, channel_id)
 }
 
-role_assignments.user_id > users.id // ON DELETE CASCADE
-role_assignments.server_id > servers.id // ON DELETE CASCADE
-role_assignments.channel_id > channels.id // ON DELETE CASCADE
-role_assignments.assigned_by > users.id // ON DELETE SET NULL
+user_role_assignments.user_id > users.id // ON DELETE CASCADE
+user_role_assignments.role > user_roles.value // ON DELETE CASCADE ON UPDATE CASCADE
+user_role_assignments.server_id > servers.id // ON DELETE CASCADE
+user_role_assignments.channel_id > channels.id // ON DELETE CASCADE
+user_role_assignments.assigned_by > users.id // ON DELETE SET NULL
 
 notification_types {
   value VARCHAR(50) PK

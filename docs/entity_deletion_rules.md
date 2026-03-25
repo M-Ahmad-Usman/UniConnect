@@ -74,7 +74,7 @@ These constraints are marked CASCADE for both soft and hard deletes, so the appl
 | `students` / `teachers` | Profile rows stay since the user row still physically exists; removed via CASCADE only on hard-delete |
 | `user_type_assignments` | Type assignments remain — soft-delete is reversible. Authorization queries must filter by `users.is_deleted = false` when resolving active users by type |
 | `server_memberships` | Membership history preserved |
-| `role_assignments` | Soft-delete is reversible — preserved so roles are restored automatically if the user is reactivated. Authorization queries must filter `users.is_deleted = false` when resolving active role holders |
+| `user_role_assignments` | Soft-delete is reversible — preserved so roles are restored automatically if the user is reactivated. Authorization queries must filter `users.is_deleted = false` when resolving active role holders |
 | `notification_preferences` | Preserved for potential reactivation |
 
 ---
@@ -104,7 +104,7 @@ Hard deletion is destructive and irreversible.
 | `teachers` | `CASCADE` |
 | `user_type_assignments` | `CASCADE` |
 | `server_memberships` | `CASCADE` |
-| `role_assignments` | `CASCADE` |
+| `user_role_assignments` | `CASCADE` |
 | `notifications` | `CASCADE` |
 | `notification_preferences` | `CASCADE` |
 | `refresh_tokens` | `CASCADE` |
@@ -114,7 +114,7 @@ Hard deletion is destructive and irreversible.
 | `servers.deleted_by` / `created_by` | `SET NULL` |
 | `channels.deleted_by` / `created_by` / `locked_by` / `archived_by` | `SET NULL` |
 | `posts.deleted_by` / `pinned_by` / `updated_by` | `SET NULL` |
-| `role_assignments.assigned_by` | `SET NULL` |
+| `user_role_assignments.assigned_by` | `SET NULL` |
 | `society_membership_requests.reviewed_by` | `SET NULL` |
 
 ---
@@ -213,7 +213,7 @@ Courses owned by the department that have no active `course_assignments` or `cha
 ```
 DELETE channels (each cascades to posts → notifications + post_attachments)
   → DELETE department (cascades to courses with no active assignments; server_id reference dropped)
-      → DELETE server (cascades to server_memberships, role_assignments, notification_preferences)
+      → DELETE server (cascades to server_memberships, user_role_assignments, notification_preferences)
 ```
 
 #### The HOD Circular Dependency
@@ -261,7 +261,7 @@ Same as departments — `classes.server_id` references `servers` and does not au
 ```
 DELETE channels (each cascades to posts → notifications + post_attachments)
   → DELETE class (server_id reference dropped)
-      → DELETE server (cascades to server_memberships, role_assignments, notification_preferences)
+      → DELETE server (cascades to server_memberships, user_role_assignments, notification_preferences)
 ```
 
 #### The CR Circular Dependency
@@ -311,7 +311,7 @@ Soft-delete society
 
 Posts become inaccessible naturally because their channel is soft-deleted. Any query fetching posts already filters on `channels.deleted_at IS NULL`, so posts do not need to be explicitly soft-deleted. Soft-deleting posts here would pollute the post audit trail by attributing deletion to the society lifecycle rather than a deliberate moderation action.
 
-`role_assignments`, `server_memberships`, and `notification_preferences` are left intact — soft-delete is reversible, and these are restored automatically if the society is reactivated.
+`user_role_assignments`, `server_memberships`, and `notification_preferences` are left intact — soft-delete is reversible, and these are restored automatically if the society is reactivated.
 
 #### Hard-Delete
 
@@ -328,7 +328,7 @@ Posts become inaccessible naturally because their channel is soft-deleted. Any q
 ```
 DELETE channels (each cascades to posts → notifications + post_attachments)
   → DELETE society (cascades to society_membership_requests; server_id reference dropped)
-      → DELETE server (cascades to server_memberships, role_assignments, notification_preferences)
+      → DELETE server (cascades to server_memberships, user_role_assignments, notification_preferences)
 ```
 
 ---
@@ -350,7 +350,7 @@ Triggered as part of deleting a department, class, or society. Channels must be 
 | Table | Behaviour |
 |---|---|
 | `server_memberships` | `CASCADE` |
-| `role_assignments` | `CASCADE` |
+| `user_role_assignments` | `CASCADE` |
 | `notification_preferences` | `CASCADE` |
 | `servers.deleted_by` / `created_by` | `SET NULL` |
 
@@ -371,7 +371,7 @@ No application pre-checks required. The DB cascade chain handles everything:
 | `posts` | `CASCADE` |
 | `posts` → `notifications` | `CASCADE` (chain) |
 | `posts` → `post_attachments` | `CASCADE` (chain) |
-| `role_assignments` | `CASCADE` |
+| `user_role_assignments` | `CASCADE` |
 | `notification_preferences` | `CASCADE` |
 
 ---
@@ -401,14 +401,14 @@ No downstream FK dependents. The DB handles nothing automatically on deletion.
 
 ---
 
-### 14. `roles` and `permissions`
+### 14. `user_roles` and `permissions`
 
 System/seed-data managed. Deletion is an administrative concern.
 
 | Trigger | Behaviour |
 |---|---|
-| Role deleted | `role_permissions CASCADE`, `role_assignments CASCADE` |
-| Permission deleted | `role_permissions CASCADE` |
+| Role deleted | `user_role_permissions CASCADE`, `user_role_assignments CASCADE` |
+| Permission deleted | `user_role_permissions CASCADE` |
 
 ---
 
