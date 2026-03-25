@@ -137,7 +137,6 @@ export const ENUMS = {
   classSection: ['a', 'b'],
   membershipRequestStatus: ['pending', 'approved', 'rejected'],
   postPriority: ['normal', 'important', 'urgent'],
-  moderatorScopeType: ['channel', 'server'],
   notificationPreferenceScope: ['server', 'channel'],
 } as const
 
@@ -146,7 +145,6 @@ export type Gender = typeof ENUMS.gender[number]
 export type ClassSection = typeof ENUMS.classSection[number]
 export type MembershipRequestStatus = typeof ENUMS.membershipRequestStatus[number]
 export type PostPriority = typeof ENUMS.postPriority[number]
-export type ModeratorScopeType = typeof ENUMS.moderatorScopeType[number]
 export type NotificationPreferenceScope = typeof ENUMS.notificationPreferenceScope[number]
 
 
