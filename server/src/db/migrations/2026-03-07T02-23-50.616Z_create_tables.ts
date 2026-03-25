@@ -16,6 +16,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await createProgramCurriculaTable(db)
   await createUserTypesTable(db)
   await createUsersTable(db)
+  await createUserTypeAssignmentsTable(db)
   await createStudentsTable(db)
   await createDesignationsTable(db)
   await createTeachersTable(db)
@@ -185,9 +186,6 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .addColumn('profile_picture_url', 'text')
     .addColumn('bio', 'varchar(1000)')
 
-    // data type must be same from 'user_types'
-    .addColumn('type', 'varchar(50)', col => col.notNull())
-
     .addColumn('is_deleted', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('deleted_by', 'integer')
     .addColumn('deleted_at', 'timestamptz')
@@ -205,6 +203,19 @@ async function createUsersTable(db: Kysely<any>): Promise<void> {
     .column('university_email')
     .where(sql<boolean>`is_deleted = false`)
     .execute()
+}
+
+async function createUserTypeAssignmentsTable(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable(TABLE_NAMES.userTypeAssignments)
+
+    .addColumn('user_id', 'integer')
+    // data type must be same from 'user_types'
+    .addColumn('type', 'varchar(50)')
+
+    .addPrimaryKeyConstraint('pk_user_type_assignments', ['user_id', 'type'])
+    .execute()
+
 }
 
 async function createStudentsTable(db: Kysely<any>): Promise<void> {

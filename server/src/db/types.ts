@@ -32,6 +32,7 @@ export interface Database {
   programCurricula: ProgramCurriculumTable
   userTypes: UserTypeTable
   users: UserTable
+  userTypeAssignments: UserTypeAssignmentTable
   students: StudentTable
   designations: DesignationTable
   teachers: TeacherTable
@@ -68,6 +69,7 @@ export const TABLE_NAMES = {
   programCurricula: 'program_curricula',
   userTypes: 'user_types',
   users: 'users',
+  userTypeAssignments: 'user_type_assignments',
   students: 'students',
   designations: 'designations',
   teachers: 'teachers',
@@ -260,8 +262,6 @@ export interface UserTable {
   profilePictureUrl: string | null
   bio: string | null
 
-  type: UserTypeValue
-
   isDeleted: Generated<boolean>
   deletedBy: UserId | null
   deletedAt: DeletedAt
@@ -273,6 +273,15 @@ export interface UserTable {
 export type User = Selectable<UserTable>
 export type NewUser = Insertable<UserTable>
 export type UpdateUser = Updateable<UserTable>
+
+export interface UserTypeAssignmentTable {
+  userId: UserId
+  type: UserTypeValue
+}
+
+export type UserTypeAssignment = Selectable<UserTypeAssignmentTable>
+export type NewUserTypeAssignment = Insertable<UserTypeAssignmentTable>
+export type UpdateUserTypeAssignment = Updateable<UserTypeAssignmentTable>
 
 export interface StudentTable {
   studentId: StudentId

@@ -145,15 +145,6 @@ const FK_CONSTRAINTS: TableFkConstraints = {
     },
   },
   users: {
-    type: {
-      constraintName: 'fk_users_type',
-      columnName: 'type',
-      referencingColumn: 'value',
-      referencingTable: 'user_types',
-      // Prevent hard deletion of user type if some user in the system has that type
-      onDelete: 'restrict',
-      onUpdate: 'cascade',
-    },
     deletedBy: {
       constraintName: 'fk_users_deleted_by',
       columnName: 'deleted_by',
@@ -162,6 +153,24 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Nullable audit column. User remains soft-deleted; only the actor identity is lost in case of hard delete.
       // Hard Delete: SET NULL, Soft Delete: leave intact.
       onDelete: 'set null',
+    },
+  },
+  userTypeAssignments: {
+    userId: {
+      constraintName: 'fk_user_type_assignments_user_id',
+      columnName: 'user_id',
+      referencingColumn: 'id',
+      referencingTable: 'users',
+      onDelete: 'cascade',
+    },
+    type: {
+      constraintName: 'fk_user_type_assignments_type',
+      columnName: 'type',
+      referencingColumn: 'value',
+      referencingTable: 'user_types',
+      // Prevent hard deletion of user type if some user in the system has that type
+      onDelete: 'restrict',
+      onUpdate: 'cascade',
     },
   },
   students: {

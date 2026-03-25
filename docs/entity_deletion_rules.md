@@ -72,6 +72,7 @@ These constraints are marked CASCADE for both soft and hard deletes, so the appl
 | Table | Reason |
 |---|---|
 | `students` / `teachers` | Profile rows stay since the user row still physically exists; removed via CASCADE only on hard-delete |
+| `user_type_assignments` | Type assignments remain — soft-delete is reversible. Authorization queries must filter by `users.is_deleted = false` when resolving active users by type |
 | `server_memberships` | Membership history preserved |
 | `role_assignments` | Soft-delete is reversible — preserved so roles are restored automatically if the user is reactivated. Authorization queries must filter `users.is_deleted = false` when resolving active role holders |
 | `notification_preferences` | Preserved for potential reactivation |
@@ -101,6 +102,7 @@ Hard deletion is destructive and irreversible.
 |---|---|
 | `students` | `CASCADE` |
 | `teachers` | `CASCADE` |
+| `user_type_assignments` | `CASCADE` |
 | `server_memberships` | `CASCADE` |
 | `role_assignments` | `CASCADE` |
 | `notifications` | `CASCADE` |
@@ -117,11 +119,36 @@ Hard deletion is destructive and irreversible.
 
 ---
 
-### 2. `teachers`
+### 2. `user_type_assignments`
 
-`teachers` is a 1:1 profile table linked to `users`. It is removed automatically via CASCADE when the parent user is hard-deleted. Direct teacher deletion should not be exposed as an API operation.
+This is a junction table establishing a many-to-many relationship between `users` and `user_types`. A user can have multiple types (e.g., both Student and Teacher).
 
-To delete a user having **Teacher** role the application must check:
+#### When a User is Deleted
+
+User deletion (both soft and hard) automatically handles this table:
+
+| Operation | Behaviour |
+|---|---|
+| Soft-delete user | No DB action — row remains, but authorization queries must filter by `users.is_deleted = false` |
+| Hard-delete user | `CASCADE` — all type assignments for the user are removed automatically |
+
+#### When a User Type is Deleted
+
+Deleting a user type from the `user_types` table is blocked (`RESTRICT`) if any user in the system has that type assigned. The application must:
+
+1. Count users with this type: `SELECT COUNT(*) FROM user_type_assignments WHERE type = ?`
+2. Return error: *"Cannot delete this user type — N users currently have this type assigned"*
+3. Admin must first reassign or delete those users before the user type can be removed
+
+---
+
+### 3. `teachers`
+
+`teachers` is an extension table for users with the 'teacher' type. It is removed automatically via CASCADE when the parent user is hard-deleted. Direct teacher deletion should not be exposed as an API operation.
+
+The presence of a row in `teachers` does NOT automatically mean the user has the teacher type — that relationship is tracked through `user_type_assignments`. It is the application's responsibility maintain consistency: if a user has a teacher profile, they should have the teacher type assigned, and vice versa.
+
+To delete a user who has a **Teacher** profile (i.e., a row in the `teachers` table), the application must check:
 
 | Check | Constraint |
 |---|---|
@@ -134,11 +161,13 @@ Note: `teachers.department_id` references `departments` with `ON DELETE RESTRICT
 
 ---
 
-### 3. `students`
+### 4. `students`
 
-Same as `teachers` — a 1:1 profile table removed via CASCADE on parent user hard-delete. Direct student deletion should not be exposed as an API operation.
+`students` is an extension table for users with the 'student' type. Same as `teachers` — removed via CASCADE on parent user hard-delete. Direct student deletion should not be exposed as an API operation.
 
-To delete a user having **Student** role the application must check:
+The presence of a row in `students` does NOT automatically mean the user has the student type — that relationship is tracked through `user_type_assignments`. It is the application's responsibility maintain consistency: if a user has a student profile, they should have the student type assigned, and vice versa.
+
+To delete a user who has a **Student** profile (i.e., a row in the `students` table), the application must check:
 
 | Check | Constraint |
 |---|---|
@@ -147,7 +176,7 @@ To delete a user having **Student** role the application must check:
 
 ---
 
-### 4. `departments`
+### 5. `departments`
 
 Rare/admin-only hard-delete operation.
 
@@ -195,7 +224,7 @@ Deleting a department requires reassigning or deleting all its teachers first (`
 
 ---
 
-### 5. `programs`
+### 6. `programs`
 
 Rare/admin-only operation.
 
@@ -214,7 +243,7 @@ Rare/admin-only operation.
 
 ---
 
-### 6. `classes`
+### 7. `classes`
 
 Rare/admin-only operation.
 
@@ -243,7 +272,7 @@ Deleting a class requires deleting or moving its students first. But the student
 
 ---
 
-### 7. `courses`
+### 8. `courses`
 
 **Blockers:**
 
@@ -257,7 +286,7 @@ All three must be cleared before deletion. The application should return all act
 
 ---
 
-### 8. `societies`
+### 9. `societies`
 
 Societies support both soft-delete and hard-delete.
 
@@ -304,7 +333,7 @@ DELETE channels (each cascades to posts → notifications + post_attachments)
 
 ---
 
-### 9. `servers`
+### 10. `servers`
 
 Servers are owned entities — department servers, class servers, and society servers are created and deleted as part of their owning entity's lifecycle. They should not be independently deletable via the API.
 
@@ -327,7 +356,7 @@ Triggered as part of deleting a department, class, or society. Channels must be 
 
 ---
 
-### 10. `channels`
+### 11. `channels`
 
 #### Soft-Delete
 
@@ -347,7 +376,7 @@ No application pre-checks required. The DB cascade chain handles everything:
 
 ---
 
-### 11. `posts`
+### 12. `posts`
 
 #### Soft-Delete
 
@@ -364,7 +393,7 @@ No application pre-checks required.
 
 ---
 
-### 12. `course_assignments`
+### 13. `course_assignments`
 
 No downstream FK dependents. The DB handles nothing automatically on deletion.
 
@@ -372,7 +401,7 @@ No downstream FK dependents. The DB handles nothing automatically on deletion.
 
 ---
 
-### 13. `roles` and `permissions`
+### 14. `roles` and `permissions`
 
 System/seed-data managed. Deletion is an administrative concern.
 

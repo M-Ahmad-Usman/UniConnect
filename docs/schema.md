@@ -136,8 +136,6 @@ users {
   profile_picture_url TEXT
   bio varchar(1000)
 
-  type VARCHAR(50) FK // NOT NULL
-
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_by INTEGER FK
   deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
@@ -148,11 +146,17 @@ users {
   // UNIQUE (university_email) WHERE is_deleted = false
 }
 
-users.type - user_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
-
 users.deleted_by > users.id // ON DELETE SET NULL
 
-// For users who have student role
+user_type_assignments {
+  user_id INTEGER PK FK
+  type VARCHAR(50) PK FK
+}
+
+users.id < user_type_assignments.user_id // ON DELETE CASCADE
+user_types.value < user_type_assignments.type // ON DELETE RESTRICT ON UPDATE CASCADE
+
+// Extension table For users who have student type
 students {
   student_id INTEGER PK FK
   class_id INTEGER FK // NOT NULL
@@ -169,6 +173,7 @@ designations {
   description VARCHAR(500)
 }
 
+// Extension table for users who have teacher type
 teachers {
   teacher_id INTEGER PK FK
   designation VARCHAR(50) FK // NOT NULL

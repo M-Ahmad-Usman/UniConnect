@@ -103,10 +103,16 @@ const TABLE_INDEXES: TableIndexes = {
       columns: ['public_id'],
       where: sql<boolean>`is_deleted = false`,
     },
+  },
+
+  /**
+   * constraints (indexes) already defined in create_tables
+   * - onUserIdType: primary key constraint
+   */
+  userTypeAssignments: {
     onType: {
-      name: 'idx_users_type',
+      name: 'idx_user_type_assignments_type',
       columns: ['type'],
-      where: sql<boolean>`is_deleted = false`,
     },
   },
 
