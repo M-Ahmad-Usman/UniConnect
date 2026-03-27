@@ -51,7 +51,7 @@ typeface clean
 notation chen
 
 departments {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
 
@@ -76,7 +76,7 @@ degree_levels {
 }
 
 programs {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   department_id INTEGER FK // NOT NULL
   discipline VARCHAR(50) FK // NOT NULL 
@@ -103,7 +103,7 @@ programs.degree_level < degree_levels.value // ON DELETE RESTRICT ON UPDATE CASC
 programs.program_director_id - teachers.teacher_id // ON DELETE RESTRICT
 
 program_curricula {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
@@ -123,7 +123,7 @@ user_types {
 }
 
 users {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   full_name VARCHAR(100) // NOT NULL
@@ -186,7 +186,7 @@ teachers.department_id > departments.id
 teachers.designation - designations.value // ON DELETE RESTRICT ON UPDATE CASCADE
 
 classes {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   program_id INTEGER FK // NOT NULL
@@ -211,7 +211,7 @@ classes.program_id > programs.id // ON DELETE RESTRICT
 classes.server_id - servers.id // ON DELETE RESTRICT
 
 societies {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
@@ -252,7 +252,7 @@ server_types {
 }
 
 servers {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
@@ -280,7 +280,7 @@ channel_types {
 }
 
 channels {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
@@ -348,7 +348,7 @@ servers.id < server_memberships.server_id // ON DELETE CASCADE
 
 // Track user requests to join societies
 society_membership_requests {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
@@ -367,7 +367,7 @@ society_membership_requests.user_id > users.id // ON DELETE CASCADE
 society_membership_requests.reviewed_by > users.id // ON DELETE SET NULL
 
 courses {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   title VARCHAR(100) // NOT NULL
   code VARCHAR(50) // UNIQUE NOT NULL
@@ -392,7 +392,7 @@ course_assignments.course_id > courses.id // ON DELETE RESTRICT
 course_assignments.class_id > classes.id // ON DELETE RESTRICT
 
 posts {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   title VARCHAR(100) // NOT NULL
@@ -426,13 +426,13 @@ posts.updated_by > users.id // ON DELETE SET NULL
 posts.pinned_by > users.id // ON DELETE SET NULL
 
 file_attachment_types {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
   type VARCHAR(150) // NOT NULL MIME types
   max_size_bytes INTEGER // NOT NULL
 }
 
 post_attachments {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   post_id INTEGER FK // NOT NULL
 
@@ -463,7 +463,7 @@ user_roles {
 }
 
 permissions {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   action TEXT // NOT NULL
   resource TEXT // NOT NULL
@@ -511,7 +511,7 @@ notification_types {
 }
 
 notifications {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   title VARCHAR(200) // NOT NULL
   message TEXT
@@ -531,7 +531,7 @@ notifications.user_id > users.id // ON DELETE CASCADE
 notifications.post_id > posts.id // ON DELETE CASCADE
 
 notification_preferences {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   user_id INTEGER FK // NOT NULL
 
@@ -557,7 +557,7 @@ notification_preferences.server_id > servers.id // ON DELETE CASCADE
 notification_preferences.channel_id > channels.id // ON DELETE CASCADE
 
 refresh_tokens {
-  id INTEGER GENERATED ALWAYS AS IDENTITY PK
+  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   user_id INTEGER FK  // NOT NULL
 
