@@ -244,6 +244,8 @@ societies.convenor_id - teachers.teacher_id // ON DELETE RESTRICT
 // Society must have only one server
 societies.server_id - servers.id // ON DELETE RESTRICT
 
+societies.deleted_by > users.id // ON DELETE SET NULL
+
 // lookup table
 server_types {
   value VARCHAR(50) PK
@@ -271,6 +273,7 @@ servers {
 
 servers.type - server_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
 servers.created_by > users.id // ON DELETE SET NULL
+servers.deleted_by > users.id // ON DELETE SET NULL
 
 // lookup table
 channel_types {
