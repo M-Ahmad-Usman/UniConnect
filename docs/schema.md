@@ -183,7 +183,7 @@ teachers {
 
 teachers.teacher_id - users.id // ON DELETE CASCADE
 teachers.department_id > departments.id
-teachers.designation - designations.value // ON DELETE RESTRICT ON UPDATE CASCADE
+teachers.designation > designations.value // ON DELETE RESTRICT ON UPDATE CASCADE
 
 classes {
   id PK // INTEGER GENERATED ALWAYS AS IDENTITY
