@@ -65,13 +65,13 @@ departments.server_id - servers.id // ON DELETE RESTRICT
 
 // lookup table
 disciplines {
-  value VARCHAR(50) PK
+  value VARCHAR(50) PK // CHECK value is in snake_case
   label VARCHAR(100) // NOT NULL
 }
 
 // lookup table
 degree_levels {
-  value VARCHAR(50) PK
+  value VARCHAR(50) PK // CHECK value is in snake_case
   label VARCHAR(100) // NOT NULL
 }
 
@@ -84,7 +84,7 @@ programs {
 
   program_director_id INTEGER FK // NOT NULL
 
-  semesters INTEGER // NOT NULL
+  semesters INTEGER // NOT NULL // CHECK semesters > 0
   code VARCHAR(20) // NOT NULL UNIQUE
 
   // UNIQUE(department_id, discipline, degree_level)
@@ -117,7 +117,7 @@ program_curricula.course_id > courses.id // ON DELETE RESTRICT
 
 // lookup table
 user_types {
-  value VARCHAR(50) PK
+  value VARCHAR(50) PK // CHECK value IN ('student', 'teacher', 'admin')
   label VARCHAR(100) // NOT NULL
   description VARCHAR(500)
 }
@@ -132,7 +132,7 @@ users {
   phone VARCHAR(20) // NOT NULL
   password_hash VARCHAR(255) // NOT NULL
 
-  gender VARCHAR(10) // NOT NULL enum ['male', 'female']
+  gender VARCHAR(10) // NOT NULL CHECK (gender IN ('male', 'female'))
   profile_picture_url TEXT
   bio varchar(1000)
 
@@ -191,7 +191,7 @@ classes {
 
   program_id INTEGER FK // NOT NULL
   current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
-  section VARCHAR(1) // NOT NULL enum['a', 'b']
+  section VARCHAR(1) // NOT NULL CHECK section IN ('A', 'B')
 
   cr_id INTEGER FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
 
@@ -356,7 +356,7 @@ society_membership_requests {
   society_id INTEGER FK  // NOT NULL
   user_id INTEGER FK  // NOT NULL
 
-  status VARCHAR(20)  // enum ['pending', 'approved', 'rejected']
+  status VARCHAR(20)  // CHECK status IN ('pending', 'approved', 'rejected')
 
   requested_at TIMESTAMPTZ  // DEFAULT NOW()
   reviewed_by INTEGER FK
@@ -403,7 +403,7 @@ posts {
 
   channel_id INTEGER FK // NOT NULL
 
-  priority VARCHAR(50) // DEFAULT normal enum ['normal', 'important', 'urgent']
+  priority VARCHAR(50) // DEFAULT normal CHECK priority IN ('normal', 'important', 'urgent')
 
   is_pinned BOOLEAN // DEFAULT FALSE
   pinned_by INTEGER FK
@@ -428,9 +428,9 @@ posts.updated_by > users.id // ON DELETE SET NULL
 
 posts.pinned_by > users.id // ON DELETE SET NULL
 
-file_attachment_types {
-  id PK // INTEGER GENERATED ALWAYS AS IDENTITY
-  type VARCHAR(150) // NOT NULL MIME types
+// lookup table
+post_attachment_types {
+  value VARCHAR(150) PK// NOT NULL MIME types
   max_size_bytes INTEGER // NOT NULL
 }
 
@@ -439,9 +439,9 @@ post_attachments {
 
   post_id INTEGER FK // NOT NULL
 
-  file_url TEXT // NOT NULL
+  attachment_url TEXT // NOT NULL
 
-  attachment_type_id INTEGER FK // NOT NULL 
+  type VARCHAR(150) FK // NOT NULL 
 
   // Enforce max attachment count (e.g., 5) at application layer
 
@@ -451,7 +451,7 @@ post_attachments {
 // One post can have many attachments
 post_attachments.post_id > posts.id // ON DELETE CASCADE
 
-post_attachments.attachment_type_id - file_attachment_types.id // ON DELETE RESTRICT ON UPDATE CASCADE
+post_attachments.type > post_attachment_types.value // ON DELETE RESTRICT ON UPDATE CASCADE
 
 // RBAC Model Design
 
@@ -509,8 +509,10 @@ user_role_assignments.server_id > servers.id // ON DELETE CASCADE
 user_role_assignments.channel_id > channels.id // ON DELETE CASCADE
 user_role_assignments.assigned_by > users.id // ON DELETE SET NULL
 
+// lookup table
 notification_types {
   value VARCHAR(50) PK
+  label VARCHAR(100) // NOT NULL
 }
 
 notifications {
@@ -538,14 +540,14 @@ notification_preferences {
 
   user_id INTEGER FK // NOT NULL
 
-  scope_type VARCHAR(20) // enum['server', 'channel']
+  scope VARCHAR(20) // CHECK scope IN ('server', 'channel')
 
   server_id INTEGER FK
   channel_id INTEGER FK
 
   // CONSTRAINT: CHECK (
-    // (scope_type='server' AND server_id IS NOT NULL AND channel_id IS NULL) OR
-    // (scope_type='channel' AND channel_id IS NOT NULL AND server_id IS NULL)
+    // (scope='server' AND server_id IS NOT NULL AND channel_id IS NULL) OR
+    // (scope='channel' AND channel_id IS NOT NULL AND server_id IS NULL)
   // )
 
   is_subscribed BOOLEAN // DEFAULT TRUE

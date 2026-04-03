@@ -31,7 +31,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await createCoursesTable(db, TABLE_NAMES.courses)
   await createCourseAssignmentsTable(db, TABLE_NAMES.courseAssignments)
   await createPostsTable(db, TABLE_NAMES.posts)
-  await createFileAttachmentTypesTable(db, TABLE_NAMES.fileAttachmentTypes)
+  await createPostAttachmentTypesTable(db, TABLE_NAMES.postAttachmentTypes)
   await createPostAttachmentsTable(db, TABLE_NAMES.postAttachments)
   await createUserRolesTable(db, TABLE_NAMES.userRoles)
   await createPermissionsTable(db, TABLE_NAMES.permissions)
@@ -180,7 +180,7 @@ const createUsersTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('phone', 'varchar(20)', col => col.notNull())
     .addColumn('password_hash', 'varchar(255)', col => col.notNull())
 
-    .addColumn('gender', sql`gender`, col => col.notNull())
+    .addColumn('gender', 'varchar(10)', col => col.notNull())
     .addColumn('profile_picture_url', 'text')
     .addColumn('bio', 'varchar(1000)')
 
@@ -273,7 +273,7 @@ const createClassesTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('program_id', 'integer', col => col.notNull())
     .addColumn('current_semester', 'integer', col => col.notNull())
-    .addColumn('section', sql`class_section`, col => col.notNull())
+    .addColumn('section', 'varchar(1)', col => col.notNull())
 
     .addColumn('cr_id', 'integer')
     .addUniqueConstraint(`uq_${tableName}_cr_id`, ['cr_id'])
@@ -461,7 +461,7 @@ const createSocietyMembershipRequestsTable: TableCreationFunction = async (db, t
     .addColumn('society_id', 'integer', col => col.notNull())
     .addColumn('user_id', 'integer', col => col.notNull())
 
-    .addColumn('status', sql`membership_request_status`, col => col.notNull())
+    .addColumn('status', 'varchar(20)', col => col.notNull())
 
     .addColumn('requested_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
     .addColumn('reviewed_by', 'integer')
@@ -527,7 +527,7 @@ const createPostsTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('channel_id', 'integer', col => col.notNull())
 
-    .addColumn('priority', sql`post_priority`, col => col.notNull().defaultTo(sql`'normal'`))
+    .addColumn('priority', 'varchar(50)', col => col.notNull().defaultTo(sql`'normal'`))
 
     .addColumn('is_pinned', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('pinned_by', 'integer')
@@ -546,21 +546,18 @@ const createPostsTable: TableCreationFunction = async (db, tableName) => {
     .execute()
 }
 
-const createFileAttachmentTypesTable: TableCreationFunction = async (db, tableName) => {
+const createPostAttachmentTypesTable: TableCreationFunction = async (db, tableName) => {
 
   await db.schema
     .createTable(tableName)
 
-    .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
-    .addPrimaryKeyConstraint(`pk_${tableName}`, ['id'])
-
-    .addColumn('type', 'varchar(150)', col => col.notNull())
-    .addUniqueConstraint(`uq_${tableName}_type`, ['type'])
+    .addColumn('value', 'varchar(150)', col => col.notNull())
+    .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
+    .addUniqueConstraint(`uq_${tableName}_value`, ['value'])
 
     .addColumn('max_size_bytes', 'integer', col => col.notNull())
 
     .execute()
-
 }
 
 const createPostAttachmentsTable: TableCreationFunction = async (db, tableName) => {
@@ -572,9 +569,10 @@ const createPostAttachmentsTable: TableCreationFunction = async (db, tableName) 
 
     .addColumn('post_id', 'integer', col => col.notNull())
 
-    .addColumn('file_url', 'text', col => col.notNull())
+    .addColumn('attachment_url', 'text', col => col.notNull())
 
-    .addColumn('attachment_type_id', 'integer', col => col.notNull())
+    // Data type must be same from 'post_attachment_types'
+    .addColumn('type', 'varchar(150)', col => col.notNull())
 
     .addColumn('uploaded_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
@@ -658,6 +656,8 @@ const createNotificationTypesTable: TableCreationFunction = async (db, tableName
     .addColumn('value', 'varchar(50)')
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
 
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
     .execute()
 
 }
@@ -694,7 +694,7 @@ const createNotificationPreferencesTable: TableCreationFunction = async (db, tab
 
     .addColumn('user_id', 'integer', col => col.notNull())
 
-    .addColumn('scope_type', sql`notification_preference_scope`, col => col.notNull())
+    .addColumn('scope', 'varchar(20)', col => col.notNull())
 
     .addColumn('server_id', 'integer')
     .addColumn('channel_id', 'integer')
@@ -707,7 +707,7 @@ const createNotificationPreferencesTable: TableCreationFunction = async (db, tab
 
   await sql`ALTER TABLE ${sql.ref(tableName)}
   ADD CONSTRAINT ${sql.raw(`uq_${tableName}`)}
-  UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id, scope_type)`.execute(db)
+  UNIQUE NULLS NOT DISTINCT (user_id, server_id, channel_id, scope)`.execute(db)
 }
 
 const createRefreshTokensTable: TableCreationFunction = async (db, tableName) => {

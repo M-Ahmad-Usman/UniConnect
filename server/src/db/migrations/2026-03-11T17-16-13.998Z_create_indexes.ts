@@ -324,7 +324,7 @@ const TABLE_INDEXES: TableIndexes = {
 
   /**
    * constraints (indexes) already defined in create_tables
-   * - onUserIdServerIdChannelIdScopeType: unique constraint
+   * - onUserIdServerIdChannelIdScope: unique constraint
    */
   notificationPreferences: {},
 

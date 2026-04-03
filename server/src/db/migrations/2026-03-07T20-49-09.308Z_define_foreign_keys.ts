@@ -568,12 +568,12 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Hard Delete: CASCADE, Soft Delete: leave intact.
       onDelete: 'cascade',
     },
-    attachmentTypeId: {
-      constraintName: `fk_${TABLE_NAMES.postAttachments}_attachment_type_id`,
-      columnName: 'attachment_type_id',
-      referencingColumn: 'id',
-      referencingTable: TABLE_NAMES.fileAttachmentTypes,
-      // Prevent hard deletion of file type if its already used
+    type: {
+      constraintName: `fk_${TABLE_NAMES.postAttachments}_type`,
+      columnName: 'type',
+      referencingColumn: 'value',
+      referencingTable: TABLE_NAMES.postAttachmentTypes,
+      // Prevent hard deletion of attachment type if its already used
       onDelete: 'restrict',
       onUpdate: 'cascade',
     },

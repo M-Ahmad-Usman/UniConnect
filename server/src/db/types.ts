@@ -47,7 +47,7 @@ export interface Database {
   courses: CourseTable
   courseAssignments: CourseAssignmentTable
   posts: PostTable
-  fileAttachmentTypes: FileAttachmentTypeTable
+  postAttachmentTypes: PostAttachmentTypeTable
   postAttachments: PostAttachmentTable
   userRoles: UserRoleTable
   permissions: PermissionTable
@@ -84,7 +84,7 @@ export const TABLE_NAMES = {
   courses: 'courses',
   courseAssignments: 'course_assignments',
   posts: 'posts',
-  fileAttachmentTypes: 'file_attachment_types',
+  postAttachmentTypes: 'post_attachment_types',
   postAttachments: 'post_attachments',
   userRoles: 'user_roles',
   permissions: 'permissions',
@@ -120,7 +120,7 @@ export type ChannelId = Brand<number, 'ChannelId'>
 export type SocietyMembershipRequestId = Brand<number, 'SocietyMembershipRequestId'>
 export type CourseId = Brand<number, 'CourseId'>
 export type PostId = Brand<number, 'PostId'>
-export type FileAttachmentTypeId = Brand<number, 'FileAttachmentTypeId'>
+export type PostAttachmentTypeValue = Brand<string, 'PostAttachmentTypeValue'>
 export type PostAttachmentId = Brand<number, 'PostAttachmentId'>
 export type UserRoleValue = Brand<string, 'UserRoleValue'>
 export type PermissionId = Brand<number, 'PermissionId'>
@@ -128,24 +128,6 @@ export type NotificationTypeValue = Brand<string, 'NotificationTypeValue'>
 export type NotificationId = Brand<number, 'NotificationId'>
 export type NotificationPreferenceId = Brand<number, 'NotificationPreferenceId'>
 export type RefreshTokenId = Brand<number, 'RefreshTokenId'>
-
-
-
-// Single source of truth for all closed enum values
-export const ENUMS = {
-  gender: ['male', 'female'],
-  classSection: ['a', 'b'],
-  membershipRequestStatus: ['pending', 'approved', 'rejected'],
-  postPriority: ['normal', 'important', 'urgent'],
-  notificationPreferenceScope: ['server', 'channel'],
-} as const
-
-// Literal Types - Derived from ENUMS
-export type Gender = typeof ENUMS.gender[number]
-export type ClassSection = typeof ENUMS.classSection[number]
-export type MembershipRequestStatus = typeof ENUMS.membershipRequestStatus[number]
-export type PostPriority = typeof ENUMS.postPriority[number]
-export type NotificationPreferenceScope = typeof ENUMS.notificationPreferenceScope[number]
 
 
 
@@ -256,7 +238,7 @@ export interface UserTable {
   phone: string
   passwordHash: string
 
-  gender: Gender
+  gender: string
   profilePictureUrl: string | null
   bio: string | null
 
@@ -317,7 +299,7 @@ export interface ClassTable {
 
   programId: ProgramId
   currentSemester: number
-  section: ClassSection
+  section: string
 
   crId: StudentId | null
 
@@ -450,7 +432,7 @@ export interface SocietyMembershipRequestTable {
   societyId: SocietyId
   userId: UserId
 
-  status: MembershipRequestStatus
+  status: string
 
   requestedAt: MembershipRequestedAt
   reviewedBy: UserId | null
@@ -494,7 +476,7 @@ export interface PostTable {
 
   channelId: ChannelId
 
-  priority: Generated<PostPriority>
+  priority: string
 
   isPinned: Generated<boolean>
   pinnedBy: UserId | null
@@ -515,24 +497,23 @@ export type Post = Selectable<PostTable>
 export type NewPost = Insertable<PostTable>
 export type UpdatePost = Updateable<PostTable>
 
-export interface FileAttachmentTypeTable {
-  id: Generated<FileAttachmentTypeId>
-  type: string
+export interface PostAttachmentTypeTable {
+  value: string
   maxSizeBytes: number
 }
 
-export type FileAttachmentType = Selectable<FileAttachmentTypeTable>
-export type NewFileAttachmentType = Insertable<FileAttachmentTypeTable>
-export type UpdateFileAttachmentType = Updateable<FileAttachmentTypeTable>
+export type PostAttachmentType = Selectable<PostAttachmentTypeTable>
+export type NewPostAttachmentType = Insertable<PostAttachmentTypeTable>
+export type UpdatePostAttachmentType = Updateable<PostAttachmentTypeTable>
 
 export interface PostAttachmentTable {
   id: Generated<PostAttachmentId>
 
   postId: PostId
 
-  fileUrl: string
+  attachmentUrl: string
 
-  attachmentTypeId: FileAttachmentTypeId
+  type: PostAttachmentTypeValue
 
   uploadedAt: UploadedAt
 }
@@ -591,6 +572,7 @@ export type UpdateUserRoleAssignment = Updateable<UserRoleAssignmentTable>
 
 export interface NotificationTypeTable {
   value: NotificationTypeValue
+  label: string
 }
 
 export type NotificationType = Selectable<NotificationTypeTable>
@@ -622,7 +604,7 @@ export interface NotificationPreferenceTable {
 
   userId: UserId
 
-  scopeType: NotificationPreferenceScope
+  scope: string
 
   serverId: ServerId | null
   channelId: ChannelId | null
