@@ -6,6 +6,10 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "npm run build && node dist/index.js",
+    "lint": "eslint .",
     "migrate:latest": "tsx src/db/migrator.ts latest",
     "migrate:up": "tsx src/db/migrator.ts up",
     "migrate:down": "tsx src/db/migrator.ts down",
