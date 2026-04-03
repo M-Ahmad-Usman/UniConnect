@@ -204,7 +204,7 @@ Each step is application-driven. The `RESTRICT` constraints enforce ordering but
 
 **Courses (automatic, with caveat):**
 
-Courses owned by the department that have no active `course_assignments` or `channels` are `CASCADE` deleted automatically. Courses with active assignments or channels will block the cascade — the application must pre-check and require manual cleanup (remove course assignments and course channels first).
+Courses owned by the department that have no active `course_assignments`, no record in `program_curricula` and not referenced by `channels` are `CASCADE` deleted automatically. Courses with active assignments, present in `program_curricula` or referenced by channels will block the cascade — the application must pre-check and require manual cleanup (remove course assignments, program_curricula assignments and course channels first).
 
 **Server:**
 
