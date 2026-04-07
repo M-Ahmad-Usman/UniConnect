@@ -142,7 +142,7 @@ export type UserRoleValue = Brand<string, 'UserRoleValue'>
 
 // Types for Timestamp related Audit fields
 
-// Fields Controlled By DB Triggers
+// Fields Controlled By db (triggers or default values)
 type CreatedAt = ColumnType<Date, never, never>
 type LockedAt = ColumnType<Date | null, never, never>
 type UpdatedAt = ColumnType<Date | null, never, never>
