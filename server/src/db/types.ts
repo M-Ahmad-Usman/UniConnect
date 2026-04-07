@@ -7,6 +7,23 @@ import type {
   Updateable,
 } from 'kysely'
 
+// Import types from constants (single source of truth for TypeScript types)
+import type {
+  Gender,
+  ClassSection,
+  PostPriority,
+  MembershipRequestStatus,
+  NotificationScope,
+  DisciplineValue,
+  DegreeLevelValue,
+  UserTypeValue,
+  DesignationValue,
+  ServerTypeValue,
+  ChannelTypeValue,
+  PostAttachmentTypeValue,
+  NotificationTypeValue,
+} from './constants.js'
+
 /* Developer Notes
 
  Table and Column Naming:
@@ -16,6 +33,13 @@ import type {
  Manual snake case conversion:
   - Migrations have to make sure to use snake_case naming (Postgres convention). Camel Case plugin willn't work there.
   - Camel Case plugin willn't convert casing for raw sql queries. Will have to use actual snake case
+
+ Type Source of Truth:
+  - All constrained value types are defined in constants.ts
+  - Migrations contain their own hardcoded data (immutable snapshots)
+  - constants.ts defines current values for app layer + TypeScript types
+
+  IMPORTANT: Make sure to keep the contants.ts and db in sync
 */
 
 
@@ -98,36 +122,23 @@ export const TABLE_NAMES = {
 
 
 
-// Branded ID Types — phantom tags for type-safe table IDs (zero runtime cost)
+// Branded ID Types — phantom tags for type-safe entity IDs (zero runtime cost)
+// Branding IDs prevents mixing up different entity IDs (e.g., UserId vs ChannelId)
 type Brand<T, B> = T & { readonly __brand: B }
 
 export type DepartmentId = Brand<number, 'DepartmentId'>
-export type DisciplineValue = Brand<string, 'DisciplineValue'>
-export type DegreeLevelValue = Brand<string, 'DegreeLevelValue'>
 export type ProgramId = Brand<number, 'ProgramId'>
-export type ProgramCurriculumId = Brand<number, 'ProgramCurriculumId'>
-export type UserTypeValue = Brand<string, 'UserTypeValue'>
 export type UserId = Brand<number, 'UserId'>
 export type StudentId = Brand<number, 'StudentId'>
-export type DesignationValue = Brand<string, 'DesignationValue'>
 export type TeacherId = Brand<number, 'TeacherId'>
 export type ClassId = Brand<number, 'ClassId'>
 export type SocietyId = Brand<number, 'SocietyId'>
-export type ServerTypeValue = Brand<string, 'ServerTypeValue'>
 export type ServerId = Brand<number, 'ServerId'>
-export type ChannelTypeValue = Brand<string, 'ChannelTypeValue'>
 export type ChannelId = Brand<number, 'ChannelId'>
-export type SocietyMembershipRequestId = Brand<number, 'SocietyMembershipRequestId'>
 export type CourseId = Brand<number, 'CourseId'>
 export type PostId = Brand<number, 'PostId'>
-export type PostAttachmentTypeValue = Brand<string, 'PostAttachmentTypeValue'>
-export type PostAttachmentId = Brand<number, 'PostAttachmentId'>
-export type UserRoleValue = Brand<string, 'UserRoleValue'>
 export type PermissionId = Brand<number, 'PermissionId'>
-export type NotificationTypeValue = Brand<string, 'NotificationTypeValue'>
-export type NotificationId = Brand<number, 'NotificationId'>
-export type NotificationPreferenceId = Brand<number, 'NotificationPreferenceId'>
-export type RefreshTokenId = Brand<number, 'RefreshTokenId'>
+export type UserRoleValue = Brand<string, 'UserRoleValue'>
 
 
 
@@ -206,7 +217,7 @@ export type NewProgram = Insertable<ProgramTable>
 export type UpdateProgram = Updateable<ProgramTable>
 
 export interface ProgramCurriculumTable {
-  id: Generated<ProgramCurriculumId>
+  id: Generated<number>
 
   programId: ProgramId
   courseId: CourseId
@@ -238,7 +249,7 @@ export interface UserTable {
   phone: string
   passwordHash: string
 
-  gender: string
+  gender: Gender
   profilePictureUrl: string | null
   bio: string | null
 
@@ -299,7 +310,7 @@ export interface ClassTable {
 
   programId: ProgramId
   currentSemester: number
-  section: string
+  section: ClassSection
 
   crId: StudentId | null
 
@@ -427,12 +438,12 @@ export type NewServerMembership = Insertable<ServerMembershipTable>
 export type UpdateServerMembership = Updateable<ServerMembershipTable>
 
 export interface SocietyMembershipRequestTable {
-  id: Generated<SocietyMembershipRequestId>
+  id: Generated<number>
 
   societyId: SocietyId
   userId: UserId
 
-  status: string
+  status: MembershipRequestStatus
 
   requestedAt: MembershipRequestedAt
   reviewedBy: UserId | null
@@ -476,7 +487,7 @@ export interface PostTable {
 
   channelId: ChannelId
 
-  priority: string
+  priority: PostPriority
 
   isPinned: Generated<boolean>
   pinnedBy: UserId | null
@@ -498,7 +509,7 @@ export type NewPost = Insertable<PostTable>
 export type UpdatePost = Updateable<PostTable>
 
 export interface PostAttachmentTypeTable {
-  value: string
+  value: PostAttachmentTypeValue
   maxSizeBytes: number
 }
 
@@ -507,7 +518,7 @@ export type NewPostAttachmentType = Insertable<PostAttachmentTypeTable>
 export type UpdatePostAttachmentType = Updateable<PostAttachmentTypeTable>
 
 export interface PostAttachmentTable {
-  id: Generated<PostAttachmentId>
+  id: Generated<number>
 
   postId: PostId
 
@@ -580,7 +591,7 @@ export type NewNotificationType = Insertable<NotificationTypeTable>
 export type UpdateNotificationType = Updateable<NotificationTypeTable>
 
 export interface NotificationTable {
-  id: Generated<NotificationId>
+  id: Generated<number>
 
   title: string
   message: string | null
@@ -600,11 +611,11 @@ export type NewNotification = Insertable<NotificationTable>
 export type UpdateNotification = Updateable<NotificationTable>
 
 export interface NotificationPreferenceTable {
-  id: Generated<NotificationPreferenceId>
+  id: Generated<number>
 
   userId: UserId
 
-  scope: string
+  scope: NotificationScope
 
   serverId: ServerId | null
   channelId: ChannelId | null
@@ -619,7 +630,7 @@ export type NewNotificationPreference = Insertable<NotificationPreferenceTable>
 export type UpdateNotificationPreference = Updateable<NotificationPreferenceTable>
 
 export interface RefreshTokenTable {
-  id: Generated<RefreshTokenId>
+  id: Generated<number>
 
   userId: UserId
 
