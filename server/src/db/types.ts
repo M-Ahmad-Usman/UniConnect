@@ -152,7 +152,6 @@ type ServerJoinedAt = ColumnType<Date, never, never>
 type MembershipRequestedAt = ColumnType<Date, never, never>
 type RequestReviewedAt = ColumnType<Date | null, never, never>
 type PostPinnedAt = ColumnType<Date | null, never, never>
-type PostDeletedAt = ColumnType<Date | null, never, never>
 type UploadedAt = ColumnType<Date, never, never>
 type RoleAssignedAt = ColumnType<Date, never, never>
 
@@ -484,7 +483,7 @@ export interface PostTable {
 
   isDeleted: Generated<boolean>
   deletedBy: UserId | null
-  deletedAt: PostDeletedAt
+  deletedAt: DeletedAt
 
   createdBy: UserId
   createdAt: CreatedAt
