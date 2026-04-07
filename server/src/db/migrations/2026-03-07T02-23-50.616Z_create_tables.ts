@@ -7,6 +7,7 @@ import { TABLE_NAMES } from '../types.js'
 // 1. PRIMARY KEY
 // 2. UNIQUE
 // 3. NOT NULL
+// 4. CHECK
 
 export async function up(db: Kysely<any>): Promise<void> {
   await createDepartmentsTable(db, TABLE_NAMES.departments)
@@ -88,6 +89,9 @@ const createDisciplinesTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
 
+    // Use snake_case names for value
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
+
     .execute()
 }
 
@@ -99,6 +103,9 @@ const createDegreeLevelsTable: TableCreationFunction = async (db, tableName) => 
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
+
+    // Use snake_case names for value
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
 
     .execute()
 }
@@ -119,6 +126,7 @@ const createProgramsTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('program_director_id', 'integer', col => col.notNull())
 
     .addColumn('semesters', 'integer', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_semester_positive`, sql<boolean>`semesters > 0`)
 
     .addColumn('code', 'varchar(20)', col => col.notNull())
     .addUniqueConstraint(`uq_${tableName}_code`, ['code'])
@@ -181,6 +189,8 @@ const createUsersTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('password_hash', 'varchar(255)', col => col.notNull())
 
     .addColumn('gender', 'varchar(10)', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_gender`, sql<boolean>`gender IN ('male', 'female')`)
+
     .addColumn('profile_picture_url', 'text')
     .addColumn('bio', 'varchar(1000)')
 
@@ -243,6 +253,9 @@ const createDesignationsTable: TableCreationFunction = async (db, tableName) => 
 
     .addColumn('description', 'varchar(500)')
 
+    // Use snake_case names for value
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
+
     .execute()
 
 }
@@ -274,6 +287,7 @@ const createClassesTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('program_id', 'integer', col => col.notNull())
     .addColumn('current_semester', 'integer', col => col.notNull())
     .addColumn('section', 'varchar(1)', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_section`, sql<boolean>`section IN ('A', 'B')`)
 
     .addColumn('cr_id', 'integer')
     .addUniqueConstraint(`uq_${tableName}_cr_id`, ['cr_id'])
@@ -339,6 +353,9 @@ const createServerTypesTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('description', 'varchar(500)')
 
+    // Use snake_case names for value
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
+
     .execute()
 
 }
@@ -376,13 +393,13 @@ const createChannelTypesTable: TableCreationFunction = async (db, tableName) => 
 
     .addColumn('value', 'varchar(50)')
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
 
     .addColumn('description', 'varchar(500)')
 
     .execute()
-
 }
 
 const createChannelsTable: TableCreationFunction = async (db, tableName) => {
@@ -405,6 +422,10 @@ const createChannelsTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('course_id', 'integer')
 
     .addColumn('program_id', 'integer')
+
+    .addCheckConstraint(`chk_${tableName}_type_course_link_course_only`, sql<boolean>`(type != 'course') OR (course_id IS NOT NULL AND program_id IS NULL)`)
+    .addCheckConstraint(`chk_${tableName}_type_program_link_program_only`, sql<boolean>`(type != 'program') OR (program_id IS NOT NULL AND course_id IS NULL)`)
+    .addCheckConstraint(`chk_${tableName}_announcement_general_no_links`, sql<boolean>`(type NOT IN ('announcement', 'general')) OR (course_id IS NULL AND program_id IS NULL)`)
 
     .addColumn('is_locked', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('locked_by', 'integer')
@@ -462,6 +483,7 @@ const createSocietyMembershipRequestsTable: TableCreationFunction = async (db, t
     .addColumn('user_id', 'integer', col => col.notNull())
 
     .addColumn('status', 'varchar(20)', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_status`, sql<boolean>`status IN ('pending', 'approved', 'rejected')`)
 
     .addColumn('requested_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
     .addColumn('reviewed_by', 'integer')
@@ -494,6 +516,7 @@ const createCoursesTable: TableCreationFunction = async (db, tableName) => {
     .addUniqueConstraint(`uq_${tableName}_code`, ['code'])
 
     .addColumn('credit_hours', 'integer', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_credit_hours_positive`, sql<boolean>`credit_hours > 0`)
 
     .addColumn('department_id', 'integer', col => col.notNull())
 
@@ -528,6 +551,7 @@ const createPostsTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('channel_id', 'integer', col => col.notNull())
 
     .addColumn('priority', 'varchar(50)', col => col.notNull().defaultTo(sql`'normal'`))
+    .addCheckConstraint(`chk_${tableName}_priority`, sql<boolean>`priority IN ('normal', 'important', 'urgent')`)
 
     .addColumn('is_pinned', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('pinned_by', 'integer')
@@ -553,7 +577,6 @@ const createPostAttachmentTypesTable: TableCreationFunction = async (db, tableNa
 
     .addColumn('value', 'varchar(150)', col => col.notNull())
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
-    .addUniqueConstraint(`uq_${tableName}_value`, ['value'])
 
     .addColumn('max_size_bytes', 'integer', col => col.notNull())
 
@@ -590,6 +613,9 @@ const createUserRolesTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('description', 'varchar(500)')
 
+    // Use snake_case names for value
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
+
     .execute()
 }
 
@@ -602,6 +628,8 @@ const createPermissionsTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('action', 'text', col => col.notNull())
     .addColumn('resource', 'text', col => col.notNull())
+
+    .addCheckConstraint(`chk_${tableName}_snake_cased_permission_names`, sql<boolean>`(action ~ '^[a-z]+(_[a-z]+)*$') AND (resource ~ '^[a-z]+(_[a-z]+)*$')`)
 
     .addUniqueConstraint(`uq_${tableName}`, ['action', 'resource'])
 
@@ -634,6 +662,10 @@ const createUserRoleAssignmentsTable: TableCreationFunction = async (db, tableNa
     .addColumn('server_id', 'integer')
     .addColumn('channel_id', 'integer')
 
+    .addCheckConstraint(`chk_${tableName}_exactly_one_scope`, sql<boolean>`
+       (server_id IS NOT NULL AND channel_id IS NULL) OR
+       (server_id IS NULL AND channel_id IS NOT NULL)`)
+
     .addColumn('assigned_by', 'integer')
     .addColumn('assigned_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
     .addColumn('expires_at', 'timestamptz')  // null = permanent
@@ -655,6 +687,8 @@ const createNotificationTypesTable: TableCreationFunction = async (db, tableName
 
     .addColumn('value', 'varchar(50)')
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
+
+    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
 
@@ -695,9 +729,14 @@ const createNotificationPreferencesTable: TableCreationFunction = async (db, tab
     .addColumn('user_id', 'integer', col => col.notNull())
 
     .addColumn('scope', 'varchar(20)', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_scope`, sql<boolean>`scope IN ('server', 'channel')`)
 
     .addColumn('server_id', 'integer')
     .addColumn('channel_id', 'integer')
+
+    .addCheckConstraint(`chk_${tableName}_exactly_one_scope`, sql<boolean>`
+     (scope = 'server' AND server_id IS NOT NULL AND channel_id IS NULL) OR
+     (scope = 'channel' AND channel_id IS NOT NULL AND server_id IS NULL)`)
 
     .addColumn('is_subscribed', 'boolean', col => col.notNull().defaultTo(true))
 
@@ -724,6 +763,8 @@ const createRefreshTokensTable: TableCreationFunction = async (db, tableName) =>
 
     .addColumn('expires_at', 'timestamptz', col => col.notNull())
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+    .addCheckConstraint(`chk_${tableName}_expires_after_creation`, sql<boolean>`expires_at > created_at`)
+
     .addColumn('revoked_at', 'timestamptz')
 
     .execute()
