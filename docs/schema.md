@@ -350,6 +350,8 @@ society_membership_requests {
   status VARCHAR(20)  // CHECK status IN ('pending', 'approved', 'rejected')
 
   requested_at TIMESTAMPTZ  // DEFAULT NOW()
+
+  is_reviewed BOOLEAN // DEFAULT FALSE
   reviewed_by INTEGER FK
   reviewed_at TIMESTAMPTZ // Populate when status changes
 

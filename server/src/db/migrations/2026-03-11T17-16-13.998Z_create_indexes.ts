@@ -228,7 +228,13 @@ const TABLE_INDEXES: TableIndexes = {
    * constraints (indexes) already defined in create_tables
    * - onSocietyIdUserId: partial unique constraint for approved and pending requests
    */
-  societyMembershipRequests: {},
+  societyMembershipRequests: {
+    onSocietyIdIsReviewd: {
+      name: 'idx_society_membership_requests_society_id_is_reviewed',
+      columns: ['society_id', 'is_reviewed'],
+      where: sql<boolean>`is_reviewed = false`,
+    },
+  },
 
   /**
    * constraints (indexes) already defined in create_tables

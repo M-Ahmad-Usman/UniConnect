@@ -435,6 +435,8 @@ export interface SocietyMembershipRequestTable {
   status: MembershipRequestStatus
 
   requestedAt: MembershipRequestedAt
+
+  isReviewed: Generated<boolean>
   reviewedBy: UserId | null
   reviewedAt: RequestReviewedAt
 }

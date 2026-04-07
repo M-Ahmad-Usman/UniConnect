@@ -470,6 +470,8 @@ const createSocietyMembershipRequestsTable: TableCreationFunction = async (db, t
     .addCheckConstraint(`chk_${tableName}_status`, sql<boolean>`status IN ('pending', 'approved', 'rejected')`)
 
     .addColumn('requested_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
+
+    .addColumn('is_reviewed', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('reviewed_by', 'integer')
     .addColumn('reviewed_at', 'timestamptz')
 
