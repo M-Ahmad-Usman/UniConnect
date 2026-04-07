@@ -3,9 +3,19 @@
 import type { Kysely } from 'kysely'
 import { TABLE_NAMES } from '../types.js'
 
-export async function up(db: Kysely<any>): Promise<void> {
+/**
+ * Seeds lookup tables with initial values.
+ *
+ * IMPORTANT: This data is hardcoded here intentionally.
+ * Migrations must be immutable snapshots - they should NOT import from
+ * evolving files like constants.ts to ensure deterministic results.
+ *
+ * To add new lookup values in the future:
+ * 1. Add to constants.ts (for TypeScript types + app layer)
+ * 2. Write a NEW migration that INSERTs only the new value(s)
+ */
 
-  // Iterate through the single source of truth and dynamically insert rows
+export async function up(db: Kysely<any>): Promise<void> {
   for (const [camelCasedTableName, seedDataRows] of Object.entries(LOOKUP_DATA)) {
     const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
@@ -14,8 +24,6 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-
-  // Delete in reverse order as a best practice, in case future lookups depend on each other
   for (const camelCasedTableName of Object.keys(LOOKUP_DATA).reverse()) {
     const snakeCasedTableName = TABLE_NAMES[camelCasedTableName as keyof typeof TABLE_NAMES]
 
@@ -23,18 +31,12 @@ export async function down(db: Kysely<any>): Promise<void> {
   }
 }
 
-// types & constants
+// Seed data (immutable snapshot - do not modify, write new migrations instead)
 
 const FIVE_MB = 5_242_880
 const TEN_MB = 10_485_760
 
-/**
- * These lookup tables works just as enum types.
- * They were converted into tables to follow scalable and extensible design.
- * The following values were decided during development and the system is built assuming these values exists.
- * If in future new values are entered then make sure that the application layer is aware of the new data.
- */
-export const LOOKUP_DATA = {
+const LOOKUP_DATA = {
   disciplines: [
     { value: 'computer_science', label: 'Computer Science' },
     { value: 'software_engineering', label: 'Software Engineering' },
@@ -52,31 +54,11 @@ export const LOOKUP_DATA = {
     { value: 'admin', label: 'Admin', description: 'System administrator' },
   ],
   designations: [
-    {
-      value: 'lab_incharge',
-      label: 'Lab Incharge',
-      description: 'Responsible for managing laboratory facilities, maintaining technical equipment, and assisting students during practical sessions.',
-    },
-    {
-      value: 'lecturer',
-      label: 'Lecturer',
-      description: 'An entry-level academic faculty member focused primarily on teaching undergraduate courses and assisting with departmental administration.',
-    },
-    {
-      value: 'assistant_professor',
-      label: 'Assistant Professor',
-      description: 'A mid-level academic rank involving independent teaching, curriculum development, and active research.',
-    },
-    {
-      value: 'associate_professor',
-      label: 'Associate Professor',
-      description: 'A senior academic rank denoting a significant and proven record of teaching excellence, research publications, and university service.',
-    },
-    {
-      value: 'professor',
-      label: 'Professor',
-      description: 'The highest standard academic rank, awarded for distinguished, sustained contributions to teaching, research, and academic leadership.',
-    },
+    { value: 'lab_incharge', label: 'Lab Incharge', description: 'Responsible for managing laboratory facilities and assisting students during practical sessions.' },
+    { value: 'lecturer', label: 'Lecturer', description: 'Entry-level academic faculty focused on teaching undergraduate courses.' },
+    { value: 'assistant_professor', label: 'Assistant Professor', description: 'Mid-level rank involving teaching, curriculum development, and research.' },
+    { value: 'associate_professor', label: 'Associate Professor', description: 'Senior rank with proven teaching excellence and research publications.' },
+    { value: 'professor', label: 'Professor', description: 'Highest academic rank for distinguished contributions to teaching and research.' },
   ],
   serverTypes: [
     { value: 'department', label: 'Department Server', description: 'Server for a department' },
@@ -98,11 +80,11 @@ export const LOOKUP_DATA = {
     { value: 'application/msword', max_size_bytes: FIVE_MB },
   ],
   notificationTypes: [
-    { value: 'role_assigned', label: 'New role asignment' },
+    { value: 'role_assigned', label: 'New role assignment' },
     { value: 'role_revoked', label: 'Role revoked' },
     { value: 'post_created', label: 'New post created' },
     { value: 'post_pinned', label: 'Post pinned' },
-    { value: 'membership_request_approved', label: 'Memberhip request approved' },
-    { value: 'membership_request_reject', label: 'Memberhip request rejected' },
+    { value: 'membership_request_approved', label: 'Membership request approved' },
+    { value: 'membership_request_rejected', label: 'Membership request rejected' },
   ],
-} as const
+}

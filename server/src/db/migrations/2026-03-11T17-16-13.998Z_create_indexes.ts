@@ -1,14 +1,12 @@
 import type { Kysely, Expression, SqlBool } from 'kysely'
 import { TABLE_NAMES } from '../types.js'
 import { sql } from 'kysely'
-import type { LOOKUP_DATA } from './2026-03-07T12-40-00.000Z_seed_lookup_tables.js'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Defines performance-related constraints (indexes).
- * * Note: Data integrity constraints (Unique, Foreign Keys)
- * * * are defined in the `create_tables` migration and documented here.
+ * Note: Data integrity and relationship constraints (Unique, Foreign Keys, Primary keys) are defined in previous migrations and documented here.
  */
 
 export async function up(db: Kysely<any>): Promise<void> {
@@ -49,8 +47,6 @@ interface Index {
 }
 
 type TableIndexes = Partial<Record<keyof typeof TABLE_NAMES, Record<string, Index>>>
-
-type CHANNEL_TYPES = typeof LOOKUP_DATA.channelTypes[number]['value']
 
 /**
  * Centralized performance index definitions (Single Source of Truth).
@@ -201,12 +197,14 @@ const TABLE_INDEXES: TableIndexes = {
     onServerIdCourseId: {
       name: 'idx_channels_server_id_course_id',
       columns: ['server_id', 'course_id'],
-      where: sql<boolean>`is_deleted = false AND type = ${'CRS' as CHANNEL_TYPES}`,
+      // course type is derived from seed lookup tables migration from 'channel_types' table
+      where: sql<boolean>`is_deleted = false AND type = 'course'`,
     },
     onServerIdProgramId: {
       name: 'idx_channels_server_id_program_id',
       columns: ['server_id', 'program_id'],
-      where: sql<boolean>`is_deleted = false AND type = ${'PROG' as CHANNEL_TYPES}`,
+      // program type is derived from seed lookup tables migration from 'channel_types' table
+      where: sql<boolean>`is_deleted = false AND type = 'program'`,
     },
     onType: {
       name: 'idx_channels_type',
