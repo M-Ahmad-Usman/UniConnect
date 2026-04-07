@@ -43,11 +43,6 @@ const LOOKUP_DATA = {
     { value: 'artificial_intelligence', label: 'Artificial Intelligence' },
     { value: 'computer_engineering', label: 'Computer Engineering' },
   ],
-  degreeLevels: [
-    { value: 'bachelors', label: 'Bachelors' },
-    { value: 'masters', label: 'Masters' },
-    { value: 'phd', label: 'PhD' },
-  ],
   userTypes: [
     { value: 'student', label: 'Student', description: 'Enrolled student' },
     { value: 'teacher', label: 'Teacher', description: 'Faculty member' },

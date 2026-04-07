@@ -69,18 +69,12 @@ disciplines {
   label VARCHAR(100) // NOT NULL
 }
 
-// lookup table
-degree_levels {
-  value VARCHAR(50) PK // CHECK value is in snake_case
-  label VARCHAR(100) // NOT NULL
-}
-
 programs {
   id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
   department_id INTEGER FK // NOT NULL
   discipline VARCHAR(50) FK // NOT NULL 
-  degree_level VARCHAR(50) FK // NOT NULL 
+  degree_level VARCHAR(50) FK // NOT NULL CHECK degree_level IN ('bachelors', 'masters', 'phd')
 
   program_director_id INTEGER FK // NOT NULL
 
@@ -95,9 +89,6 @@ departments.id < programs.department_id // ON DELETE RESTRICT
 
 // One degree level in a program can be offered in many disciplines
 programs.discipline < disciplines.value // ON DELETE RESTRICT ON UPDATE CASCADE
-
-// One discipline in a program can be offered in many degree levels
-programs.degree_level < degree_levels.value // ON DELETE RESTRICT ON UPDATE CASCADE
 
 // One program can have only one director
 programs.program_director_id - teachers.teacher_id // ON DELETE RESTRICT

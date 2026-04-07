@@ -9,13 +9,13 @@ import type {
 
 // Import types from constants (single source of truth for TypeScript types)
 import type {
+  DegreeLevel,
   Gender,
   ClassSection,
   PostPriority,
   MembershipRequestStatus,
   NotificationScope,
   DisciplineValue,
-  DegreeLevelValue,
   UserTypeValue,
   DesignationValue,
   ServerTypeValue,
@@ -51,7 +51,6 @@ import type {
 export interface Database {
   departments: DepartmentTable
   disciplines: DisciplineTable
-  degreeLevels: DegreeLevelTable
   programs: ProgramTable
   programCurricula: ProgramCurriculumTable
   userTypes: UserTypeTable
@@ -88,7 +87,6 @@ export interface Database {
 export const TABLE_NAMES = {
   departments: 'departments',
   disciplines: 'disciplines',
-  degreeLevels: 'degree_levels',
   programs: 'programs',
   programCurricula: 'program_curricula',
   userTypes: 'user_types',
@@ -190,21 +188,12 @@ export type Discipline = Selectable<DisciplineTable>
 export type NewDiscipline = Insertable<DisciplineTable>
 export type UpdateDiscipline = Updateable<DisciplineTable>
 
-export interface DegreeLevelTable {
-  value: DegreeLevelValue
-  label: string
-}
-
-export type DegreeLevel = Selectable<DegreeLevelTable>
-export type NewDegreeLevel = Insertable<DegreeLevelTable>
-export type UpdateDegreeLevel = Updateable<DegreeLevelTable>
-
 export interface ProgramTable {
   id: Generated<ProgramId>
 
   departmentId: DepartmentId
   discipline: DisciplineValue
-  degreeLevel: DegreeLevelValue
+  degreeLevel: DegreeLevel
 
   programDirectorId: TeacherId
 

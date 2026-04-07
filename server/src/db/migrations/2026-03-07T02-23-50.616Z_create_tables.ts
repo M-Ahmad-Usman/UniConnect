@@ -12,7 +12,6 @@ import { TABLE_NAMES } from '../types.js'
 export async function up(db: Kysely<any>): Promise<void> {
   await createDepartmentsTable(db, TABLE_NAMES.departments)
   await createDisciplinesTable(db, TABLE_NAMES.disciplines)
-  await createDegreeLevelsTable(db, TABLE_NAMES.degreeLevels)
   await createProgramsTable(db, TABLE_NAMES.programs)
   await createProgramCurriculaTable(db, TABLE_NAMES.programCurricula)
   await createUserTypesTable(db, TABLE_NAMES.userTypes)
@@ -95,21 +94,6 @@ const createDisciplinesTable: TableCreationFunction = async (db, tableName) => {
     .execute()
 }
 
-const createDegreeLevelsTable: TableCreationFunction = async (db, tableName) => {
-  await db.schema
-    .createTable(tableName)
-
-    .addColumn('value', 'varchar(50)')
-    .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
-
-    .addColumn('label', 'varchar(100)', col => col.notNull())
-
-    // Use snake_case names for value
-    .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
-
-    .execute()
-}
-
 const createProgramsTable: TableCreationFunction = async (db, tableName) => {
   await db.schema
     .createTable(tableName)
@@ -120,8 +104,8 @@ const createProgramsTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('department_id', 'integer', col => col.notNull())
     // data type must be same from 'disciplines'
     .addColumn('discipline', 'varchar(50)', col => col.notNull())
-    // data type must be same from 'degree_levels'
     .addColumn('degree_level', 'varchar(50)', col => col.notNull())
+    .addCheckConstraint(`chk_${tableName}_degree_level`, sql<boolean>`degree_level IN ('bachelors', 'masters', 'phd')`)
 
     .addColumn('program_director_id', 'integer', col => col.notNull())
 

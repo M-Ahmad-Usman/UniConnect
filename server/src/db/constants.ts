@@ -14,6 +14,9 @@
 
 // CHECK Constraint Values (require schema migration to modify)
 
+export const DEGREE_LEVELS = ['bachelors', 'masters', 'phd'] as const
+export type DegreeLevel = typeof GENDERS[number]
+
 export const GENDERS = ['male', 'female'] as const
 export type Gender = typeof GENDERS[number]
 
@@ -38,9 +41,6 @@ export const DISCIPLINES = [
   'computer_engineering',
 ] as const
 export type DisciplineValue = typeof DISCIPLINES[number]
-
-export const DEGREE_LEVELS = ['bachelors', 'masters', 'phd'] as const
-export type DegreeLevelValue = typeof DEGREE_LEVELS[number]
 
 export const USER_TYPES = ['student', 'teacher', 'admin'] as const
 export type UserTypeValue = typeof USER_TYPES[number]

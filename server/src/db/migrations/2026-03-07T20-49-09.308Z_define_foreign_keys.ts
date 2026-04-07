@@ -106,15 +106,6 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       onDelete: 'restrict',
       onUpdate: 'cascade',
     },
-    degreeLevel: {
-      constraintName: `fk_${TABLE_NAMES.programs}_degree_level`,
-      columnName: 'degree_level',
-      referencingColumn: 'value',
-      referencingTable: TABLE_NAMES.degreeLevels,
-      // Prevent hard deletion of degree level if it is already offered by department in some discipline
-      onDelete: 'restrict',
-      onUpdate: 'cascade',
-    },
     programDirectorId: {
       constraintName: `fk_${TABLE_NAMES.programs}_program_director_id`,
       columnName: 'program_director_id',
