@@ -548,8 +548,9 @@ const createPostsTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('created_by', 'integer', col => col.notNull())
     .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
-    .addColumn('updated_by', 'integer')
-    .addColumn('updated_at', 'timestamptz')
+    .addColumn('is_edited', 'boolean', col => col.notNull().defaultTo(false))
+    .addColumn('edited_by', 'integer')
+    .addColumn('edited_at', 'timestamptz')
 
     .execute()
 }

@@ -407,15 +407,16 @@ posts {
   created_by INTEGER FK // NOT NULL
   created_at TIMESTAMPTZ // DEFAULT NOW()
   
-  updated_by INTEGER FK
-  updated_at TIMESTAMPTZ // Populate when updated_by changes
+  is_edited BOOLEAN // DEFAULT FALSE
+  edited_by INTEGER FK
+  edited_at TIMESTAMPTZ // Populate when is_edited is set to true
 }
 
 posts.created_by > users.id // ON DELETE RESTRICT
 posts.channel_id > channels.id // ON DELETE CASCADE
 
 posts.deleted_by > users.id // ON DELETE SET NULL
-posts.updated_by > users.id // ON DELETE SET NULL
+posts.edited_by > users.id // ON DELETE SET NULL
 
 posts.pinned_by > users.id // ON DELETE SET NULL
 

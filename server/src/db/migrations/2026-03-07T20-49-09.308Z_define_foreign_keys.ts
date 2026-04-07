@@ -539,9 +539,9 @@ const FK_CONSTRAINTS: TableFkConstraints = {
       // Hard Delete: RESTRICT, Soft Delete: leave intact.
       onDelete: 'restrict',
     },
-    updatedBy: {
-      constraintName: `fk_${TABLE_NAMES.posts}_updated_by`,
-      columnName: 'updated_by',
+    editedBy: {
+      constraintName: `fk_${TABLE_NAMES.posts}_edited_by`,
+      columnName: 'edited_by',
       referencingColumn: 'id',
       referencingTable: TABLE_NAMES.users,
       // Nullable audit column. Post remains intact; only the last-editor identity is lost in case of hard delete.
