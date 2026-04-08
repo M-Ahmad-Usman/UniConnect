@@ -727,7 +727,7 @@ const createNotificationPreferencesTable: TableCreationFunction = async (db, tab
 
     .addColumn('is_subscribed', 'boolean', col => col.notNull().defaultTo(true))
 
-    .addColumn('updated_at', 'timestamptz')
+    .addColumn('updated_at', 'timestamptz', col => col.notNull().defaultTo(sql`NOW()`))
 
     .execute()
 

@@ -546,7 +546,7 @@ notification_preferences {
 
   is_subscribed BOOLEAN // DEFAULT TRUE
 
-  updated_at TIMESTAMPTZ // Populate on update
+  updated_at TIMESTAMPTZ // DEFAULT NOW(). update when is_subscribed changes
 
   // UNIQUE(user_id, scope_type, server_id, channel_id NULLS NOT DISTINCT)
 }
