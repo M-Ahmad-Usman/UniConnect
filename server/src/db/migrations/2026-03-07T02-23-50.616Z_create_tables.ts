@@ -601,6 +601,8 @@ const createPostAttachmentTypesTable: TableCreationFunction = async (db, tableNa
     .addColumn('value', 'varchar(150)', col => col.notNull())
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['value'])
 
+    .addColumn('label', 'varchar(100)', col => col.notNull())
+
     .addColumn('max_size_bytes', 'integer', col => col.notNull())
 
     .execute()

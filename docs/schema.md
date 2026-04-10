@@ -423,7 +423,8 @@ posts.pinned_by > users.id // ON DELETE SET NULL
 
 // lookup table
 post_attachment_types {
-  value VARCHAR(150) PK// NOT NULL MIME types
+  value VARCHAR(150) PK // NOT NULL. MIME types
+  label VARCHAR(100) // NOT NULL
   max_size_bytes INTEGER // NOT NULL
 }
 

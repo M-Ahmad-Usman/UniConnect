@@ -464,6 +464,7 @@ export type UpdatePost = Updateable<PostTable>
 
 export interface PostAttachmentTypeTable {
   value: PostAttachmentTypeValue
+  label: string
   maxSizeBytes: number
 }
 
