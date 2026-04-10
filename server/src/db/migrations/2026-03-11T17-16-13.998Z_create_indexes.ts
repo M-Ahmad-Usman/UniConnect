@@ -273,6 +273,11 @@ const TABLE_INDEXES: TableIndexes = {
       columns: ['channel_id', 'created_at'],
       where: sql<boolean>`is_deleted = false`,
     },
+    onChannelIdIsPinned: {
+      name: 'idx_posts_channel_id_is_pinned',
+      columns: ['channel_id', 'is_pinned'],
+      where: sql<boolean>`is_deleted = false`,
+    },
   },
 
   postAttachments: {
