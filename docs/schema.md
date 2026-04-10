@@ -55,7 +55,7 @@ departments {
   name VARCHAR(100) // UNIQUE NOT NULL
   code VARCHAR(20) // UNIQUE NOT NULL
 
-  hod_id INTEGER FK // UNIQUE Enforce NOT NULL in application layer. Can't enforce in DB due to chicken egg problem.
+  hod_id INTEGER FK // UNIQUE. Enforce NOT NULL in application layer. Can't enforce in DB due to chicken-egg problem.
 
   server_id INTEGER FK // UNIQUE NOT NULL
 }
@@ -98,7 +98,7 @@ program_curricula {
 
   program_id INTEGER FK  // NOT NULL
   course_id INTEGER FK  // NOT NULL
-  semester_number INTEGER  // NOT NULL CHECK (1 <= semester_number <= programs.semesters) - enforce at application layer
+  semester_number INTEGER  // NOT NULL. CHECK (1 <= semester_number <= programs.semesters) enforced by trigger trg_fn_validate_curriculum_semester
   batch_year INTEGER  // NOT NULL (admission year this applies to)
   // UNIQUE(program_id, course_id, semester_number, batch_year)
 }
@@ -128,11 +128,11 @@ users {
   bio varchar(1000)
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_by INTEGER FK
-  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+  deleted_by INTEGER FK // Required when is_deleted → TRUE. Cleared by trigger trg_fn_sync_delete_state when is_deleted → FALSE.
+  deleted_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_delete_state when is_deleted → TRUE. Cleared when is_deleted → FALSE.
 
   created_at TIMESTAMPTZ // DEFAULT NOW()
-  updated_at TIMESTAMPTZ // Populate when something is updated
+  updated_at TIMESTAMPTZ // Stamped by trigger trg_fn_stamp_updated_at on every UPDATE.
 
   // UNIQUE (university_email) WHERE is_deleted = false
 }
@@ -181,17 +181,16 @@ classes {
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   program_id INTEGER FK // NOT NULL
-  current_semester INTEGER // NOT NULL. CHECK (current_semester >= 1 AND current_semester <= program.semesters) must be enforced at application layer as PG CHECK cannot reference other tables.
+  current_semester INTEGER // NOT NULL. CHECK (1 <= current_semester <= programs.semesters) enforced by trigger trg_fn_validate_class_semester (cross-table constraint, cannot use PG CHECK).
   section VARCHAR(1) // NOT NULL CHECK section IN ('A', 'B')
 
-  cr_id INTEGER FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
+  cr_id INTEGER FK // UNIQUE. Cannot set NOT NULL due to chicken-egg problem with students.class_id. Enforce NOT NULL in application layer. Cross-class membership enforced by trigger trg_fn_validate_cr_membership (fires on UPDATE OF cr_id, skipped when cr_id IS NULL).
 
   academic_year INTEGER // NOT NULL. Represents current year
   admission_year INTEGER // NOT NULL. Represents the year this batch was admitted
 
   server_id INTEGER FK // UNIQUE NOT NULL
 
-  // Constraint CHECK (cr belongs to this class)
   // UNIQUE (program_id, current_semester, section, admission_year)
 }
 
@@ -214,8 +213,8 @@ societies {
   server_id INT FK // UNIQUE NOT NULL
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_by INTEGER FK
-  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+  deleted_by INTEGER FK // Required when is_deleted → TRUE. Cleared by trigger trg_fn_sync_delete_state when is_deleted → FALSE.
+  deleted_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_delete_state when is_deleted → TRUE. Cleared when is_deleted → FALSE.
 
   // UNIQUE ('name') WHERE is_deleted = false
 
@@ -255,8 +254,8 @@ servers {
   type VARCHAR(50) FK // NOT NULL
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_by INTEGER FK
-  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+  deleted_by INTEGER FK // Required when is_deleted → TRUE. Cleared by trigger trg_fn_sync_delete_state when is_deleted → FALSE.
+  deleted_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_delete_state when is_deleted → TRUE. Cleared when is_deleted → FALSE.
 
   created_by INTEGER FK
   created_at TIMESTAMPTZ // DEFAULT NOW()
@@ -296,16 +295,16 @@ channels {
   // (type IN ('announcement', 'general') AND course_id IS NULL AND program_id IS NULL))
 
   is_locked BOOLEAN // DEFAULT FALSE
-  locked_by INTEGER FK
-  locked_at TIMESTAMPTZ // Populate when is_locked becomes true
+  locked_by INTEGER FK // Required when is_locked → TRUE. Cleared by trigger trg_fn_sync_lock_state when is_locked → FALSE.
+  locked_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_lock_state when is_locked → TRUE. Cleared when is_locked → FALSE.
 
   is_archived BOOLEAN // DEFAULT FALSE
-  archived_by INTEGER FK
-  archived_at TIMESTAMPTZ // Populate when is_archived becomes true
+  archived_by INTEGER FK // Required when is_archived → TRUE. Cleared by trigger trg_fn_sync_archive_state when is_archived → FALSE.
+  archived_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_archive_state when is_archived → TRUE. Cleared when is_archived → FALSE.
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_by INTEGER FK
-  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+  deleted_by INTEGER FK // Required when is_deleted → TRUE. Cleared by trigger trg_fn_sync_delete_state when is_deleted → FALSE.
+  deleted_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_delete_state when is_deleted → TRUE. Cleared when is_deleted → FALSE.
 
   is_auto_created BOOLEAN // DEFAULT FALSE
   created_by INTEGER FK
@@ -352,8 +351,8 @@ society_membership_requests {
   requested_at TIMESTAMPTZ  // DEFAULT NOW()
 
   is_reviewed BOOLEAN // DEFAULT FALSE
-  reviewed_by INTEGER FK
-  reviewed_at TIMESTAMPTZ // Populate when status changes
+  reviewed_by INTEGER FK // Required when status changes to 'approved' or 'rejected'. Validated by trigger trg_fn_stamp_review_state.
+  reviewed_at TIMESTAMPTZ // Stamped by trigger trg_fn_stamp_review_state when status → 'approved' or 'rejected'.
 
   // UNIQUE(society_id, user_id) WHERE status IN ('pending', 'approved')
 }
@@ -399,19 +398,19 @@ posts {
   priority VARCHAR(50) // DEFAULT normal CHECK priority IN ('normal', 'important', 'urgent')
 
   is_pinned BOOLEAN // DEFAULT FALSE
-  pinned_by INTEGER FK
-  pinned_at TIMESTAMPTZ // Populate when is_pinned becomes true
+  pinned_by INTEGER FK // Required when is_pinned → TRUE. Cleared by trigger trg_fn_sync_pin_state when is_pinned → FALSE.
+  pinned_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_pin_state when is_pinned → TRUE. Cleared when is_pinned → FALSE.
 
   is_deleted BOOLEAN // DEFAULT FALSE
-  deleted_by INTEGER FK
-  deleted_at TIMESTAMPTZ // Populate when is_deleted becomes true
+  deleted_by INTEGER FK // Required when is_deleted → TRUE. Cleared by trigger trg_fn_sync_delete_state when is_deleted → FALSE.
+  deleted_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_delete_state when is_deleted → TRUE. Cleared when is_deleted → FALSE.
   
   created_by INTEGER FK // NOT NULL
   created_at TIMESTAMPTZ // DEFAULT NOW()
   
   is_edited BOOLEAN // DEFAULT FALSE
-  edited_by INTEGER FK
-  edited_at TIMESTAMPTZ // Populate when is_edited is set to true
+  edited_by INTEGER FK // Required when is_edited → TRUE. Cleared by trigger trg_fn_sync_edit_state when is_edited → FALSE.
+  edited_at TIMESTAMPTZ // Stamped by trigger trg_fn_sync_edit_state when is_edited → TRUE. Cleared when is_edited → FALSE.
 }
 
 posts.created_by > users.id // ON DELETE RESTRICT
@@ -546,7 +545,7 @@ notification_preferences {
 
   is_subscribed BOOLEAN // DEFAULT TRUE
 
-  updated_at TIMESTAMPTZ // DEFAULT NOW(). update when is_subscribed changes
+  updated_at TIMESTAMPTZ // DEFAULT NOW(). Stamped by trigger trg_fn_stamp_updated_at when is_subscribed changes.
 
   // UNIQUE(user_id, scope_type, server_id, channel_id NULLS NOT DISTINCT)
 }
