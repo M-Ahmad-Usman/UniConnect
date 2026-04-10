@@ -1,13 +1,47 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
-import { TABLE_NAMES } from '../types.js'
+import type { Kysely } from 'kysely'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // This migration will create all tables with the following constraints:
 // 1. PRIMARY KEY
 // 2. UNIQUE
 // 3. NOT NULL
 // 4. CHECK
+
+export const TABLE_NAMES = {
+  departments: 'departments',
+  disciplines: 'disciplines',
+  programs: 'programs',
+  programCurricula: 'program_curricula',
+  userTypes: 'user_types',
+  users: 'users',
+  userTypeAssignments: 'user_type_assignments',
+  students: 'students',
+  designations: 'designations',
+  teachers: 'teachers',
+  classes: 'classes',
+  societies: 'societies',
+  serverTypes: 'server_types',
+  servers: 'servers',
+  channelTypes: 'channel_types',
+  channels: 'channels',
+  serverMemberships: 'server_memberships',
+  societyMembershipRequests: 'society_membership_requests',
+  courses: 'courses',
+  courseAssignments: 'course_assignments',
+  posts: 'posts',
+  postAttachmentTypes: 'post_attachment_types',
+  postAttachments: 'post_attachments',
+  userRoles: 'user_roles',
+  permissions: 'permissions',
+  userRolePermissions: 'user_role_permissions',
+  userRoleAssignments: 'user_role_assignments',
+  notificationTypes: 'notification_types',
+  notifications: 'notifications',
+  notificationPreferences: 'notification_preferences',
+  refreshTokens: 'refresh_tokens',
+} as const
 
 export async function up(db: Kysely<any>): Promise<void> {
   await createDepartmentsTable(db, TABLE_NAMES.departments)
@@ -55,7 +89,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 // Dedicated Table Creation Functions
 
-type TableCreationFunction = (db: Kysely<any>, tableName: string) => Promise<void>
+type TableCreationFunction = (db: Kysely<any>, tableName: typeof TABLE_NAMES[keyof typeof TABLE_NAMES]) => Promise<void>
 
 const createDepartmentsTable: TableCreationFunction = async (db, tableName) => {
   await db.schema

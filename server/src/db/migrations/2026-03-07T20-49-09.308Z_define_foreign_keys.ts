@@ -1,10 +1,10 @@
+import { TABLE_NAMES } from './2026-03-07T02-23-50.616Z_create_tables.js'
+import type { Kysely } from 'kysely'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// This migration will define all foreign key constraints
-
-import type { Kysely } from 'kysely'
-import { TABLE_NAMES } from '../types.js'
-
+/**
+ * Define all foreign key constraints
+ */
 export async function up(db: Kysely<any>): Promise<void> {
 
   for (const [camelCasedTableName, fkConstraints] of Object.entries(FK_CONSTRAINTS)) {

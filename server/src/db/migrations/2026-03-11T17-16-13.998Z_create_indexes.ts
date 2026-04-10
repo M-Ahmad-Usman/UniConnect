@@ -1,5 +1,5 @@
 import type { Kysely, Expression, SqlBool } from 'kysely'
-import { TABLE_NAMES } from '../types.js'
+import { TABLE_NAMES } from './2026-03-07T02-23-50.616Z_create_tables.js'
 import { sql } from 'kysely'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

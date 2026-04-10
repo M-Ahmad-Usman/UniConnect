@@ -82,44 +82,6 @@ export interface Database {
   refreshTokens: RefreshTokenTable
 }
 
-// Snake cased Table names derived from database.
-// This object is used by create tables migration.
-export const TABLE_NAMES = {
-  departments: 'departments',
-  disciplines: 'disciplines',
-  programs: 'programs',
-  programCurricula: 'program_curricula',
-  userTypes: 'user_types',
-  users: 'users',
-  userTypeAssignments: 'user_type_assignments',
-  students: 'students',
-  designations: 'designations',
-  teachers: 'teachers',
-  classes: 'classes',
-  societies: 'societies',
-  serverTypes: 'server_types',
-  servers: 'servers',
-  channelTypes: 'channel_types',
-  channels: 'channels',
-  serverMemberships: 'server_memberships',
-  societyMembershipRequests: 'society_membership_requests',
-  courses: 'courses',
-  courseAssignments: 'course_assignments',
-  posts: 'posts',
-  postAttachmentTypes: 'post_attachment_types',
-  postAttachments: 'post_attachments',
-  userRoles: 'user_roles',
-  permissions: 'permissions',
-  userRolePermissions: 'user_role_permissions',
-  userRoleAssignments: 'user_role_assignments',
-  notificationTypes: 'notification_types',
-  notifications: 'notifications',
-  notificationPreferences: 'notification_preferences',
-  refreshTokens: 'refresh_tokens',
-} as const satisfies Record<keyof Database, string>
-
-
-
 // Branded ID Types — phantom tags for type-safe entity IDs (zero runtime cost)
 // Branding IDs prevents mixing up different entity IDs (e.g., UserId vs ChannelId)
 type Brand<T, B> = T & { readonly __brand: B }

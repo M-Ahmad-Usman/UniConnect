@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Kysely } from 'kysely'
-import { TABLE_NAMES } from '../types.js'
+import { TABLE_NAMES } from './2026-03-07T02-23-50.616Z_create_tables.js'
 
 /**
  * Seeds lookup tables with initial values.
@@ -30,8 +30,6 @@ export async function down(db: Kysely<any>): Promise<void> {
     await db.deleteFrom(snakeCasedTableName).execute()
   }
 }
-
-// Seed data (immutable snapshot - do not modify, write new migrations instead)
 
 const FIVE_MB = 5_242_880
 const TEN_MB = 10_485_760
