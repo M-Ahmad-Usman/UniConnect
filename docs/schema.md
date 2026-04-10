@@ -568,3 +568,116 @@ refresh_tokens {
 
 refresh_tokens.user_id > users.id // ON DELETE CASCADE
 ```
+
+---
+
+## **Indexes**
+
+> Unique, PK, and FK constraints implicitly create indexes in Postgres and are documented in the migration files, not here. This section covers only explicit performance indexes.
+>
+> Partial indexes use `WHERE is_deleted = false` throughout to exclude soft-deleted rows — this keeps the index small and matches the WHERE clause all live-data queries use.
+
+### `programs`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_programs_department_id` | `department_id` | — | Listing all programs offered by a department |
+| `idx_programs_program_director_id` | `program_director_id` | — | Looking up which programs a teacher directs |
+
+### `users`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_users_public_id` | `public_id` | — | External-facing identifier used in API routes and audit references. No partial filter — deleted users may still be referenced by other entities (posts, notifications) and must be resolvable. |
+
+### `user_type_assignments`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_user_type_assignments_type` | `type` | — | Finding all users of a given type (e.g., all students, all teachers) |
+
+### `students`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_students_class_id` | `class_id` | — | Loading all students in a class (roster, CR validation) |
+
+### `teachers`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_teachers_department_id` | `department_id` | — | Listing all teachers in a department |
+
+### `classes`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_classes_public_id` | `public_id` | — | External-facing identifier used in API routes |
+
+### `societies`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_societies_public_id` | `public_id` | `is_deleted = false` | External-facing lookup, active societies only |
+| `idx_societies_department_id` | `department_id` | `is_deleted = false` | Listing active societies under a department |
+| `idx_societies_president_id` | `president_id` | `is_deleted = false` | Finding which active society a student presides over |
+| `idx_societies_convenor_id` | `convenor_id` | `is_deleted = false` | Finding which active society a teacher convenes |
+
+### `servers`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_servers_public_id` | `public_id` | `is_deleted = false` | External-facing lookup, active servers only |
+| `idx_servers_type` | `type` | `is_deleted = false` | ⚠️ Low cardinality (~3 values). Planner will likely prefer a seq scan for common types. Monitor with EXPLAIN ANALYZE and drop if unused. |
+
+### `channels`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_channels_public_id` | `public_id` | `is_deleted = false` | External-facing lookup, active channels only |
+| `idx_channels_server_id_course_id` | `server_id, course_id` | `is_deleted = false AND type = 'course'` | Loading course channels for a class server |
+| `idx_channels_server_id_program_id` | `server_id, program_id` | `is_deleted = false AND type = 'program'` | Loading program channels for a department server |
+| `idx_channels_type` | `type` | `is_deleted = false` | Filtering channels by type within a server |
+
+### `server_memberships`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_server_memberships_server_id` | `server_id` | — | Loading all members of a server. PK covers `(user_id, server_id)` so `user_id`-first lookups are already indexed. |
+
+### `society_membership_requests`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_society_membership_requests_society_id_is_reviewed` | `society_id, is_reviewed` | `is_reviewed = false` | Society admin view: pending requests awaiting review |
+| `idx_society_membership_requests_user_id` | `user_id` | — | Student view: "show me all my requests". Without this, any `WHERE user_id = $1` is a seq scan. |
+
+### `courses`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_courses_department_id` | `department_id` | — | Listing all courses offered by a department |
+
+### `course_assignments`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_course_assignments_teacher_id` | `teacher_id` | — | Loading a teacher's assigned courses. PK covers `(teacher_id, course_id, class_id)` so this may be redundant — the PK index already supports teacher_id-first lookups. |
+
+### `posts`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_posts_public_id` | `public_id` | `is_deleted = false` | External-facing lookup, active posts only |
+| `idx_posts_channel_id_priority` | `channel_id, priority` | `is_deleted = false` | Filtering posts by priority within a channel (important/urgent) |
+| `idx_posts_channel_id_created_at` | `channel_id, created_at` | `is_deleted = false` | Paginated post feed ordered by time |
+| `idx_posts_channel_id_is_pinned` | `channel_id` | `is_deleted = false AND is_pinned = true` | Pinned posts are loaded on every channel open as they should be shown on top of the channel. |
+
+### `post_attachments`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_post_attachments_post_id` | `post_id` | — | Loading all attachments for a post |
+
+### `user_role_assignments`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_user_role_assignments_server_id` | `server_id` | — | Loading all role assignments scoped to a server |
+| `idx_user_role_assignments_channel_id` | `channel_id` | — | Loading all role assignments scoped to a channel |
+
+### `notifications`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_notifications_post_id_user_id` | `post_id, user_id` | — | Checking if a user has a notification for a specific post |
+| `idx_notifications_user_id_created_at` | `user_id, created_at` | — | Paginated notification feed (all notifications) for a user |
+| `idx_notifications_unread_by_user` | `user_id, created_at` | `read_at IS NULL` | Unread notification feed and unread count queries. Same columns as above — both are kept because the partial index is significantly smaller and faster for pure unread queries. |
+
+### `refresh_tokens`
+| Index | Columns | Partial | Rationale |
+|---|---|---|---|
+| `idx_refresh_tokens_user_id_expires_at_revoked_at` | `user_id, expires_at, revoked_at` | — | Finding valid (non-expired, non-revoked) tokens for a user during refresh |
