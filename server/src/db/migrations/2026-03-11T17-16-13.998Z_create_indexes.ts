@@ -97,7 +97,6 @@ const TABLE_INDEXES: TableIndexes = {
     onPublicId: {
       name: 'idx_users_public_id',
       columns: ['public_id'],
-      where: sql<boolean>`is_deleted = false`,
     },
   },
 
