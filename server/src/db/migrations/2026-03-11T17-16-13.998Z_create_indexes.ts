@@ -229,7 +229,7 @@ const TABLE_INDEXES: TableIndexes = {
    * - onSocietyIdUserId: partial unique constraint for approved and pending requests
    */
   societyMembershipRequests: {
-    onSocietyIdIsReviewd: {
+    onSocietyIdIsReviewed: {
       name: 'idx_society_membership_requests_society_id_is_reviewed',
       columns: ['society_id', 'is_reviewed'],
       where: sql<boolean>`is_reviewed = false`,
