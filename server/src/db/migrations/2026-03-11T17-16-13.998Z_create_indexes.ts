@@ -233,6 +233,10 @@ const TABLE_INDEXES: TableIndexes = {
       columns: ['society_id', 'is_reviewed'],
       where: sql<boolean>`is_reviewed = false`,
     },
+    onUserId: {
+      name: 'idx_society_membership_requests_user_id',
+      columns: ['user_id'],
+    },
   },
 
   /**
