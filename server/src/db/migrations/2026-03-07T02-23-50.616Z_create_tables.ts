@@ -3,11 +3,13 @@ import type { Kysely } from 'kysely'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// This migration will create all tables with the following constraints:
-// 1. PRIMARY KEY
-// 2. UNIQUE
-// 3. NOT NULL
-// 4. CHECK
+/**
+ * Creates all tables defined in TABLE_NAMES with the following constraints:
+ * 1. PRIMARY KEY
+ * 2. UNIQUE
+ * 3. NOT NULL
+ * 4. CHECK
+**/
 
 export const TABLE_NAMES = {
   departments: 'departments',
