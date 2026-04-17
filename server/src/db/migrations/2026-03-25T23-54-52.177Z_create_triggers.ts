@@ -283,6 +283,91 @@ const triggerFunctions: { create: PGFunction, destroy: PGFunction } = {
       END;
       $$;
     `.execute(db)
+
+    await sql`
+      CREATE OR REPLACE FUNCTION trg_fn_enforce_user_type_integrity()
+        RETURNS TRIGGER
+        LANGUAGE plpgsql
+      AS $$
+      DECLARE
+        v_user_id INTEGER;
+        v_type VARCHAR(50);
+      BEGIN
+        CASE TG_TABLE_NAME
+          -- 1. Handle user_type_assignments changes
+          WHEN 'user_type_assignments' THEN
+            IF TG_OP IN ('INSERT', 'UPDATE') THEN
+              v_user_id := NEW.user_id;
+              v_type    := NEW.type;
+
+                -- If type requires a subtype, ensure it exists
+                IF v_type = 'student' THEN
+                    PERFORM 1 FROM students WHERE student_id = v_user_id;
+                    IF NOT FOUND THEN
+                        RAISE EXCEPTION 'Integrity violation. User % is assigned type "student" has no corresponding entry in "students"', v_user_id;
+                    END IF;
+                ELSIF v_type = 'teacher' THEN
+                    PERFORM 1 FROM teachers WHERE teacher_id = v_user_id;
+                    IF NOT FOUND THEN
+                        RAISE EXCEPTION 'Integrity violation. User % is assigned type "teacher" has no corresponding entry in "teachers"', v_user_id;
+                    END IF;
+                END IF;
+
+            ELSIF TG_OP = 'DELETE' THEN
+                v_user_id := OLD.user_id;
+                v_type    := OLD.type;
+
+                  -- If subtype still exists, block deletion
+                  IF v_type = 'student' THEN
+                    PERFORM 1 FROM students WHERE student_id = v_user_id;
+                    IF FOUND THEN
+                        RAISE EXCEPTION 'Integrity violation. Cannot remove "student" type  for User %. User % has still an entry in "students"', v_user_id, v_user_id;
+                    END IF;
+                ELSIF v_type = 'teacher' THEN
+                    PERFORM 1 FROM teachers WHERE teacher_id = v_user_id;
+                    IF FOUND THEN
+                        RAISE EXCEPTION 'Integrity violation. Cannot remove "teacher" type for User %. User % has still an entry in "students"', v_user_id, v_user_id;
+                    END IF;
+                END IF;
+            END IF;
+
+          -- 2. Handle students changes
+          WHEN 'students' THEN v_user_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.student_id ELSE NEW.student_id END;
+            IF TG_OP IN ('INSERT', 'UPDATE') THEN
+              PERFORM 1 FROM user_type_assignments WHERE user_id = v_user_id AND type = 'student';
+                IF NOT FOUND THEN
+                  RAISE EXCEPTION 'Integrity violation. User % has a students record but has no "student" type in "user_type_assignments".', v_user_id;
+                END IF;
+            ELSIF TG_OP = 'DELETE' THEN
+              PERFORM 1 FROM user_type_assignments WHERE user_id = v_user_id AND type = 'student';
+                IF FOUND THEN
+                  RAISE EXCEPTION 'Integrity violation. Cannot delete students record while "student" type in "user_type_assignments" exists for user %.', v_user_id;
+                END IF;
+            END IF;
+
+          -- 3. Handle teachers changes
+          WHEN 'teachers' THEN v_user_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.teacher_id ELSE NEW.teacher_id END;
+            IF TG_OP IN ('INSERT', 'UPDATE') THEN
+              PERFORM 1 FROM user_type_assignments WHERE user_id = v_user_id AND type = 'teacher';
+                IF NOT FOUND THEN
+                  RAISE EXCEPTION 'Integrity violation. User % has a teachers record but has no "teacher" type in "user_type_assignments".', v_user_id;
+                END IF;
+            ELSIF TG_OP = 'DELETE' THEN
+              PERFORM 1 FROM user_type_assignments WHERE user_id = v_user_id AND type = 'teacher';
+                IF FOUND THEN
+                  RAISE EXCEPTION 'Integrity violation. Cannot delete teachers record while "teacher" type in "user_type_assignments" exists for user %.', v_user_id;
+                END IF;
+            END IF;
+
+          ELSE
+            -- Should never happen if triggers are correctly attached
+            RAISE EXCEPTION 'Trigger fired on unexpected table: %', TG_TABLE_NAME;
+        END CASE;
+
+        RETURN NULL; -- Irrelevant for AFTER triggers
+      END;
+      $$;
+    `.execute(db)
   },
 
   destroy: async function (db) {
@@ -296,6 +381,7 @@ const triggerFunctions: { create: PGFunction, destroy: PGFunction } = {
     await sql`DROP FUNCTION IF EXISTS trg_fn_validate_curriculum_semester CASCADE;`.execute(db)
     await sql`DROP FUNCTION IF EXISTS trg_fn_validate_class_semester CASCADE;`.execute(db)
     await sql`DROP FUNCTION IF EXISTS trg_fn_validate_cr_membership CASCADE;`.execute(db)
+    await sql`DROP FUNCTION IF EXISTS trg_fn_enforce_user_type_integrity CASCADE;`.execute(db)
   },
 }
 
@@ -396,6 +482,31 @@ const triggers: { create: PGFunction, destroy: PGFunction } = {
       WHEN (NEW.cr_id IS NOT NULL)
       EXECUTE FUNCTION trg_fn_validate_cr_membership();
     `.execute(db)
+
+    await sql`
+      CREATE CONSTRAINT TRIGGER trg_enforce_user_type_assignments_integrity
+      AFTER INSERT OR UPDATE OR DELETE ON user_type_assignments
+      DEFERRABLE INITIALLY DEFERRED
+      FOR EACH ROW
+      EXECUTE FUNCTION trg_fn_enforce_user_type_integrity();
+    `.execute(db)
+
+    await sql`
+      CREATE CONSTRAINT TRIGGER trg_enforce_students_integrity
+      AFTER INSERT OR UPDATE OR DELETE ON students
+      DEFERRABLE INITIALLY DEFERRED
+      FOR EACH ROW
+      EXECUTE FUNCTION trg_fn_enforce_user_type_integrity();
+    `.execute(db)
+
+    await sql`
+      CREATE CONSTRAINT TRIGGER trg_enforce_teachers_integrity
+      AFTER INSERT OR UPDATE OR DELETE ON teachers
+      DEFERRABLE INITIALLY DEFERRED
+      FOR EACH ROW
+      EXECUTE FUNCTION trg_fn_enforce_user_type_integrity();
+    `.execute(db)
+
   },
 
   destroy: async function (db) {
@@ -414,5 +525,8 @@ const triggers: { create: PGFunction, destroy: PGFunction } = {
     await sql`DROP TRIGGER IF EXISTS trg_program_curricula_validate_semester ON program_curricula;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_classes_validate_semester ON classes;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_classes_validate_cr_membership ON classes;`.execute(db)
+    await sql`DROP TRIGGER IF EXISTS trg_enforce_user_type_assignments_integrity ON user_type_assignments;`.execute(db)
+    await sql`DROP TRIGGER IF EXISTS trg_enforce_students_integrity ON students;`.execute(db)
+    await sql`DROP TRIGGER IF EXISTS trg_enforce_teachers_integrity ON teachers;`.execute(db)
   },
 }
