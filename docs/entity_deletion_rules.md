@@ -146,9 +146,7 @@ Deleting a user type from the `user_types` table is blocked (`RESTRICT`) if any 
 
 `teachers` is an extension table for users with the 'teacher' type. It is removed automatically via CASCADE when the parent user is hard-deleted. Direct teacher deletion should not be exposed as an API operation.
 
-The presence of a row in `teachers` does NOT automatically mean the user has the teacher type — that relationship is tracked through `user_type_assignments`. It is the application's responsibility maintain consistency: if a user has a teacher profile, they should have the teacher type assigned, and vice versa.
-
-To delete a user who has a **Teacher** profile (i.e., a row in the `teachers` table), the application must check:
+To delete a user who has a **Teacher** profile, the application must check:
 
 | Check | Constraint |
 |---|---|
@@ -165,9 +163,7 @@ Note: `teachers.department_id` references `departments` with `ON DELETE RESTRICT
 
 `students` is an extension table for users with the 'student' type. Same as `teachers` — removed via CASCADE on parent user hard-delete. Direct student deletion should not be exposed as an API operation.
 
-The presence of a row in `students` does NOT automatically mean the user has the student type — that relationship is tracked through `user_type_assignments`. It is the application's responsibility maintain consistency: if a user has a student profile, they should have the student type assigned, and vice versa.
-
-To delete a user who has a **Student** profile (i.e., a row in the `students` table), the application must check:
+To delete a user who has a **Student** profile, the application must check:
 
 | Check | Constraint |
 |---|---|
