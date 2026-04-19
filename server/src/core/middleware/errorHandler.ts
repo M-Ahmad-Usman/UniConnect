@@ -13,43 +13,49 @@ interface DbError extends Error {
 }
 
 export function errorHandler(
-  error: Error,
+  error: unknown,
   request: Request,
   response: Response,
   _next: NextFunction,
 ): void {
 
-  let appError: AppError
+  // 1. Classify
+  const appError: AppError = createAppError(error)
 
-  // 1. classify the error
-
-  if (error instanceof AppError) {
-    appError = error
-  }
-  else if (error instanceof ZodError) {
-    // Raw Zod error that escaped the validation middleware
-    appError = new ValidationError(formatZodError(error))
-  }
-  else if (isDbError(error) && error.code === '23505') {
-    // PostgreSQL unique constraint violation
-    appError = new ConflictError('A resource with these details already exists')
-  }
-  else {
-    // Unknown error
-    // Log the original error so we can debug it, then send a safe response
-    logger.error({ error, requestId: request.requestId }, 'Unhandled error')
-    appError = new InternalServerError()
-  }
-
-  // 2. Log
-
+  // 2. log
   if (appError.isOperational) {
     // Expected failures — debug level, no stack trace needed
     logger.debug({ type: appError.type, path: request.path }, appError.message)
   }
+  else {
+    // Log the original error to debug it, then send a safe response
+    logger.error({ error, requestId: request.requestId }, 'Unhandled error')
+  }
 
   // 3. Build and send response
+  const errorResponseBody = buildErrorResponseBody(appError)
+  response.status(appError.statusCode).json(errorResponseBody)
 
+}
+
+function createAppError(error: unknown): AppError {
+  if (error instanceof AppError)
+    return error
+
+  else if (error instanceof ZodError)
+    // Raw Zod error that escaped the validation middleware
+    return new ValidationError(formatZodError(error))
+
+  else if (isDbError(error) && error.code === '23505')
+    // PostgreSQL unique constraint violation
+    return new ConflictError('A resource with these details already exists')
+
+  else
+    // Unknown error
+    return new InternalServerError()
+}
+
+function buildErrorResponseBody(appError: AppError): ErrorResponseBody | ValidationErrorResponseBody {
   if (appError instanceof ValidationError) {
     const body: ValidationErrorResponseBody = {
       success: false,
@@ -59,7 +65,7 @@ export function errorHandler(
         details: appError.details,
       },
     }
-    response.status(appError.statusCode).json(body)
+    return body
   }
   else {
     const body: ErrorResponseBody = {
@@ -69,7 +75,7 @@ export function errorHandler(
         message: appError.message,
       },
     }
-    response.status(appError.statusCode).json(body)
+    return body
   }
 }
 
