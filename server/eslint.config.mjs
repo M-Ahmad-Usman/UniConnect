@@ -15,9 +15,8 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['eslint.config.mjs'],
-        },
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
@@ -44,5 +43,10 @@ export default defineConfig(
       'eqeqeq': ['error', 'always'],
       'no-console': 'off',
     },
+  },
+  {
+    // Disable type-aware linting for root config files to prevent projectService conflicts
+    files: ['eslint.config.mjs', 'vitest.config.ts'],
+    ...tseslint.configs.disableTypeChecked,
   },
 )
