@@ -15,7 +15,9 @@
     "migrate:down": "tsx src/db/migrator.ts down",
     "create:migration": "tsx src/db/migrator.ts create",
     "get:migrations": "tsx src/db/migrator.ts get:migrations",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
