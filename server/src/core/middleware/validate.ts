@@ -6,7 +6,7 @@ import type { z } from 'zod'
 
 type ValidationSource = 'body' | 'query' | 'params'
 
-export const validationHandler = (
+export const validate = (
   schema: z.ZodType,
   target: ValidationSource = 'body',
 ) => {

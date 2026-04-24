@@ -1,5 +1,5 @@
 import { errorHandler } from './errorHandler.js'
-import { notFoundHandler } from './notFound.js'
-import { validationHandler } from './validate.js'
+import { notFoundHandler } from './notFoundHandler.js'
+import { validate } from './validate.js'
 
-export default { errorHandler, notFoundHandler, validationHandler }
+export default { errorHandler, notFoundHandler, validate }
