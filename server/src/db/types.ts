@@ -1,4 +1,3 @@
-
 import type {
   ColumnType,
   Generated,
@@ -82,26 +81,6 @@ export interface Database {
   refreshTokens: RefreshTokenTable
 }
 
-// Branded ID Types — phantom tags for type-safe entity IDs (zero runtime cost)
-// Branding IDs prevents mixing up different entity IDs (e.g., UserId vs ChannelId)
-type Brand<T, B> = T & { readonly __brand: B }
-
-export type DepartmentId = Brand<number, 'DepartmentId'>
-export type ProgramId = Brand<number, 'ProgramId'>
-export type UserId = Brand<number, 'UserId'>
-export type StudentId = Brand<number, 'StudentId'>
-export type TeacherId = Brand<number, 'TeacherId'>
-export type ClassId = Brand<number, 'ClassId'>
-export type SocietyId = Brand<number, 'SocietyId'>
-export type ServerId = Brand<number, 'ServerId'>
-export type ChannelId = Brand<number, 'ChannelId'>
-export type CourseId = Brand<number, 'CourseId'>
-export type PostId = Brand<number, 'PostId'>
-export type PermissionId = Brand<number, 'PermissionId'>
-export type UserRoleValue = Brand<string, 'UserRoleValue'>
-
-
-
 // Types for Timestamp related Audit fields
 
 // Fields Controlled By db (triggers or default values)
@@ -128,13 +107,13 @@ type TokenRevokedAt = ColumnType<Date | null, Date | null, Date>
 // Table Interfaces: Each interface describes one table in DB
 
 export interface DepartmentTable {
-  id: Generated<DepartmentId>
+  id: Generated<number>
   name: string
   code: string
 
-  hodId: TeacherId | null
+  hodId: number | null
 
-  serverId: ServerId
+  serverId: number
 }
 
 export type Department = Selectable<DepartmentTable>
@@ -151,13 +130,13 @@ export type NewDiscipline = Insertable<DisciplineTable>
 export type UpdateDiscipline = Updateable<DisciplineTable>
 
 export interface ProgramTable {
-  id: Generated<ProgramId>
+  id: Generated<number>
 
-  departmentId: DepartmentId
+  departmentId: number
   discipline: DisciplineValue
   degreeLevel: DegreeLevel
 
-  programDirectorId: TeacherId
+  programDirectorId: number
 
   semesters: number
   code: string
@@ -170,8 +149,8 @@ export type UpdateProgram = Updateable<ProgramTable>
 export interface ProgramCurriculumTable {
   id: Generated<number>
 
-  programId: ProgramId
-  courseId: CourseId
+  programId: number
+  courseId: number
   semesterNumber: number
   batchYear: number
 }
@@ -191,7 +170,7 @@ export type NewUserType = Insertable<UserTypeTable>
 export type UpdateUserType = Updateable<UserTypeTable>
 
 export interface UserTable {
-  id: Generated<UserId>
+  id: Generated<number>
   publicId: ColumnType<string, never, never>
 
   fullName: string
@@ -205,7 +184,7 @@ export interface UserTable {
   bio: string | null
 
   isDeleted: Generated<boolean>
-  deletedBy: UserId | null
+  deletedBy: number | null
   deletedAt: DeletedAt
 
   createdAt: CreatedAt
@@ -217,7 +196,7 @@ export type NewUser = Insertable<UserTable>
 export type UpdateUser = Updateable<UserTable>
 
 export interface UserTypeAssignmentTable {
-  userId: UserId
+  userId: number
   type: UserTypeValue
 }
 
@@ -226,8 +205,8 @@ export type NewUserTypeAssignment = Insertable<UserTypeAssignmentTable>
 export type UpdateUserTypeAssignment = Updateable<UserTypeAssignmentTable>
 
 export interface StudentTable {
-  studentId: StudentId
-  classId: ClassId
+  studentId: number
+  classId: number
   rollNumber: number
 }
 
@@ -246,8 +225,8 @@ export type NewDesignation = Insertable<DesignationTable>
 export type UpdateDesignation = Updateable<DesignationTable>
 
 export interface TeacherTable {
-  teacherId: TeacherId
-  departmentId: DepartmentId
+  teacherId: number
+  departmentId: number
   designation: DesignationValue
 }
 
@@ -256,19 +235,19 @@ export type NewTeacher = Insertable<TeacherTable>
 export type UpdateTeacher = Updateable<TeacherTable>
 
 export interface ClassTable {
-  id: Generated<ClassId>
+  id: Generated<number>
   publicId: ColumnType<string, never, never>
 
-  programId: ProgramId
+  programId: number
   currentSemester: number
   section: ClassSection
 
-  crId: StudentId | null
+  crId: number | null
 
   academicYear: number
   admissionYear: number
 
-  serverId: ServerId
+  serverId: number
 }
 
 export type Class = Selectable<ClassTable>
@@ -276,19 +255,19 @@ export type NewClass = Insertable<ClassTable>
 export type UpdateClass = Updateable<ClassTable>
 
 export interface SocietyTable {
-  id: Generated<SocietyId>
+  id: Generated<number>
   publicId: ColumnType<string, never, never>
 
   name: string
   description: string | null
 
-  departmentId: DepartmentId
-  presidentId: StudentId
-  convenorId: TeacherId
-  serverId: ServerId
+  departmentId: number
+  presidentId: number
+  convenorId: number
+  serverId: number
 
   isDeleted: Generated<boolean>
-  deletedBy: UserId | null
+  deletedBy: number | null
   deletedAt: DeletedAt
 
   createdAt: CreatedAt
@@ -309,7 +288,7 @@ export type NewServerType = Insertable<ServerTypeTable>
 export type UpdateServerType = Updateable<ServerTypeTable>
 
 export interface ServerTable {
-  id: Generated<ServerId>
+  id: Generated<number>
   publicId: ColumnType<string, never, never>
 
   name: string
@@ -319,10 +298,10 @@ export interface ServerTable {
   type: ServerTypeValue
 
   isDeleted: Generated<boolean>
-  deletedBy: UserId | null
+  deletedBy: number | null
   deletedAt: DeletedAt
 
-  createdBy: UserId | null
+  createdBy: number | null
   createdAt: CreatedAt
 }
 
@@ -341,7 +320,7 @@ export type NewChannelType = Insertable<ChannelTypeTable>
 export type UpdateChannelType = Updateable<ChannelTypeTable>
 
 export interface ChannelTable {
-  id: Generated<ChannelId>
+  id: Generated<number>
   publicId: ColumnType<string, never, never>
 
   name: string
@@ -349,26 +328,26 @@ export interface ChannelTable {
 
   type: ChannelTypeValue
 
-  serverId: ServerId
+  serverId: number
 
-  courseId: CourseId | null
+  courseId: number | null
 
-  programId: ProgramId | null
+  programId: number | null
 
   isLocked: Generated<boolean>
-  lockedBy: UserId | null
+  lockedBy: number | null
   lockedAt: LockedAt
 
   isArchived: Generated<boolean>
-  archivedBy: UserId | null
+  archivedBy: number | null
   archivedAt: ArchivedAt
 
   isDeleted: Generated<boolean>
-  deletedBy: UserId | null
+  deletedBy: number | null
   deletedAt: DeletedAt
 
   isAutoCreated: Generated<boolean>
-  createdBy: UserId | null
+  createdBy: number | null
   createdAt: CreatedAt
 }
 
@@ -377,8 +356,8 @@ export type NewChannel = Insertable<ChannelTable>
 export type UpdateChannel = Updateable<ChannelTable>
 
 export interface ServerMembershipTable {
-  userId: UserId
-  serverId: ServerId
+  userId: number
+  serverId: number
 
   joinedAt: ServerJoinedAt
   isAutoJoined: Generated<boolean>
@@ -391,15 +370,15 @@ export type UpdateServerMembership = Updateable<ServerMembershipTable>
 export interface SocietyMembershipRequestTable {
   id: Generated<number>
 
-  societyId: SocietyId
-  userId: UserId
+  societyId: number
+  userId: number
 
   status: MembershipRequestStatus
 
   requestedAt: MembershipRequestedAt
 
   isReviewed: Generated<boolean>
-  reviewedBy: UserId | null
+  reviewedBy: number | null
   reviewedAt: RequestReviewedAt
 }
 
@@ -408,13 +387,13 @@ export type NewSocietyMembershipRequest = Insertable<SocietyMembershipRequestTab
 export type UpdateSocietyMembershipRequest = Updateable<SocietyMembershipRequestTable>
 
 export interface CourseTable {
-  id: Generated<CourseId>
+  id: Generated<number>
 
   title: string
   code: string
   creditHours: number
 
-  departmentId: DepartmentId
+  departmentId: number
 }
 
 export type Course = Selectable<CourseTable>
@@ -422,9 +401,9 @@ export type NewCourse = Insertable<CourseTable>
 export type UpdateCourse = Updateable<CourseTable>
 
 export interface CourseAssignmentTable {
-  teacherId: TeacherId
-  courseId: CourseId
-  classId: ClassId
+  teacherId: number
+  courseId: number
+  classId: number
 }
 
 export type CourseAssignment = Selectable<CourseAssignmentTable>
@@ -432,29 +411,29 @@ export type NewCourseAssignment = Insertable<CourseAssignmentTable>
 export type UpdateCourseAssignment = Updateable<CourseAssignmentTable>
 
 export interface PostTable {
-  id: Generated<PostId>
+  id: Generated<number>
   publicId: ColumnType<string, never, never>
 
   title: string
   content: string
 
-  channelId: ChannelId
+  channelId: number
 
   priority: PostPriority
 
   isPinned: Generated<boolean>
-  pinnedBy: UserId | null
+  pinnedBy: number | null
   pinnedAt: PostPinnedAt
 
   isDeleted: Generated<boolean>
-  deletedBy: UserId | null
+  deletedBy: number | null
   deletedAt: DeletedAt
 
-  createdBy: UserId
+  createdBy: number
   createdAt: CreatedAt
 
   isEdited: Generated<boolean>
-  editedBy: UserId | null
+  editedBy: number | null
   editedAt: EditedAt
 }
 
@@ -475,7 +454,7 @@ export type UpdatePostAttachmentType = Updateable<PostAttachmentTypeTable>
 export interface PostAttachmentTable {
   id: Generated<number>
 
-  postId: PostId
+  postId: number
 
   attachmentUrl: string
 
@@ -489,7 +468,7 @@ export type NewPostAttachment = Insertable<PostAttachmentTable>
 export type UpdatePostAttachment = Updateable<PostAttachmentTable>
 
 export interface UserRoleTable {
-  value: UserRoleValue
+  value: string
   label: string
   description: string | null
 }
@@ -499,7 +478,7 @@ export type NewUserRole = Insertable<UserRoleTable>
 export type UpdateUserRole = Updateable<UserRoleTable>
 
 export interface PermissionTable {
-  id: Generated<PermissionId>
+  id: Generated<number>
 
   action: string
   resource: string
@@ -510,8 +489,8 @@ export type NewPermission = Insertable<PermissionTable>
 export type UpdatePermission = Updateable<PermissionTable>
 
 export interface UserRolePermissionTable {
-  role: UserRoleValue
-  permissionId: PermissionId
+  role: string
+  permissionId: number
 }
 
 export type UserRolePermission = Selectable<UserRolePermissionTable>
@@ -521,13 +500,13 @@ export type UpdateUserRolePermission = Updateable<UserRolePermissionTable>
 export interface UserRoleAssignmentTable {
   id: Generated<number>
 
-  userId: UserId
-  role: UserRoleValue
+  userId: number
+  role: string
 
-  serverId: ServerId | null
-  channelId: ChannelId | null
+  serverId: number | null
+  channelId: number | null
 
-  assignedBy: UserId | null
+  assignedBy: number | null
   assignedAt: RoleAssignedAt
   expiresAt: Date | null
 }
@@ -553,9 +532,9 @@ export interface NotificationTable {
 
   type: NotificationTypeValue
 
-  userId: UserId
+  userId: number
 
-  postId: PostId | null
+  postId: number | null
 
   readAt: NotificationReadAt
   createdAt: CreatedAt
@@ -568,12 +547,12 @@ export type UpdateNotification = Updateable<NotificationTable>
 export interface NotificationPreferenceTable {
   id: Generated<number>
 
-  userId: UserId
+  userId: number
 
   scope: NotificationScope
 
-  serverId: ServerId | null
-  channelId: ChannelId | null
+  serverId: number | null
+  channelId: number | null
 
   isSubscribed: Generated<boolean>
 
@@ -587,7 +566,7 @@ export type UpdateNotificationPreference = Updateable<NotificationPreferenceTabl
 export interface RefreshTokenTable {
   id: Generated<number>
 
-  userId: UserId
+  userId: number
 
   tokenHash: string
 
