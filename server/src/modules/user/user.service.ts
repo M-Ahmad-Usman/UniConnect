@@ -372,7 +372,7 @@ export async function getProfile(userId: number) {
 
   return {
     ...user,
-    roles: Array.from(new Set(roles.map((role) => role.role))),
+    roles,
   };
 }
 

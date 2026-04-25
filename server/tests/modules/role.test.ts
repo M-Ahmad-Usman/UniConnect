@@ -363,7 +363,7 @@ describe("Module 7 - Role Management", () => {
 
     // ─── Moderator Assignment ────────────────────────────────────────
 
-    it("should allow admin to assign server-scoped moderator", async () => {
+    it("should allow admin to assign server moderator", async () => {
       const admin = await createUser({
         email: `admin-mod-${uid()}@test.com`,
         password: "Pass@1234",
@@ -382,11 +382,11 @@ describe("Module 7 - Role Management", () => {
       const res = await request(app)
         .post("/api/roles/assign")
         .set("Cookie", cookies)
-        .send({ userId: teacher.id, role: "moderator", serverId: deptRecord!.serverId });
+        .send({ userId: teacher.id, role: "server_moderator", serverId: deptRecord!.serverId });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("moderator");
+      expect(res.body.data.role).toBe("server_moderator");
       expect(res.body.data.scopeType).toBe("server");
       expect(res.body.data.serverId).toBe(deptRecord!.serverId);
 
@@ -398,7 +398,7 @@ describe("Module 7 - Role Management", () => {
       expect(assignment!.scopeType).toBe("SERVER");
     });
 
-    it("should allow admin to assign channel-scoped moderator", async () => {
+    it("should allow admin to assign channel moderator", async () => {
       const admin = await createUser({
         email: `admin-modch-${uid()}@test.com`,
         password: "Pass@1234",
@@ -429,19 +429,19 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({
           userId: teacher.id,
-          role: "moderator",
+          role: "channel_moderator",
           serverId: deptRecord!.serverId,
           channelId: channel.id,
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("moderator");
+      expect(res.body.data.role).toBe("channel_moderator");
       expect(res.body.data.scopeType).toBe("channel");
       expect(res.body.data.channelId).toBe(channel.id);
     });
 
-    it("should allow CR to assign moderator in their class server", async () => {
+    it("should allow CR to assign server moderator in their class server", async () => {
       const dept = await createDepartment({ code: `D-CRMOD-${uid()}` });
       const program = await createProgram(dept.id);
       const cls = await createClass(program.id);
@@ -465,16 +465,16 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({
           userId: otherStudent.id,
-          role: "moderator",
+          role: "server_moderator",
           serverId: classRecord!.serverId,
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("moderator");
+      expect(res.body.data.role).toBe("server_moderator");
     });
 
-    it("should return 403 when CR assigns moderator in another server", async () => {
+    it("should return 403 when CR assigns server moderator in another server", async () => {
       const dept = await createDepartment({ code: `D-CRMOD2-${uid()}` });
       const program = await createProgram(dept.id);
       const cls1 = await createClass(program.id, { section: "A" });
@@ -499,7 +499,7 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({
           userId: otherStudent.id,
-          role: "moderator",
+          role: "server_moderator",
           serverId: cls2Record!.serverId,
         });
 
@@ -507,7 +507,7 @@ describe("Module 7 - Role Management", () => {
       expect(res.body.success).toBe(false);
     });
 
-    it("should allow convenor to assign moderator in their society server", async () => {
+    it("should allow convenor to assign server moderator in their society server", async () => {
       const dept = await createDepartment({ code: `D-CMOD-${uid()}` });
       const program = await createProgram(dept.id);
       const cls = await createClass(program.id);
@@ -535,16 +535,16 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({
           userId: member.id,
-          role: "moderator",
+          role: "server_moderator",
           serverId: society.serverId,
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("moderator");
+      expect(res.body.data.role).toBe("server_moderator");
     });
 
-    it("should allow president to assign moderator in their society server", async () => {
+    it("should allow president to assign server moderator in their society server", async () => {
       const dept = await createDepartment({ code: `D-PMOD-${uid()}` });
       const program = await createProgram(dept.id);
       const cls = await createClass(program.id);
@@ -572,16 +572,16 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({
           userId: member.id,
-          role: "moderator",
+          role: "server_moderator",
           serverId: society.serverId,
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("moderator");
+      expect(res.body.data.role).toBe("server_moderator");
     });
 
-    it("should return 409 when assigning duplicate moderator", async () => {
+    it("should return 409 when assigning duplicate server moderator", async () => {
       const admin = await createUser({
         email: `admin-moddup-${uid()}@test.com`,
         password: "Pass@1234",
@@ -601,19 +601,19 @@ describe("Module 7 - Role Management", () => {
       await request(app)
         .post("/api/roles/assign")
         .set("Cookie", cookies)
-        .send({ userId: teacher.id, role: "moderator", serverId: deptRecord!.serverId });
+        .send({ userId: teacher.id, role: "server_moderator", serverId: deptRecord!.serverId });
 
       // Duplicate assignment
       const res = await request(app)
         .post("/api/roles/assign")
         .set("Cookie", cookies)
-        .send({ userId: teacher.id, role: "moderator", serverId: deptRecord!.serverId });
+        .send({ userId: teacher.id, role: "server_moderator", serverId: deptRecord!.serverId });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
     });
 
-    it("should reject moderator assignment when user is not a server member", async () => {
+    it("should reject server moderator assignment when user is not a server member", async () => {
       const admin = await createUser({
         email: `admin-modnm-${uid()}@test.com`,
         password: "Pass@1234",
@@ -634,7 +634,7 @@ describe("Module 7 - Role Management", () => {
       const res = await request(app)
         .post("/api/roles/assign")
         .set("Cookie", cookies)
-        .send({ userId: teacher.id, role: "moderator", serverId: deptRecord!.serverId });
+        .send({ userId: teacher.id, role: "server_moderator", serverId: deptRecord!.serverId });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -948,7 +948,7 @@ describe("Module 7 - Role Management", () => {
       expect(updated!.programDirectorId).toBeNull();
     });
 
-    it("should revoke moderator → assignment deleted", async () => {
+    it("should revoke server moderator → assignment deleted", async () => {
       const admin = await createUser({
         email: `admin-rmod-${uid()}@test.com`,
         password: "Pass@1234",
@@ -978,11 +978,11 @@ describe("Module 7 - Role Management", () => {
       const res = await request(app)
         .post("/api/roles/revoke")
         .set("Cookie", cookies)
-        .send({ userId: teacher.id, role: "moderator", serverId: deptRecord!.serverId });
+        .send({ userId: teacher.id, role: "server_moderator", serverId: deptRecord!.serverId });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("moderator");
+      expect(res.body.data.role).toBe("server_moderator");
 
       // Verify DB
       const assignment = await prisma.moderatorAssignment.findFirst({

@@ -1,4 +1,4 @@
-import type { ServerType } from './enums';
+import type { ServerType, UserType } from './enums';
 
 // ─── Server List Item ───────────────────────────────────────────────────────
 
@@ -54,12 +54,21 @@ export interface ServerMember {
   userId: number;
   joinedAt: string;
   isAutoJoined: boolean;
-  badges: string[];
+  badges: MemberBadge[];
   user: {
     id: number;
     fullName: string;
     email: string;
-    userType: string;
+    userType: UserType;
     profilePictureUrl: string | null;
   };
 }
+
+export type MemberBadge =
+  | 'hod'
+  | 'program_director'
+  | 'cr'
+  | 'president'
+  | 'convenor'
+  | 'server_moderator'
+  | 'channel_moderator';

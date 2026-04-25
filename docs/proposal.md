@@ -43,9 +43,13 @@ Currently, National Textile University lacks a unified digital platform for publ
 | | HOD (Head of Dept) | Department-wide | Post to entire department, manage teachers and classes |
 | | Program Director | Program-specific | Post to specific program (CS/SE/AI) |
 | | Society Convenor | Society-specific | Oversee society activities |
+| | Server Moderator | Server-specific | Moderate and post across all channels in an assigned server |
+| | Channel Moderator | Channel-specific | Moderate and post only in an assigned channel |
 | **Student** | Regular Student | View & Interact | View announcements |
 | | Class CR | Class-specific | Post announcements to their class (e.g., CS-6th Semester) |
 | | Society President | Society-specific | Create society events and announcements |
+| | Server Moderator | Server-specific | Moderate and post across all channels in an assigned server |
+| | Channel Moderator | Channel-specific | Moderate and post only in an assigned channel |
 
 ### 1.4 Key Differentiators
 
@@ -62,7 +66,7 @@ Currently, National Textile University lacks a unified digital platform for publ
 **Our system uniquely offers:**
 
 - **Discord-like server/channel architecture** - Organized structure where each department, class, and society is a "server" with multiple channels
-- **Hierarchical role-based access control** - 3 main user types (Admin, Teacher, Student) with multiple roles
+- **Hierarchical role-based access control** - 3 main user types (Admin, Teacher, Student) with explicit server-level and channel-level moderation roles
 - **Channel-based organization** - Users browse specific channels for announcements (no information overload)
 - **Role-based posting permissions** - Only authorized users can post in specific channels
 - **Official badge verification** - Role-based badges for authentic announcements
@@ -78,21 +82,25 @@ Teacher (Faculty) - Can have multiple roles simultaneously
 │   ├── Regular Teacher (course-specific)
 │   ├── HOD (department-wide + user management)
 │   ├── Program Director (program-specific: CS/SE/AI)
-│   └── Society Convenor
+│   ├── Society Convenor
+│   ├── Server Moderator (assigned server scope)
+│   └── Channel Moderator (assigned channel scope)
 │
 Student - Can have multiple roles simultaneously
     ├── Regular Student (view & interact)
     ├── Class CR (class-specific posting)
-    └── Society President (society events)
+    ├── Society President (society events)
+    ├── Server Moderator (assigned server scope)
+    └── Channel Moderator (assigned channel scope)
 ```
 
-**Note:** A teacher can simultaneously be HOD + Program Director + Society Convenor. A student can be CR + Society President.
+**Note:** A teacher can simultaneously be HOD + Program Director + Society Convenor + scoped moderator assignments. A student can be CR + Society President + scoped moderator assignments.
 
 ---
 
 ## 3. Conclusion
 
-The University Social Community Platform addresses a critical need at National Textile University by providing a centralized, intelligent, and cross-platform communication solution. By implementing a flexible hierarchical role-based access control system (3 main roles with 7 sub-roles) and smart notification filtering, the system ensures that students and faculty receive relevant information without information overload.
+The University Social Community Platform addresses a critical need at National Textile University by providing a centralized, intelligent, and cross-platform communication solution. By implementing a flexible hierarchical role-based access control system with explicit server-level and channel-level moderator roles, plus smart notification filtering, the system ensures that students and faculty receive relevant information without information overload.
 
 The unique role structure empowers department management by allowing HODs to independently manage their departments, assign sub-roles, and maintain content quality without constant Central Admin intervention. This distributed responsibility model ensures scalability and efficient administration.
 

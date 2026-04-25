@@ -236,11 +236,13 @@ export async function canPostInChannel(
         // President/Convenor can post in all society server channels
         return true;
 
-      case "moderator":
+      case "server_moderator":
         // Server moderator can post in all channels (FR-29)
-        if (role.scopeType === "server") return true;
+        return true;
+
+      case "channel_moderator":
         // Channel moderator can post in assigned channel (FR-30)
-        if (role.scopeType === "channel" && role.channelId === channelId) return true;
+        if (role.channelId === channelId) return true;
         break;
     }
   }

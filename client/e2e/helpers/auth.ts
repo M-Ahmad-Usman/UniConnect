@@ -55,6 +55,20 @@ export const e2eUsers = {
     fullName: 'E2E Module Notifications',
     mustChangePassword: false,
   },
+  moduleManager: {
+    email: 'e2e.module.manager@uniconnect.test',
+    password: 'Manager@1234',
+    fullName: 'E2E Module Manager',
+    mustChangePassword: false,
+    userType: 'Teacher',
+  },
+  moduleViewer: {
+    email: 'e2e.module.viewer@uniconnect.test',
+    password: 'Viewer@1234',
+    fullName: 'E2E Module Viewer',
+    mustChangePassword: false,
+    userType: 'Student',
+  },
 } as const;
 
 export function generateResetToken(userId: number, email: string) {

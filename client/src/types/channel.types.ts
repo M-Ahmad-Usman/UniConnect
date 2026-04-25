@@ -56,3 +56,19 @@ export interface UpdateChannelRequest {
   name?: string;
   description?: string;
 }
+
+export interface UpdateChannelResponse {
+  id: number;
+  serverId: number;
+  name: string;
+  description: string | null;
+  type: ChannelType;
+  isLocked: boolean;
+  isAutoCreated: boolean;
+  isDeleted: boolean;
+  isArchived: boolean;
+  createdAt: string;
+}
+
+export type LockChannelResponse = UpdateChannelResponse;
+export type UnlockChannelResponse = UpdateChannelResponse;

@@ -329,7 +329,7 @@ POST_ATTACHMENT.post_id > POST.id
 
 ROLE {
   id SERIAL PK
-  name VARCHAR(100) // NOT NULL enum ['hod', 'program_director' 'society_president', 'society_convenor', 'cr', 'moderator']
+  name VARCHAR(100) // NOT NULL enum ['hod', 'program_director', 'society_president', 'society_convenor', 'cr', 'server_moderator', 'channel_moderator']
 }
 
 PERMISSION {
@@ -353,6 +353,10 @@ MODERATOR_ASSIGNMENT {
   scope_type VARCHAR(20) // NOT NULL enum ['server' or 'channel']
   server_id INTEGER FK // NOT NULL Always required
   channel_id INTEGER FK
+
+  // Application-level role names map as follows:
+  // scope_type='server'  => 'server_moderator'
+  // scope_type='channel' => 'channel_moderator'
 
   // CONSTRAINT: CHECK (
     // (scope_type='server' AND channel_id IS NULL)

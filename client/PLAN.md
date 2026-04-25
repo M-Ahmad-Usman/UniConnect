@@ -53,7 +53,7 @@ This frontend implementation will satisfy **all 76 functional requirements** acr
 - **ESLint + Prettier** - Code quality and consistency
 
 ### UI & Styling
-- **Tailwind CSS v4** - Utility-first CSS with JIT compilation
+- **Tailwind CSS v4** - Utility-first CSS with official Vite plugin integration
 - **shadcn/ui** - Accessible, composable component primitives (current v4 stack uses Base UI)
 - **Lucide React** - Icon library
 - **Framer Motion** - Animations for modals, transitions, toasts
@@ -111,7 +111,7 @@ All backend communication goes through a dedicated API layer:
 - `usePermissions()` hook checks user roles and type
 - `<Can action="...">` wrapper component for conditional rendering
 - Admin bypass: admins see all management actions
-- Scoped roles: HOD/CR/Moderator/President see actions in their scope
+- Scoped roles: HOD/CR/Society leadership plus explicit `server_moderator` and `channel_moderator` assignments see actions only in their scope
 
 ### 5. Optimistic Updates with Rollback
 - TanStack Query mutations update cache optimistically
@@ -136,12 +136,13 @@ All backend communication goes through a dedicated API layer:
 #### Deliverables
 1. **Vite Project Setup**
    - React 19 + TypeScript 5.9
-   - Tailwind CSS v4 with JIT
+  - Tailwind CSS v4 with official Vite plugin setup (`@tailwindcss/vite`) and core import in `src/index.css`
    - Vite proxy: `/api` → `http://localhost:4000`, `/socket.io` → WebSocket proxy
    - Path aliases: `@/*` → `src/*`
 
 2. **shadcn/ui Installation**
-   - Initialize shadcn/ui with Tailwind v4 config
+  - Initialize shadcn/ui with Tailwind v4-compatible setup
+  - Layer `shadcn/tailwind.css` after Tailwind core import
    - Install primitive components: Button, Card, Dialog, Input, Label, Select, Textarea, Toast
 
 3. **Axios Instance** (`src/api/client.ts`)
@@ -239,14 +240,14 @@ All backend communication goes through a dedicated API layer:
     - `EmptyState.tsx` - For empty lists, 404s
     - `LoadingSpinner.tsx` - Full-page and inline variants
     - `ConfirmDialog.tsx` - Reusable confirmation modal
-    - `RoleBadge.tsx` - Colored badge for roles (HOD, CR, President, Moderator, etc.)
+    - `RoleBadge.tsx` - Colored badge for roles (HOD, CR, Society President, Server Moderator, Channel Moderator, etc.)
 
 #### Verification Targets
 - `npm run dev` starts without errors
 - Vite proxy connects to backend `http://localhost:4000`
 - Test API call `GET /api/health` returns `{ success: true }`
 - `npm run type-check` passes
-- Tailwind CSS classes render correctly
+- Tailwind CSS utilities and shadcn theme tokens render correctly
 
 ---
 
@@ -629,7 +630,7 @@ Submit → `PATCH /api/channels/:id`
 - Full name (bold)
 - Email (muted)
 - User type badge (Admin/Teacher/Student)
-- Role badges (HOD, CR, President, Moderator, etc.) - horizontally stacked
+- Role badges (HOD, CR, Society President, Server Moderator, Channel Moderator, etc.) - horizontally stacked
 
 ##### `RoleBadge` (`src/components/shared/RoleBadge.tsx`)
 Colored pill with role name:
@@ -697,9 +698,11 @@ export function usePermissions() {
   const canManageChannels = (serverId: number) => {
     if (user?.userType === 'ADMIN') return true;
     // TODO: Check if user has 'create:channel' permission on this server
-    // For now, simplified: HOD/CR/Convenor/President can manage
-    return user?.roles?.some(role =>
-      ['hod', 'cr', 'president', 'convenor'].includes(role)
+    // For now, simplified: scoped leadership roles can manage inside their server
+    return user?.roles?.some(
+      (role) =>
+        role.serverId === serverId &&
+        ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role)
     );
   };
 
@@ -1613,7 +1616,8 @@ export const societiesApi = {
   - "CR of CS-7A"
   - "Program Director of BS Computer Science"
   - "Society President of Debating Society"
-  - "Moderator of #announcements in CS Department Server"
+  - "Server Moderator of CS Department Server"
+  - "Channel Moderator of #announcements in CS Department Server"
 - Each role: badge + "Revoke" button
 
 ##### `AssignRoleForm` (`src/features/roles/components/AssignRoleForm.tsx`)
@@ -1625,7 +1629,8 @@ Dynamic form that adapts based on selected role type:
 - CR (Class Representative)
 - Society President
 - Society Convenor
-- Moderator
+- Server Moderator
+- Channel Moderator
 
 **Step 2:** Select scope (dropdown based on role)
 - **HOD:** Select Department
@@ -1633,7 +1638,8 @@ Dynamic form that adapts based on selected role type:
 - **CR:** Select Class
 - **Society President:** Select Society
 - **Society Convenor:** Select Society
-- **Moderator:** Select Server (+ optional Channel for channel-scoped moderator)
+- **Server Moderator:** Select Server
+- **Channel Moderator:** Select Server, then Channel
 
 **Step 3:** Submit
 - `POST /api/roles/assign` with payload:
@@ -1641,8 +1647,9 @@ Dynamic form that adapts based on selected role type:
   // Non-moderator roles
   { userId: number, role: string, scopeId: number }
 
-  // Moderator role
-  { userId: number, role: "moderator", serverId: number, channelId?: number }
+  // Moderation roles
+  { userId: number, role: "server_moderator", serverId: number }
+  { userId: number, role: "channel_moderator", serverId: number, channelId: number }
   ```
 
 ##### `RevokeRoleButton` (`src/features/roles/components/RevokeRoleButton.tsx`)
@@ -1656,8 +1663,8 @@ Dropdown that loads entities based on role type:
 - **Program:** `GET /api/departments/:id/programs` (nested, department selected first)
 - **Class:** `GET /api/classes`
 - **Society:** `GET /api/societies`
-- **Server:** `GET /api/servers` (for moderator)
-- **Channel:** `GET /api/servers/:id/channels` (for channel-scoped moderator)
+- **Server:** `GET /api/servers` (for server moderator / channel moderator)
+- **Channel:** `GET /api/servers/:id/channels` (for channel moderator)
 
 #### API Integrations
 ```typescript
@@ -1699,13 +1706,20 @@ export function usePermissions() {
   return {
     canManageChannels: (serverId: number) => {
       // Check if user is HOD, CR, President, or Convenor for this server
-      // Simplified: return true if roles includes any of these
-      return roles.some(r => ['hod', 'cr', 'president', 'convenor'].includes(r));
+      return roles.some(
+        (role) =>
+          role.serverId === serverId &&
+          ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role)
+      );
     },
 
     canPinPosts: (channelId: number) => {
-      // Check if user has lock:channel permission (HOD, CR, Moderator)
-      return roles.some(r => ['hod', 'cr', 'moderator'].includes(r));
+      // Check if user has lock:channel permission in the active scope
+      return roles.some(
+        (role) =>
+          role.role === 'server_moderator' ||
+          (role.role === 'channel_moderator' && role.channelId === channelId)
+      );
     },
 
     // ... other permission checks
@@ -1738,7 +1752,7 @@ export function Can({ action, serverId, children }: CanProps) {
 - ✅ Admin users see all actions
 - ✅ HOD sees management actions for their department's servers
 - ✅ CR sees management actions for their class server
-- ✅ Moderator sees management actions for assigned server/channel
+- ✅ Explicit server/channel moderator roles see management actions only for their assigned scope
 
 ---
 
@@ -1746,7 +1760,7 @@ export function Can({ action, serverId, children }: CanProps) {
 
 ### Phase 1: Foundation (Week 1)
 **Module 0: Project Foundation**
-- Day 1-2: Vite setup, Tailwind, shadcn/ui, folder structure
+- Day 1-2: Vite setup, official Tailwind v4 Vite plugin integration, shadcn/ui, folder structure
 - Day 3: Axios instance, TanStack Query, Zustand stores
 - Day 4: Socket.IO client, type definitions
 - Day 5: Route tree, guards, error boundary, toast system
@@ -1812,7 +1826,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Vite proxy connects to backend
 ✅ Test API call `GET /api/health` returns `{ success: true }`
 ✅ TypeScript type checking passes
-✅ Tailwind CSS classes render
+✅ Tailwind CSS utilities and shadcn theme tokens render
 
 ### Module 1
 ✅ Login with valid credentials → redirects to server list
@@ -1970,4 +1984,3 @@ export function Can({ action, serverId, children }: CanProps) {
 3. **Use traces and HTML reports** as the debugging baseline for runtime failures
 4. **Begin Module 2** implementation now that Module 1 has focused runtime verification
 5. **Use PROGRESS.md** to log decisions and track completion
-

@@ -39,6 +39,7 @@ export function AuthGuard() {
           email: profile.email,
           userType: profile.userType,
           mustChangePassword: profile.mustChangePassword,
+          roles: profile.roles,
         };
         setUser(authUser);
       } catch (error) {

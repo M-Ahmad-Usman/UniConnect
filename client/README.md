@@ -2,7 +2,7 @@
 
 A Discord-like university communication platform for the Department of Computer Science at National Textile University.
 
-**Status:** Module 2 layout and navigation shell complete, with auth plus the responsive application shell verified through tests, lint, type-check, and production build
+**Status:** Modules 0-3 complete, with Module 3 server and channel views hardened and verified through unit tests, lint, type-check, production build, and focused Playwright runtime coverage
 
 ---
 
@@ -30,7 +30,8 @@ The app will be available at `http://localhost:5173`
 - `npx prettier --check "src/**/*.{ts,tsx,css}"` passes
 - `npm run build` passes
 - `http://127.0.0.1:5173/api/health` returns the backend health payload through the Vite proxy
-- `npm run test:e2e` passes with 13 Playwright tests covering critical Module 1 auth flows
+- `npm run test` passes with 61 Vitest tests
+- Focused Playwright runtime coverage passes for Module 2 shell flows and Module 3 server/channel flows
 
 ---
 
@@ -51,7 +52,7 @@ Comprehensive documentation is available in this directory:
 ## Technology Stack
 
 - **Framework:** React 19 + Vite 7 + TypeScript 5.9
-- **UI:** shadcn/ui + Tailwind CSS v4
+- **UI:** shadcn/ui + Tailwind CSS v4 (official Vite plugin setup)
 - **Primitive layer:** Base UI via shadcn/ui v4
 - **State Management:** TanStack Query v5 (server state) + Zustand (client state)
 - **Routing:** React Router v7
@@ -82,6 +83,19 @@ client/
 ├── API_CONTRACT.md       # API reference
 └── ARCHITECTURE.md       # Architecture guide
 ```
+
+---
+
+## Tailwind CSS Setup (v4)
+
+This frontend uses Tailwind's official Vite plugin setup for Tailwind v4:
+
+- `vite.config.ts` registers `@tailwindcss/vite` in `plugins`
+- `src/index.css` imports Tailwind core first via `@import 'tailwindcss';`
+- shadcn/ui helpers are layered after core via `@import 'shadcn/tailwind.css';`
+
+Official references:
+- https://tailwindcss.com/docs/installation/using-vite
 
 ---
 
@@ -305,8 +319,8 @@ VITE_SOCKET_URL=http://localhost:4000
 |--------|--------|
 | Module 0: Project Foundation | ✅ Complete |
 | Module 1: Authentication | ✅ Complete |
-| Module 2: Layout & Navigation | ⏳ Not Started |
-| Module 3: Server & Channel Views | ⏳ Not Started |
+| Module 2: Layout & Navigation | ✅ Complete |
+| Module 3: Server & Channel Views | ✅ Complete |
 | Module 4: Posts & Announcements | ⏳ Not Started |
 | Module 5: Notifications | ⏳ Not Started |
 | Module 6: User Profile & Management | ⏳ Not Started |
@@ -314,7 +328,7 @@ VITE_SOCKET_URL=http://localhost:4000
 | Module 8: Society Management | ⏳ Not Started |
 | Module 9: Role Management | ⏳ Not Started |
 
-**Progress:** 2/10 modules complete
+**Progress:** 4/10 modules complete
 
 ---
 

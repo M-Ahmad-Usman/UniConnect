@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 2 Complete
-**Current Phase:** Module 2 implementation hardened and verified with unit tests, lint, type-check, production build, and focused Playwright coverage
+**Status:** Module 3 Complete
+**Current Phase:** Module 3 implementation hardened and verified, with cross-cutting role/permission contracts refined for production-grade scoped authorization
 
 ---
 
@@ -20,7 +20,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module 0: Project Foundation | Complete | 2026-03-07 | 2026-03-08 | Verified with type-check, lint, format, production build, and Vite proxy health check |
 | Module 1: Authentication | Complete | 2026-03-08 | 2026-03-10 | Verified with format, type-check, lint, production build, and focused Playwright runtime coverage for critical auth flows |
 | Module 2: Layout & Navigation | Complete | 2026-03-10 | 2026-03-10 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
-| Module 3: Server & Channel Views | Not Started | - | - | - |
+| Module 3: Server & Channel Views | Complete | 2026-04-24 | 2026-04-24 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 4: Posts & Announcements | Not Started | - | - | - |
 | Module 5: Notifications | Not Started | - | - | - |
 | Module 6: User Profile & Management | Not Started | - | - | - |
@@ -31,6 +31,49 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-04-24 - Scoped Moderator Role Model Finalized Across Backend, Frontend, and Docs
+
+#### Breaking Change Applied Cleanly
+- ✅ Replaced the legacy single `moderator` concept with explicit `server_moderator` and `channel_moderator` roles
+- ✅ Updated frontend permission checks to require server/channel-scoped role matches instead of flattened role-name checks
+- ✅ Changed `/api/users/me` consumption to rely on scoped role assignments for authorization-sensitive UI
+- ✅ Strengthened role-related frontend types so assignment payloads and current-user role data reflect the real backend contract
+
+#### Seed and Contract Hardening
+- ✅ Expanded the Prisma seed with realistic scoped moderator assignments and richer demo data for department, class, and society flows
+- ✅ Updated functional requirements, proposal, schema notes, and frontend/backend API contracts to match the explicit moderation model
+- ✅ Added backend test coverage to lock in the new scoped current-user role payload returned by `/api/users/me`
+
+#### Verification Completed
+- ✅ Focused backend role, user, auth, and channel test suites pass after the breaking change
+- ✅ Frontend unit tests still pass with the scoped permission model
+- ✅ Type-safe frontend contracts now align with the backend response shapes used by authorization-sensitive UI
+
+### 2026-04-24 - Module 3 Hardening and Verification Completed
+
+#### Final Refinement Pass Applied
+- ✅ Wrapped the protected app-shell route branch in `SuspenseOutlet` so lazy-loaded protected pages have a reliable loading boundary in production
+- ✅ Replaced stale Module 2 copy in the Module 3 channel and server screens with finalized Module 3 messaging
+- ✅ Tightened channel creation affordances with accessible icon-button labeling and direct navigation to newly created channels
+- ✅ Switched the edit-channel dialog to the dedicated update schema instead of reusing the create schema implicitly
+
+#### Cache and Mutation Hardening Applied
+- ✅ Added cache-safe channel list helpers for insert, update, and delete flows
+- ✅ Updated create, edit, lock, unlock, and delete mutations to patch server-channel query caches immediately before invalidation
+- ✅ Kept server detail channel counts in sync after create/delete mutations to avoid stale sidebar metadata
+- ✅ Removed deleted-channel post caches so route transitions cannot briefly reuse stale channel data after destructive actions
+
+#### Verification Expanded
+- ✅ Added unit tests for channel cache-list helpers and the update schema
+- ✅ `npm run test` passes with 61 Vitest tests
+- ✅ `npm run type-check` passes
+- ✅ `npm run lint` passes
+- ✅ `npm run build` passes
+- ✅ Focused Playwright runtime coverage passes for `client/e2e/module3-server-channel.spec.ts`
+
+#### Remaining Follow-up
+- ✅ Follow-up completed on 2026-04-24: frontend permission UI now consumes scoped current-user role assignments from the backend instead of flattened role names
 
 ### 2026-03-10 - Module 2 Layout & Navigation Implemented
 
@@ -238,7 +281,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 #### Technology Stack Finalized
 - **Framework:** React 19 + Vite 7 + TypeScript 5.9
-- **UI:** shadcn/ui + Tailwind CSS v4
+- **UI:** shadcn/ui + Tailwind CSS v4 (official Vite plugin setup)
 - **State:** TanStack Query v5 + Zustand
 - **Routing:** React Router v7
 - **Forms:** React Hook Form + Zod
@@ -324,22 +367,26 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| AppShell (3-column layout) | ⏳ Pending | - | Server | Channel | Main |
-| ServerSidebar | ⏳ Pending | - | Vertical icon list, links |
-| ChannelSidebar | ⏳ Pending | - | Grouped channels, active highlighting |
-| TopBar | ⏳ Pending | - | Breadcrumbs, search, bell, user dropdown |
-| NotificationBell | ⏳ Pending | - | Unread count badge, Socket.IO integration |
-| UserDropdown | ⏳ Pending | - | Menu: Profile, Settings, Logout |
-| MobileDrawer | ⏳ Pending | - | Responsive drawer for sidebars |
-| AdminLayout | ⏳ Pending | - | Alternative layout for /admin/* |
-| Socket.IO event listeners | ⏳ Pending | - | notification:new, unread-count, auth:expired |
-| Responsive design | ⏳ Pending | - | Desktop, tablet, mobile breakpoints |
+| AppShell (3-column layout) | ✅ Complete | 2026-03-10 | Responsive authenticated shell with server, channel, and main-content regions |
+| ServerSidebar | ✅ Complete | 2026-03-10 | Vertical server navigation with active-state handling |
+| ChannelSidebar | ✅ Complete | 2026-03-10 | Grouped channels, lock indicators, member route, and create entry point |
+| TopBar | ✅ Complete | 2026-03-10 | Breadcrumbs, contextual search, notification bell, and user dropdown |
+| NotificationBell | ✅ Complete | 2026-03-10 | Unread count badge with preview dropdown wiring |
+| UserDropdown | ✅ Complete | 2026-03-10 | Session-aware menu with profile and sign-out actions |
+| MobileDrawer | ✅ Complete | 2026-03-10 | Responsive drawer navigation with server/channel drill-in |
+| AdminLayout | ✅ Complete | 2026-03-10 | Stable admin shell for later CRUD modules |
+| Socket.IO event listeners | ✅ Complete | 2026-03-10 | Notification and auth-expiry listeners remain centralized in the auth/socket lifecycle |
+| Responsive design | ✅ Complete | 2026-03-10 | Desktop and sub-`lg` navigation flows verified through focused runtime coverage |
 
 ### Key Decisions
-- (To be logged)
+- Socket lifecycle ownership stays in `AuthGuard`; shell components consume that lifecycle rather than duplicating it
+- Channel-scoped search remains tied to `GET /api/channels/:id/posts` until the broader posts module lands
+- Future admin CRUD pages reuse the current admin shell instead of introducing a second layout system
 
 ### Challenges & Solutions
-- (To be logged)
+- Paginated API unwrapping originally dropped pagination metadata; the client interceptor was fixed to preserve both data and pagination
+- Mobile drawer interaction needed dialog-mode adjustments before it behaved correctly under runtime navigation
+- Channel/page query params were normalized to avoid cache fragmentation across equivalent search states
 
 ---
 
@@ -349,22 +396,26 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| ServerPage | ⏳ Pending | - | Auto-redirect to first channel |
-| ChannelPage | ⏳ Pending | - | Post feed container |
-| ChannelHeader | ⏳ Pending | - | Name, type, description, lock status |
-| ChannelActions dropdown | ⏳ Pending | - | Edit, Lock, Unlock, Delete |
-| CreateChannelDialog | ⏳ Pending | - | Name + description form |
-| EditChannelDialog | ⏳ Pending | - | Pre-filled edit form |
-| MemberListPage | ⏳ Pending | - | Paginated members |
-| MemberCard | ⏳ Pending | - | Avatar, name, badges |
-| RoleBadge | ⏳ Pending | - | Colored pills for roles |
-| Permission checks | ⏳ Pending | - | usePermissions hook, Can component |
+| ServerPage | ✅ Complete | 2026-04-24 | Auto-redirects to the default visible channel with a production-ready empty state |
+| ChannelPage | ✅ Complete | 2026-04-24 | Channel header plus search-aware feed preview with resilient route validation |
+| ChannelHeader | ✅ Complete | 2026-04-24 | Name, type, description, lock state, create action, and management actions |
+| ChannelActions dropdown | ✅ Complete | 2026-04-24 | Edit, lock, unlock, and delete flows with confirm and toast feedback |
+| CreateChannelDialog | ✅ Complete | 2026-04-24 | Zod-backed form with description counter and inline API validation handling |
+| EditChannelDialog | ✅ Complete | 2026-04-24 | Prefilled edit flow using the dedicated update schema |
+| MemberListPage | ✅ Complete | 2026-04-24 | Paginated member roster with URL-synced page state |
+| MemberCard | ✅ Complete | 2026-04-24 | Avatar, email, user type, badges, and joined-date summary |
+| RoleBadge | ✅ Complete | 2026-04-24 | Consistent role pill styling across member and auth-adjacent surfaces |
+| Permission checks | ✅ Complete | 2026-04-24 | `usePermissions` and `Can` gate channel-management affordances in the UI |
 
 ### Key Decisions
-- (To be logged)
+- Module 3 keeps posts as a preview/feed-loading surface and defers rich post composition to Module 4
+- Channel mutations patch query caches immediately, then invalidate, to avoid stale navigation and stale sidebar counts after write operations
+- Runtime verification stays focused on the highest-value management flows instead of waiting for a later all-modules release suite
 
 ### Challenges & Solutions
-- (To be logged)
+- Protected lazy routes under the authenticated shell were not consistently wrapped in a suspense boundary; adding `SuspenseOutlet` closed that runtime gap
+- Channel create/update/delete flows originally depended on refetch timing; immediate cache patching now prevents stale redirects and stale channel counts
+- The backend originally returned flattened current-user roles via `/users/me`; switching to scoped role assignments aligned frontend authorization decisions with backend server/channel scope rules
 
 ---
 
@@ -574,7 +625,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Copy-paste approach: full control over components
 - No dependency lock-in (components are yours to modify)
 - Built on Base UI in the current shadcn/ui v4 stack (accessible by default)
-- Tailwind v4 offers best DX with JIT compilation
+- Tailwind v4 integrates cleanly with the official Vite plugin pipeline used in this repo
 - Lightweight (only include what you use)
 
 ### Decision 5: Tiptap for Rich Text
@@ -751,8 +802,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
     "@vitejs/plugin-react": "^5.x",
     "typescript": "^5.9.x",
     "tailwindcss": "^4.x",
-    "autoprefixer": "latest",
-    "postcss": "latest",
+    "@tailwindcss/vite": "^4.x",
     "eslint": "^9.x",
     "prettier": "^3.x",
     "vitest": "latest",
@@ -793,6 +843,10 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Module 1 runtime verification completed with a 13-test Playwright auth suite
 - Playwright now boots the backend through a dedicated E2E environment and targets the separate `uniconnect_test` database
 - Global Playwright setup rebuilds the test schema from committed Prisma migrations and seeds only the users required for focused auth coverage
+
+### 2026-04-24
+- Resolved a Tailwind styling regression by restoring the required Tailwind v4 core import: `@import 'tailwindcss';` in `src/index.css`
+- Migrated frontend Tailwind integration from PostCSS to the official Vite plugin setup (`@tailwindcss/vite` + CSS core import)
 
 ---
 

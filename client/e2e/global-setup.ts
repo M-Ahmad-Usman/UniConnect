@@ -17,6 +17,7 @@ interface SeedUser {
   password: string;
   fullName: string;
   mustChangePassword: boolean;
+  userType?: 'Teacher' | 'Student' | 'Admin';
 }
 
 interface SeededUserRow {
@@ -70,9 +71,182 @@ async function createUser(pool: Pool, user: SeedUser) {
       '03000000000',
       passwordHash,
       'male',
-      'Student',
+      user.userType ?? 'Student',
       true,
       user.mustChangePassword,
+    ],
+  );
+}
+
+async function seedModule3Permissions(pool: Pool) {
+  await pool.query(
+    `
+      INSERT INTO roles (name)
+      VALUES ($1)
+    `,
+    ['hod'],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO permissions (name)
+      VALUES
+        ($1),
+        ($2),
+        ($3)
+    `,
+    ['create:channel', 'lock:channel', 'delete:channel'],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO role_permissions (role_id, permission_id)
+      SELECT r.id, p.id
+      FROM roles r
+      CROSS JOIN permissions p
+      WHERE r.name = $1
+    `,
+    ['hod'],
+  );
+}
+
+async function seedModule3Data(pool: Pool) {
+  const managerUserId = await findUserIdByEmail(pool, e2eUsers.moduleManager.email);
+  const viewerUserId = await findUserIdByEmail(pool, e2eUsers.moduleViewer.email);
+
+  if (!managerUserId || !viewerUserId) {
+    throw new Error('Module 3 E2E users were not created before seeding runtime data.');
+  }
+
+  const serverResult = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, $3::server_type, $4, NOW())
+      RETURNING id
+    `,
+    [
+      'Engineering Faculty Hub',
+      'Module 3 fixture server for channel-management and member-list coverage.',
+      'Department',
+      managerUserId,
+    ],
+  );
+  const module3ServerId = serverResult.rows[0]?.id;
+
+  if (!module3ServerId) {
+    throw new Error('Module 3 fixture server could not be created.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO teacher_info (teacher_id, designation)
+      VALUES ($1, $2)
+    `,
+    [managerUserId, 'Assistant Professor'],
+  );
+
+  const departmentResult = await pool.query<{ id: number }>(
+    `
+      INSERT INTO departments (name, code, hod_id, server_id)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    `,
+    ['E2E Engineering Department', 'E2E-ENG', managerUserId, module3ServerId],
+  );
+  const departmentId = departmentResult.rows[0]?.id;
+
+  if (!departmentId) {
+    throw new Error('Module 3 fixture department could not be created.');
+  }
+
+  await pool.query(
+    `
+      UPDATE users
+      SET department_id = $2
+      WHERE id = $1
+    `,
+    [managerUserId, departmentId],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
+      VALUES
+        ($1, $3, false),
+        ($2, $3, false)
+    `,
+    [managerUserId, viewerUserId, module3ServerId],
+  );
+
+  const extraMembersResult = await pool.query<{ id: number }>(
+    `
+      INSERT INTO users (
+        full_name,
+        email,
+        phone,
+        password_hash,
+        gender,
+        user_type,
+        is_active,
+        must_change_password,
+        department_id,
+        created_at,
+        updated_at
+      )
+      SELECT
+        'E2E Member ' || LPAD(gs::text, 2, '0'),
+        'e2e.module.member.' || gs || '@uniconnect.test',
+        '0311' || LPAD(gs::text, 7, '0'),
+        'not-used-for-login',
+        'male'::gender,
+        'Student'::user_type,
+        true,
+        false,
+        $1,
+        NOW(),
+        NOW()
+      FROM generate_series(1, 22) AS gs
+      RETURNING id
+    `,
+    [departmentId],
+  );
+
+  const extraMemberIds = extraMembersResult.rows.map((row) => row.id);
+
+  if (extraMemberIds.length === 0) {
+    throw new Error('Module 3 fixture members could not be created.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
+      SELECT member_id, $2, false
+      FROM unnest($1::int[]) AS member_id
+    `,
+    [extraMemberIds, module3ServerId],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO channels (server_id, name, description, type, is_auto_created, created_by, created_at)
+      VALUES
+        ($1, $2, $3, $4::channel_type, $5, $6, NOW() - INTERVAL '15 minutes'),
+        ($1, $7, $8, $9::channel_type, $10, $6, NOW() - INTERVAL '10 minutes'),
+        ($1, $11, $12, $9::channel_type, false, $6, NOW() - INTERVAL '5 minutes')
+    `,
+    [
+      module3ServerId,
+      'announcements',
+      'Default announcement channel for Module 3 fixture server.',
+      'announcement',
+      true,
+      managerUserId,
+      'general',
+      'General discussion for Module 3 runtime coverage.',
+      'general',
+      true,
+      'project-lab',
+      'Mutable channel used by Playwright to verify edit and lock actions.',
     ],
   );
 }
@@ -278,7 +452,9 @@ export default async function globalSetup() {
       await createUser(pool, user);
     }
 
+    await seedModule3Permissions(pool);
     await seedModule2Data(pool);
+    await seedModule3Data(pool);
   } finally {
     await pool.end();
   }

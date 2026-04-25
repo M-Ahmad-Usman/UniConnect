@@ -96,7 +96,8 @@ UniConnect follows a **feature-based architecture** with clear separation of con
 **Approach:**
 - Components are in our codebase, not node_modules
 - Built on Base UI primitives in shadcn/ui v4 (WAI-ARIA aligned)
-- Tailwind v4 for utility-first styling with JIT compilation
+- Tailwind v4 with the official Vite plugin integration (`@tailwindcss/vite`)
+- Tailwind core is imported in `src/index.css` with `@import 'tailwindcss';` before shadcn helpers
 
 ### TanStack Query v5
 **Why:** Industry-standard server state management, automatic caching, background refetching, optimistic updates.
@@ -263,7 +264,7 @@ client/
 ├── .env.development             # Development environment variables
 ├── .env.production              # Production environment variables
 ├── vite.config.ts               # Vite configuration
-├── tailwind.config.ts           # Tailwind configuration
+├── tailwind.config.js           # Tailwind compatibility configuration
 ├── tsconfig.json                # TypeScript configuration
 ├── package.json                 # Dependencies
 └── README.md                    # Quick start guide
@@ -839,13 +840,22 @@ export function usePermissions() {
 
   return {
     canManageChannels: (serverId: number) => {
-      // Check if user has management role for this server
-      return roles.some(r => ['hod', 'cr', 'president', 'convenor'].includes(r));
+      // Check management roles only inside the active server scope.
+      return roles.some(
+        (role) =>
+          role.serverId === serverId &&
+          ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role)
+      );
     },
 
     canPinPosts: (channelId: number) => {
-      // Check if user has lock:channel permission
-      return roles.some(r => ['hod', 'cr', 'moderator'].includes(r));
+      // Channel-scoped roles must match the active channel; server-scoped roles
+      // may act anywhere within their assigned server.
+      return roles.some(
+        (role) =>
+          role.role === 'server_moderator' ||
+          (role.role === 'channel_moderator' && role.channelId === channelId)
+      );
     },
 
     canDeactivateUsers: () => false,
@@ -865,7 +875,7 @@ export interface CanProps {
 
 export function Can({ action, serverId, channelId, children }: CanProps) {
   const permissions = usePermissions();
-  const allowed = permissions[action]?.(serverId ||channelId);
+  const allowed = permissions[action]?.(serverId || channelId);
 
   return allowed ? <>{children}</> : null;
 }

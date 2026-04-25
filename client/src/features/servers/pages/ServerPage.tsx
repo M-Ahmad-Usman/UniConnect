@@ -47,7 +47,7 @@ export function ServerPage() {
       <EmptyState
         icon={Hash}
         title="No channels available"
-        description="This server does not have any visible channels yet. Channel creation and management will land in a later module."
+        description="This server does not have any visible channels yet. Create a channel when the server is ready for members."
       />
     );
   }

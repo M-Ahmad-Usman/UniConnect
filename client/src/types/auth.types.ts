@@ -1,4 +1,5 @@
 import type { UserType } from './enums';
+import type { ScopedRoleAssignment } from './role.types';
 
 // ─── Auth User (from POST /auth/login response) ────────────────────────────
 
@@ -8,6 +9,7 @@ export interface AuthUser {
   email: string;
   userType: UserType;
   mustChangePassword: boolean;
+  roles?: ScopedRoleAssignment[];
 }
 
 // ─── Login ──────────────────────────────────────────────────────────────────

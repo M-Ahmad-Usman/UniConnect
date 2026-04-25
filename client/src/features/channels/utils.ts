@@ -1,4 +1,4 @@
-import { ChannelType, type ChannelListItem } from '@/types';
+import { ChannelType, type ChannelListItem, type CreateChannelResponse, type UpdateChannelResponse } from '@/types';
 
 export interface ChannelGroup {
   key: ChannelListItem['type'];
@@ -61,4 +61,38 @@ export function selectDefaultChannel(channels: ChannelListItem[]) {
   }
 
   return channels[0] ?? null;
+}
+
+function sortChannelsByCreatedAt(channels: ChannelListItem[]) {
+  return [...channels].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+}
+
+export function insertChannel(channels: ChannelListItem[], channel: CreateChannelResponse) {
+  const nextChannel: ChannelListItem = {
+    ...channel,
+    isArchived: false,
+    courseId: null,
+    programId: null,
+  };
+
+  const withoutExisting = channels.filter((current) => current.id !== channel.id);
+  return sortChannelsByCreatedAt([...withoutExisting, nextChannel]);
+}
+
+export function updateChannelInList(
+  channels: ChannelListItem[],
+  channel: UpdateChannelResponse,
+) {
+  return channels.map((current) =>
+    current.id === channel.id
+      ? {
+          ...current,
+          ...channel,
+        }
+      : current,
+  );
+}
+
+export function removeChannelFromList(channels: ChannelListItem[], channelId: number) {
+  return channels.filter((channel) => channel.id !== channelId);
 }

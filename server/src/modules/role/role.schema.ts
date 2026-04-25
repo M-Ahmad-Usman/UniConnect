@@ -3,7 +3,15 @@ import { z } from "zod";
 // ─── Role Enum ─────────────────────────────────────────────────────────────
 
 const roleEnum = z.enum(
-  ["hod", "program_director", "cr", "society_president", "society_convenor", "moderator"],
+  [
+    "hod",
+    "program_director",
+    "cr",
+    "society_president",
+    "society_convenor",
+    "server_moderator",
+    "channel_moderator",
+  ],
   { error: "Invalid role" }
 );
 
@@ -31,19 +39,48 @@ export const assignRoleSchema = {
         .optional(),
     })
     .superRefine((data, ctx) => {
-      if (data.role === "moderator") {
+      if (data.role === "server_moderator") {
         if (!data.serverId) {
           ctx.addIssue({
             code: "custom",
             path: ["serverId"],
-            message: "Server ID is required for moderator role",
+            message: "Server ID is required for server moderator role",
+          });
+        }
+        if (data.channelId !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["channelId"],
+            message: "Channel ID is not applicable for server moderator role",
           });
         }
         if (data.scopeId !== undefined) {
           ctx.addIssue({
             code: "custom",
             path: ["scopeId"],
-            message: "Scope ID is not applicable for moderator role",
+            message: "Scope ID is not applicable for server moderator role",
+          });
+        }
+      } else if (data.role === "channel_moderator") {
+        if (!data.serverId) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["serverId"],
+            message: "Server ID is required for channel moderator role",
+          });
+        }
+        if (!data.channelId) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["channelId"],
+            message: "Channel ID is required for channel moderator role",
+          });
+        }
+        if (data.scopeId !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["scopeId"],
+            message: "Scope ID is not applicable for channel moderator role",
           });
         }
       } else {
@@ -75,7 +112,7 @@ export const assignRoleSchema = {
 // ─── Revoke Role ───────────────────────────────────────────────────────────
 
 const revokableRoleEnum = z.enum(
-  ["hod", "program_director", "cr", "moderator"],
+  ["hod", "program_director", "cr", "server_moderator", "channel_moderator"],
   { error: "Invalid role. Society president and convenor cannot be revoked — use PATCH /api/societies/:id to change leadership" }
 );
 
@@ -101,19 +138,48 @@ export const revokeRoleSchema = {
         .optional(),
     })
     .superRefine((data, ctx) => {
-      if (data.role === "moderator") {
+      if (data.role === "server_moderator") {
         if (!data.serverId) {
           ctx.addIssue({
             code: "custom",
             path: ["serverId"],
-            message: "Server ID is required for moderator role",
+            message: "Server ID is required for server moderator role",
+          });
+        }
+        if (data.channelId !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["channelId"],
+            message: "Channel ID is not applicable for server moderator role",
           });
         }
         if (data.scopeId !== undefined) {
           ctx.addIssue({
             code: "custom",
             path: ["scopeId"],
-            message: "Scope ID is not applicable for moderator role",
+            message: "Scope ID is not applicable for server moderator role",
+          });
+        }
+      } else if (data.role === "channel_moderator") {
+        if (!data.serverId) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["serverId"],
+            message: "Server ID is required for channel moderator role",
+          });
+        }
+        if (!data.channelId) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["channelId"],
+            message: "Channel ID is required for channel moderator role",
+          });
+        }
+        if (data.scopeId !== undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["scopeId"],
+            message: "Scope ID is not applicable for channel moderator role",
           });
         }
       } else {

@@ -23,12 +23,12 @@
 | Type | Roles
 |------|-----------|
 | **Admin** | - |
-| **Teacher** | HOD, Program Director, Society Convenor, Moderator |
-| **Student** | CR, Society President, Moderator |
+| **Teacher** | HOD, Program Director, Society Convenor, Server Moderator, Channel Moderator |
+| **Student** | CR, Society President, Server Moderator, Channel Moderator |
 
 **Note:** 
 - Users can have **multiple roles** simultaneously.
-- Roles are **scoped** (e.g., CR of CS-7th-A, President of IEEE, Moderator of #general).
+- Roles are **scoped** (e.g., CR of CS-7th-A, President of IEEE, Server Moderator of CS Department Server, Channel Moderator of #general).
 
 ### 2.2 Role Scope Rules
 
@@ -39,7 +39,8 @@
 | Society Convenor | One per society | Mr. Ali is Convenor of IEEE |
 | Society President | One per society | Hamza is President of IEEE |
 | CR | One per class | Ali is CR of CS-7th-A |
-| Moderator | Multiple allowed | User can moderate multiple servers/channels |
+| Server Moderator | Multiple allowed | User can moderate multiple servers |
+| Channel Moderator | Multiple allowed | User can moderate multiple channels |
 
 ---
 
@@ -58,7 +59,7 @@
 | Type | Purpose | Example | Who Can Post |
 |------|---------|---------|--------------|
 | Announcement | Official notices | #announcements | Server managers and moderators |
-| Course | Course updates | #cs-301 | Assigned teacher, CR and moderator |
+| Course | Course updates | #cs-301 | Assigned teacher, CR, server moderators, and assigned channel moderators |
 | General | Discussions | #general | Server managers and moderators |
 
 ### 3.3 Posts
@@ -182,10 +183,10 @@
 | ID | Requirement |
 |----|-------------|
 | FR-58 | Admin can assign any role/sub-role to users |
-| FR-59 | HOD can assign sub-roles within their department (CR, Program Director, Moderators (channel and server level)) |
-| FR-60 | HOD can assign Society Convenor for societies |
-| FR-61 | CR can assign moderators (channel and server level) in their class server |
-| FR-62 | Society Convenor/President can assign moderator (channel and server level) in their society server |
+| FR-59 | HOD can assign CR and Program Director within their department |
+| FR-60 | HOD can assign Society Convenor, Society President, Server Moderator, and Channel Moderator within their department |
+| FR-61 | CR can assign Server Moderator and Channel Moderator in their class server |
+| FR-62 | Society Convenor/President can assign Server Moderator and Channel Moderator in their society server |
 | FR-63 | Role changes take effect immediately |
 
 #### 4.9 Society Membership
@@ -274,9 +275,9 @@
 ### 6.3 Role Assignment Rules
 14. **Admin** - Can assign any role to any user
 15. **HOD** - Can assign CR, Program Director, Society Convenor within their department
-16. **HOD** - Can assign moderators in department server
-17. **CR** - Can assign moderators in their class server
-18. **Convenor/President** - Can assign moderators in their society server
+16. **HOD** - Can assign server-level and channel-level moderators in department, class, and society servers within their department
+17. **CR** - Can assign server-level and channel-level moderators in their class server
+18. **Convenor/President** - Can assign server-level and channel-level moderators in their society server
 
 ---
 

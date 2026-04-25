@@ -35,7 +35,7 @@ export type {
 } from './user.types';
 
 // Servers
-export type { ServerListItem, ServerDetail, ServerMember } from './server.types';
+export type { MemberBadge, ServerListItem, ServerDetail, ServerMember } from './server.types';
 
 // Channels
 export type {
@@ -43,7 +43,10 @@ export type {
   ChannelListItem,
   CreateChannelRequest,
   CreateChannelResponse,
+  LockChannelResponse,
+  UnlockChannelResponse,
   UpdateChannelRequest,
+  UpdateChannelResponse,
 } from './channel.types';
 
 // Posts
@@ -68,7 +71,15 @@ export type {
 } from './notification.types';
 
 // Roles
-export type { UserRole, AssignRoleRequest, RevokeRoleRequest } from './role.types';
+export type {
+  RoleName,
+  ModerationRoleName,
+  RevokableRoleName,
+  ScopedRoleAssignment,
+  UserRole,
+  AssignRoleRequest,
+  RevokeRoleRequest,
+} from './role.types';
 
 // Societies
 export type {

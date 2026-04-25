@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ChannelHeader } from '@/features/channels/components/ChannelHeader';
 import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
 import { useChannelPosts } from '@/features/posts/hooks/useChannelPosts';
 import { parseSearchParam } from '@/features/posts/utils';
@@ -18,7 +19,7 @@ export function ChannelPage() {
   const channelId = parseRouteParamId(params.channelId);
   const search = parseSearchParam(searchParams.get('search'));
   const channelQuery = useServerChannels(serverId, false);
-  const postsQuery = useChannelPosts(channelId, {
+  const postsQuery = useChannelPosts(serverId !== null ? channelId : null, {
     page: 1,
     limit: 20,
     ...(search ? { search } : {}),
@@ -28,6 +29,16 @@ export function ChannelPage() {
     () => channelQuery.data?.find((channel) => channel.id === channelId) ?? null,
     [channelId, channelQuery.data],
   );
+
+  if (serverId === null || channelId === null) {
+    return (
+      <EmptyState
+        icon={Hash}
+        title="Invalid channel route"
+        description="The current server or channel identifier could not be resolved from the URL."
+      />
+    );
+  }
 
   if (channelQuery.isLoading || postsQuery.isLoading) {
     return <LoadingSpinner fullPage />;
@@ -64,24 +75,15 @@ export function ChannelPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{activeChannel.name}</h1>
-          {activeChannel.isLocked ? <Badge variant="outline">Locked</Badge> : null}
-          <Badge variant="outline">{activeChannel.type}</Badge>
-        </div>
-        <p className="text-muted-foreground max-w-3xl text-sm">
-          {activeChannel.description ?? 'Follow official updates and browse the latest posts in this channel.'}
-        </p>
-      </div>
+      {serverId !== null ? <ChannelHeader serverId={serverId} channel={activeChannel} /> : null}
       <Card>
         <CardHeader className="gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Search className="size-4" />
-            Search-aware feed preview
+            Channel feed preview
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Module 2 wires channel-scoped search, route params, and feed loading. Rich post composition lands next.
+            Module 3 hardens channel discovery with scoped search, resilient loading states, and management-aware header actions.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

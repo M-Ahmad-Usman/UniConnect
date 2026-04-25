@@ -1,8 +1,8 @@
 # UniConnect API Contract Reference
 
-**Version:** 1.0
+**Version:** 1.1
 **Backend API Version:** 1.0.0
-**Last Updated:** 2026-03-07
+**Last Updated:** 2026-04-24
 
 This document provides a complete reference for all API endpoints available to the UniConnect frontend. It includes request/response examples, error handling patterns, and integration notes.
 
@@ -768,7 +768,19 @@ GET /api/users/me
     isActive: boolean;
     mustChangePassword: boolean;
     createdAt: string;  // ISO 8601
-    roles: string[];    // e.g., ['hod', 'program_director']
+    roles: Array<{
+      role:
+        | 'hod'
+        | 'program_director'
+        | 'cr'
+        | 'society_president'
+        | 'society_convenor'
+        | 'server_moderator'
+        | 'channel_moderator';
+      serverId: number;
+      channelId?: number | null;
+      scopeType: 'server' | 'channel';
+    }>;
     studentInfo?: {
       rollNumber: string;
       classId: number;
@@ -1886,22 +1898,62 @@ POST /api/roles/assign
 }
 ```
 
-**Request Body (for moderator role):**
+**Request Body (for server-level moderator):**
 ```typescript
 {
   userId: number;
-  role: 'moderator';
+  role: 'server_moderator';
   serverId: number;
-  channelId?: number;  // Optional: channel-scoped moderator
+}
+```
+
+**Request Body (for channel-level moderator):**
+```typescript
+{
+  userId: number;
+  role: 'channel_moderator';
+  serverId: number;
+  channelId: number;
 }
 ```
 
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "data": {},
-  "message": "Role assigned successfully"
+  success: true;
+  data:
+    | {
+        role: 'hod';
+        userId: number;
+        departmentId: number;
+        departmentName: string;
+      }
+    | {
+        role: 'program_director';
+        userId: number;
+        programId: number;
+        programCode: string;
+      }
+    | {
+        role: 'cr';
+        userId: number;
+        classId: number;
+      }
+    | {
+        role: 'society_president' | 'society_convenor';
+        userId: number;
+        societyId: number;
+        societyName: string;
+      }
+    | {
+        role: 'server_moderator' | 'channel_moderator';
+        userId: number;
+        serverId: number;
+        channelId: number | null;
+        scopeType: 'server' | 'channel';
+        assignmentId?: number;
+      };
+  message: 'Role assigned successfully';
 }
 ```
 
@@ -1912,14 +1964,29 @@ POST /api/roles/revoke
 
 **Auth:** Required (permission logic varies by role)
 
-**Request Body:** Same shape as assign
+**Request Body:** Same shape as assign, except only these roles are revokable here:
+- `hod`
+- `program_director`
+- `cr`
+- `server_moderator`
+- `channel_moderator`
 
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "data": {},
-  "message": "Role revoked successfully"
+  success: true;
+  data:
+    | { role: 'hod'; userId: number; departmentId: number }
+    | { role: 'program_director'; userId: number; programId: number }
+    | { role: 'cr'; userId: number; classId: number }
+    | {
+        role: 'server_moderator' | 'channel_moderator';
+        userId: number;
+        serverId: number;
+        channelId: number | null;
+        scopeType: 'server' | 'channel';
+      };
+  message: 'Role revoked successfully';
 }
 ```
 
@@ -1933,6 +2000,23 @@ GET /api/roles/users/:id
 **Auth:** Admin or Teacher
 
 **Response:**
+```typescript
+{
+  success: true;
+  data: Array<
+    | { role: 'hod'; departmentId: number; departmentName: string }
+    | { role: 'program_director'; programId: number; programCode: string }
+    | { role: 'cr'; classId: number }
+    | { role: 'society_president' | 'society_convenor'; societyId: number; societyName: string }
+    | {
+        role: 'server_moderator' | 'channel_moderator';
+        serverId: number;
+        channelId: number | null;
+        scopeType: 'server' | 'channel';
+      }
+  >;
+}
+```
 ```typescript
 {
   success: true;

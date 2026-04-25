@@ -113,6 +113,10 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `POST /bulk-import`
   - Multipart field: `file` (CSV)
 - `GET /me`
+  - Returns profile plus scoped current-user roles for UI authorization:
+    - `roles: Array<{ role, serverId, channelId?, scopeType }>`
+    - Role values currently include `hod`, `program_director`, `cr`, `society_president`, `society_convenor`, `server_moderator`, `channel_moderator`
+    - `scopeType` is `"server"` or `"channel"`
 - `PATCH /me`
   - Body: `{ bio? }`
 - `PATCH /me/profile-picture`
@@ -192,10 +196,21 @@ This document is the frontend integration contract for the UniConnect backend. I
 
 ### Roles (`/api/roles`)
 - `POST /assign`
-  - Body: role-based (`userId`, `role`, plus `scopeId` or `serverId/channelId`)
+  - Body for scoped organizational roles: `{ userId, role, scopeId }`
+    - `role` in `hod | program_director | cr | society_president | society_convenor`
+  - Body for moderation roles:
+    - `{ userId, role: "server_moderator", serverId }`
+    - `{ userId, role: "channel_moderator", serverId, channelId }`
+  - Success data echoes the assigned role context (`role`, `userId`, and relevant scope ids)
 - `POST /revoke`
-  - Body: role-based (`userId`, `role`, plus `scopeId` or `serverId/channelId`)
+  - Body for revokable scoped roles: `{ userId, role, scopeId }`
+    - `role` in `hod | program_director | cr`
+  - Body for moderation roles:
+    - `{ userId, role: "server_moderator", serverId }`
+    - `{ userId, role: "channel_moderator", serverId, channelId }`
+  - Society leadership roles are changed via society update endpoints, not revoke
 - `GET /users/:id`
+  - Returns contextual role assignments for the target user, including department/program/class/society metadata and explicit moderation roles
 
 ### Servers (`/api/servers`)
 - `GET /`

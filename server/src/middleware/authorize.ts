@@ -143,7 +143,7 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
 
   for (const assignment of moderatorAssignments) {
     roles.push({
-      role: "moderator",
+      role: assignment.scopeType === "CHANNEL" ? "channel_moderator" : "server_moderator",
       serverId: assignment.serverId,
       channelId: assignment.channelId,
       scopeType: assignment.scopeType === "CHANNEL" ? "channel" : "server",

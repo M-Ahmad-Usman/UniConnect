@@ -21,20 +21,21 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   hod: [
     "post:channel", "create:channel", "delete:channel", "lock:channel",
     "create:society", "create:class", "assign:program_director", "assign:cr",
-    "assign:society_president", "assign:society_convenor", "assign:moderator",
+    "assign:society_president", "assign:society_convenor", "assign:server_moderator", "assign:channel_moderator",
   ],
   program_director: ["post:channel", "assign:cr"],
   society_president: [
-    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:moderator",
+    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:server_moderator", "assign:channel_moderator",
   ],
   society_convenor: [
     "post:channel", "create:channel", "delete:channel", "lock:channel",
-    "assign:moderator", "assign:society_president",
+    "assign:server_moderator", "assign:channel_moderator", "assign:society_president",
   ],
   cr: [
-    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:moderator",
+    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:server_moderator", "assign:channel_moderator",
   ],
-  moderator: ["post:channel"],
+  server_moderator: ["post:channel"],
+  channel_moderator: ["post:channel"],
 };
 
 /**
@@ -46,7 +47,7 @@ export async function seedRolesAndPermissions() {
     "post:channel", "create:channel", "delete:channel", "lock:channel",
     "create:society", "create:department", "create:class",
     "assign:hod", "assign:program_director", "assign:cr",
-    "assign:society_president", "assign:society_convenor", "assign:moderator",
+    "assign:society_president", "assign:society_convenor", "assign:server_moderator", "assign:channel_moderator",
   ];
   const roleNames = Object.keys(ROLE_PERMISSIONS);
 

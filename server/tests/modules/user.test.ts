@@ -5,6 +5,7 @@ import { prisma } from "../../src/config/prisma.js";
 import { resetDB } from "../helpers/db.helper.js";
 import {
   createClass,
+  createChannel,
   createDepartment,
   createProgram,
   createTeacherWithInfo,
@@ -368,6 +369,54 @@ describe("Module 2 - User Management", () => {
 
       const inDb = await prisma.user.findUnique({ where: { id: user.id } });
       expect(inDb?.bio).toBe("I am a CS student");
+    });
+
+    it("should return scoped current-user roles for authorization-sensitive UI", async () => {
+      const department = await createDepartment({ code: "CS-M2-PROFILE" });
+      const teacher = await createTeacherWithInfo(department.id, {
+        email: "scoped-roles@test.com",
+        password: "Pass@1234",
+      });
+      const channel = await createChannel(department.serverId, {
+        name: "faculty-updates",
+        createdBy: teacher.id,
+      });
+
+      await prisma.department.update({
+        where: { id: department.id },
+        data: { hodId: teacher.id },
+      });
+
+      await prisma.moderatorAssignment.create({
+        data: {
+          userId: teacher.id,
+          serverId: department.serverId,
+          channelId: channel.id,
+          scopeType: "CHANNEL",
+          assignedBy: teacher.id,
+        },
+      });
+
+      const cookies = await loginAs(teacher.email, "Pass@1234");
+      const profileRes = await request(app).get("/api/users/me").set("Cookie", cookies);
+
+      expect(profileRes.status).toBe(200);
+      expect(profileRes.body.success).toBe(true);
+      expect(profileRes.body.data.roles).toEqual(
+        expect.arrayContaining([
+          {
+            role: "hod",
+            serverId: department.serverId,
+            scopeType: "server",
+          },
+          {
+            role: "channel_moderator",
+            serverId: department.serverId,
+            channelId: channel.id,
+            scopeType: "channel",
+          },
+        ])
+      );
     });
 
     it("should upload profile picture", async () => {

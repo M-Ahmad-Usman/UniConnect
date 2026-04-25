@@ -16,6 +16,8 @@ type AssignRoleInput = {
   channelId?: number;
 };
 
+type ModeratorRole = "server_moderator" | "channel_moderator";
+
 type RevokeRoleInput = {
   userId: number;
   role: string;
@@ -240,8 +242,10 @@ export async function assignRole(input: AssignRoleInput, caller: CallerInfo) {
       return assignSocietyPresident(input.scopeId!, targetUser, caller);
     case "society_convenor":
       return assignSocietyConvenor(input.scopeId!, targetUser, caller);
-    case "moderator":
-      return assignModerator(input.serverId!, input.channelId, targetUser, caller);
+    case "server_moderator":
+      return assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
+    case "channel_moderator":
+      return assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
     default:
       throw new ValidationError("Unknown role");
   }
@@ -443,6 +447,7 @@ async function assignSocietyConvenor(
 }
 
 async function assignModerator(
+  role: ModeratorRole,
   serverId: number,
   channelId: number | undefined,
   targetUser: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
@@ -472,7 +477,7 @@ async function assignModerator(
   }
 
   // If channel-scoped, verify channel belongs to server
-  if (channelId) {
+  if (role === "channel_moderator") {
     const channel = await prisma.channel.findFirst({
       where: { id: channelId, serverId, isDeleted: false },
     });
@@ -482,7 +487,7 @@ async function assignModerator(
     }
   }
 
-  const scopeType = channelId ? "CHANNEL" : "SERVER";
+  const scopeType = role === "channel_moderator" ? "CHANNEL" : "SERVER";
 
   // Check for existing assignment (NULL channelId doesn't trigger unique constraint in PostgreSQL)
   const existing = await prisma.moderatorAssignment.findFirst({
@@ -508,10 +513,10 @@ async function assignModerator(
   });
 
   return {
-    role: "moderator",
+    role,
     userId: targetUser.id,
     serverId,
-    channelId: channelId ?? null,
+    channelId: role === "channel_moderator" ? (channelId ?? null) : null,
     scopeType: scopeType.toLowerCase(),
     assignmentId: assignment.id,
   };
@@ -527,8 +532,10 @@ export async function revokeRole(input: RevokeRoleInput, caller: CallerInfo) {
       return revokeProgramDirector(input.scopeId!, input.userId, caller);
     case "cr":
       return revokeCR(input.scopeId!, input.userId, caller);
-    case "moderator":
-      return revokeModerator(input.serverId!, input.channelId, input.userId, caller);
+    case "server_moderator":
+      return revokeModerator("server_moderator", input.serverId!, undefined, input.userId, caller);
+    case "channel_moderator":
+      return revokeModerator("channel_moderator", input.serverId!, input.channelId!, input.userId, caller);
     default:
       throw new ValidationError("Unknown role");
   }
@@ -611,6 +618,7 @@ async function revokeCR(classId: number, userId: number, caller: CallerInfo) {
 }
 
 async function revokeModerator(
+  role: ModeratorRole,
   serverId: number,
   channelId: number | undefined,
   userId: number,
@@ -635,10 +643,10 @@ async function revokeModerator(
   });
 
   return {
-    role: "moderator",
+    role,
     userId,
     serverId,
-    channelId: channelId ?? null,
+    channelId: role === "channel_moderator" ? (channelId ?? null) : null,
     scopeType: assignment.scopeType.toLowerCase(),
   };
 }
@@ -720,7 +728,7 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
 
   for (const mod of moderatorAssignments) {
     roles.push({
-      role: "moderator",
+      role: mod.scopeType === "CHANNEL" ? "channel_moderator" : "server_moderator",
       serverId: mod.serverId,
       channelId: mod.channelId,
       scopeType: mod.scopeType.toLowerCase(),

@@ -42,6 +42,9 @@ const ServersPage = lazy(() =>
 const ServerPage = lazy(() =>
   import('@/features/servers/pages/ServerPage').then((m) => ({ default: m.ServerPage })),
 );
+const MemberListPage = lazy(() =>
+  import('@/features/servers/pages/MemberListPage').then((m) => ({ default: m.MemberListPage })),
+);
 const ChannelPage = lazy(() =>
   import('@/features/channels/pages/ChannelPage').then((m) => ({ default: m.ChannelPage })),
 );
@@ -61,9 +64,6 @@ function Placeholder({ label }: { label: string }) {
   );
 }
 
-function MemberListPage() {
-  return <Placeholder label="Members" />;
-}
 function ProfilePage() {
   return <Placeholder label="Profile" />;
 }
@@ -113,115 +113,120 @@ export const router = createBrowserRouter([
           {
             element: <AppShell />,
             children: [
-              { index: true, element: <Navigate to="/servers" replace /> },
               {
-                path: 'servers',
+                element: <SuspenseOutlet />,
                 children: [
-                  { index: true, element: <ServersPage /> },
+                  { index: true, element: <Navigate to="/servers" replace /> },
                   {
-                    path: ':serverId',
+                    path: 'servers',
                     children: [
-                      { index: true, element: <ServerPage /> },
-                      { path: 'channels/:channelId', element: <ChannelPage /> },
-                      { path: 'members', element: <MemberListPage /> },
-                    ],
-                  },
-                ],
-              },
-              { path: 'profile', element: <ProfilePage /> },
-              {
-                path: 'settings',
-                children: [
-                  { path: 'password', element: <ChangePasswordPage /> },
-                  { path: 'notifications', element: <NotificationPreferencesPage /> },
-                ],
-              },
-              {
-                element: <AdminGuard />,
-                children: [
-                  {
-                    path: 'admin',
-                    element: <AdminLayout />,
-                    children: [
-                      { index: true, element: <Navigate to={ROUTES.ADMIN_DASHBOARD} replace /> },
-                      { path: 'dashboard', element: <AdminDashboardPage /> },
+                      { index: true, element: <ServersPage /> },
                       {
-                        path: 'users',
-                        element: (
-                          <AdminSectionPage
-                            title="Users"
-                            description="User management will plug into this new admin shell in a later module."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'departments',
-                        element: (
-                          <AdminSectionPage
-                            title="Departments"
-                            description="Department CRUD will land on top of the current admin navigation structure."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'programs',
-                        element: (
-                          <AdminSectionPage
-                            title="Programs"
-                            description="Program management screens are intentionally deferred beyond Module 2."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'disciplines',
-                        element: (
-                          <AdminSectionPage
-                            title="Disciplines"
-                            description="Discipline management will reuse this admin shell once its CRUD flows are implemented."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'classes',
-                        element: (
-                          <AdminSectionPage
-                            title="Classes"
-                            description="Class management is deferred, but its route and navigation slot are now in place."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'courses',
-                        element: (
-                          <AdminSectionPage
-                            title="Courses"
-                            description="Course management and channel generation will land in later modules."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'societies',
-                        element: (
-                          <AdminSectionPage
-                            title="Societies"
-                            description="Society administration is queued for later modules, not Module 2."
-                          />
-                        ),
-                      },
-                      {
-                        path: 'roles',
-                        element: (
-                          <AdminSectionPage
-                            title="Roles"
-                            description="Role assignment and permission management will build on this shell later."
-                          />
-                        ),
+                        path: ':serverId',
+                        children: [
+                          { index: true, element: <ServerPage /> },
+                          { path: 'channels/:channelId', element: <ChannelPage /> },
+                          { path: 'members', element: <MemberListPage /> },
+                        ],
                       },
                     ],
                   },
+                  { path: 'profile', element: <ProfilePage /> },
+                  {
+                    path: 'settings',
+                    children: [
+                      { path: 'password', element: <ChangePasswordPage /> },
+                      { path: 'notifications', element: <NotificationPreferencesPage /> },
+                    ],
+                  },
+                  {
+                    element: <AdminGuard />,
+                    children: [
+                      {
+                        path: 'admin',
+                        element: <AdminLayout />,
+                        children: [
+                          { index: true, element: <Navigate to={ROUTES.ADMIN_DASHBOARD} replace /> },
+                          { path: 'dashboard', element: <AdminDashboardPage /> },
+                          {
+                            path: 'users',
+                            element: (
+                              <AdminSectionPage
+                                title="Users"
+                                description="User management will plug into this new admin shell in a later module."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'departments',
+                            element: (
+                              <AdminSectionPage
+                                title="Departments"
+                                description="Department CRUD will land on top of the current admin navigation structure."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'programs',
+                            element: (
+                              <AdminSectionPage
+                                title="Programs"
+                                description="Program management screens are intentionally deferred beyond Module 2."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'disciplines',
+                            element: (
+                              <AdminSectionPage
+                                title="Disciplines"
+                                description="Discipline management will reuse this admin shell once its CRUD flows are implemented."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'classes',
+                            element: (
+                              <AdminSectionPage
+                                title="Classes"
+                                description="Class management is deferred, but its route and navigation slot are now in place."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'courses',
+                            element: (
+                              <AdminSectionPage
+                                title="Courses"
+                                description="Course management and channel generation will land in later modules."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'societies',
+                            element: (
+                              <AdminSectionPage
+                                title="Societies"
+                                description="Society administration is queued for later modules, not Module 2."
+                              />
+                            ),
+                          },
+                          {
+                            path: 'roles',
+                            element: (
+                              <AdminSectionPage
+                                title="Roles"
+                                description="Role assignment and permission management will build on this shell later."
+                              />
+                            ),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  { path: '*', element: <NotFoundPage /> },
                 ],
               },
-              { path: '*', element: <NotFoundPage /> },
             ],
           },
         ],

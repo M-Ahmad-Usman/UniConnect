@@ -1,4 +1,5 @@
 import type { Gender, UserType } from './enums';
+import type { ScopedRoleAssignment } from './role.types';
 
 // ─── User Profile (from GET /users/me) ──────────────────────────────────────
 
@@ -17,7 +18,7 @@ export interface UserProfile {
   createdAt: string;
   studentInfo: StudentInfo | null;
   teacherInfo: TeacherInfo | null;
-  roles: string[];
+  roles: ScopedRoleAssignment[];
 }
 
 export interface StudentInfo {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ChannelType, type ChannelListItem } from '@/types';
-import { groupChannels, selectDefaultChannel } from '../utils';
+import { groupChannels, insertChannel, removeChannelFromList, selectDefaultChannel, updateChannelInList } from '../utils';
 
 const channels: ChannelListItem[] = [
   {
@@ -104,5 +104,58 @@ describe('selectDefaultChannel', () => {
 
   it('returns null when there are no channels', () => {
     expect(selectDefaultChannel([])).toBeNull();
+  });
+});
+
+describe('insertChannel', () => {
+  it('adds a new channel and preserves created-at ordering', () => {
+    const inserted = insertChannel(channels, {
+      id: 4,
+      serverId: 10,
+      name: 'fresh-updates',
+      description: null,
+      type: ChannelType.GENERAL,
+      isLocked: false,
+      isAutoCreated: false,
+      createdAt: '2026-03-10T01:00:00.000Z',
+    });
+
+    expect(inserted.map((channel) => channel.id)).toEqual([1, 2, 3, 4]);
+    expect(inserted[3]).toMatchObject({
+      id: 4,
+      isArchived: false,
+      courseId: null,
+      programId: null,
+    });
+  });
+});
+
+describe('updateChannelInList', () => {
+  it('merges updated channel fields without losing list-only metadata', () => {
+    const updated = updateChannelInList(channels, {
+      id: 3,
+      serverId: 10,
+      name: 'cs-401-updated',
+      description: 'Updated description',
+      type: ChannelType.COURSE,
+      isLocked: false,
+      isAutoCreated: false,
+      isDeleted: false,
+      isArchived: false,
+      createdAt: '2026-03-10T00:00:00.000Z',
+    });
+
+    expect(updated.find((channel) => channel.id === 3)).toMatchObject({
+      id: 3,
+      name: 'cs-401-updated',
+      isLocked: false,
+      courseId: 99,
+    });
+  });
+});
+
+describe('removeChannelFromList', () => {
+  it('removes the deleted channel from the cache snapshot', () => {
+    expect(removeChannelFromList(channels, 2).map((channel) => channel.id)).toEqual([1, 3]);
   });
 });

@@ -1,5 +1,13 @@
 import { apiClient } from '@/api/client';
-import type { ChannelListItem, PaginatedResponse, ServerDetail, ServerListItem } from '@/types';
+import type {
+  ChannelListItem,
+  CreateChannelRequest,
+  CreateChannelResponse,
+  PaginatedResponse,
+  ServerDetail,
+  ServerListItem,
+  ServerMember,
+} from '@/types';
 
 interface ListServersParams {
   page?: number;
@@ -9,6 +17,11 @@ interface ListServersParams {
 
 interface ListServerChannelsParams {
   includeArchived?: boolean;
+}
+
+interface ListServerMembersParams {
+  page?: number;
+  limit?: number;
 }
 
 export const serversApi = {
@@ -26,6 +39,21 @@ export const serversApi = {
     const response = await apiClient.get<ChannelListItem[]>(`/servers/${serverId}/channels`, {
       params,
     });
+    return response.data;
+  },
+
+  async listMembers(serverId: number, params?: ListServerMembersParams) {
+    const response = await apiClient.get<PaginatedResponse<ServerMember>>(
+      `/servers/${serverId}/members`,
+      {
+        params,
+      },
+    );
+    return response.data;
+  },
+
+  async createChannel(serverId: number, payload: CreateChannelRequest) {
+    const response = await apiClient.post<CreateChannelResponse>(`/servers/${serverId}/channels`, payload);
     return response.data;
   },
 };
