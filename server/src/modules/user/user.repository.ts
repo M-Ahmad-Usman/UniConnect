@@ -1,19 +1,19 @@
 import type { Kysely } from 'kysely'
 import type {
   Database,
-  NewUser,
-  NewTeacher,
-  User,
-  Teacher,
+  UserEntity,
+  InsertUserEntity,
+  TeacherEntity,
+  InsertTeacherEntity,
 } from '../../db/types.js'
 
 export default class UserRepository {
   constructor(private readonly db: Kysely<Database>) { }
 
   async createTeacher(
-    fullUserDetails: NewUser,
-    partialTeacherDetails: Omit<NewTeacher, 'teacherId'>,
-  ): Promise<User & Teacher> {
+    fullUserDetails: InsertUserEntity,
+    partialTeacherDetails: Omit<InsertTeacherEntity, 'teacherId'>,
+  ): Promise<UserEntity & TeacherEntity> {
 
     const completeTeacher = await this.db
       .transaction()
@@ -25,7 +25,7 @@ export default class UserRepository {
           .returningAll()
           .executeTakeFirstOrThrow()
 
-        const fullTeacherDetails: NewTeacher = {
+        const fullTeacherDetails: InsertTeacherEntity = {
           ...partialTeacherDetails,
           teacherId: newUser.id,
         }

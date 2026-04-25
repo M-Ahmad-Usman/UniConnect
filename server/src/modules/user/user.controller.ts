@@ -3,7 +3,7 @@ import type { Request, Response } from 'express'
 import type UserService from './user.service.js'
 
 import type { SuccessResponseBody } from '../../core/types/api.js'
-import type { User, Teacher } from '../../db/types.js'
+import type { UserEntity, TeacherEntity } from '../../db/types.js'
 import type { TeacherCreateInput } from './user.schema.js'
 
 export default class UserController {
@@ -15,9 +15,10 @@ export default class UserController {
     response: Response,
   ) {
 
-    const newTeacher: User & Teacher = await this.userService.createTeacher(request.body)
+    const newTeacher: UserEntity & TeacherEntity =
+      await this.userService.createTeacher(request.body)
 
-    const responseBody: SuccessResponseBody<User & Teacher> = {
+    const responseBody: SuccessResponseBody<UserEntity & TeacherEntity> = {
       success: true,
       data: newTeacher,
     }

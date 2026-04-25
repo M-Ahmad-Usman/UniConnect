@@ -116,18 +116,18 @@ export interface DepartmentTable {
   serverId: number
 }
 
-export type Department = Selectable<DepartmentTable>
-export type NewDepartment = Insertable<DepartmentTable>
-export type UpdateDepartment = Updateable<DepartmentTable>
+export type DepartmentEntity = Selectable<DepartmentTable>
+export type InsertDepartmentEntity = Insertable<DepartmentTable>
+export type UpdateDepartmentEntity = Updateable<DepartmentTable>
 
 export interface DisciplineTable {
   value: DisciplineValue
   label: string
 }
 
-export type Discipline = Selectable<DisciplineTable>
-export type NewDiscipline = Insertable<DisciplineTable>
-export type UpdateDiscipline = Updateable<DisciplineTable>
+export type DisciplineEntity = Selectable<DisciplineTable>
+export type InsertDisciplineEntity = Insertable<DisciplineTable>
+export type UpdateDisciplineEntity = Updateable<DisciplineTable>
 
 export interface ProgramTable {
   id: Generated<number>
@@ -142,9 +142,9 @@ export interface ProgramTable {
   code: string
 }
 
-export type Program = Selectable<ProgramTable>
-export type NewProgram = Insertable<ProgramTable>
-export type UpdateProgram = Updateable<ProgramTable>
+export type ProgramEntity = Selectable<ProgramTable>
+export type InsertProgramEntity = Insertable<ProgramTable>
+export type UpdateProgramEntity = Updateable<ProgramTable>
 
 export interface ProgramCurriculumTable {
   id: Generated<number>
@@ -155,9 +155,9 @@ export interface ProgramCurriculumTable {
   batchYear: number
 }
 
-export type ProgramCurriculum = Selectable<ProgramCurriculumTable>
-export type NewProgramCurriculum = Insertable<ProgramCurriculumTable>
-export type UpdateProgramCurriculum = Updateable<ProgramCurriculumTable>
+export type ProgramCurriculumEntity = Selectable<ProgramCurriculumTable>
+export type InsertProgramCurriculumEntity = Insertable<ProgramCurriculumTable>
+export type UpdateProgramCurriculumEntity = Updateable<ProgramCurriculumTable>
 
 export interface UserTypeTable {
   value: UserTypeValue
@@ -165,9 +165,9 @@ export interface UserTypeTable {
   description: string | null
 }
 
-export type UserType = Selectable<UserTypeTable>
-export type NewUserType = Insertable<UserTypeTable>
-export type UpdateUserType = Updateable<UserTypeTable>
+export type UserTypeEntity = Selectable<UserTypeTable>
+export type InsertUserTypeEntity = Insertable<UserTypeTable>
+export type UpdateUserTypeEntity = Updateable<UserTypeTable>
 
 export interface UserTable {
   id: Generated<number>
@@ -191,18 +191,18 @@ export interface UserTable {
   updatedAt: UpdatedAt
 }
 
-export type User = Selectable<UserTable>
-export type NewUser = Insertable<UserTable>
-export type UpdateUser = Updateable<UserTable>
+export type UserEntity = Selectable<UserTable>
+export type InsertUserEntity = Insertable<UserTable>
+export type UpdateUserEntity = Updateable<UserTable>
 
 export interface UserTypeAssignmentTable {
   userId: number
   type: UserTypeValue
 }
 
-export type UserTypeAssignment = Selectable<UserTypeAssignmentTable>
-export type NewUserTypeAssignment = Insertable<UserTypeAssignmentTable>
-export type UpdateUserTypeAssignment = Updateable<UserTypeAssignmentTable>
+export type UserTypeAssignmentEntity = Selectable<UserTypeAssignmentTable>
+export type InsertUserTypeAssignmentEntity = Insertable<UserTypeAssignmentTable>
+export type UpdateUserTypeAssignmentEntity = Updateable<UserTypeAssignmentTable>
 
 export interface StudentTable {
   studentId: number
@@ -210,9 +210,9 @@ export interface StudentTable {
   rollNumber: number
 }
 
-export type Student = Selectable<StudentTable>
-export type NewStudent = Insertable<StudentTable>
-export type UpdateStudent = Updateable<StudentTable>
+export type StudentEntity = Selectable<StudentTable>
+export type InsertStudentEntity = Insertable<StudentTable>
+export type UpdateStudentEntity = Updateable<StudentTable>
 
 export interface DesignationTable {
   value: DesignationValue
@@ -220,9 +220,9 @@ export interface DesignationTable {
   description: string | null
 }
 
-export type Designation = Selectable<DesignationTable>
-export type NewDesignation = Insertable<DesignationTable>
-export type UpdateDesignation = Updateable<DesignationTable>
+export type DesignationEntity = Selectable<DesignationTable>
+export type InsertDesignationEntity = Insertable<DesignationTable>
+export type UpdateDesignationEntity = Updateable<DesignationTable>
 
 export interface TeacherTable {
   teacherId: number
@@ -230,9 +230,9 @@ export interface TeacherTable {
   designation: DesignationValue
 }
 
-export type Teacher = Selectable<TeacherTable>
-export type NewTeacher = Insertable<TeacherTable>
-export type UpdateTeacher = Updateable<TeacherTable>
+export type TeacherEntity = Selectable<TeacherTable>
+export type InsertTeacherEntity = Insertable<TeacherTable>
+export type UpdateTeacherEntity = Updateable<TeacherTable>
 
 export interface ClassTable {
   id: Generated<number>
@@ -250,9 +250,9 @@ export interface ClassTable {
   serverId: number
 }
 
-export type Class = Selectable<ClassTable>
-export type NewClass = Insertable<ClassTable>
-export type UpdateClass = Updateable<ClassTable>
+export type ClassEntity = Selectable<ClassTable>
+export type InsertClassEntity = Insertable<ClassTable>
+export type UpdateClassEntity = Updateable<ClassTable>
 
 export interface SocietyTable {
   id: Generated<number>
@@ -273,9 +273,9 @@ export interface SocietyTable {
   createdAt: CreatedAt
 }
 
-export type Society = Selectable<SocietyTable>
-export type NewSociety = Insertable<SocietyTable>
-export type UpdateSociety = Updateable<SocietyTable>
+export type SocietyEntity = Selectable<SocietyTable>
+export type InsertSocietyEntity = Insertable<SocietyTable>
+export type UpdateSocietyEntity = Updateable<SocietyTable>
 
 export interface ServerTypeTable {
   value: ServerTypeValue
@@ -283,9 +283,9 @@ export interface ServerTypeTable {
   description: string | null
 }
 
-export type ServerType = Selectable<ServerTypeTable>
-export type NewServerType = Insertable<ServerTypeTable>
-export type UpdateServerType = Updateable<ServerTypeTable>
+export type ServerTypeEntity = Selectable<ServerTypeTable>
+export type InsertServerTypeEntity = Insertable<ServerTypeTable>
+export type UpdateServerTypeEntity = Updateable<ServerTypeTable>
 
 export interface ServerTable {
   id: Generated<number>
@@ -305,9 +305,9 @@ export interface ServerTable {
   createdAt: CreatedAt
 }
 
-export type Server = Selectable<ServerTable>
-export type NewServer = Insertable<ServerTable>
-export type UpdateServer = Updateable<ServerTable>
+export type ServerEntity = Selectable<ServerTable>
+export type InsertServerEntity = Insertable<ServerTable>
+export type UpdateServerEntity = Updateable<ServerTable>
 
 export interface ChannelTypeTable {
   value: ChannelTypeValue
@@ -315,9 +315,9 @@ export interface ChannelTypeTable {
   description: string | null
 }
 
-export type ChannelType = Selectable<ChannelTypeTable>
-export type NewChannelType = Insertable<ChannelTypeTable>
-export type UpdateChannelType = Updateable<ChannelTypeTable>
+export type ChannelTypeEntity = Selectable<ChannelTypeTable>
+export type InsertChannelTypeEntity = Insertable<ChannelTypeTable>
+export type UpdateChannelTypeEntity = Updateable<ChannelTypeTable>
 
 export interface ChannelTable {
   id: Generated<number>
@@ -351,9 +351,9 @@ export interface ChannelTable {
   createdAt: CreatedAt
 }
 
-export type Channel = Selectable<ChannelTable>
-export type NewChannel = Insertable<ChannelTable>
-export type UpdateChannel = Updateable<ChannelTable>
+export type ChannelEntity = Selectable<ChannelTable>
+export type InsertChannelEntity = Insertable<ChannelTable>
+export type UpdateChannelEntity = Updateable<ChannelTable>
 
 export interface ServerMembershipTable {
   userId: number
@@ -363,9 +363,9 @@ export interface ServerMembershipTable {
   isAutoJoined: Generated<boolean>
 }
 
-export type ServerMembership = Selectable<ServerMembershipTable>
-export type NewServerMembership = Insertable<ServerMembershipTable>
-export type UpdateServerMembership = Updateable<ServerMembershipTable>
+export type ServerMembershipEntity = Selectable<ServerMembershipTable>
+export type InsertServerMembershipEntity = Insertable<ServerMembershipTable>
+export type UpdateServerMembershipEntity = Updateable<ServerMembershipTable>
 
 export interface SocietyMembershipRequestTable {
   id: Generated<number>
@@ -382,9 +382,9 @@ export interface SocietyMembershipRequestTable {
   reviewedAt: RequestReviewedAt
 }
 
-export type SocietyMembershipRequest = Selectable<SocietyMembershipRequestTable>
-export type NewSocietyMembershipRequest = Insertable<SocietyMembershipRequestTable>
-export type UpdateSocietyMembershipRequest = Updateable<SocietyMembershipRequestTable>
+export type SocietyMembershipRequestEntity = Selectable<SocietyMembershipRequestTable>
+export type InsertSocietyMembershipRequestEntity = Insertable<SocietyMembershipRequestTable>
+export type UpdateSocietyMembershipRequestEntity = Updateable<SocietyMembershipRequestTable>
 
 export interface CourseTable {
   id: Generated<number>
@@ -396,9 +396,9 @@ export interface CourseTable {
   departmentId: number
 }
 
-export type Course = Selectable<CourseTable>
-export type NewCourse = Insertable<CourseTable>
-export type UpdateCourse = Updateable<CourseTable>
+export type CourseEntity = Selectable<CourseTable>
+export type InsertCourseEntity = Insertable<CourseTable>
+export type UpdateCourseEntity = Updateable<CourseTable>
 
 export interface CourseAssignmentTable {
   teacherId: number
@@ -406,9 +406,9 @@ export interface CourseAssignmentTable {
   classId: number
 }
 
-export type CourseAssignment = Selectable<CourseAssignmentTable>
-export type NewCourseAssignment = Insertable<CourseAssignmentTable>
-export type UpdateCourseAssignment = Updateable<CourseAssignmentTable>
+export type CourseAssignmentEntity = Selectable<CourseAssignmentTable>
+export type InsertCourseAssignmentEntity = Insertable<CourseAssignmentTable>
+export type UpdateCourseAssignmentEntity = Updateable<CourseAssignmentTable>
 
 export interface PostTable {
   id: Generated<number>
@@ -437,9 +437,9 @@ export interface PostTable {
   editedAt: EditedAt
 }
 
-export type Post = Selectable<PostTable>
-export type NewPost = Insertable<PostTable>
-export type UpdatePost = Updateable<PostTable>
+export type PostEntity = Selectable<PostTable>
+export type InsertPostEntity = Insertable<PostTable>
+export type UpdatePostEntity = Updateable<PostTable>
 
 export interface PostAttachmentTypeTable {
   value: PostAttachmentTypeValue
@@ -447,9 +447,9 @@ export interface PostAttachmentTypeTable {
   maxSizeBytes: number
 }
 
-export type PostAttachmentType = Selectable<PostAttachmentTypeTable>
-export type NewPostAttachmentType = Insertable<PostAttachmentTypeTable>
-export type UpdatePostAttachmentType = Updateable<PostAttachmentTypeTable>
+export type PostAttachmentTypeEntity = Selectable<PostAttachmentTypeTable>
+export type InsertPostAttachmentTypeEntity = Insertable<PostAttachmentTypeTable>
+export type UpdatePostAttachmentTypeEntity = Updateable<PostAttachmentTypeTable>
 
 export interface PostAttachmentTable {
   id: Generated<number>
@@ -463,9 +463,9 @@ export interface PostAttachmentTable {
   uploadedAt: UploadedAt
 }
 
-export type PostAttachment = Selectable<PostAttachmentTable>
-export type NewPostAttachment = Insertable<PostAttachmentTable>
-export type UpdatePostAttachment = Updateable<PostAttachmentTable>
+export type PostAttachmentEntity = Selectable<PostAttachmentTable>
+export type InsertPostAttachmentEntity = Insertable<PostAttachmentTable>
+export type UpdatePostAttachmentEntity = Updateable<PostAttachmentTable>
 
 export interface UserRoleTable {
   value: string
@@ -473,9 +473,9 @@ export interface UserRoleTable {
   description: string | null
 }
 
-export type UserRole = Selectable<UserRoleTable>
-export type NewUserRole = Insertable<UserRoleTable>
-export type UpdateUserRole = Updateable<UserRoleTable>
+export type UserRoleEntity = Selectable<UserRoleTable>
+export type InsertUserRoleEntity = Insertable<UserRoleTable>
+export type UpdateUserRoleEntity = Updateable<UserRoleTable>
 
 export interface PermissionTable {
   id: Generated<number>
@@ -484,18 +484,18 @@ export interface PermissionTable {
   resource: string
 }
 
-export type Permission = Selectable<PermissionTable>
-export type NewPermission = Insertable<PermissionTable>
-export type UpdatePermission = Updateable<PermissionTable>
+export type PermissionEntity = Selectable<PermissionTable>
+export type InsertPermissionEntity = Insertable<PermissionTable>
+export type UpdatePermissionEntity = Updateable<PermissionTable>
 
 export interface UserRolePermissionTable {
   role: string
   permissionId: number
 }
 
-export type UserRolePermission = Selectable<UserRolePermissionTable>
-export type NewUserRolePermission = Insertable<UserRolePermissionTable>
-export type UpdateUserRolePermission = Updateable<UserRolePermissionTable>
+export type UserRolePermissionEntity = Selectable<UserRolePermissionTable>
+export type InsertUserRolePermissionEntity = Insertable<UserRolePermissionTable>
+export type UpdateUserRolePermissionEntity = Updateable<UserRolePermissionTable>
 
 export interface UserRoleAssignmentTable {
   id: Generated<number>
@@ -511,18 +511,18 @@ export interface UserRoleAssignmentTable {
   expiresAt: Date | null
 }
 
-export type UserRoleAssignment = Selectable<UserRoleAssignmentTable>
-export type NewUserRoleAssignment = Insertable<UserRoleAssignmentTable>
-export type UpdateUserRoleAssignment = Updateable<UserRoleAssignmentTable>
+export type UserRoleAssignmentEntity = Selectable<UserRoleAssignmentTable>
+export type InsertUserRoleAssignmentEntity = Insertable<UserRoleAssignmentTable>
+export type UpdateUserRoleAssignmentEntity = Updateable<UserRoleAssignmentTable>
 
 export interface NotificationTypeTable {
   value: NotificationTypeValue
   label: string
 }
 
-export type NotificationType = Selectable<NotificationTypeTable>
-export type NewNotificationType = Insertable<NotificationTypeTable>
-export type UpdateNotificationType = Updateable<NotificationTypeTable>
+export type NotificationTypeEntity = Selectable<NotificationTypeTable>
+export type InsertNotificationTypeEntity = Insertable<NotificationTypeTable>
+export type UpdateNotificationTypeEntity = Updateable<NotificationTypeTable>
 
 export interface NotificationTable {
   id: Generated<number>
@@ -540,9 +540,9 @@ export interface NotificationTable {
   createdAt: CreatedAt
 }
 
-export type Notification = Selectable<NotificationTable>
-export type NewNotification = Insertable<NotificationTable>
-export type UpdateNotification = Updateable<NotificationTable>
+export type NotificationEntity = Selectable<NotificationTable>
+export type InsertNotificationEntity = Insertable<NotificationTable>
+export type UpdateNotificationEntity = Updateable<NotificationTable>
 
 export interface NotificationPreferenceTable {
   id: Generated<number>
@@ -559,9 +559,9 @@ export interface NotificationPreferenceTable {
   updatedAt: UpdatedAt
 }
 
-export type NotificationPreference = Selectable<NotificationPreferenceTable>
-export type NewNotificationPreference = Insertable<NotificationPreferenceTable>
-export type UpdateNotificationPreference = Updateable<NotificationPreferenceTable>
+export type NotificationPreferenceEntity = Selectable<NotificationPreferenceTable>
+export type InsertNotificationPreferenceEntity = Insertable<NotificationPreferenceTable>
+export type UpdateNotificationPreferenceEntity = Updateable<NotificationPreferenceTable>
 
 export interface RefreshTokenTable {
   id: Generated<number>
@@ -575,6 +575,6 @@ export interface RefreshTokenTable {
   revokedAt: TokenRevokedAt
 }
 
-export type RefreshToken = Selectable<RefreshTokenTable>
-export type NewRefreshToken = Insertable<RefreshTokenTable>
-export type UpdateRefreshToken = Updateable<RefreshTokenTable>
+export type RefreshTokenEntity = Selectable<RefreshTokenTable>
+export type InsertRefreshTokenEntity = Insertable<RefreshTokenTable>
+export type UpdateRefreshTokenEntity = Updateable<RefreshTokenTable>
