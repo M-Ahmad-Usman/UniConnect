@@ -1,5 +1,11 @@
 import type { ErrorType } from '../errors/errorType.js'
 
+export interface SuccessResponseBody<T> {
+  success: true,
+  data: T
+  meta?: Record<string, unknown>
+}
+
 export interface ErrorResponseBody {
   success: false
   error: {
