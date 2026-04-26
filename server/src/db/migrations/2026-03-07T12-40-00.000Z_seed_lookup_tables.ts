@@ -157,12 +157,12 @@ async function seedPostAttachmentTypes(db: Kysely<any>): Promise<void> {
   await db
     .insertInto(TABLE_NAMES.postAttachmentTypes)
     .values([
-      { value: 'image/jpeg', max_size_bytes: FIVE_MB },
-      { value: 'image/jpg', max_size_bytes: FIVE_MB },
-      { value: 'image/png', max_size_bytes: FIVE_MB },
-      { value: 'image/webp', max_size_bytes: FIVE_MB },
-      { value: 'application/pdf', max_size_bytes: TEN_MB },
-      { value: 'application/msword', max_size_bytes: FIVE_MB },
+      { value: 'image/jpeg', max_size_bytes: FIVE_MB, label: 'JPEG Image' },
+      { value: 'image/jpg', max_size_bytes: FIVE_MB, label: 'JPG Image' },
+      { value: 'image/png', max_size_bytes: FIVE_MB, label: 'PNG Image' },
+      { value: 'image/webp', max_size_bytes: FIVE_MB, label: 'WebP Image' },
+      { value: 'application/pdf', max_size_bytes: TEN_MB, label: 'PDF Document' },
+      { value: 'application/msword', max_size_bytes: FIVE_MB, label: 'Word Document' },
     ])
     .execute()
 }
