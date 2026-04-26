@@ -16,3 +16,6 @@ export type ErrorType =
 
   // Validation
   | 'VALIDATION_FAILED'
+
+  // Content Type
+  | 'INVALID_CONTENT_TYPE'
