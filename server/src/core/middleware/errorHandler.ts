@@ -4,7 +4,7 @@ import { AppError, ValidationError, ConflictError, InternalServerError } from '.
 import { logger } from '../logger.js'
 import { formatZodError } from '../utils/formatZodError.js'
 
-import type { ErrorResponseBody, ValidationErrorResponseBody } from '../types/api.js'
+import type { ErrorResponseBody } from '../types/api.js'
 import type { Request, Response, NextFunction } from 'express'
 
 // pg driver attaches a 'code' property to DB errors.
@@ -42,41 +42,31 @@ function createAppError(error: unknown): AppError {
   if (error instanceof AppError)
     return error
 
-  else if (error instanceof ZodError)
+  if (error instanceof ZodError)
     // Raw Zod error that escaped the validation middleware
     return new ValidationError(formatZodError(error))
 
-  else if (isDbError(error) && error.code === '23505')
+  if (isDbError(error) && error.code === '23505')
     // PostgreSQL unique constraint violation
     return new ConflictError('A resource with these details already exists')
 
-  else
-    // Unknown error
-    return new InternalServerError()
+  // Unknown error
+  return new InternalServerError()
 }
 
-function buildErrorResponseBody(appError: AppError): ErrorResponseBody | ValidationErrorResponseBody {
-  if (appError instanceof ValidationError) {
-    const body: ValidationErrorResponseBody = {
-      success: false,
-      error: {
-        errorType: appError.type,
-        message: appError.message,
-        details: appError.details,
-      },
-    }
-    return body
+function buildErrorResponseBody(appError: AppError): ErrorResponseBody {
+  const body: ErrorResponseBody = {
+    success: false,
+    error: {
+      type: appError.type,
+      message: appError.message,
+    },
   }
-  else {
-    const body: ErrorResponseBody = {
-      success: false,
-      error: {
-        errorType: appError.type,
-        message: appError.message,
-      },
-    }
-    return body
-  }
+
+  if (appError.details !== undefined)
+    body.error.details = appError.details
+
+  return body
 }
 
 function isDbError(error: unknown): error is DbError {
