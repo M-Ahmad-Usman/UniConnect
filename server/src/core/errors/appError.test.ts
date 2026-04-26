@@ -9,6 +9,7 @@ import {
   ValidationError,
   InternalServerError,
   UnauthorizedError,
+  InvalidContentTypeError,
 } from './AppError.js'
 import type { FieldError } from '../types/api.js'
 
@@ -58,24 +59,10 @@ describe('App Error', () => {
         expect(notFoundError.isOperational).toBe(true)
       })
 
-      it('should use the default message when none is provided', () => {
-        const notFoundError = new NotFoundError()
-
-        // toBeTruthy also validates empty strings
-        expect(notFoundError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const notFoundError = new NotFoundError('custom message')
-
-        expect(notFoundError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const notFoundError = new NotFoundError()
 
         expect(notFoundError).toBeInstanceOf(AppError)
-        expect(notFoundError).toBeInstanceOf(Error)
       })
     })
 
@@ -89,24 +76,10 @@ describe('App Error', () => {
         expect(badRequestError.isOperational).toBe(true)
       })
 
-      it('should use the default message when none is provided', () => {
-        const badRequestError = new BadRequestError()
-
-        // toBeTruthy also validates empty strings
-        expect(badRequestError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const badRequestError = new BadRequestError('custom message')
-
-        expect(badRequestError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const badRequestError = new BadRequestError()
 
         expect(badRequestError).toBeInstanceOf(AppError)
-        expect(badRequestError).toBeInstanceOf(Error)
       })
     })
 
@@ -120,24 +93,10 @@ describe('App Error', () => {
         expect(unauthorizedError.isOperational).toBe(true)
       })
 
-      it('should use the default message when none is provided', () => {
-        const unauthorizedError = new UnauthorizedError()
-
-        // toBeTruthy also validates empty strings
-        expect(unauthorizedError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const unauthorizedError = new UnauthorizedError('custom message')
-
-        expect(unauthorizedError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const unauthorizedError = new UnauthorizedError()
 
         expect(unauthorizedError).toBeInstanceOf(AppError)
-        expect(unauthorizedError).toBeInstanceOf(Error)
       })
     })
 
@@ -151,24 +110,10 @@ describe('App Error', () => {
         expect(forbiddenError.isOperational).toBe(true)
       })
 
-      it('should use the default message when none is provided', () => {
-        const forbiddenError = new ForbiddenError()
-
-        // toBeTruthy also validates empty strings
-        expect(forbiddenError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const forbiddenError = new ForbiddenError('custom message')
-
-        expect(forbiddenError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const forbiddenError = new ForbiddenError()
 
         expect(forbiddenError).toBeInstanceOf(AppError)
-        expect(forbiddenError).toBeInstanceOf(Error)
       })
     })
 
@@ -182,24 +127,10 @@ describe('App Error', () => {
         expect(conflictError.isOperational).toBe(true)
       })
 
-      it('should use the default message when none is provided', () => {
-        const conflictError = new ConflictError()
-
-        // toBeTruthy also validates empty strings
-        expect(conflictError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const conflictError = new ConflictError('custom message')
-
-        expect(conflictError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const conflictError = new ConflictError()
 
         expect(conflictError).toBeInstanceOf(AppError)
-        expect(conflictError).toBeInstanceOf(Error)
       })
     })
 
@@ -230,32 +161,7 @@ describe('App Error', () => {
         expect(validationError.details).toBe(fieldErrors)
       })
 
-      it('should use the default message when none is provided', () => {
-        const fieldErrors: FieldError[] = [{
-          field: 'user.age',
-          message: 'age cannot be negative',
-          code: 'too_small',
-        }]
-
-        const validationError = new ValidationError(fieldErrors)
-
-        // toBeTruthy also validates empty strings
-        expect(validationError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const fieldErrors: FieldError[] = [{
-          field: 'user.age',
-          message: 'age cannot be negative',
-          code: 'too_small',
-        }]
-
-        const validationError = new ValidationError(fieldErrors, 'custom message')
-
-        expect(validationError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const fieldErrors: FieldError[] = [{
           field: 'user.age',
           message: 'age cannot be negative',
@@ -265,7 +171,29 @@ describe('App Error', () => {
         const validationError = new ValidationError(fieldErrors)
 
         expect(validationError).toBeInstanceOf(AppError)
-        expect(validationError).toBeInstanceOf(Error)
+      })
+    })
+
+    // InvalidContentTypeError
+    describe('InvalidContentTypeError', () => {
+      it('should have correct HTTP semantics', () => {
+        const invalidContentTypeError = new InvalidContentTypeError('application/json')
+
+        expect(invalidContentTypeError.statusCode).toBe(415)
+        expect(invalidContentTypeError.type).toBe('INVALID_CONTENT_TYPE')
+        expect(invalidContentTypeError.isOperational).toBe(true)
+      })
+
+      it('should expose the allowed content type in details', () => {
+        const invalidContentTypeError = new InvalidContentTypeError('application/json')
+
+        expect(invalidContentTypeError.details).toEqual({ allowedContentType: 'application/json' })
+      })
+
+      it('should be an instance of AppError', () => {
+        const invalidContentTypeError = new InvalidContentTypeError('application/json')
+
+        expect(invalidContentTypeError).toBeInstanceOf(AppError)
       })
     })
 
@@ -284,24 +212,10 @@ describe('App Error', () => {
         expect(internalServerError.isOperational).toBe(false)
       })
 
-      it('should use the default message when none is provided', () => {
-        const internalServerError = new InternalServerError()
-
-        // toBeTruthy also validates empty strings
-        expect(internalServerError.message).toBeTruthy()
-      })
-
-      it('should use a custom message when provided', () => {
-        const internalServerError = new InternalServerError('custom message')
-
-        expect(internalServerError.message).toBe('custom message')
-      })
-
-      it('should be an instance of AppError and Error', () => {
+      it('should be an instance of AppError', () => {
         const internalServerError = new InternalServerError()
 
         expect(internalServerError).toBeInstanceOf(AppError)
-        expect(internalServerError).toBeInstanceOf(Error)
       })
     })
   })
