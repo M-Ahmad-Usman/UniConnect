@@ -207,7 +207,7 @@ export type UpdateUserTypeAssignmentEntity = Updateable<UserTypeAssignmentTable>
 export interface StudentTable {
   studentId: number
   classId: number
-  rollNumber: number
+  rollNumber: string
 }
 
 export type StudentEntity = Selectable<StudentTable>
