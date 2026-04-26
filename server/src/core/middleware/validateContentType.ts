@@ -7,10 +7,10 @@ export const validateContentType = (contentType: ContentType) => {
 
   return (request: Request, _response: Response, next: NextFunction) => {
 
-    if (!request.is(contentType)) {
+    if (!request.is(contentType))
       next(new InvalidContentTypeError(contentType, 'Content format is not supported'))
-    }
-    next()
+    else
+      next()
   }
 
 }
