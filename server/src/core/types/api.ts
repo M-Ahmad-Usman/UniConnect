@@ -1,4 +1,4 @@
-import type { ErrorType } from '../errors/errorType.js'
+import type { ErrorType } from './error.js'
 
 export interface SuccessResponseBody<T> {
   success: true,
@@ -6,16 +6,13 @@ export interface SuccessResponseBody<T> {
   meta?: Record<string, unknown>
 }
 
-export interface ErrorResponseBody {
+export interface ErrorResponseBody<TDetails = unknown> {
   success: false
   error: {
     message: string
-    errorType: ErrorType
+    type: ErrorType
+    details?: TDetails
   }
-}
-
-export interface ValidationErrorResponseBody extends ErrorResponseBody {
-  error: ErrorResponseBody['error'] & { details: FieldError[] }
 }
 
 // The shape of a single field-level zod validation error
