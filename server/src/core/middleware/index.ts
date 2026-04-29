@@ -1,5 +1,6 @@
 import { errorHandler } from './errorHandler.js'
 import { notFoundHandler } from './notFoundHandler.js'
 import { validate } from './validate.js'
+import { validateContentType } from './validateContentType.js'
 
-export default { errorHandler, notFoundHandler, validate }
+export { errorHandler, notFoundHandler, validate, validateContentType }
