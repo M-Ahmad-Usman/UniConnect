@@ -2,11 +2,12 @@
 // Database
 import pg from 'pg'
 import type { Kysely } from 'kysely'
-import type { Database } from '../../db/types.js'
+import type { Database, InsertStudentEntity } from '../../db/types.js'
 import type UserRepository from './repositories/user.repository.js'
 import type TeacherRepository from './repositories/teacher.repository.js'
 import type StudentRepository from './repositories/student.repository.js'
 import type ServerRepository from '../server/server.repository.js'
+import type ClassRepository from '../class/class.repository.js'
 import type {
   InsertUserEntity,
   InsertTeacherEntity,
@@ -16,7 +17,7 @@ import type {
 
 // Validation and Errors
 import type z from 'zod'
-import type { teacherCreateSchema } from './user.schema.js'
+import type { studentCreateSchema, teacherCreateSchema } from './user.schema.js'
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 
 // Utils
@@ -30,6 +31,7 @@ export default class UserService {
     private readonly teacherRepository: TeacherRepository,
     private readonly studentRepository: StudentRepository,
     private readonly serverRepository: ServerRepository,
+    private readonly classRepository: ClassRepository,
   ) { }
 
   async createTeacher(teacherData: z.infer<typeof teacherCreateSchema>) {
@@ -111,5 +113,92 @@ export default class UserService {
       }
       throw err
     }
+  }
+
+  async createStudent(studentData: z.infer<typeof studentCreateSchema>) {
+
+    const passwordHash = await passwordUtil.hash(studentData.password)
+
+    const studentEnrollmentContext = await this.classRepository.getStudentEnrollmentContext(studentData.classPublicId)
+
+    if (!studentEnrollmentContext)
+      throw new BadRequestError("Wrong or Invalid publicId for student's class")
+
+    const { classId, classServerId, departmentServerId } = studentEnrollmentContext
+
+    try {
+      return await this.db.transaction().execute(async trx => {
+
+        const userDetails: InsertUserEntity = {
+          fullName: studentData.fullName,
+          personalEmail: studentData.personalEmail,
+          universityEmail: studentData.universityEmail ?? null,
+          phone: studentData.phone,
+          passwordHash: passwordHash,
+
+          gender: studentData.gender,
+          profilePictureUrl: studentData.profilePictureUrl ?? null,
+          bio: studentData.bio ?? null,
+        }
+        const rawNewUser = await this.userRepository.createUser(userDetails, trx)
+
+        // Prepare rest of the data for insertion
+        const studentDetails: InsertStudentEntity = {
+          studentId: rawNewUser.id,
+          classId: classId,
+          rollNumber: studentData.rollNumber,
+        }
+        const userTypeAssignmentDetails: InsertUserTypeAssignmentEntity = {
+          userId: rawNewUser.id,
+          type: 'student',
+        }
+        const classServerMembershipDetails: InsertServerMembershipEntity = {
+          userId: rawNewUser.id,
+          serverId: classServerId,
+        }
+        const departmentServerMembershipDetails: InsertServerMembershipEntity = {
+          userId: rawNewUser.id,
+          serverId: departmentServerId,
+        }
+
+        // Insert rest of the data
+        await Promise.all([
+          this.studentRepository.createStudent(studentDetails, trx),
+          this.serverRepository.addMember(classServerMembershipDetails, trx),
+          this.serverRepository.addMember(departmentServerMembershipDetails, trx),
+          this.userRepository.assignType(userTypeAssignmentDetails, trx),
+        ])
+
+        const newStudent = {
+          publicId: rawNewUser.publicId,
+          fullName: rawNewUser.fullName,
+          personalEmail: rawNewUser.personalEmail,
+          universityEmail: rawNewUser.universityEmail ?? null,
+          phone: rawNewUser.phone,
+
+          gender: rawNewUser.gender,
+          profilePictureUrl: rawNewUser.profilePictureUrl ?? null,
+          bio: rawNewUser.bio ?? null,
+
+          rollNumber: studentData.rollNumber,
+          classPublicId: studentData.classPublicId,
+        }
+        return newStudent
+      })
+    }
+    // Enrich known and expected DB Errors
+    catch (err: unknown) {
+      if (err instanceof pg.DatabaseError) {
+        // constraint names are defined in src/db/migrations/2026-03-07T02-23-50.616Z_create_tables.ts
+        switch (err.constraint) {
+          case 'uq_users_personal_email':
+            throw new ConflictError('Specified personal email is already registered.')
+          case 'uidx_users_active_university_email':
+            throw new ConflictError('Specified university email is already in use.')
+        }
+      }
+      throw err
+    }
+
   }
 }

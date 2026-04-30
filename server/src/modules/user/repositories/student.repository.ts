@@ -1,9 +1,15 @@
 
 import type { Kysely } from 'kysely'
-import type { Database } from '../../../db/types.js'
+import type { Database, InsertStudentEntity } from '../../../db/types.js'
 
 export default class StudentRepository {
 
   constructor(private readonly db: Kysely<Database>) {}
+
+  async createStudent(studentDetails: InsertStudentEntity, trx: Kysely<Database> = this.db) {
+    return await trx.insertInto('students')
+      .values(studentDetails)
+      .executeTakeFirstOrThrow()
+  }
 
 }

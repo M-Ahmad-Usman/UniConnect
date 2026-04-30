@@ -2,7 +2,7 @@ import { Router } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
 
-import { teacherCreateSchema } from './user.schema.js'
+import { studentCreateSchema, teacherCreateSchema } from './user.schema.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import type { z } from 'zod'
 
@@ -24,6 +24,22 @@ export function createUserRouter(userService: UserService): Router {
       const resBody: SuccessResponseBody<typeof newTeacher> = {
         success: true,
         data: newTeacher,
+      }
+
+      res.status(201).json(resBody)
+    },
+  )
+
+  userRouter.post('/students',
+    validateContentType('application/json'),
+    validate(studentCreateSchema),
+    async (req: Request<ParamsDictionary, unknown, z.infer<typeof studentCreateSchema>>, res: Response) => {
+
+      const newStudent = await userService.createStudent(req.body)
+
+      const resBody: SuccessResponseBody<typeof newStudent> = {
+        success: true,
+        data: newStudent,
       }
 
       res.status(201).json(resBody)
