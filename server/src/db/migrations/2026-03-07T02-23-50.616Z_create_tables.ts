@@ -255,7 +255,7 @@ const createStudentsTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('class_id', 'integer', col => col.notNull())
 
-    .addColumn('roll_number', 'integer', col => col.notNull())
+    .addColumn('roll_number', 'varchar(100)', col => col.notNull())
     .addUniqueConstraint(`uq_${tableName}_roll_number`, ['roll_number'])
 
     .execute()

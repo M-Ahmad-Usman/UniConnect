@@ -151,7 +151,7 @@ user_types.value < user_type_assignments.type // ON DELETE RESTRICT ON UPDATE CA
 students {
   student_id INTEGER PK FK
   class_id INTEGER FK // NOT NULL
-  roll_number INTEGER // UNIQUE NOT NULL
+  roll_number VARCHAR(100) // UNIQUE NOT NULL
 }
 
 students.student_id - users.id // ON DELETE CASCADE
