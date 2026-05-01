@@ -2,6 +2,14 @@
 // Database
 import pg from 'pg'
 import type { Kysely } from 'kysely'
+import type {
+  Database,
+  InsertUserEntity,
+  InsertTeacherEntity,
+  InsertStudentEntity,
+  InsertServerMembershipEntity,
+  InsertUserTypeAssignmentEntity,
+} from '../../db/types.js'
 
 // Repositories
 import type UserRepository from './repositories/user.repository.js'
@@ -17,16 +25,8 @@ import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 // Utils
 import * as passwordUtil from '../../core/utils/password.js'
 
-// Data Types
+// Types
 import type { CreateTeacher, CreateStudent } from './user.types.js'
-import type {
-  Database,
-  InsertUserEntity,
-  InsertTeacherEntity,
-  InsertStudentEntity,
-  InsertServerMembershipEntity,
-  InsertUserTypeAssignmentEntity,
-} from '../../db/types.js'
 
 export default class UserService {
 
