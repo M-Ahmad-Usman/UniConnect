@@ -3,16 +3,18 @@ import { Router } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
 
-// Validations & Data Types
-import { createTeacherSchema, createStudentSchema } from './user.schema.js'
-import { validate, validateContentType } from '../../core/middleware/index.js'
-import type { CreateStudent, CreateTeacher } from './user.types.js'
-import type { SuccessResponseBody } from '../../core/types/api.js'
-
 // Services
 import type UserService from './user.service.js'
 
-export function createUserRouter(userService: UserService): Router {
+// Validations
+import { validate, validateContentType } from '../../core/middleware/index.js'
+import { createTeacherSchema, createStudentSchema } from './user.schema.js'
+
+// Data Types
+import type { CreateStudent, CreateTeacher } from './user.types.js'
+import type { SuccessResponseBody } from '../../core/types/api.js'
+
+export default function createUserRouter(userService: UserService): Router {
 
   const userRouter = Router()
 

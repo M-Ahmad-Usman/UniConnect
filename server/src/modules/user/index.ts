@@ -11,7 +11,7 @@ import DepartmentRepository from '../department/department.repository.js'
 import UserService from './user.service.js'
 
 // User Router Factory
-import { createUserRouter } from './user.router.js'
+import createUserRouter from './user.router.js'
 
 // Kysely db instance
 import { db } from '../../db/index.js'
