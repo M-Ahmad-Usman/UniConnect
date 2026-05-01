@@ -10,7 +10,10 @@ import DepartmentRepository from '../department/department.repository.js'
 // Services
 import UserService from './user.service.js'
 
+// User Router Factory
 import { createUserRouter } from './user.router.js'
+
+// Kysely db instance
 import { db } from '../../db/index.js'
 
 const userRepository = new UserRepository(db)
@@ -30,4 +33,6 @@ const userService = new UserService(
   departmentRepository,
 )
 
-export const userRouter = createUserRouter(userService)
+const userRouter = createUserRouter(userService)
+
+export default userRouter
