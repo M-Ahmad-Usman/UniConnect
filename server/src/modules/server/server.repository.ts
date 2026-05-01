@@ -13,13 +13,4 @@ export default class ServerRepository {
       .executeTakeFirstOrThrow()
   }
 
-  async getDepartmentServerId(departmentId: number, trx: Kysely<Database> = this.db) {
-    const departmentsRow = await trx.selectFrom('departments')
-      .select('serverId')
-      .where('id', '=', departmentId)
-      .executeTakeFirst()
-
-    return departmentsRow?.serverId
-  }
-
 }

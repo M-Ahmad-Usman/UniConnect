@@ -9,6 +9,7 @@ import type TeacherRepository from './repositories/teacher.repository.js'
 import type StudentRepository from './repositories/student.repository.js'
 import type ServerRepository from '../server/server.repository.js'
 import type ClassRepository from '../class/class.repository.js'
+import type DepartmentRepository from '../department/department.repository.js'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
@@ -36,13 +37,14 @@ export default class UserService {
     private readonly studentRepository: StudentRepository,
     private readonly serverRepository: ServerRepository,
     private readonly classRepository: ClassRepository,
+    private readonly departmentRepository: DepartmentRepository,
   ) { }
 
   async createTeacher(createTeacherData: CreateTeacher) {
 
     const passwordHash = await passwordUtil.hash(createTeacherData.password)
 
-    const teacherDepartmentServerId = await this.serverRepository
+    const teacherDepartmentServerId = await this.departmentRepository
       .getDepartmentServerId(createTeacherData.departmentId)
 
     if (!teacherDepartmentServerId)
