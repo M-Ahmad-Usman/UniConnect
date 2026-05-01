@@ -5,9 +5,9 @@ export default class DepartmentRepository {
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async createDepartment(departmentDetails: InsertDepartmentEntity, trx: Kysely<Database> = this.db) {
+  async createDepartment(createDepartmentDetails: InsertDepartmentEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('departments')
-      .values(departmentDetails)
+      .values(createDepartmentDetails)
       .returningAll()
       .executeTakeFirstOrThrow()
   }

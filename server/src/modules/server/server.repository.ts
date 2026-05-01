@@ -9,9 +9,9 @@ export default class ServerRepository {
 
   constructor(private readonly db: Kysely<Database>) { }
 
-  async createServer(serverDetails: InsertServerEntity, trx: Kysely<Database> = this.db) {
+  async createServer(createServerDetails: InsertServerEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('servers')
-      .values(serverDetails)
+      .values(createServerDetails)
       .returningAll()
       .executeTakeFirstOrThrow()
   }
