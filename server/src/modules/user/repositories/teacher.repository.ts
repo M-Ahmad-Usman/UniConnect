@@ -6,10 +6,9 @@ export default class TeacherRepository {
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async createTeacher(teacherData: InsertTeacherEntity, trx: Kysely<Database> = this.db) {
-
+  async createTeacher(createTeacherDetails: InsertTeacherEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('teachers')
-      .values(teacherData)
+      .values(createTeacherDetails)
       .returningAll()
       .executeTakeFirstOrThrow()
   }

@@ -2,26 +2,30 @@
 // Database
 import pg from 'pg'
 import type { Kysely } from 'kysely'
-import type { Database, InsertStudentEntity } from '../../db/types.js'
+
+// Repositories
 import type UserRepository from './repositories/user.repository.js'
 import type TeacherRepository from './repositories/teacher.repository.js'
 import type StudentRepository from './repositories/student.repository.js'
 import type ServerRepository from '../server/server.repository.js'
 import type ClassRepository from '../class/class.repository.js'
-import type {
-  InsertUserEntity,
-  InsertTeacherEntity,
-  InsertServerMembershipEntity,
-  InsertUserTypeAssignmentEntity,
-} from '../../db/types.js'
 
-// Validation and Errors
-import type z from 'zod'
-import type { studentCreateSchema, teacherCreateSchema } from './user.schema.js'
+// Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 
 // Utils
 import * as passwordUtil from '../../core/utils/password.js'
+
+// Data Types
+import type { CreateTeacher, CreateStudent } from './user.types.js'
+import type {
+  Database,
+  InsertUserEntity,
+  InsertTeacherEntity,
+  InsertStudentEntity,
+  InsertServerMembershipEntity,
+  InsertUserTypeAssignmentEntity,
+} from '../../db/types.js'
 
 export default class UserService {
 
@@ -34,66 +38,68 @@ export default class UserService {
     private readonly classRepository: ClassRepository,
   ) { }
 
-  async createTeacher(teacherData: z.infer<typeof teacherCreateSchema>) {
+  async createTeacher(createTeacherData: CreateTeacher) {
 
-    const passwordHash = await passwordUtil.hash(teacherData.password)
-    // required for insertion in server_memberships
-    const departmentServerId = await this.serverRepository.getDepartmentServerId(teacherData.departmentId)
-    if (!departmentServerId)
+    const passwordHash = await passwordUtil.hash(createTeacherData.password)
+
+    const teacherDepartmentServerId = await this.serverRepository
+      .getDepartmentServerId(createTeacherData.departmentId)
+
+    if (!teacherDepartmentServerId)
       throw new BadRequestError('Wrong or Invalid departmentId for teacher.')
 
     try {
       return await this.db.transaction().execute(async trx => {
 
         // Insert into users first to get the generated id for teacher
-        const userDetails: InsertUserEntity = {
-          fullName: teacherData.fullName,
-          personalEmail: teacherData.personalEmail,
-          universityEmail: teacherData.universityEmail ?? null,
-          phone: teacherData.phone,
+        const createUserInfo: InsertUserEntity = {
+          fullName: createTeacherData.fullName,
+          personalEmail: createTeacherData.personalEmail,
+          universityEmail: createTeacherData.universityEmail ?? null,
+          phone: createTeacherData.phone,
           passwordHash: passwordHash,
 
-          gender: teacherData.gender,
-          profilePictureUrl: teacherData.profilePictureUrl ?? null,
-          bio: teacherData.bio ?? null,
+          gender: createTeacherData.gender,
+          profilePictureUrl: createTeacherData.profilePictureUrl ?? null,
+          bio: createTeacherData.bio ?? null,
         }
-        const rawNewUser = await this.userRepository.createUser(userDetails, trx)
+        const rawNewUserData = await this.userRepository.createUser(createUserInfo, trx)
 
         // Prepare rest of the data for insertion
-        const teacherDetails: InsertTeacherEntity = {
-          teacherId: rawNewUser.id,
-          departmentId: teacherData.departmentId,
-          designation: teacherData.designation,
+        const createTeacherInfo: InsertTeacherEntity = {
+          teacherId: rawNewUserData.id,
+          departmentId: createTeacherData.departmentId,
+          designation: createTeacherData.designation,
         }
-        const userTypeAssignmentDetails: InsertUserTypeAssignmentEntity = {
-          userId: rawNewUser.id,
+        const userTypeAssignmentInfo: InsertUserTypeAssignmentEntity = {
+          userId: rawNewUserData.id,
           type: 'teacher',
         }
-        const serverMembershipDetails: InsertServerMembershipEntity = {
-          userId: rawNewUser.id,
-          serverId: departmentServerId,
+        const serverMembershipInfo: InsertServerMembershipEntity = {
+          userId: rawNewUserData.id,
+          serverId: teacherDepartmentServerId,
         }
 
         // Insert rest of the data
-        const [rawNewTeacher, ..._temp] = await Promise.all([
-          this.teacherRepository.createTeacher(teacherDetails, trx),
-          this.serverRepository.addMember(serverMembershipDetails, trx),
-          this.userRepository.assignType(userTypeAssignmentDetails, trx),
+        const [rawNewTeacherData] = await Promise.all([
+          this.teacherRepository.createTeacher(createTeacherInfo, trx),
+          this.serverRepository.addMember(serverMembershipInfo, trx),
+          this.userRepository.assignType(userTypeAssignmentInfo, trx),
         ])
 
         const newTeacher = {
-          publicId: rawNewUser.publicId,
-          fullName: rawNewUser.fullName,
-          personalEmail: rawNewUser.personalEmail,
-          universityEmail: rawNewUser.universityEmail ?? null,
-          phone: rawNewUser.phone,
+          publicId: rawNewUserData.publicId,
+          fullName: rawNewUserData.fullName,
+          personalEmail: rawNewUserData.personalEmail,
+          universityEmail: rawNewUserData.universityEmail ?? null,
+          phone: rawNewUserData.phone,
 
-          gender: rawNewUser.gender,
-          profilePictureUrl: rawNewUser.profilePictureUrl ?? null,
-          bio: rawNewUser.bio ?? null,
+          gender: rawNewUserData.gender,
+          profilePictureUrl: rawNewUserData.profilePictureUrl ?? null,
+          bio: rawNewUserData.bio ?? null,
 
-          designation: rawNewTeacher.designation,
-          departmentId: rawNewTeacher.departmentId,
+          designation: rawNewTeacherData.designation,
+          departmentId: rawNewTeacherData.departmentId,
         }
         return newTeacher
       })
@@ -115,11 +121,12 @@ export default class UserService {
     }
   }
 
-  async createStudent(studentData: z.infer<typeof studentCreateSchema>) {
+  async createStudent(createStudentData: CreateStudent) {
 
-    const passwordHash = await passwordUtil.hash(studentData.password)
+    const passwordHash = await passwordUtil.hash(createStudentData.password)
 
-    const studentEnrollmentContext = await this.classRepository.getStudentEnrollmentContext(studentData.classPublicId)
+    const studentEnrollmentContext = await this.classRepository
+      .getStudentEnrollmentContext(createStudentData.classPublicId)
 
     if (!studentEnrollmentContext)
       throw new BadRequestError("Wrong or Invalid publicId for student's class")
@@ -129,59 +136,59 @@ export default class UserService {
     try {
       return await this.db.transaction().execute(async trx => {
 
-        const userDetails: InsertUserEntity = {
-          fullName: studentData.fullName,
-          personalEmail: studentData.personalEmail,
-          universityEmail: studentData.universityEmail ?? null,
-          phone: studentData.phone,
+        const createUserInfo: InsertUserEntity = {
+          fullName: createStudentData.fullName,
+          personalEmail: createStudentData.personalEmail,
+          universityEmail: createStudentData.universityEmail ?? null,
+          phone: createStudentData.phone,
           passwordHash: passwordHash,
 
-          gender: studentData.gender,
-          profilePictureUrl: studentData.profilePictureUrl ?? null,
-          bio: studentData.bio ?? null,
+          gender: createStudentData.gender,
+          profilePictureUrl: createStudentData.profilePictureUrl ?? null,
+          bio: createStudentData.bio ?? null,
         }
-        const rawNewUser = await this.userRepository.createUser(userDetails, trx)
+        const rawNewUserData = await this.userRepository.createUser(createUserInfo, trx)
 
         // Prepare rest of the data for insertion
-        const studentDetails: InsertStudentEntity = {
-          studentId: rawNewUser.id,
+        const createStudentInfo: InsertStudentEntity = {
+          studentId: rawNewUserData.id,
           classId: classId,
-          rollNumber: studentData.rollNumber,
+          rollNumber: createStudentData.rollNumber,
         }
-        const userTypeAssignmentDetails: InsertUserTypeAssignmentEntity = {
-          userId: rawNewUser.id,
+        const userTypeAssignmentInfo: InsertUserTypeAssignmentEntity = {
+          userId: rawNewUserData.id,
           type: 'student',
         }
-        const classServerMembershipDetails: InsertServerMembershipEntity = {
-          userId: rawNewUser.id,
+        const classServerMembershipInfo: InsertServerMembershipEntity = {
+          userId: rawNewUserData.id,
           serverId: classServerId,
         }
-        const departmentServerMembershipDetails: InsertServerMembershipEntity = {
-          userId: rawNewUser.id,
+        const departmentServerMembershipInfo: InsertServerMembershipEntity = {
+          userId: rawNewUserData.id,
           serverId: departmentServerId,
         }
 
         // Insert rest of the data
         await Promise.all([
-          this.studentRepository.createStudent(studentDetails, trx),
-          this.serverRepository.addMember(classServerMembershipDetails, trx),
-          this.serverRepository.addMember(departmentServerMembershipDetails, trx),
-          this.userRepository.assignType(userTypeAssignmentDetails, trx),
+          this.studentRepository.createStudent(createStudentInfo, trx),
+          this.serverRepository.addMember(classServerMembershipInfo, trx),
+          this.serverRepository.addMember(departmentServerMembershipInfo, trx),
+          this.userRepository.assignType(userTypeAssignmentInfo, trx),
         ])
 
         const newStudent = {
-          publicId: rawNewUser.publicId,
-          fullName: rawNewUser.fullName,
-          personalEmail: rawNewUser.personalEmail,
-          universityEmail: rawNewUser.universityEmail ?? null,
-          phone: rawNewUser.phone,
+          publicId: rawNewUserData.publicId,
+          fullName: rawNewUserData.fullName,
+          personalEmail: rawNewUserData.personalEmail,
+          universityEmail: rawNewUserData.universityEmail ?? null,
+          phone: rawNewUserData.phone,
 
-          gender: rawNewUser.gender,
-          profilePictureUrl: rawNewUser.profilePictureUrl ?? null,
-          bio: rawNewUser.bio ?? null,
+          gender: rawNewUserData.gender,
+          profilePictureUrl: rawNewUserData.profilePictureUrl ?? null,
+          bio: rawNewUserData.bio ?? null,
 
-          rollNumber: studentData.rollNumber,
-          classPublicId: studentData.classPublicId,
+          rollNumber: createStudentData.rollNumber,
+          classPublicId: createStudentData.classPublicId,
         }
         return newStudent
       })

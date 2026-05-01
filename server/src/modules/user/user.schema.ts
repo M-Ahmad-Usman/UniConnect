@@ -6,7 +6,7 @@ import {
 } from '../../db/constants.js'
 
 // General data for both students and teachers
-export const userCreateSchema = z.object({
+export const createUserSchema = z.object({
   fullName: z.string().min(3).max(100), // db allows max 100 characters
   personalEmail: z.email(),
   universityEmail: z.email().optional(),
@@ -18,12 +18,12 @@ export const userCreateSchema = z.object({
   bio: z.string().max(1000).optional(), // db allows max 1000 characters
 })
 
-export const studentCreateSchema = z.object({
+export const createStudentSchema = z.object({
   classPublicId: z.uuidv7(),
   rollNumber: z.string(),
-}).and(userCreateSchema)
+}).and(createUserSchema)
 
-export const teacherCreateSchema = z.object({
+export const createTeacherSchema = z.object({
   designation: z.enum(DESIGNATIONS),
   departmentId: z.coerce.number().positive(),
-}).and(userCreateSchema)
+}).and(createUserSchema)

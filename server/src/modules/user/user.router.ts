@@ -1,13 +1,15 @@
+// Express Types
 import { Router } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
 
-import { studentCreateSchema, teacherCreateSchema } from './user.schema.js'
+// Validations & Data Types
+import { createTeacherSchema, createStudentSchema } from './user.schema.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
-import type { z } from 'zod'
-
+import type { CreateStudent, CreateTeacher } from './user.types.js'
 import type { SuccessResponseBody } from '../../core/types/api.js'
 
+// Services
 import type UserService from './user.service.js'
 
 export function createUserRouter(userService: UserService): Router {
@@ -16,8 +18,8 @@ export function createUserRouter(userService: UserService): Router {
 
   userRouter.post('/teachers',
     validateContentType('application/json'),
-    validate(teacherCreateSchema),
-    async (req: Request<ParamsDictionary, unknown, z.infer<typeof teacherCreateSchema>>, res: Response) => {
+    validate(createTeacherSchema),
+    async (req: Request<ParamsDictionary, unknown, CreateTeacher>, res: Response) => {
 
       const newTeacher = await userService.createTeacher(req.body)
 
@@ -32,8 +34,8 @@ export function createUserRouter(userService: UserService): Router {
 
   userRouter.post('/students',
     validateContentType('application/json'),
-    validate(studentCreateSchema),
-    async (req: Request<ParamsDictionary, unknown, z.infer<typeof studentCreateSchema>>, res: Response) => {
+    validate(createStudentSchema),
+    async (req: Request<ParamsDictionary, unknown, CreateStudent>, res: Response) => {
 
       const newStudent = await userService.createStudent(req.body)
 

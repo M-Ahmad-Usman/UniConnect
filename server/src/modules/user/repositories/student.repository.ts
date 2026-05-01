@@ -6,9 +6,9 @@ export default class StudentRepository {
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async createStudent(studentDetails: InsertStudentEntity, trx: Kysely<Database> = this.db) {
+  async createStudent(createStudentDetails: InsertStudentEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('students')
-      .values(studentDetails)
+      .values(createStudentDetails)
       .executeTakeFirstOrThrow()
   }
 
