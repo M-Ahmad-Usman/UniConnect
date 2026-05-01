@@ -15,7 +15,7 @@ import { db } from '../../db/index.js'
 const departmentRepository = new DepartmentRepository(db)
 const serverRepository = new ServerRepository(db)
 
-const departmentService = new DepartmentService(departmentRepository, serverRepository)
+const departmentService = new DepartmentService(db, departmentRepository, serverRepository)
 
 const departmentRouter = createDepartmentRouter(departmentService)
 
