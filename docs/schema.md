@@ -100,7 +100,7 @@ program_curricula {
   course_id INTEGER FK  // NOT NULL
   semester_number INTEGER  // NOT NULL. CHECK (1 <= semester_number <= programs.semesters) enforced by trigger trg_fn_validate_curriculum_semester
   batch_year INTEGER  // NOT NULL (admission year this applies to)
-  // UNIQUE(program_id, course_id, semester_number, batch_year)
+  // UNIQUE(program_id, course_id, batch_year)
 }
 
 program_curricula.program_id > programs.id // ON DELETE CASCADE

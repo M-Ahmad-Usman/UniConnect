@@ -86,7 +86,7 @@ const INDEXES: TableIndexes = {
 
   /**
    * constraints (indexes) already defined in create_tables
-   * - onProgramIdBatchYearSemesterNumberCourseId: unique constraint
+   * - onProgramIdBatchYearCourseId: unique constraint
    */
   programCurricula: {},
 

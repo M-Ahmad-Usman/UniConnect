@@ -168,7 +168,7 @@ const createProgramCurriculaTable: TableCreationFunction = async (db, tableName)
     .addColumn('semester_number', 'integer', col => col.notNull())
     .addColumn('batch_year', 'integer', col => col.notNull())
 
-    .addUniqueConstraint(`uq_${tableName}`, ['program_id', 'batch_year', 'semester_number', 'course_id'])
+    .addUniqueConstraint(`uq_${tableName}`, ['program_id', 'batch_year', 'course_id'])
 
     .execute()
 }
