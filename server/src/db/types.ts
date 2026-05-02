@@ -138,7 +138,7 @@ export interface ProgramTable {
 
   programDirectorId: number
 
-  semesters: number
+  totalSemesters: number
   code: string
 }
 

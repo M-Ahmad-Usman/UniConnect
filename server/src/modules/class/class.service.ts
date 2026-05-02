@@ -38,8 +38,8 @@ export default class ClassService {
       throw new BadRequestError('Wrong or invalid ProgramId')
 
     // Validate that the class's current_semester doesn't exceeds the class's enrolled program's allowed semesters
-    if (createClassData.currentSemester > programDetails.semesters)
-      throw new BadRequestError(`Class's current_semester cannot exceed from its enrolled program's semesters. Max ${programDetails.code} semesters: ${programDetails.semesters.toString()}`)
+    if (createClassData.currentSemester > programDetails.totalSemesters)
+      throw new BadRequestError(`Class's current_semester cannot exceed from its enrolled program's semesters. Max ${programDetails.code} semesters: ${programDetails.totalSemesters.toString()}`)
 
     return await this.db.transaction().execute(async trx => {
 

@@ -78,7 +78,7 @@ programs {
 
   program_director_id INTEGER FK // NOT NULL
 
-  semesters INTEGER // NOT NULL // CHECK semesters > 0
+  total_semesters INTEGER // NOT NULL // CHECK semesters > 0
   code VARCHAR(20) // NOT NULL UNIQUE
 
   // UNIQUE(department_id, discipline, degree_level)

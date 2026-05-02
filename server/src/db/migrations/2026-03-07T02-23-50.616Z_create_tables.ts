@@ -145,7 +145,7 @@ const createProgramsTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('program_director_id', 'integer', col => col.notNull())
 
-    .addColumn('semesters', 'integer', col => col.notNull())
+    .addColumn('total_semesters', 'integer', col => col.notNull())
     .addCheckConstraint(`chk_${tableName}_semester_positive`, sql<boolean>`semesters > 0`)
 
     .addColumn('code', 'varchar(20)', col => col.notNull())
