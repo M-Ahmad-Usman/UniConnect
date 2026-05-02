@@ -65,43 +65,43 @@ export default class UserService {
           profilePictureUrl: createTeacherData.profilePictureUrl ?? null,
           bio: createTeacherData.bio ?? null,
         }
-        const rawNewUserData = await this.userRepository.createUser(createUserInfo, trx)
+        const createdUserInfo = await this.userRepository.createUser(createUserInfo, trx)
 
         // Prepare rest of the data for insertion
         const createTeacherInfo: InsertTeacherEntity = {
-          teacherId: rawNewUserData.id,
+          teacherId: createdUserInfo.id,
           departmentId: createTeacherData.departmentId,
           designation: createTeacherData.designation,
         }
         const userTypeAssignmentInfo: InsertUserTypeAssignmentEntity = {
-          userId: rawNewUserData.id,
+          userId: createdUserInfo.id,
           type: 'teacher',
         }
         const serverMembershipInfo: InsertServerMembershipEntity = {
-          userId: rawNewUserData.id,
+          userId: createdUserInfo.id,
           serverId: teacherDepartmentServerId,
         }
 
         // Insert rest of the data
-        const [rawNewTeacherData] = await Promise.all([
+        const [createdTeacherData, ..._] = await Promise.all([
           this.teacherRepository.createTeacher(createTeacherInfo, trx),
           this.serverRepository.addMember(serverMembershipInfo, trx),
           this.userRepository.assignType(userTypeAssignmentInfo, trx),
         ])
 
         const newTeacher = {
-          publicId: rawNewUserData.publicId,
-          fullName: rawNewUserData.fullName,
-          personalEmail: rawNewUserData.personalEmail,
-          universityEmail: rawNewUserData.universityEmail ?? null,
-          phone: rawNewUserData.phone,
+          publicId: createdUserInfo.publicId,
+          fullName: createdUserInfo.fullName,
+          personalEmail: createdUserInfo.personalEmail,
+          universityEmail: createdUserInfo.universityEmail ?? null,
+          phone: createdUserInfo.phone,
 
-          gender: rawNewUserData.gender,
-          profilePictureUrl: rawNewUserData.profilePictureUrl ?? null,
-          bio: rawNewUserData.bio ?? null,
+          gender: createdUserInfo.gender,
+          profilePictureUrl: createdUserInfo.profilePictureUrl ?? null,
+          bio: createdUserInfo.bio ?? null,
 
-          designation: rawNewTeacherData.designation,
-          departmentId: rawNewTeacherData.departmentId,
+          designation: createdTeacherData.designation,
+          departmentId: createdTeacherData.departmentId,
         }
         return newTeacher
       })
@@ -133,7 +133,11 @@ export default class UserService {
     if (!studentEnrollmentContext)
       throw new BadRequestError("Wrong or Invalid publicId for student's class")
 
-    const { classId, classServerId, departmentServerId } = studentEnrollmentContext
+    const {
+      classId: studentClassId,
+      classServerId: studentClassServerId,
+      departmentServerId: studentDepartmentServerId,
+    } = studentEnrollmentContext
 
     try {
       return await this.db.transaction().execute(async trx => {
@@ -154,7 +158,7 @@ export default class UserService {
         // Prepare rest of the data for insertion
         const createStudentInfo: InsertStudentEntity = {
           studentId: rawNewUserData.id,
-          classId: classId,
+          classId: studentClassId,
           rollNumber: createStudentData.rollNumber,
         }
         const userTypeAssignmentInfo: InsertUserTypeAssignmentEntity = {
@@ -163,11 +167,11 @@ export default class UserService {
         }
         const classServerMembershipInfo: InsertServerMembershipEntity = {
           userId: rawNewUserData.id,
-          serverId: classServerId,
+          serverId: studentClassServerId,
         }
         const departmentServerMembershipInfo: InsertServerMembershipEntity = {
           userId: rawNewUserData.id,
-          serverId: departmentServerId,
+          serverId: studentDepartmentServerId,
         }
 
         // Insert rest of the data
