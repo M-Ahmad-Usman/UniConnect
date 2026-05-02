@@ -1,9 +1,16 @@
 import type { Kysely } from 'kysely'
-import type { Database } from '../../db/types.js'
+import type { Database, InsertClassEntity } from '../../db/types.js'
 
 export default class ClassRepository {
 
   constructor(private readonly db: Kysely<Database>) { }
+
+  async createClass(createClassDetails: InsertClassEntity, trx: Kysely<Database> = this.db) {
+    return await trx.insertInto('classes')
+      .values(createClassDetails)
+      .returningAll()
+      .executeTakeFirstOrThrow()
+  }
 
   async getIdFromPublicId(publicId: string, trx: Kysely<Database> = this.db): Promise<number | undefined> {
     const classesRow = await trx.selectFrom('classes')
