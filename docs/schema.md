@@ -181,7 +181,7 @@ classes {
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   program_id INTEGER FK // NOT NULL
-  current_semester INTEGER // NOT NULL. CHECK (1 <= current_semester <= programs.semesters) enforced by trigger trg_fn_validate_class_semester (cross-table constraint, cannot use PG CHECK).
+  current_semester INTEGER // NOT NULL. CHECK (1 <= current_semester <= programs.semesters)
   section VARCHAR(1) // NOT NULL CHECK section IN ('A', 'B')
 
   cr_id INTEGER FK // UNIQUE. Cannot set NOT NULL due to chicken-egg problem with students.class_id. Enforce NOT NULL in application layer. Cross-class membership enforced by trigger trg_fn_validate_cr_membership (fires on UPDATE OF cr_id, skipped when cr_id IS NULL).
