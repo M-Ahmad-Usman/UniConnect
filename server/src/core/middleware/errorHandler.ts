@@ -1,11 +1,14 @@
 import { ZodError } from 'zod'
 
-import { AppError, ValidationError, InternalServerError } from '../errors/AppError.js'
+import { AppError, ValidationError, InternalServerError, BadRequestError } from '../errors/AppError.js'
 import { logger } from '../logger.js'
 import { formatZodError } from '../utils/formatZodError.js'
 
 import type { ErrorResponseBody } from '../types/api.js'
 import type { Request, Response, NextFunction } from 'express'
+
+// body-parser error type thrown by express.json middleware on invalid JSON formatted body
+const MALFORMED_JSON_ERROR_CODE = 'entity.parse.failed'
 
 export function errorHandler(
   error: unknown,
@@ -30,7 +33,6 @@ export function errorHandler(
   // 3. Build and send response
   const errorResponseBody = buildErrorResponseBody(appError)
   response.status(appError.statusCode).json(errorResponseBody)
-
 }
 
 function createAppError(error: unknown): AppError {
@@ -40,6 +42,9 @@ function createAppError(error: unknown): AppError {
   if (error instanceof ZodError)
     // Raw Zod error that escaped the validation middleware
     return new ValidationError(formatZodError(error))
+
+  if (isMalformedJsonError(error))
+    return new BadRequestError('Malformed JSON body')
 
   // Unknown error
   return new InternalServerError()
@@ -58,4 +63,13 @@ function buildErrorResponseBody(appError: AppError): ErrorResponseBody {
     body.error.details = appError.details
 
   return body
+}
+
+function isMalformedJsonError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    error.type === MALFORMED_JSON_ERROR_CODE
+  )
 }
