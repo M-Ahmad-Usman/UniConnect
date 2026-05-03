@@ -211,30 +211,6 @@ const triggerFunctions: { create: PGFunction, destroy: PGFunction } = {
       $$;
     `.execute(db)
 
-    // Validates that program_curricula.semester_number does not exceed
-    // the total semesters defined in the associated program.
-    await sql`
-      CREATE OR REPLACE FUNCTION trg_fn_validate_curriculum_semester()
-        RETURNS TRIGGER
-        LANGUAGE plpgsql
-      AS $$
-      DECLARE
-        max_semesters INTEGER;
-      BEGIN
-        SELECT semesters INTO max_semesters
-        FROM programs
-        WHERE id = NEW.program_id;
-
-        IF NEW.semester_number < 1 OR NEW.semester_number > max_semesters THEN
-          RAISE EXCEPTION 'semester_number % is out of range for program % (max: %)',
-            NEW.semester_number, NEW.program_id, max_semesters;
-        END IF;
-
-        RETURN NEW;
-      END;
-      $$;
-    `.execute(db)
-
     // Validates that the student assigned as CR actually belongs to the
     // class they are being assigned to. Skipped when cr_id is NULL (see WHEN
     // clause on the trigger) to allow removal of a CR without validation.
@@ -354,7 +330,6 @@ const triggerFunctions: { create: PGFunction, destroy: PGFunction } = {
     await sql`DROP FUNCTION IF EXISTS trg_fn_stamp_updated_at CASCADE;`.execute(db)
     await sql`DROP FUNCTION IF EXISTS trg_fn_sync_delete_state CASCADE;`.execute(db)
     await sql`DROP FUNCTION IF EXISTS trg_fn_stamp_review_state CASCADE;`.execute(db)
-    await sql`DROP FUNCTION IF EXISTS trg_fn_validate_curriculum_semester CASCADE;`.execute(db)
     await sql`DROP FUNCTION IF EXISTS trg_fn_validate_cr_membership CASCADE;`.execute(db)
     await sql`DROP FUNCTION IF EXISTS trg_fn_enforce_user_type_integrity CASCADE;`.execute(db)
   },
@@ -435,12 +410,6 @@ const triggers: { create: PGFunction, destroy: PGFunction } = {
       FOR EACH ROW EXECUTE FUNCTION trg_fn_stamp_review_state();
     `.execute(db)
 
-    await sql`
-      CREATE TRIGGER trg_program_curricula_validate_semester
-      BEFORE INSERT OR UPDATE ON program_curricula
-      FOR EACH ROW EXECUTE FUNCTION trg_fn_validate_curriculum_semester();
-    `.execute(db)
-
     // Attached to UPDATE only — classes.cr_id has a circular dependency with
     // students.class_id so cr_id is always NULL on INSERT and set via a
     // subsequent UPDATE. WHEN clause skips validation on cr_id removal.
@@ -491,7 +460,6 @@ const triggers: { create: PGFunction, destroy: PGFunction } = {
     await sql`DROP TRIGGER IF EXISTS trg_channels_sync_delete_state ON channels;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_posts_sync_delete_state ON posts;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_society_membership_requests_stamp_review_state ON society_membership_requests;`.execute(db)
-    await sql`DROP TRIGGER IF EXISTS trg_program_curricula_validate_semester ON program_curricula;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_classes_validate_cr_membership ON classes;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_enforce_user_type_assignments_integrity ON user_type_assignments;`.execute(db)
     await sql`DROP TRIGGER IF EXISTS trg_enforce_students_integrity ON students;`.execute(db)
