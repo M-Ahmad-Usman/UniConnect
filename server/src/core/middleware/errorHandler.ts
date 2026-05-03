@@ -1,16 +1,11 @@
 import { ZodError } from 'zod'
 
-import { AppError, ValidationError, ConflictError, InternalServerError } from '../errors/AppError.js'
+import { AppError, ValidationError, InternalServerError } from '../errors/AppError.js'
 import { logger } from '../logger.js'
 import { formatZodError } from '../utils/formatZodError.js'
 
 import type { ErrorResponseBody } from '../types/api.js'
 import type { Request, Response, NextFunction } from 'express'
-
-// pg driver attaches a 'code' property to DB errors.
-interface DbError extends Error {
-  code?: string
-}
 
 export function errorHandler(
   error: unknown,
@@ -46,10 +41,6 @@ function createAppError(error: unknown): AppError {
     // Raw Zod error that escaped the validation middleware
     return new ValidationError(formatZodError(error))
 
-  if (isDbError(error) && error.code === '23505')
-    // PostgreSQL unique constraint violation
-    return new ConflictError('A resource with these details already exists')
-
   // Unknown error
   return new InternalServerError()
 }
@@ -67,8 +58,4 @@ function buildErrorResponseBody(appError: AppError): ErrorResponseBody {
     body.error.details = appError.details
 
   return body
-}
-
-function isDbError(error: unknown): error is DbError {
-  return error instanceof Error && 'code' in error
 }
