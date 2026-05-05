@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePostListParams, normalizeSearchValue, parseSearchParam, toQueryParamsRecord } from '../utils';
+import type { InfiniteData } from '@tanstack/react-query';
+import { ChannelType, PostPriority, ServerType, UserType, type PaginatedResponse, type PostListItem } from '@/types';
+import {
+  canDeletePostClient,
+  canEditPostClient,
+  canPostInChannelClient,
+  getEditWindowState,
+  getPlainTextPreview,
+  normalizeDateParam,
+  normalizePostListParams,
+  normalizeSearchValue,
+  parseSearchParam,
+  removePostFromInfiniteData,
+  replacePostInInfiniteData,
+  toQueryParamsRecord,
+  upsertPostInInfiniteData,
+  validatePostAttachments,
+} from '../utils';
 
 describe('normalizeSearchValue', () => {
   it('trims whitespace around the search input', () => {
@@ -26,6 +43,22 @@ describe('normalizePostListParams', () => {
 
     expect(normalizePostListParams({ page: 1, search: '   ' })).toEqual({ page: 1 });
   });
+
+  it('normalizes date filters and drops invalid values', () => {
+    expect(
+      normalizePostListParams({
+        startDate: '2026-04-01',
+        endDate: 'not-a-date',
+      }),
+    ).toEqual({ startDate: '2026-04-01' });
+  });
+});
+
+describe('normalizeDateParam', () => {
+  it('keeps YYYY-MM-DD dates only', () => {
+    expect(normalizeDateParam('2026-04-24')).toBe('2026-04-24');
+    expect(normalizeDateParam('04/24/2026')).toBeUndefined();
+  });
 });
 
 describe('toQueryParamsRecord', () => {
@@ -41,5 +74,177 @@ describe('toQueryParamsRecord', () => {
 
   it('returns undefined when params are missing', () => {
     expect(toQueryParamsRecord(undefined)).toBeUndefined();
+  });
+});
+
+describe('getPlainTextPreview', () => {
+  it('strips markup and truncates long previews', () => {
+    expect(getPlainTextPreview('<p>Hello <strong>class</strong></p>', 20)).toBe('Hello class');
+    expect(getPlainTextPreview(`<p>${'a'.repeat(30)}</p>`, 10)).toBe('aaaaaaaaaa...');
+  });
+});
+
+describe('validatePostAttachments', () => {
+  it('accepts up to three valid images', () => {
+    const file = new File(['image'], 'notice.png', { type: 'image/png' });
+    expect(validatePostAttachments([file])).toEqual([]);
+  });
+
+  it('rejects invalid attachment types', () => {
+    const file = new File(['pdf'], 'notice.pdf', { type: 'application/pdf' });
+    expect(validatePostAttachments([file])).toEqual(['notice.pdf must be a JPEG, PNG, or WEBP image.']);
+  });
+});
+
+describe('edit and permission helpers', () => {
+  const author = {
+    id: 1,
+    fullName: 'Author One',
+    email: 'author@example.com',
+    userType: UserType.STUDENT,
+    profilePictureUrl: null,
+    badges: [],
+  };
+  const post = {
+    id: 11,
+    title: 'Notice',
+    content: '<p>Notice</p>',
+    priority: PostPriority.NORMAL,
+    isPinned: false,
+    pinnedAt: null,
+    createdAt: '2026-04-24T10:00:00.000Z',
+    updatedAt: null,
+    author,
+    _count: { attachments: 0 },
+  } satisfies PostListItem;
+
+  it('calculates the 24-hour edit window', () => {
+    expect(getEditWindowState(post.createdAt, new Date('2026-04-25T09:59:00.000Z')).canEditNow).toBe(true);
+    expect(getEditWindowState(post.createdAt, new Date('2026-04-25T10:01:00.000Z')).canEditNow).toBe(false);
+  });
+
+  it('allows authors to edit only inside the edit window', () => {
+    const user = {
+      id: 1,
+      fullName: 'Author One',
+      email: 'author@example.com',
+      userType: UserType.STUDENT,
+      mustChangePassword: false,
+      roles: [],
+    };
+
+    expect(canEditPostClient(post, user, new Date('2026-04-24T11:00:00.000Z'))).toBe(true);
+    expect(canEditPostClient(post, user, new Date('2026-04-26T11:00:00.000Z'))).toBe(false);
+  });
+
+  it('allows admins or authors to delete', () => {
+    expect(
+      canDeletePostClient(post, {
+        id: 2,
+        fullName: 'Admin',
+        email: 'admin@example.com',
+        userType: UserType.ADMIN,
+        mustChangePassword: false,
+        roles: [],
+      }),
+    ).toBe(true);
+  });
+
+  it('mirrors core channel posting permissions from available frontend data', () => {
+    const server = {
+      id: 5,
+      name: 'Server',
+      description: null,
+      type: ServerType.CLASS,
+      iconUrl: null,
+      isActive: true,
+      createdAt: '2026-04-24T10:00:00.000Z',
+      department: null,
+      class: null,
+      society: null,
+      _count: { memberships: 1, channels: 1 },
+    };
+    const channel = {
+      id: 9,
+      name: 'announcements',
+      description: null,
+      type: ChannelType.ANNOUNCEMENT,
+      isLocked: false,
+      isArchived: false,
+      isAutoCreated: true,
+      courseId: null,
+      programId: null,
+      createdAt: '2026-04-24T10:00:00.000Z',
+    };
+
+    expect(
+      canPostInChannelClient({
+        server,
+        channel,
+        user: {
+          id: 1,
+          fullName: 'CR',
+          email: 'cr@example.com',
+          userType: UserType.STUDENT,
+          mustChangePassword: false,
+          roles: [{ role: 'cr', serverId: 5, scopeType: 'server' }],
+        },
+      }),
+    ).toBe(true);
+
+    expect(
+      canPostInChannelClient({
+        server,
+        channel: { ...channel, isLocked: true },
+        user: {
+          id: 1,
+          fullName: 'CR',
+          email: 'cr@example.com',
+          userType: UserType.STUDENT,
+          mustChangePassword: false,
+          roles: [{ role: 'cr', serverId: 5, scopeType: 'server' }],
+        },
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('post cache helpers', () => {
+  const post = (id: number, title = `Post ${id}`): PostListItem => ({
+    id,
+    title,
+    content: '<p>Body</p>',
+    priority: PostPriority.NORMAL,
+    isPinned: false,
+    pinnedAt: null,
+    createdAt: `2026-04-24T10:0${id}:00.000Z`,
+    updatedAt: null,
+    author: {
+      id: 1,
+      fullName: 'Author One',
+      email: 'author@example.com',
+      userType: UserType.STUDENT,
+      profilePictureUrl: null,
+      badges: [],
+    },
+    _count: { attachments: 0 },
+  });
+
+  const infiniteData: InfiniteData<PaginatedResponse<PostListItem>> = {
+    pageParams: [1],
+    pages: [
+      {
+        data: [post(1), post(2)],
+        pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
+      },
+    ],
+  };
+
+  it('upserts, replaces, and removes posts in infinite query pages', () => {
+    const upserted = upsertPostInInfiniteData(infiniteData, post(3))!;
+    expect(upserted.pages[0]!.data.map((item) => item.id)).toContain(3);
+    expect(upserted.pages[0]!.pagination.total).toBe(3);
+    expect(replacePostInInfiniteData(infiniteData, post(1, 'Updated'))!.pages[0]!.data[1]!.title).toBe('Updated');
+    expect(removePostFromInfiniteData(infiniteData, 1)!.pages[0]!.data.map((item) => item.id)).toEqual([2]);
   });
 });

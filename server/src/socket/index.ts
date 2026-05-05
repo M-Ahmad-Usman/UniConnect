@@ -2,6 +2,7 @@ import { Server as SocketIOServer } from "socket.io";
 import type http from "node:http";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
+import { prisma } from "../config/prisma.js";
 import type { AuthUser } from "../shared/types/index.js";
 
 interface AccessTokenPayload {
@@ -48,6 +49,7 @@ export function initializeSocket(server: http.Server): SocketIOServer {
       origin: env.CORS_ORIGIN,
       credentials: true,
     },
+    path: "/api/socket.io",
   });
 
   // ─── Connection Rate Limiting Middleware ────────────────────────────────
@@ -127,6 +129,37 @@ export function initializeSocket(server: http.Server): SocketIOServer {
     socket.on("disconnect", () => {
       clearTimeout(disconnectTimer);
     });
+
+    socket.on("channel:join", async (rawChannelId) => {
+      const channelId = Number(rawChannelId);
+      if (!Number.isInteger(channelId) || channelId <= 0) {
+        return;
+      }
+
+      try {
+        const allowed = await canJoinChannel(user, channelId);
+        if (!allowed) {
+          return;
+        }
+
+        socket.join(`channel:${channelId}`);
+      } catch (error) {
+        console.warn("[Socket] Failed to join channel", {
+          userId: user.id,
+          channelId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+
+    socket.on("channel:leave", (rawChannelId) => {
+      const channelId = Number(rawChannelId);
+      if (!Number.isInteger(channelId) || channelId <= 0) {
+        return;
+      }
+
+      socket.leave(`channel:${channelId}`);
+    });
   });
 
   // Periodically prune expired rate-limit entries to prevent memory growth
@@ -153,6 +186,12 @@ export function initializeSocket(server: http.Server): SocketIOServer {
  */
 export function getIO(): SocketIOServer | null {
   return io;
+}
+
+export function emitToChannel(channelId: number, event: string, data: unknown): void {
+  if (io) {
+    io.to(`channel:${channelId}`).emit(event, data);
+  }
 }
 
 /**
@@ -189,4 +228,25 @@ function parseCookie(cookieHeader: string, name: string): string | undefined {
     }
   }
   return undefined;
+}
+
+async function canJoinChannel(user: AuthUser, channelId: number): Promise<boolean> {
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    select: { id: true, serverId: true, isDeleted: true, isArchived: true },
+  });
+
+  if (!channel || channel.isDeleted || channel.isArchived) {
+    return false;
+  }
+
+  if (user.userType === "ADMIN") {
+    return true;
+  }
+
+  const membership = await prisma.serverMembership.findUnique({
+    where: { userId_serverId: { userId: user.id, serverId: channel.serverId } },
+  });
+
+  return Boolean(membership);
 }

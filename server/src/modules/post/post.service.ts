@@ -14,6 +14,7 @@ import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
+import { emitToChannel } from "../../socket/index.js";
 import type { UserRole } from "../../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -381,13 +382,17 @@ export async function createPost(
       serverType: channel.server.type,
     });
 
-    return {
+    const response = {
       ...withAttachments,
       author: {
         ...withAttachments.author,
         badges: badgeMap.get(withAttachments.author.id) ?? [],
       },
     };
+
+    emitToChannel(channelId, "post:created", { channelId, post: response });
+
+    return response;
   }
 
   // Resolve author badge
@@ -407,13 +412,17 @@ export async function createPost(
     serverType: channel.server.type,
   });
 
-  return {
+  const response = {
     ...post,
     author: {
       ...post.author,
       badges: badgeMap.get(post.author.id) ?? [],
     },
   };
+
+  emitToChannel(channelId, "post:created", { channelId, post: response });
+
+  return response;
 }
 
 export async function listPosts(
@@ -564,13 +573,20 @@ export async function updatePost(
     [updated.author.id]
   );
 
-  return {
+  const response = {
     ...updated,
     author: {
       ...updated.author,
       badges: badgeMap.get(updated.author.id) ?? [],
     },
   };
+
+  emitToChannel(post.channelId, "post:updated", {
+    channelId: post.channelId,
+    post: response,
+  });
+
+  return response;
 }
 
 export async function deletePost(postId: number, caller: CallerInfo) {
@@ -588,6 +604,11 @@ export async function deletePost(postId: number, caller: CallerInfo) {
       deletedAt: new Date(),
       deletedBy: caller.id,
     },
+  });
+
+  emitToChannel(post.channelId, "post:deleted", {
+    channelId: post.channelId,
+    postId,
   });
 
   return null;
@@ -614,13 +635,20 @@ export async function pinPost(
     [updated.author.id]
   );
 
-  return {
+  const response = {
     ...updated,
     author: {
       ...updated.author,
       badges: badgeMap.get(updated.author.id) ?? [],
     },
   };
+
+  emitToChannel(post.channelId, "post:pinned", {
+    channelId: post.channelId,
+    post: response,
+  });
+
+  return response;
 }
 
 export async function addAttachments(
@@ -668,11 +696,18 @@ export async function addAttachments(
     [updated.author.id]
   );
 
-  return {
+  const response = {
     ...updated,
     author: {
       ...updated.author,
       badges: badgeMap.get(updated.author.id) ?? [],
     },
   };
+
+  emitToChannel(post.channelId, "post:updated", {
+    channelId: post.channelId,
+    post: response,
+  });
+
+  return response;
 }

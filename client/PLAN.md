@@ -74,7 +74,7 @@ This frontend implementation will satisfy **all 76 functional requirements** acr
 
 ### Real-time & HTTP
 - **axios** - HTTP client with interceptors for auth and error handling
-- **socket.io-client** - WebSocket client for real-time notifications
+- **socket.io-client** - WebSocket client for real-time notifications and active channel feed updates
 
 ### Developer Experience
 - **TypeScript strict mode** - Maximum type safety
@@ -137,7 +137,7 @@ All backend communication goes through a dedicated API layer:
 1. **Vite Project Setup**
    - React 19 + TypeScript 5.9
   - Tailwind CSS v4 with official Vite plugin setup (`@tailwindcss/vite`) and core import in `src/index.css`
-   - Vite proxy: `/api` → `http://localhost:4000`, `/socket.io` → WebSocket proxy
+  - Vite proxy: `/api` → `http://localhost:4000`, `/api/socket.io` → WebSocket proxy
    - Path aliases: `@/*` → `src/*`
 
 2. **shadcn/ui Installation**
@@ -192,7 +192,7 @@ All backend communication goes through a dedicated API layer:
      ```
 
 6. **Socket.IO Client** (`src/lib/socket.ts`)
-  - Connect with `withCredentials: true` using same-origin `/socket.io` by default
+  - Connect with `withCredentials: true` using same-origin `/api/socket.io` by default
   - Server joins the socket to room `user:{userId}` after successful authentication
    - Event listeners: `notification:new`, `notification:unread-count`, `auth:expired`
    - Graceful disconnect on logout
@@ -904,6 +904,10 @@ export const postsApi = {
   - `usePost(postId)` - Single post detail
   - Mutations: `useCreatePost`, `useUpdatePost`, `useDeletePost`, `usePinPost`
     - On success: invalidate `['posts', channelId]` query
+
+- **Realtime (active channel only):**
+  - `useChannelPostRealtime(channelId)` joins `channel:{id}` and listens for `post:created`, `post:updated`, `post:pinned`, `post:deleted`
+  - Updates the active channel feed cache independent of notification subscription preferences
 
 - **Filter State:**
   - Managed via URL search params (React Router `useSearchParams`)
@@ -1939,7 +1943,7 @@ export function Can({ action, serverId, children }: CanProps) {
 
 ### Deployment Recommendation
 - Default to same-origin production deployment for frontend and backend
-- Keep `/api` and `/socket.io` relative in the app by default
+- Keep `/api` and `/api/socket.io` relative in the app by default
 - Introduce `VITE_API_URL` and `VITE_SOCKET_URL` only if deployment later requires separate origins
 
 ### Security Note

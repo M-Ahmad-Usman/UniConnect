@@ -251,6 +251,86 @@ async function seedModule3Data(pool: Pool) {
   );
 }
 
+async function findChannelIdByServerAndName(pool: Pool, serverId: number, name: string) {
+  const result = await pool.query<{ id: number }>(
+    'SELECT id FROM channels WHERE server_id = $1 AND name = $2 AND is_deleted = false LIMIT 1',
+    [serverId, name],
+  );
+
+  return result.rows[0]?.id ?? null;
+}
+
+async function seedModule4Data(pool: Pool) {
+  const managerUserId = await findUserIdByEmail(pool, e2eUsers.moduleManager.email);
+  const serverResult = await pool.query<{ id: number }>(
+    'SELECT id FROM servers WHERE name = $1 LIMIT 1',
+    ['Engineering Faculty Hub'],
+  );
+  const serverId = serverResult.rows[0]?.id ?? null;
+
+  if (!managerUserId || !serverId) {
+    throw new Error('Module 4 E2E prerequisites were not created before seeding post data.');
+  }
+
+  const announcementChannelId = await findChannelIdByServerAndName(pool, serverId, 'announcements');
+
+  if (!announcementChannelId) {
+    throw new Error('Module 4 E2E announcement channel could not be found.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO channels (
+        server_id,
+        name,
+        description,
+        type,
+        is_locked,
+        is_auto_created,
+        created_by,
+        created_at
+      )
+      VALUES ($1, $2, $3, 'general'::channel_type, true, false, $4, NOW())
+    `,
+    [
+      serverId,
+      'module4-locked',
+      'Locked Module 4 fixture channel for publishing-affordance coverage.',
+      managerUserId,
+    ],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO posts (
+        author_id,
+        channel_id,
+        title,
+        content,
+        priority,
+        is_pinned,
+        pinned_by,
+        pinned_at,
+        created_at
+      )
+      VALUES
+        ($1, $2, $3, $4, 'urgent'::post_priority, true, $1, NOW() - INTERVAL '2 hours', NOW() - INTERVAL '2 hours'),
+        ($1, $2, $5, $6, 'important'::post_priority, false, NULL, NULL, NOW() - INTERVAL '1 hour'),
+        ($1, $2, $7, $8, 'normal'::post_priority, false, NULL, NULL, NOW() - INTERVAL '26 hours')
+    `,
+    [
+      managerUserId,
+      announcementChannelId,
+      'Module 4 Pinned Safety Bulletin',
+      '<p>Sanitized pinned content for Module 4 detail reading.</p>',
+      'Module 4 Important Date Filter',
+      '<p>Important content for priority and date filtering.</p>',
+      'Module 4 Expired Edit Window',
+      '<p>This post is old enough that edit controls should be hidden.</p>',
+    ],
+  );
+}
+
 async function findUserIdByEmail(pool: Pool, email: string) {
   const result = await pool.query<SeededUserRow>('SELECT id, email FROM users WHERE email = $1 LIMIT 1', [
     email,
@@ -455,6 +535,7 @@ export default async function globalSetup() {
     await seedModule3Permissions(pool);
     await seedModule2Data(pool);
     await seedModule3Data(pool);
+    await seedModule4Data(pool);
   } finally {
     await pool.end();
   }

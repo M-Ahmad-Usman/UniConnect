@@ -17,7 +17,8 @@ export function connectSocket(): void {
 
   socket = io({
     withCredentials: true,
-    // Same-origin — path defaults to /socket.io
+    path: '/api/socket.io',
+    // Same-origin — socket path under /api so access_token cookie is sent
   });
 
   socket.on('notification:new', (payload: NewNotificationPayload) => {
@@ -34,6 +35,13 @@ export function connectSocket(): void {
     }
 
     queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all(), refetchType: 'inactive' });
+
+    if (payload.post?.channelId) {
+      void queryClient.invalidateQueries({
+        queryKey: ['posts', payload.post.channelId],
+        refetchType: 'active',
+      });
+    }
   });
 
   socket.on('notification:unread-count', (payload: UnreadCountPayload) => {

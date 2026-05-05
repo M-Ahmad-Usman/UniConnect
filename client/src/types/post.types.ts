@@ -31,7 +31,7 @@ export interface PostListItem {
   isPinned: boolean;
   pinnedAt: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
   author: PostAuthor;
   _count: {
     attachments: number;
@@ -48,7 +48,7 @@ export interface PostDetail {
   isPinned: boolean;
   pinnedAt: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
   author: PostAuthor;
   attachments: PostAttachment[];
   pinner: { id: number; fullName: string } | null;
@@ -60,6 +60,7 @@ export interface CreatePostRequest {
   title: string;
   content: string;
   priority?: PostPriority;
+  attachments?: File[];
 }
 
 export interface UpdatePostRequest {
@@ -75,5 +76,18 @@ export interface PostListParams {
   limit?: number;
   search?: string;
   priority?: PostPriority;
-  isPinned?: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
+// ─── Socket Event Payloads ────────────────────────────────────────────────
+
+export interface PostRealtimePayload {
+  channelId: number;
+  post: PostDetail;
+}
+
+export interface PostDeletedPayload {
+  channelId: number;
+  postId: number;
 }

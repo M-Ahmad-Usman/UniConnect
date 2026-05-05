@@ -58,6 +58,8 @@ export type {
   CreatePostRequest,
   UpdatePostRequest,
   PostListParams,
+  PostRealtimePayload,
+  PostDeletedPayload,
 } from './post.types';
 
 // Notifications

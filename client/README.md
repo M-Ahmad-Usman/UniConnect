@@ -300,7 +300,7 @@ Current Playwright coverage included in the repo:
 
 ## Environment Variables
 
-Local development should default to the Vite proxy so the browser talks to the frontend origin while `/api` and `/socket.io` are proxied to the backend.
+Local development should default to the Vite proxy so the browser talks to the frontend origin while `/api` and `/api/socket.io` are proxied to the backend.
 
 Recommended production topology: serve frontend and backend from the same origin. This fits the backend's cookie model and avoids cross-site cookie and Socket.IO complications.
 

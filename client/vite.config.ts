@@ -68,7 +68,7 @@ export default defineConfig({
         target: proxyTarget,
         changeOrigin: true,
       },
-      '/socket.io': {
+      '/api/socket.io': {
         target: proxyTarget,
         ws: true,
       },

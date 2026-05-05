@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 3 Complete
-**Current Phase:** Module 3 implementation hardened and verified, with cross-cutting role/permission contracts refined for production-grade scoped authorization
+**Status:** Module 4 Complete
+**Current Phase:** Module 4 posts and announcements implemented, hardened, and verified with unit, build, and focused browser-runtime coverage
 
 ---
 
@@ -21,7 +21,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module 1: Authentication | Complete | 2026-03-08 | 2026-03-10 | Verified with format, type-check, lint, production build, and focused Playwright runtime coverage for critical auth flows |
 | Module 2: Layout & Navigation | Complete | 2026-03-10 | 2026-03-10 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 3: Server & Channel Views | Complete | 2026-04-24 | 2026-04-24 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
-| Module 4: Posts & Announcements | Not Started | - | - | - |
+| Module 4: Posts & Announcements | Complete | 2026-05-03 | 2026-05-03 | Production-grade feed, post detail, editor, attachments, moderation actions, cache hardening, and focused Playwright coverage |
 | Module 5: Notifications | Not Started | - | - | - |
 | Module 6: User Profile & Management | Not Started | - | - | - |
 | Module 7: Admin Dashboard & CRUD | Not Started | - | - | - |
@@ -31,6 +31,39 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-05-03 - Module 4 Posts & Announcements Implemented and Verified
+
+#### Production Feed and Reading Experience
+- ✅ Replaced the Module 3 channel feed preview with a real posts and announcements feed
+- ✅ Added load-more pagination, URL-backed search/priority/date filters, pinned-first rendering, loading skeletons, empty states, and retry states
+- ✅ Added polished post cards with author avatars, role badges, priority badges, pinned/edited/attachment indicators, sanitized previews, and focused post detail dialogs
+- ✅ Added attachment thumbnail grids and full-size image preview dialogs for post detail views
+
+#### Publishing, Editor, and Moderation Actions
+- ✅ Added permission-aware post creation with a Tiptap editor, priority selection, title/content/file validation, multipart submission, and upload limits
+- ✅ Added edit, delete, pin, and unpin actions with role/ownership/edit-window gating and confirmation dialogs
+- ✅ Kept existing attachments read-only in edit flows until backend attachment delete/reorder support exists
+- ✅ Added channel post cache patching for create, update, delete, and pin flows, plus socket-driven active post-feed updates
+
+#### Verification and Runtime Hardening
+- ✅ Added post schemas, permission helpers, edit-window helpers, preview/sanitization helpers, attachment validation, and cache-helper unit tests
+- ✅ Added focused Module 4 Playwright coverage for feed search/filtering, detail reading, create/edit/pin/delete, unauthorized publishing controls, and locked-channel publishing controls
+- ✅ Fixed a rapid filter-update URL race caught by Playwright
+- ✅ Fixed top-bar search synchronization so unrelated filter URL changes no longer overwrite a quick search clear
+- ✅ `npm run test` passes with 76 Vitest tests
+- ✅ `npm run type-check` passes
+- ✅ `npm run lint` passes
+- ✅ `npm run build` passes
+- ✅ Focused Playwright runtime coverage passes for `client/e2e/module4-posts-announcements.spec.ts`
+
+### 2026-05-05 - Channel Realtime Feed Updates
+
+#### Socket-Scoped Post Updates
+- ✅ Added channel room join/leave with membership checks for Socket.IO
+- ✅ Emitted `post:created`, `post:updated`, `post:pinned`, and `post:deleted` events to channel rooms
+- ✅ Added a channel-scoped realtime hook to patch post caches while a channel is open
+- ✅ Kept notification subscriptions independent from active channel feed updates
 
 ### 2026-04-24 - Scoped Moderator Role Model Finalized Across Backend, Frontend, and Docs
 

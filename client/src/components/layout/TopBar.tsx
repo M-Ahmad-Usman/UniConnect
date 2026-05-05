@@ -28,12 +28,13 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
   const isChannelRoute = serverId !== null && channelId !== null && !isAdminRoute;
   const serverQuery = useServerDetail(serverId);
   const channelQuery = useServerChannels(serverId, false);
-  const [searchInput, setSearchInput] = useState(() => parseSearchParam(searchParams.get('search')));
+  const searchParamValue = parseSearchParam(searchParams.get('search'));
+  const [searchInput, setSearchInput] = useState(() => searchParamValue);
   const debouncedSearchInput = useDebouncedValue(searchInput, 500);
 
   useEffect(() => {
-    setSearchInput(parseSearchParam(searchParams.get('search')));
-  }, [searchParams]);
+    setSearchInput(searchParamValue);
+  }, [searchParamValue]);
 
   useEffect(() => {
     if (!isChannelRoute) {

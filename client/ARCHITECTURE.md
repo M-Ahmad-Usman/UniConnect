@@ -892,7 +892,7 @@ export function Can({ action, serverId, channelId, children }: CanProps) {
 
 ### Socket.IO Setup
 
-The socket client is managed centrally in `src/lib/socket.ts`. The module keeps a singleton `Socket` instance and exposes `connectSocket()`, `disconnectSocket()`, and `getSocket()` helpers. All core event listeners are registered inside `connectSocket()` so that every connection automatically handles notifications and auth-expiry events.
+The socket client is managed centrally in `src/lib/socket.ts`. The module keeps a singleton `Socket` instance and exposes `connectSocket()`, `disconnectSocket()`, and `getSocket()` helpers. Core event listeners are registered inside `connectSocket()` so every connection automatically handles notifications and auth-expiry events.
 
 ```typescript
 // src/lib/socket.ts
@@ -906,11 +906,18 @@ export function connectSocket(): void {
     return;
   }
 
-  socket = io({ withCredentials: true });  // Same-origin, path defaults to /socket.io
+  socket = io({ withCredentials: true, path: '/api/socket.io' });  // Same-origin, /api cookie path
 
-  socket.on('notification:new', () => {
+  socket.on('notification:new', (payload: NewNotificationPayload) => {
     useNotificationStore.getState().incrementUnread();
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all(), refetchType: 'inactive' });
+
+    if (payload.post?.channelId) {
+      void queryClient.invalidateQueries({
+        queryKey: ['posts', payload.post.channelId],
+        refetchType: 'active',
+      });
+    }
   });
 
   socket.on('notification:unread-count', (payload: UnreadCountPayload) => {
@@ -934,7 +941,11 @@ export function disconnectSocket(): void {
 }
 ```
 
-Recommended default: keep the socket on the same origin as the frontend and backend. The Vite proxy handles `/socket.io` in development.
+Recommended default: keep the socket on the same origin as the frontend and backend. The Vite proxy handles `/api/socket.io` in development.
+
+### Channel Feed Realtime
+
+Channel-scoped feed updates are handled by `useChannelPostRealtime` in the posts feature. The hook joins/leaves `channel:{id}` rooms and listens for `post:created`, `post:updated`, `post:pinned`, and `post:deleted`. Each event patches the active channel's query cache so the open feed updates even if the user is unsubscribed from notifications.
 
 ### Connection Lifecycle
 

@@ -76,7 +76,7 @@ export default defineConfig({
         target: 'http://localhost:4000',
         changeOrigin: true,
       },
-      '/socket.io': {
+      '/api/socket.io': {
         target: 'http://localhost:4000',
         ws: true,
       },
@@ -448,7 +448,7 @@ if (error.error.code === 'RATE_LIMIT_EXCEEDED') {
 import { io } from 'socket.io-client';
 
 const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
-  path: '/socket.io',
+  path: '/api/socket.io',
   withCredentials: true,  // Sends access_token cookie
   transports: ['websocket', 'polling'],
 });
