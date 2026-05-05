@@ -1,13 +1,13 @@
 import { z } from 'zod'
 import { DEGREE_LEVELS, DISCIPLINES } from '../../db/constants.js'
 
-const curriculumEntry = z.object({
+const courseSemesterAssignment = z.object({
   courseId: z.coerce.number().positive(),
   semesterNumber: z.coerce.number().positive(),
 })
 const batchCurriculum = z.object({
   batchYear: z.coerce.number().min(2000).max(2100),
-  curriculumEntries: z.array(curriculumEntry),
+  courseSemesterAssignments: z.array(courseSemesterAssignment),
 })
 
 export const createProgramSchema = z.object({
@@ -24,35 +24,36 @@ export const createProgramSchema = z.object({
 }).superRefine((programData, ctx) => {
 
   // Validate each curriculum
-  programData.curriculums.forEach((curr, currIdx) => {
-    const entries = curr.curriculumEntries
+  programData.curriculums.forEach((curriculum, currIdx) => {
+
+    const { courseSemesterAssignments } = curriculum
 
     // Validate curriculum is provided for all semesters
-    if (entries.length !== programData.totalSemesters) {
+    if (courseSemesterAssignments.length !== programData.totalSemesters) {
       ctx.addIssue({
         code: 'custom',
-        path: ['curriculums', currIdx, 'curriculumEntries'],
-        message: `Curriculum is required for all semesters (${programData.totalSemesters.toString()}), got ${entries.length.toString()} entries`,
+        path: ['curriculums', currIdx, 'courseSemesterAssignments'],
+        message: `Curriculum is required for all (${programData.totalSemesters.toString()}) semesters, got ${courseSemesterAssignments.length.toString()} courseSemesterAssignment entries instead`,
       })
     }
 
     // validate all smesters are valid and unique
     const semesters = new Set<number>()
-    entries.forEach((entry, entryIdx) => {
-      if (entry.semesterNumber < 1 || entry.semesterNumber > programData.totalSemesters)
+    courseSemesterAssignments.forEach((assignment, entryIdx) => {
+      if (assignment.semesterNumber < 1 || assignment.semesterNumber > programData.totalSemesters)
         ctx.addIssue({
           code: 'custom',
-          path: ['curriculums', currIdx, 'curriculumEntries', entryIdx, 'semester'],
-          message: `Semester must be between 1 and ${programData.totalSemesters.toString()}`,
+          path: ['curriculums', currIdx, 'courseSemesterAssignments', entryIdx, 'semesterNumber'],
+          message: `Semester must be between 1 and ${programData.totalSemesters.toString()} (max semester in the program)`,
         })
-      if (semesters.has(entry.semesterNumber))
+      if (semesters.has(assignment.semesterNumber))
         ctx.addIssue({
           code: 'custom',
-          path: ['curriculums', currIdx, 'curriculumEntries', entryIdx, 'semester'],
+          path: ['curriculums', currIdx, 'courseSemesterAssignments', entryIdx, 'semesterNumber'],
           message: 'Duplicate semester number in curriculum',
         })
 
-      semesters.add(entry.semesterNumber)
+      semesters.add(assignment.semesterNumber)
     })
   })
 })

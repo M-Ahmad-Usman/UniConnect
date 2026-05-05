@@ -51,11 +51,11 @@ export default class ProgramService {
           .createProgram(createProgramInfo, trx)
 
         const programCurriculaInfoAllBatches: InsertProgramCurriculumEntity[][] = createProgramData.curriculums.map(curriculum => {
-          const singleBatchCurriculum: InsertProgramCurriculumEntity[] = curriculum.curriculumEntries.map(curriculumEntry => {
+          const singleBatchCurriculum: InsertProgramCurriculumEntity[] = curriculum.courseSemesterAssignments.map(courseSemesterAssignment => {
             return {
               programId: createdProgramInfo.id,
-              courseId: curriculumEntry.courseId, // can throw foreign key error if courseId is wrong
-              semesterNumber: curriculumEntry.semesterNumber,
+              courseId: courseSemesterAssignment.courseId, // can throw foreign key error if courseId is wrong
+              semesterNumber: courseSemesterAssignment.semesterNumber,
               batchYear: curriculum.batchYear,
             }
           })
@@ -70,7 +70,7 @@ export default class ProgramService {
         const curriculums = createdProgramCurriculumsAllBatches.map(curriculum => {
           return {
             batchYear: curriculum[0]?.batchYear,
-            curriculumEntries: curriculum.map(entry => ({ courseId: entry.courseId, semester: entry.semesterNumber })),
+            courseSemesterAssignments: curriculum.map(entry => ({ courseId: entry.courseId, semester: entry.semesterNumber })),
           }
         })
 
