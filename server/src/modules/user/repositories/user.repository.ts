@@ -3,7 +3,7 @@ import type { Database, InsertUserEntity, InsertUserTypeAssignmentEntity } from 
 
 export default class UserRepository {
 
-  constructor(private readonly db: Kysely<Database>) {}
+  constructor(private readonly db: Kysely<Database>) { }
 
   async createUser(createUserDetails: InsertUserEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('users')
@@ -17,6 +17,15 @@ export default class UserRepository {
       .values(typeAssignmentDetails)
       .returningAll()
       .executeTakeFirstOrThrow()
+  }
+
+  async getIdFromPublicId(publicId: string, trx: Kysely<Database> = this.db) {
+    const usersRow = await trx.selectFrom('users')
+      .select('id')
+      .where('publicId', '=', publicId)
+      .executeTakeFirst()
+
+    return usersRow?.id
   }
 
 }

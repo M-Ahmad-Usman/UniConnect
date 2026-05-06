@@ -6,6 +6,7 @@ import type { Database, InsertProgramEntity } from '../../db/types.js'
 
 // Repositories
 import type ProgramRepository from './program.repository.js'
+import type UserRepository from '../user/repositories/user.repository.js'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
@@ -21,12 +22,13 @@ export default class ProgramService {
   constructor(
     private readonly db: Kysely<Database>,
     private readonly programRepository: ProgramRepository,
+    private readonly userRepository: UserRepository,
   ) { }
 
   async createProgram(createProgramData: CreateProgram) {
 
-    const programDirectorId = await this.programRepository
-      .getProgramDirectorIdFromPublicId(createProgramData.programDirectorPublicId)
+    const programDirectorId = await this.userRepository
+      .getIdFromPublicId(createProgramData.programDirectorPublicId)
 
     if (!programDirectorId)
       throw new BadRequestError('Wrong or Invalid Program Director Public Id')

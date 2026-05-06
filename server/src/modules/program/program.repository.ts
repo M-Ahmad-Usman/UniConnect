@@ -12,15 +12,6 @@ export default class ProgramRepository {
       .executeTakeFirstOrThrow()
   }
 
-  async getProgramDirectorIdFromPublicId(programDirectorPublicId: string, trx: Kysely<Database> = this.db) {
-    const usersRow = await trx.selectFrom('users')
-      .select('id')
-      .where('publicId', '=', programDirectorPublicId)
-      .executeTakeFirst()
-
-    return usersRow?.id
-  }
-
   async createProgramCurriculums(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
     await trx.insertInto('programCurricula')
       .values(createProgramCurriculumDetails)
