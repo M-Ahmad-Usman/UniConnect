@@ -21,14 +21,9 @@ export default class ProgramRepository {
     return usersRow?.id
   }
 
-  /**
-   * Takes curriculum entries for all semesters of a program.
-   * Inserts the full curriculum of a program in the db
-  **/
-  async createProgramCurriculum(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db): Promise<InsertProgramCurriculumEntity[]> {
-    return await trx.insertInto('programCurricula')
+  async createProgramCurriculums(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
+    await trx.insertInto('programCurricula')
       .values(createProgramCurriculumDetails)
-      .returningAll()
       .execute()
   }
 

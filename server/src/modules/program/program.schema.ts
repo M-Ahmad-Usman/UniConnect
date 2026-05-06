@@ -1,13 +1,14 @@
 import { z } from 'zod'
 import { DEGREE_LEVELS, DISCIPLINES } from '../../db/constants.js'
 
-const courseSemesterAssignment = z.object({
-  courseId: z.coerce.number().positive(),
-  semesterNumber: z.coerce.number().positive(),
+const courseAssignmentsForSemester = z.object({
+  semesterNumber: z.coerce.number().min(1),
+  courseIds: z.array(z.coerce.number()).min(1),
 })
-const batchCurriculum = z.object({
+
+export const batchCurriculum = z.object({
   batchYear: z.coerce.number().min(2000).max(2100),
-  courseSemesterAssignments: z.array(courseSemesterAssignment),
+  semesterCourses: z.array(courseAssignmentsForSemester),
 })
 
 export const createProgramSchema = z.object({
@@ -20,40 +21,73 @@ export const createProgramSchema = z.object({
   totalSemesters: z.coerce.number().positive().max(10),
   code: z.string().min(2).max(20), // db allows max 20 characters
 
-  curriculums: z.array(batchCurriculum).min(1), // TODO: improve error response
+  curriculums: z.array(batchCurriculum).min(1, 'atleast 1 curriculum is required'), // TODO: improve error response
 }).superRefine((programData, ctx) => {
 
-  // Validate each curriculum
-  programData.curriculums.forEach((curriculum, currIdx) => {
+  /**
+   * Validate following in each curriculum
+   * 1. batchYear is unique for each curriculum
+   * 2. all courses are unique within each curriculum
+   * 3. validate semester number for all curriculum entries stays within the range of 1 and programData.totalSemesters
+   * 4. no duplicate semester number within each curriculum
+   * 5. curriculum is provided for all semesters of the program neither less nor more
+  */
+  const batches = new Set<number>()
+  programData.curriculums.forEach((curriculum, curriculumIdx) => {
 
-    const { courseSemesterAssignments } = curriculum
-
-    // Validate curriculum is provided for all semesters
-    if (courseSemesterAssignments.length !== programData.totalSemesters) {
+    // 1. no duplicate batchYear between curriculums
+    if (batches.has(curriculum.batchYear))
       ctx.addIssue({
         code: 'custom',
-        path: ['curriculums', currIdx, 'courseSemesterAssignments'],
-        message: `Curriculum is required for all (${programData.totalSemesters.toString()}) semesters, got ${courseSemesterAssignments.length.toString()} courseSemesterAssignment entries instead`,
+        path: ['curriculums', curriculumIdx, 'batchYear'],
+        message: 'Duplicate batchYear. batchYear must be unique for each curriculum',
       })
-    }
 
-    // validate all smesters are valid and unique
+    batches.add(curriculum.batchYear)
+
+    const courseIds = new Set<number>()
     const semesters = new Set<number>()
-    courseSemesterAssignments.forEach((assignment, entryIdx) => {
-      if (assignment.semesterNumber < 1 || assignment.semesterNumber > programData.totalSemesters)
-        ctx.addIssue({
-          code: 'custom',
-          path: ['curriculums', currIdx, 'courseSemesterAssignments', entryIdx, 'semesterNumber'],
-          message: `Semester must be between 1 and ${programData.totalSemesters.toString()} (max semester in the program)`,
-        })
-      if (semesters.has(assignment.semesterNumber))
-        ctx.addIssue({
-          code: 'custom',
-          path: ['curriculums', currIdx, 'courseSemesterAssignments', entryIdx, 'semesterNumber'],
-          message: 'Duplicate semester number in curriculum',
-        })
 
-      semesters.add(assignment.semesterNumber)
+    curriculum.semesterCourses.forEach((semesterCourses, semesterCoursesIdx) => {
+
+      // 2. Validate all courses are unique within a curriculum
+      semesterCourses.courseIds.forEach((courseId, courseIdIdx) => {
+        if (courseIds.has(courseId))
+          ctx.addIssue({
+            code: 'custom',
+            path: ['curriculums', curriculumIdx, 'semesterCourses', semesterCoursesIdx, 'courseIds', courseIdIdx],
+            message: 'Duplicate course assignment. All course assignments must be unique within a batch',
+          })
+        courseIds.add(courseId)
+      })
+
+      // 3. validate semesterNumber stays within the range of 1 and programData.totalSemesters
+      if (semesterCourses.semesterNumber > programData.totalSemesters) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['curriculums', curriculumIdx, 'semesterCourses', semesterCoursesIdx, 'semesterNumber'],
+          message: `Semester number cannot exceed ${programData.totalSemesters.toString()}`,
+        })
+      }
+
+      // 4. validate semester number is not duplicated within a curriculum
+      if (semesters.has(semesterCourses.semesterNumber)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['curriculums', curriculumIdx, 'semesterCourses', semesterCoursesIdx],
+          message: 'Semester numbers must be unique within a curriculum',
+        })
+      }
+
+      semesters.add(semesterCourses.semesterNumber)
     })
+
+    // 5. validate curriculum is specified for all semesters
+    if (semesters.size !== programData.totalSemesters)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['curriculums', curriculumIdx, 'semesterCourses'],
+        message: `semesterCourses entries must be provided for ${programData.totalSemesters.toString()} semesters. Got ${semesters.size.toString()} instead`,
+      })
   })
 })
