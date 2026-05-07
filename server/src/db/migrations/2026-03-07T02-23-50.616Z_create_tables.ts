@@ -538,7 +538,7 @@ const createCoursesTable: TableCreationFunction = async (db, tableName) => {
     .addUniqueConstraint(`uq_${tableName}_code`, ['code'])
 
     .addColumn('credit_hours', 'integer', col => col.notNull())
-    .addCheckConstraint(`chk_${tableName}_credit_hours_positive`, sql<boolean>`credit_hours > 0`)
+    .addCheckConstraint(`chk_${tableName}_credit_hours`, sql<boolean>`credit_hours >= 0`)
 
     .addColumn('department_id', 'integer', col => col.notNull())
 
