@@ -12,7 +12,7 @@ export default class ProgramRepository {
       .executeTakeFirstOrThrow()
   }
 
-  async createProgramCurriculums(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
+  async createProgramCurricula(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
     await trx.insertInto('programCurricula')
       .values(createProgramCurriculumDetails)
       .execute()

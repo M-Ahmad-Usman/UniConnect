@@ -50,7 +50,7 @@ export default class ProgramService {
 
         const createProgramCurriculaInfo = processProgramCurriculaForDb(createProgramData.curriculums, createdProgramInfo.id)
 
-        await this.programRepository.createProgramCurriculums(createProgramCurriculaInfo, trx)
+        await this.programRepository.createProgramCurricula(createProgramCurriculaInfo, trx)
 
         const newProgram = {
           id: createdProgramInfo.id,
