@@ -321,14 +321,14 @@ VITE_SOCKET_URL=http://localhost:4000
 | Module 1: Authentication | ✅ Complete |
 | Module 2: Layout & Navigation | ✅ Complete |
 | Module 3: Server & Channel Views | ✅ Complete |
-| Module 4: Posts & Announcements | ⏳ Not Started |
+| Module 4: Posts & Announcements | ✅ Complete |
 | Module 5: Notifications | ⏳ Not Started |
 | Module 6: User Profile & Management | ⏳ Not Started |
 | Module 7: Admin Dashboard & CRUD | ⏳ Not Started |
 | Module 8: Society Management | ⏳ Not Started |
 | Module 9: Role Management | ⏳ Not Started |
 
-**Progress:** 4/10 modules complete
+**Progress:** 5/10 modules complete
 
 ---
 

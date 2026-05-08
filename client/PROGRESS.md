@@ -3,7 +3,7 @@
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
 **Status:** Module 4 Complete
-**Current Phase:** Module 4 posts and announcements implemented, hardened, and verified with unit, build, and focused browser-runtime coverage
+**Current Phase:** Module 4 posts and announcements are complete; Module 5 notification preferences and full notification workflows are next
 
 ---
 
@@ -31,6 +31,18 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-05-08 - Module 4 Documentation and Pre-Module-5 Cleanup
+
+#### Documentation Alignment
+- ✅ Updated the Module 4 task ledger to reflect the implemented feed, editor, attachment, moderation, realtime, and sanitization work
+- ✅ Clarified that Module 5 remains not started beyond the Module 2 notification preview foundation
+- ✅ Aligned the post API contract with backend responses used by Module 4 cache patching for update, pin/unpin, and attachment flows
+
+#### Pre-Module-5 Cleanup
+- ✅ Fixed the channel realtime hook lint issue caused by unused pagination-filter destructuring
+- ✅ Re-ran frontend unit, type-check, lint, and production build verification after the cleanup
+- ⚠️ Focused Module 4 Playwright could not complete in this environment because the configured web servers timed out during startup
 
 ### 2026-05-03 - Module 4 Posts & Announcements Implemented and Verified
 
@@ -458,26 +470,32 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| PostFeed | ⏳ Pending | - | Hybrid paginated feed, pinned first |
-| PostCard | ⏳ Pending | - | Compact list view |
-| PostDetail | ⏳ Pending | - | Full post view |
-| CreatePostForm | ⏳ Pending | - | Tiptap + attachments |
-| EditPostForm | ⏳ Pending | - | 24h window, pre-filled |
-| Tiptap editor configuration | ⏳ Pending | - | StarterKit, CharacterCount, Placeholder |
-| Tiptap toolbar | ⏳ Pending | - | Bold, Italic, Headings, Lists |
-| PostSearchBar | ⏳ Pending | - | 500ms debounce |
-| PostFilters | ⏳ Pending | - | Priority + date range |
-| PriorityBadge | ⏳ Pending | - | Normal, Important, Urgent styling |
-| AttachmentPreview | ⏳ Pending | - | Thumbnail grid + lightbox |
-| PostActions dropdown | ⏳ Pending | - | Edit, Delete, Pin/Unpin |
-| File upload with validation | ⏳ Pending | - | Max 3, 5MB each, JPEG/PNG/WEBP |
-| DOMPurify sanitization | ⏳ Pending | - | XSS protection for rendered HTML |
+| PostFeed | ✅ Complete | 2026-05-03 | Hybrid paginated feed, pinned-first rendering, load more, empty/error/loading states |
+| PostCard | ✅ Complete | 2026-05-03 | Compact list view with author, badges, priority, pinned, edited, attachment, and preview metadata |
+| PostDetail | ✅ Complete | 2026-05-03 | Dialog-based full post view with sanitized HTML, author metadata, attachments, and actions |
+| CreatePostForm | ✅ Complete | 2026-05-03 | Dialog-based Tiptap editor with title, content, priority, attachments, and multipart submission |
+| EditPostForm | ✅ Complete | 2026-05-03 | 24h edit-window gating, pre-filled editor, priority updates, and read-only existing attachments |
+| Tiptap editor configuration | ✅ Complete | 2026-05-03 | StarterKit, CharacterCount, Placeholder, and controlled content synchronization |
+| Tiptap toolbar | ✅ Complete | 2026-05-03 | Bold, italic, strike, headings, lists, code block, undo, redo, and character count |
+| PostSearchBar | ✅ Complete | 2026-05-03 | Implemented in `TopBar` with 500ms debounce and channel-scoped URL search sync |
+| PostFilters | ✅ Complete | 2026-05-03 | Priority and date filters backed by URL search params with clear controls |
+| PriorityBadge | ✅ Complete | 2026-05-03 | Normal, Important, and Urgent styling |
+| AttachmentPreview | ✅ Complete | 2026-05-03 | Thumbnail grid with full-size image dialog preview |
+| PostActions dropdown | ✅ Complete | 2026-05-03 | Edit, delete, pin, and unpin actions with permission gates and confirmations |
+| File upload with validation | ✅ Complete | 2026-05-03 | Max 3 images, 5MB each, JPEG/PNG/WEBP validation |
+| DOMPurify sanitization | ✅ Complete | 2026-05-03 | Sanitized rendered post content and sanitized plain-text previews |
+| Channel post realtime | ✅ Complete | 2026-05-05 | Joins/leaves active channel rooms and patches active post caches for create/update/pin/delete events |
 
 ### Key Decisions
-- (To be logged)
+- Post feed filters are URL-backed so refreshes and navigation preserve search, priority, and date state.
+- The top-bar search remains channel-scoped because the backend exposes search through `GET /api/channels/:id/posts`.
+- Existing attachments stay read-only while editing posts until backend delete/reorder support is added.
+- Active channel realtime updates are separate from notification subscription preferences.
 
 ### Challenges & Solutions
-- (To be logged)
+- Rapid filter updates could race with search-param synchronization; fixed by tracking the latest search params while applying URL updates.
+- Unfiltered post caches can be patched directly from socket events, while filtered caches are invalidated to avoid inserting posts that may not match active filters.
+- A lint issue in the realtime hook's pagination-filter cleanup was fixed on 2026-05-08 before beginning Module 5.
 
 ---
 
@@ -487,21 +505,22 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| NotificationPanel dropdown | ⏳ Pending | - | List + mark all read |
+| NotificationPanel dropdown | ⏳ Pending | - | Module 2 preview exists; Module 5 still needs full list behavior and mark-all-read controls |
 | NotificationItem | ⏳ Pending | - | Bold if unread, click to navigate |
 | NotificationPreferencesPage | ⏳ Pending | - | Server/channel subscription toggles |
 | SubscriptionToggle | ⏳ Pending | - | Optimistic update switch |
-| Socket.IO notification:new | ⏳ Pending | - | Prepend to cache, toast for urgent |
-| Socket.IO unread-count | ⏳ Pending | - | Update Zustand store |
-| Navigation on click | ⏳ Pending | - | Post location from notification data |
-| Mark as read mutation | ⏳ Pending | - | Optimistic decrement |
+| Socket.IO notification:new | ⏳ Pending | - | Foundation listener exists; Module 5 still needs final cache/toast behavior |
+| Socket.IO unread-count | ⏳ Pending | - | Foundation listener updates Zustand; Module 5 should verify and harden full workflow |
+| Navigation on click | ⏳ Pending | - | Preview navigation exists; Module 5 should cover final notification item behavior |
+| Mark as read mutation | ⏳ Pending | - | Preview mutation exists; Module 5 should finish full list integration and tests |
 | Mark all as read | ⏳ Pending | - | Optimistic reset to 0 |
 
 ### Key Decisions
-- (To be logged)
+- Do not start Module 5 until the Module 4 documentation and verification baseline is clean.
+- Keep the existing notification bell/preview foundation in place, but treat preferences, subscription toggles, mark-all-read, and full notification workflow tests as Module 5 work.
 
 ### Challenges & Solutions
-- (To be logged)
+- Module 2 introduced a lightweight notification preview, which can make Module 5 look partially complete. The current task ledger explicitly separates that foundation from the pending Module 5 implementation.
 
 ---
 

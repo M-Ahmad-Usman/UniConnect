@@ -37,7 +37,9 @@ export function useChannelPostRealtime(channelId: number | null) {
       entries.forEach(([key]) => {
         const queryKey = key as unknown[];
         const params = queryKey[2] as Record<string, unknown> | undefined;
-        const { limit: _limit, page: _page, ...filters } = params ?? {};
+        const filters = { ...(params ?? {}) };
+        delete filters.limit;
+        delete filters.page;
         const hasFilters = Object.keys(filters).length > 0;
 
         if (hasFilters) {

@@ -2434,12 +2434,12 @@ PATCH /api/posts/:id
 }
 ```
 
-**Response:**
-```json
+**Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+```typescript
 {
-  "success": true,
-  "data": {},
-  "message": "Post updated successfully"
+  success: true;
+  data: PostDetail;
+  message: 'Post updated successfully';
 }
 ```
 
@@ -2477,12 +2477,12 @@ PATCH /api/posts/:id/pin
 }
 ```
 
-**Response:**
-```json
+**Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+```typescript
 {
-  "success": true,
-  "data": {},
-  "message": "Post pinned successfully" | "Post unpinned successfully"
+  success: true;
+  data: PostDetail;
+  message: 'Post pinned successfully' | 'Post unpinned successfully';
 }
 ```
 
@@ -2497,12 +2497,12 @@ POST /api/posts/:id/attachments
 **Request Body:** Multipart form data
 - `attachments` (file[], max 3 additional files)
 
-**Response:**
-```json
+**Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+```typescript
 {
-  "success": true,
-  "data": {},
-  "message": "Attachments added successfully"
+  success: true;
+  data: PostDetail;
+  message: 'Attachments uploaded successfully';
 }
 ```
 
