@@ -171,7 +171,7 @@ export type DisciplineGroupByOutputType = {
   _max: DisciplineMaxAggregateOutputType | null
 }
 
-type GetDisciplineGroupByPayload<T extends DisciplineGroupByArgs> = Prisma.PrismaPromise<
+export type GetDisciplineGroupByPayload<T extends DisciplineGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DisciplineGroupByOutputType, T['by']> &
       {
@@ -1031,6 +1031,11 @@ export type DisciplineFindManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Skip the first `n` Disciplines.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Disciplines.
+   */
   distinct?: Prisma.DisciplineScalarFieldEnum | Prisma.DisciplineScalarFieldEnum[]
 }
 

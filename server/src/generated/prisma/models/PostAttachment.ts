@@ -207,7 +207,7 @@ export type PostAttachmentGroupByOutputType = {
   _max: PostAttachmentMaxAggregateOutputType | null
 }
 
-type GetPostAttachmentGroupByPayload<T extends PostAttachmentGroupByArgs> = Prisma.PrismaPromise<
+export type GetPostAttachmentGroupByPayload<T extends PostAttachmentGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PostAttachmentGroupByOutputType, T['by']> &
       {
@@ -1208,6 +1208,11 @@ export type PostAttachmentFindManyArgs<ExtArgs extends runtime.Types.Extensions.
    * Skip the first `n` PostAttachments.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of PostAttachments.
+   */
   distinct?: Prisma.PostAttachmentScalarFieldEnum | Prisma.PostAttachmentScalarFieldEnum[]
 }
 

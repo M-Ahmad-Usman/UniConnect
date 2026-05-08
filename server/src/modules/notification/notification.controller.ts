@@ -61,7 +61,13 @@ export async function handleMarkAllAsRead(req: Request, res: Response): Promise<
 // ─── Preference Handlers ───────────────────────────────────────────────────
 
 export async function handleGetPreferences(req: Request, res: Response): Promise<void> {
-  const preferences = await notificationService.getPreferences(req.user!.id);
+  const preferences = await notificationService.getPreferences(
+    req.user!.id,
+    {
+      serverId: req.query.serverId ? Number(req.query.serverId) : undefined,
+      notificationType: req.query.notificationType as "NEW_POST" | "ROLE_ASSIGNED" | undefined,
+    }
+  );
 
   const response: ApiResponse<typeof preferences> = {
     success: true,

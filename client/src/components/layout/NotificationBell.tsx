@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bell } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,31 +12,22 @@ import { useNotificationStore } from '@/stores/notification.store';
 import { useNotificationPreview } from '@/features/notifications/hooks/useNotificationPreview';
 import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount';
 import { useMarkNotificationRead } from '@/features/notifications/hooks/useMarkNotificationRead';
+import { useMarkAllNotificationsRead } from '@/features/notifications/hooks/useMarkAllNotificationsRead';
 import { NotificationPanel } from '@/features/notifications/components/NotificationPanel';
+import { getNotificationTarget } from '@/features/notifications/utils';
+import { parseRouteParamId } from '@/lib/route-params';
 import type { Notification } from '@/types';
-
-function getNotificationTarget(notification: Notification) {
-  if (notification.type === 'ROLE_ASSIGNED') {
-    return ROUTES.PROFILE;
-  }
-
-  const serverId = notification.post?.channel.serverId;
-  const channelId = notification.post?.channelId;
-
-  if (serverId && channelId) {
-    return ROUTES.CHANNEL(serverId, channelId);
-  }
-
-  return ROUTES.SETTINGS_NOTIFICATIONS;
-}
 
 export function NotificationBell() {
   const navigate = useNavigate();
+  const params = useParams();
+  const serverId = parseRouteParamId(params.serverId);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const [open, setOpen] = useState(false);
   const unreadCountQuery = useUnreadCount();
   const previewQuery = useNotificationPreview(open);
   const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
   const showPulse = useMemo(() => unreadCount > 0, [unreadCount]);
 
   useEffect(() => {
@@ -54,6 +45,11 @@ export function NotificationBell() {
 
     setOpen(false);
     navigate(getNotificationTarget(notification));
+  };
+
+  const handleOpenSettings = () => {
+    setOpen(false);
+    navigate(serverId ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId) : ROUTES.SETTINGS_NOTIFICATIONS);
   };
 
   return (
@@ -77,10 +73,13 @@ export function NotificationBell() {
           isError={previewQuery.isError}
           onRetry={() => void previewQuery.refetch()}
           onSelectNotification={handleSelectNotification}
-          onOpenSettings={() => {
+          onMarkAllRead={() => markAllRead.mutate()}
+          isMarkingAllRead={markAllRead.isPending}
+          onViewAll={() => {
             setOpen(false);
-            navigate(ROUTES.SETTINGS_NOTIFICATIONS);
+            navigate(ROUTES.NOTIFICATIONS);
           }}
+          onOpenSettings={handleOpenSettings}
         />
       </DropdownMenuContent>
     </DropdownMenu>

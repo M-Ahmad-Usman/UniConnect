@@ -1,10 +1,9 @@
-import { Bell, CheckCheck, ChevronRight, ShieldAlert } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Bell, CheckCheck, ShieldAlert, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { NotificationType, type Notification, type PaginatedResponse } from '@/types';
+import type { Notification, PaginatedResponse } from '@/types';
+import { NotificationItem } from './NotificationItem';
 
 interface NotificationPanelProps {
   notifications: PaginatedResponse<Notification> | undefined;
@@ -12,15 +11,10 @@ interface NotificationPanelProps {
   isError?: boolean;
   onRetry?: () => void;
   onSelectNotification: (notification: Notification) => void;
+  onMarkAllRead: () => void;
+  onViewAll: () => void;
   onOpenSettings: () => void;
-}
-
-function getNotificationIcon(type: Notification['type']) {
-  if (type === NotificationType.ROLE_ASSIGNED) {
-    return ShieldAlert;
-  }
-
-  return Bell;
+  isMarkingAllRead?: boolean;
 }
 
 export function NotificationPanel({
@@ -29,9 +23,13 @@ export function NotificationPanel({
   isError,
   onRetry,
   onSelectNotification,
+  onMarkAllRead,
+  onViewAll,
   onOpenSettings,
+  isMarkingAllRead,
 }: NotificationPanelProps) {
   const items = notifications?.data ?? [];
+  const hasUnread = items.some((notification) => notification.readAt === null);
 
   return (
     <div className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl bg-popover text-popover-foreground">
@@ -40,9 +38,14 @@ export function NotificationPanel({
           <h3 className="text-sm font-semibold">Notifications</h3>
           <p className="text-muted-foreground text-xs">Recent activity across your spaces.</p>
         </div>
-        <Button variant="ghost" size="sm" onClick={onOpenSettings}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onMarkAllRead}
+          disabled={!hasUnread || isMarkingAllRead}
+        >
           <CheckCheck className="size-4" />
-          Settings
+          Mark read
         </Button>
       </div>
       <Separator />
@@ -80,58 +83,26 @@ export function NotificationPanel({
           </div>
         ) : (
           <div className="p-2">
-            {items.map((notification) => {
-              const Icon = getNotificationIcon(notification.type);
-
-              return (
-                <button
-                  key={notification.id}
-                  type="button"
-                  onClick={() => onSelectNotification(notification)}
-                  className={cn(
-                    'hover:bg-accent flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors',
-                    notification.readAt === null ? 'bg-accent/30' : 'bg-transparent',
-                  )}
-                >
-                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Icon className="size-4" />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-start gap-2">
-                      <p
-                        className={cn(
-                          'line-clamp-1 text-sm',
-                          notification.readAt === null ? 'font-semibold' : 'font-medium',
-                        )}
-                      >
-                        {notification.title}
-                      </p>
-                      {notification.readAt === null ? (
-                        <span
-                          className="mt-1 size-2 shrink-0 rounded-full bg-sky-500"
-                          aria-label="Unread notification"
-                          role="img"
-                        />
-                      ) : null}
-                    </div>
-                    {notification.message ? (
-                      <p className="text-muted-foreground line-clamp-2 text-xs">
-                        {notification.message}
-                      </p>
-                    ) : null}
-                    <div className="text-muted-foreground flex items-center justify-between text-[11px]">
-                      <span>
-                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                      </span>
-                      <ChevronRight className="size-3.5" />
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+            {items.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onSelect={onSelectNotification}
+              />
+            ))}
           </div>
         )}
       </ScrollArea>
+      <Separator />
+      <div className="flex items-center justify-between gap-2 px-3 py-2">
+        <Button variant="ghost" size="sm" onClick={onViewAll}>
+          View all
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onOpenSettings}>
+          <SlidersHorizontal className="size-4" />
+          Settings
+        </Button>
+      </div>
     </div>
   );
 }

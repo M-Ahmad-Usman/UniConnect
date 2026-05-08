@@ -8,6 +8,7 @@ import { prisma } from "../../config/prisma.js";
 import {
   ForbiddenError,
   NotFoundError,
+  ValidationError,
 } from "../../shared/errors/index.js";
 import {
   parsePagination,
@@ -34,11 +35,24 @@ type ListNotificationsQuery = {
   unreadOnly?: boolean;
 };
 
+type ListPreferencesQuery = {
+  serverId?: number;
+  notificationType?: NotificationType;
+};
+
 type UpdatePreferenceInput = {
+  notificationType?: NotificationType;
   scopeType: NotificationScopeType;
   serverId: number;
   channelId?: number;
   isSubscribed: boolean;
+};
+
+type CreateRoleAssignedNotificationInput = {
+  userId: number;
+  serverId: number;
+  channelId?: number | null;
+  role: string;
 };
 
 // ─── Select Constants ──────────────────────────────────────────────────────
@@ -54,6 +68,7 @@ const notificationListSelect = {
   post: {
     select: {
       channelId: true,
+      priority: true,
       channel: {
         select: {
           name: true,
@@ -66,6 +81,7 @@ const notificationListSelect = {
 
 const preferenceListSelect = {
   id: true,
+  notificationType: true,
   scopeType: true,
   serverId: true,
   channelId: true,
@@ -118,6 +134,7 @@ async function getSubscribedMemberIds(
   const unsubscribed = await prisma.notificationPreference.findMany({
     where: {
       userId: { in: memberIds },
+      notificationType: "NEW_POST",
       isSubscribed: false,
       OR: [
         // Server-level unsubscribe
@@ -152,6 +169,28 @@ async function emitUnreadCount(userId: number): Promise<void> {
     where: { userId, readAt: null },
   });
   emitToUser(userId, "notification:unread-count", { count });
+}
+
+function formatRoleName(role: string): string {
+  return role
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+async function isRoleNotificationSubscribed(userId: number, serverId: number): Promise<boolean> {
+  const preference = await prisma.notificationPreference.findFirst({
+    where: {
+      userId,
+      notificationType: "ROLE_ASSIGNED",
+      scopeType: "SERVER",
+      serverId,
+      channelId: null,
+    },
+    select: { isSubscribed: true },
+  });
+
+  return preference?.isSubscribed ?? true;
 }
 
 // ─── Service Functions ─────────────────────────────────────────────────────
@@ -232,6 +271,54 @@ export async function createPostNotifications(
       count: unreadCountMap.get(notification.userId) ?? 0,
     });
   }
+}
+
+export async function createRoleAssignedNotification(
+  input: CreateRoleAssignedNotificationInput
+): Promise<void> {
+  const isSubscribed = await isRoleNotificationSubscribed(input.userId, input.serverId);
+  if (!isSubscribed) {
+    return;
+  }
+
+  const server = await prisma.server.findUnique({
+    where: { id: input.serverId },
+    select: { name: true, isActive: true },
+  });
+
+  if (!server || !server.isActive) {
+    return;
+  }
+
+  const channel =
+    input.channelId === null || input.channelId === undefined
+      ? null
+      : await prisma.channel.findUnique({
+          where: { id: input.channelId },
+          select: { name: true, serverId: true, isDeleted: true },
+        });
+
+  if (channel && (channel.isDeleted || channel.serverId !== input.serverId)) {
+    return;
+  }
+
+  const roleLabel = formatRoleName(input.role);
+  const message = channel
+    ? `You were assigned ${roleLabel} in #${channel.name} on ${server.name}`
+    : `You were assigned ${roleLabel} on ${server.name}`;
+
+  const notification = await prisma.notification.create({
+    data: {
+      userId: input.userId,
+      type: "ROLE_ASSIGNED",
+      title: `${roleLabel} assigned`,
+      message,
+    },
+    select: notificationListSelect,
+  });
+
+  emitToUser(input.userId, "notification:new", notification);
+  await emitUnreadCount(input.userId);
 }
 
 export async function listNotifications(
@@ -319,18 +406,36 @@ export async function markAllAsRead(userId: number) {
   return { count: result.count };
 }
 
-export async function getPreferences(userId: number) {
+export async function getPreferences(userId: number, query: ListPreferencesQuery = {}) {
   const preferences = await prisma.notificationPreference.findMany({
-    where: { userId },
+    where: {
+      userId,
+      serverId: query.serverId,
+      notificationType: query.notificationType,
+    },
     select: preferenceListSelect,
-    orderBy: [{ serverId: "asc" }, { channelId: "asc" }],
+    orderBy: [
+      { serverId: "asc" },
+      { notificationType: "asc" },
+      { scopeType: "desc" },
+      { channelId: "asc" },
+    ],
   });
 
   return preferences;
 }
 
 export async function updatePreference(userId: number, input: UpdatePreferenceInput) {
+  const notificationType = input.notificationType ?? "NEW_POST";
   const { scopeType, serverId, channelId, isSubscribed } = input;
+
+  if (notificationType === "ROLE_ASSIGNED" && scopeType !== "SERVER") {
+    throw new ValidationError("Role assignment notifications only support server-level preferences");
+  }
+
+  if (notificationType === "ROLE_ASSIGNED" && channelId) {
+    throw new ValidationError("channelId is not supported for role assignment notifications");
+  }
 
   // Validate user is a member of the server
   const membership = await prisma.serverMembership.findUnique({
@@ -359,8 +464,9 @@ export async function updatePreference(userId: number, input: UpdatePreferenceIn
   if (scopeType === "CHANNEL" && channelId) {
     const preference = await prisma.notificationPreference.upsert({
       where: {
-        userId_scopeType_serverId_channelId: {
+        userId_notificationType_scopeType_serverId_channelId: {
           userId,
+          notificationType,
           scopeType,
           serverId,
           channelId,
@@ -369,6 +475,7 @@ export async function updatePreference(userId: number, input: UpdatePreferenceIn
       update: { isSubscribed },
       create: {
         userId,
+        notificationType,
         scopeType,
         serverId,
         channelId,
@@ -382,7 +489,7 @@ export async function updatePreference(userId: number, input: UpdatePreferenceIn
 
   // SERVER scope — channelId is null, can't use compound unique directly
   const existing = await prisma.notificationPreference.findFirst({
-    where: { userId, scopeType, serverId, channelId: null },
+    where: { userId, notificationType, scopeType, serverId, channelId: null },
   });
 
   if (existing) {
@@ -397,6 +504,7 @@ export async function updatePreference(userId: number, input: UpdatePreferenceIn
   const preference = await prisma.notificationPreference.create({
     data: {
       userId,
+      notificationType,
       scopeType,
       serverId,
       isSubscribed,

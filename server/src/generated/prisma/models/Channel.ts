@@ -318,7 +318,7 @@ export type ChannelGroupByOutputType = {
   _max: ChannelMaxAggregateOutputType | null
 }
 
-type GetChannelGroupByPayload<T extends ChannelGroupByArgs> = Prisma.PrismaPromise<
+export type GetChannelGroupByPayload<T extends ChannelGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ChannelGroupByOutputType, T['by']> &
       {
@@ -3477,6 +3477,11 @@ export type ChannelFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` Channels.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Channels.
+   */
   distinct?: Prisma.ChannelScalarFieldEnum | Prisma.ChannelScalarFieldEnum[]
 }
 

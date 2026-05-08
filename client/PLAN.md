@@ -956,7 +956,9 @@ export function useCanEditPost(post: PostListItem | PostDetail) {
 | Route | Component |
 |-------|-----------|
 | (dropdown from bell) | `NotificationPanel` |
-| `/settings/notifications` | `NotificationPreferencesPage` |
+| `/notifications` | `NotificationInboxPage` |
+| `/servers/:serverId/settings/notifications` | `NotificationPreferencesPage` |
+| `/settings/notifications` | `NotificationSettingsServerPickerPage` |
 
 #### Components
 
@@ -972,7 +974,8 @@ Dropdown panel (positioned below bell):
 - Scrollable list (max-height: 400px)
 - Each notification: `NotificationItem`
 - Empty state: "No notifications yet"
-- Footer: "View all" link to `/settings/notifications` (future: dedicated notifications page)
+- Header action: "Mark read" marks visible unread notifications via `PATCH /api/notifications/read-all`
+- Footer: "View all" link to `/notifications`, "Settings" link to the active server's notification settings or the server picker
 
 ##### `NotificationItem` (`src/features/notifications/components/NotificationItem.tsx`)
 - **Unread:** Bold title, blue dot indicator on left
@@ -986,50 +989,50 @@ Dropdown panel (positioned below bell):
   - Mark notification as read (`PATCH /api/notifications/:id/read`)
   - Navigate to associated post:
     - `NEW_POST`: navigate to `/servers/{serverId}/channels/{channelId}` (from `notification.post.channel`)
-    - `ROLE_ASSIGNED`: navigate to `/profile` (to see new role)
+    - `ROLE_ASSIGNED`: navigate to the related server notification settings when known, otherwise `/profile`
+
+##### `NotificationInboxPage` (`src/features/notifications/pages/NotificationInboxPage.tsx`)
+- Global notification inbox at `/notifications`
+- URL-backed filters:
+  - `tab=all|unread`
+  - `type=NEW_POST|ROLE_ASSIGNED`
+  - `page=<number>`
+- Shows paginated notifications, type/unread filters, total count, page controls, and mark-all-read
 
 ##### `NotificationPreferencesPage` (`src/features/notifications/pages/NotificationPreferencesPage.tsx`)
-- List of user's servers (fetched via `useServers()`)
-- Each server: toggle switch (subscribe/unsubscribe at server level)
-- Expand server → shows channels with individual toggle switches
+- Per-server preferences at `/servers/:serverId/settings/notifications`
+- Post notifications section:
+  - Server-level `NEW_POST` toggle
+  - Channel-level `NEW_POST` toggles
+  - Server off disables channel toggles while preserving their saved values
+- Role notifications section:
+  - Server-level `ROLE_ASSIGNED` toggle only
 - **Subscription logic:**
-  - Server-level unsubscribe: suppresses all notifications from that server's channels
-  - Channel-level unsubscribe: suppresses only that channel's notifications
+  - Missing preference record means subscribed
+  - Server-level `NEW_POST` unsubscribe suppresses all post notifications from that server, including urgent posts
+  - Channel-level `NEW_POST` unsubscribe suppresses only that channel when server notifications are on
+  - Server-level `ROLE_ASSIGNED` unsubscribe suppresses role assignment notifications for that server
 - Submission: `PATCH /api/notification-preferences` on toggle (optimistic update)
 
+##### `NotificationSettingsServerPickerPage` (`src/features/notifications/pages/NotificationSettingsServerPickerPage.tsx`)
+- Fallback from user menu when no active server context exists
+- Lists active servers and routes to each server's notification preferences page
+
 ##### `SubscriptionToggle` (`src/features/notifications/components/SubscriptionToggle.tsx`)
-- Switch component from shadcn/ui
+- Accessible button with `role="switch"`
 - `checked={isSubscribed}`
-- `onCheckedChange` → mutation to update preference
+- `onChange` → mutation to update preference
 - Optimistic update: toggle immediately, rollback on error
 
-#### Socket.IO Integration (in AppShell from Module 2, detailed here)
+#### Socket.IO Integration (`src/lib/socket.ts`)
 ```typescript
-// In AppShell.tsx (Module 2)
 socket.on('notification:new', (notification: Notification) => {
-  // 1. Prepend to notifications cache
-  queryClient.setQueryData(['notifications'], (old: any) => {
-    if (!old) return { data: [notification], pagination: { total: 1 } };
-    return {
-      ...old,
-      data: [notification, ...old.data],
-      pagination: { ...old.pagination, total: old.pagination.total + 1 },
-    };
-  });
-
-  // 2. Increment unread count
+  // Patch preview, invalidate inbox queries, and update active post feeds.
   notificationStore.incrementUnread();
 
-  // 3. Show toast for urgent posts
   const isUrgent = notification.post?.priority === 'URGENT';
   if (isUrgent) {
-    toast.error(notification.title, {
-      description: notification.message,
-      action: {
-        label: 'View',
-        onClick: () => navigate(`/servers/${notification.post.channel.serverId}/channels/${notification.post.channelId}`),
-      },
-    });
+    toast.error(notification.title, { description: notification.message });
   }
 });
 
@@ -1054,8 +1057,8 @@ export const notificationsApi = {
   markAllAsRead: () =>
     axios.patch('/notifications/read-all'),
 
-  listPreferences: () =>
-    axios.get<NotificationPreference[]>('/notification-preferences'),
+  listPreferences: (params: NotificationPreferenceListParams) =>
+    axios.get<NotificationPreference[]>('/notification-preferences', { params }),
 
   updatePreference: (data: UpdatePreferenceDto) =>
     axios.patch('/notification-preferences', data),
@@ -1071,7 +1074,7 @@ export const notificationsApi = {
 
 - **TanStack Query:**
   - `useNotifications(filters)` - Paginated notification list
-  - `useNotificationPreferences()` - User's subscription preferences
+  - `useNotificationPreferences({ serverId })` - Server-scoped preferences
   - Mutations:
     - `useMarkAsRead` - Optimistic update: set `readAt`, decrement unread count
     - `useMarkAllAsRead` - Optimistic update: set all `readAt`, reset unread count to 0
@@ -1079,18 +1082,12 @@ export const notificationsApi = {
 
 #### Navigation Logic
 ```typescript
-// src/features/notifications/utils/handleNotificationClick.ts
-export function handleNotificationClick(notification: Notification, navigate: NavigateFunction) {
-  // Mark as read
-  notificationsApi.markAsRead(notification.id);
-
-  // Navigate based on type
+// src/features/notifications/utils.ts
+export function getNotificationTarget(notification: Notification) {
   if (notification.type === 'NEW_POST' && notification.post) {
-    const { serverId, channelId } = notification.post.channel;
-    navigate(`/servers/${serverId}/channels/${channelId}`);
-  } else if (notification.type === 'ROLE_ASSIGNED') {
-    navigate('/profile');
+    return ROUTES.CHANNEL(notification.post.channel.serverId, notification.post.channelId);
   }
+  return ROUTES.PROFILE;
 }
 ```
 

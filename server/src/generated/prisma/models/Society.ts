@@ -236,7 +236,7 @@ export type SocietyGroupByOutputType = {
   _max: SocietyMaxAggregateOutputType | null
 }
 
-type GetSocietyGroupByPayload<T extends SocietyGroupByArgs> = Prisma.PrismaPromise<
+export type GetSocietyGroupByPayload<T extends SocietyGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<SocietyGroupByOutputType, T['by']> &
       {
@@ -1769,6 +1769,11 @@ export type SocietyFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` Societies.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Societies.
+   */
   distinct?: Prisma.SocietyScalarFieldEnum | Prisma.SocietyScalarFieldEnum[]
 }
 

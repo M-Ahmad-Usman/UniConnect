@@ -1,8 +1,10 @@
 import { io, type Socket } from 'socket.io-client';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNotificationStore } from '@/stores/notification.store';
 import { queryClient } from '@/lib/query-client';
 import { queryKeys, ROUTES } from '@/lib/constants';
+import { PostPriority } from '@/types';
 import type { NewNotificationPayload, PaginatedResponse, Notification, UnreadCountPayload } from '@/types';
 
 let socket: Socket | null = null;
@@ -40,6 +42,22 @@ export function connectSocket(): void {
       void queryClient.invalidateQueries({
         queryKey: ['posts', payload.post.channelId],
         refetchType: 'active',
+      });
+    }
+
+    if (payload.post?.priority === PostPriority.URGENT) {
+      toast.error(payload.title, {
+        description: payload.message,
+        action: {
+          label: 'View',
+          onClick: () => {
+            const serverId = payload.post?.channel.serverId;
+            const channelId = payload.post?.channelId;
+            if (serverId && channelId) {
+              window.location.href = ROUTES.CHANNEL(serverId, channelId);
+            }
+          },
+        },
       });
     }
   });

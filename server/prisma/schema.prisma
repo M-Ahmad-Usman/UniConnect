@@ -507,19 +507,20 @@ model Notification {
 }
 
 model NotificationPreference {
-  id           Int                    @id @default(autoincrement())
-  userId       Int                    @map("user_id")
-  scopeType    NotificationScopeType  @map("scope_type")
-  serverId     Int                    @map("server_id")
-  channelId    Int?                   @map("channel_id")
-  isSubscribed Boolean                @default(true) @map("is_subscribed")
-  updatedAt    DateTime               @updatedAt @map("updated_at")
+  id               Int                    @id @default(autoincrement())
+  userId           Int                    @map("user_id")
+  notificationType NotificationType       @default(NEW_POST) @map("notification_type")
+  scopeType        NotificationScopeType  @map("scope_type")
+  serverId         Int                    @map("server_id")
+  channelId        Int?                   @map("channel_id")
+  isSubscribed     Boolean                @default(true) @map("is_subscribed")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
 
   user    User     @relation(fields: [userId], references: [id])
   server  Server   @relation(fields: [serverId], references: [id])
   channel Channel? @relation(fields: [channelId], references: [id])
 
-  @@unique([userId, scopeType, serverId, channelId])
+  @@unique([userId, notificationType, scopeType, serverId, channelId])
   @@map("notification_preferences")
 }
 

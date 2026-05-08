@@ -370,6 +370,7 @@ export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[k
 export const NotificationPreferenceScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  notificationType: 'notificationType',
   scopeType: 'scopeType',
   serverId: 'serverId',
   channelId: 'channelId',

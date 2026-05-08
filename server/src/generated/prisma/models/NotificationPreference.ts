@@ -43,6 +43,7 @@ export type NotificationPreferenceSumAggregateOutputType = {
 export type NotificationPreferenceMinAggregateOutputType = {
   id: number | null
   userId: number | null
+  notificationType: $Enums.NotificationType | null
   scopeType: $Enums.NotificationScopeType | null
   serverId: number | null
   channelId: number | null
@@ -53,6 +54,7 @@ export type NotificationPreferenceMinAggregateOutputType = {
 export type NotificationPreferenceMaxAggregateOutputType = {
   id: number | null
   userId: number | null
+  notificationType: $Enums.NotificationType | null
   scopeType: $Enums.NotificationScopeType | null
   serverId: number | null
   channelId: number | null
@@ -63,6 +65,7 @@ export type NotificationPreferenceMaxAggregateOutputType = {
 export type NotificationPreferenceCountAggregateOutputType = {
   id: number
   userId: number
+  notificationType: number
   scopeType: number
   serverId: number
   channelId: number
@@ -89,6 +92,7 @@ export type NotificationPreferenceSumAggregateInputType = {
 export type NotificationPreferenceMinAggregateInputType = {
   id?: true
   userId?: true
+  notificationType?: true
   scopeType?: true
   serverId?: true
   channelId?: true
@@ -99,6 +103,7 @@ export type NotificationPreferenceMinAggregateInputType = {
 export type NotificationPreferenceMaxAggregateInputType = {
   id?: true
   userId?: true
+  notificationType?: true
   scopeType?: true
   serverId?: true
   channelId?: true
@@ -109,6 +114,7 @@ export type NotificationPreferenceMaxAggregateInputType = {
 export type NotificationPreferenceCountAggregateInputType = {
   id?: true
   userId?: true
+  notificationType?: true
   scopeType?: true
   serverId?: true
   channelId?: true
@@ -206,6 +212,7 @@ export type NotificationPreferenceGroupByArgs<ExtArgs extends runtime.Types.Exte
 export type NotificationPreferenceGroupByOutputType = {
   id: number
   userId: number
+  notificationType: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   channelId: number | null
@@ -218,7 +225,7 @@ export type NotificationPreferenceGroupByOutputType = {
   _max: NotificationPreferenceMaxAggregateOutputType | null
 }
 
-type GetNotificationPreferenceGroupByPayload<T extends NotificationPreferenceGroupByArgs> = Prisma.PrismaPromise<
+export type GetNotificationPreferenceGroupByPayload<T extends NotificationPreferenceGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<NotificationPreferenceGroupByOutputType, T['by']> &
       {
@@ -239,6 +246,7 @@ export type NotificationPreferenceWhereInput = {
   NOT?: Prisma.NotificationPreferenceWhereInput | Prisma.NotificationPreferenceWhereInput[]
   id?: Prisma.IntFilter<"NotificationPreference"> | number
   userId?: Prisma.IntFilter<"NotificationPreference"> | number
+  notificationType?: Prisma.EnumNotificationTypeFilter<"NotificationPreference"> | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFilter<"NotificationPreference"> | $Enums.NotificationScopeType
   serverId?: Prisma.IntFilter<"NotificationPreference"> | number
   channelId?: Prisma.IntNullableFilter<"NotificationPreference"> | number | null
@@ -252,6 +260,7 @@ export type NotificationPreferenceWhereInput = {
 export type NotificationPreferenceOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  notificationType?: Prisma.SortOrder
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -264,11 +273,12 @@ export type NotificationPreferenceOrderByWithRelationInput = {
 
 export type NotificationPreferenceWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  userId_scopeType_serverId_channelId?: Prisma.NotificationPreferenceUserIdScopeTypeServerIdChannelIdCompoundUniqueInput
+  userId_notificationType_scopeType_serverId_channelId?: Prisma.NotificationPreferenceUserIdNotificationTypeScopeTypeServerIdChannelIdCompoundUniqueInput
   AND?: Prisma.NotificationPreferenceWhereInput | Prisma.NotificationPreferenceWhereInput[]
   OR?: Prisma.NotificationPreferenceWhereInput[]
   NOT?: Prisma.NotificationPreferenceWhereInput | Prisma.NotificationPreferenceWhereInput[]
   userId?: Prisma.IntFilter<"NotificationPreference"> | number
+  notificationType?: Prisma.EnumNotificationTypeFilter<"NotificationPreference"> | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFilter<"NotificationPreference"> | $Enums.NotificationScopeType
   serverId?: Prisma.IntFilter<"NotificationPreference"> | number
   channelId?: Prisma.IntNullableFilter<"NotificationPreference"> | number | null
@@ -277,11 +287,12 @@ export type NotificationPreferenceWhereUniqueInput = Prisma.AtLeast<{
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   channel?: Prisma.XOR<Prisma.ChannelNullableScalarRelationFilter, Prisma.ChannelWhereInput> | null
-}, "id" | "userId_scopeType_serverId_channelId">
+}, "id" | "userId_notificationType_scopeType_serverId_channelId">
 
 export type NotificationPreferenceOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  notificationType?: Prisma.SortOrder
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -300,6 +311,7 @@ export type NotificationPreferenceScalarWhereWithAggregatesInput = {
   NOT?: Prisma.NotificationPreferenceScalarWhereWithAggregatesInput | Prisma.NotificationPreferenceScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"NotificationPreference"> | number
   userId?: Prisma.IntWithAggregatesFilter<"NotificationPreference"> | number
+  notificationType?: Prisma.EnumNotificationTypeWithAggregatesFilter<"NotificationPreference"> | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeWithAggregatesFilter<"NotificationPreference"> | $Enums.NotificationScopeType
   serverId?: Prisma.IntWithAggregatesFilter<"NotificationPreference"> | number
   channelId?: Prisma.IntNullableWithAggregatesFilter<"NotificationPreference"> | number | null
@@ -308,6 +320,7 @@ export type NotificationPreferenceScalarWhereWithAggregatesInput = {
 }
 
 export type NotificationPreferenceCreateInput = {
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   isSubscribed?: boolean
   updatedAt?: Date | string
@@ -319,6 +332,7 @@ export type NotificationPreferenceCreateInput = {
 export type NotificationPreferenceUncheckedCreateInput = {
   id?: number
   userId: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   channelId?: number | null
@@ -327,6 +341,7 @@ export type NotificationPreferenceUncheckedCreateInput = {
 }
 
 export type NotificationPreferenceUpdateInput = {
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -338,6 +353,7 @@ export type NotificationPreferenceUpdateInput = {
 export type NotificationPreferenceUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -348,6 +364,7 @@ export type NotificationPreferenceUncheckedUpdateInput = {
 export type NotificationPreferenceCreateManyInput = {
   id?: number
   userId: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   channelId?: number | null
@@ -356,6 +373,7 @@ export type NotificationPreferenceCreateManyInput = {
 }
 
 export type NotificationPreferenceUpdateManyMutationInput = {
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -364,6 +382,7 @@ export type NotificationPreferenceUpdateManyMutationInput = {
 export type NotificationPreferenceUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -381,8 +400,9 @@ export type NotificationPreferenceOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type NotificationPreferenceUserIdScopeTypeServerIdChannelIdCompoundUniqueInput = {
+export type NotificationPreferenceUserIdNotificationTypeScopeTypeServerIdChannelIdCompoundUniqueInput = {
   userId: number
+  notificationType: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   channelId: number
@@ -391,6 +411,7 @@ export type NotificationPreferenceUserIdScopeTypeServerIdChannelIdCompoundUnique
 export type NotificationPreferenceCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  notificationType?: Prisma.SortOrder
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
@@ -408,6 +429,7 @@ export type NotificationPreferenceAvgOrderByAggregateInput = {
 export type NotificationPreferenceMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  notificationType?: Prisma.SortOrder
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
@@ -418,6 +440,7 @@ export type NotificationPreferenceMaxOrderByAggregateInput = {
 export type NotificationPreferenceMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  notificationType?: Prisma.SortOrder
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
@@ -563,6 +586,7 @@ export type EnumNotificationScopeTypeFieldUpdateOperationsInput = {
 }
 
 export type NotificationPreferenceCreateWithoutUserInput = {
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   isSubscribed?: boolean
   updatedAt?: Date | string
@@ -572,6 +596,7 @@ export type NotificationPreferenceCreateWithoutUserInput = {
 
 export type NotificationPreferenceUncheckedCreateWithoutUserInput = {
   id?: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   channelId?: number | null
@@ -611,6 +636,7 @@ export type NotificationPreferenceScalarWhereInput = {
   NOT?: Prisma.NotificationPreferenceScalarWhereInput | Prisma.NotificationPreferenceScalarWhereInput[]
   id?: Prisma.IntFilter<"NotificationPreference"> | number
   userId?: Prisma.IntFilter<"NotificationPreference"> | number
+  notificationType?: Prisma.EnumNotificationTypeFilter<"NotificationPreference"> | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFilter<"NotificationPreference"> | $Enums.NotificationScopeType
   serverId?: Prisma.IntFilter<"NotificationPreference"> | number
   channelId?: Prisma.IntNullableFilter<"NotificationPreference"> | number | null
@@ -619,6 +645,7 @@ export type NotificationPreferenceScalarWhereInput = {
 }
 
 export type NotificationPreferenceCreateWithoutServerInput = {
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   isSubscribed?: boolean
   updatedAt?: Date | string
@@ -629,6 +656,7 @@ export type NotificationPreferenceCreateWithoutServerInput = {
 export type NotificationPreferenceUncheckedCreateWithoutServerInput = {
   id?: number
   userId: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   channelId?: number | null
   isSubscribed?: boolean
@@ -662,6 +690,7 @@ export type NotificationPreferenceUpdateManyWithWhereWithoutServerInput = {
 }
 
 export type NotificationPreferenceCreateWithoutChannelInput = {
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   isSubscribed?: boolean
   updatedAt?: Date | string
@@ -672,6 +701,7 @@ export type NotificationPreferenceCreateWithoutChannelInput = {
 export type NotificationPreferenceUncheckedCreateWithoutChannelInput = {
   id?: number
   userId: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   isSubscribed?: boolean
@@ -706,6 +736,7 @@ export type NotificationPreferenceUpdateManyWithWhereWithoutChannelInput = {
 
 export type NotificationPreferenceCreateManyUserInput = {
   id?: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   channelId?: number | null
@@ -714,6 +745,7 @@ export type NotificationPreferenceCreateManyUserInput = {
 }
 
 export type NotificationPreferenceUpdateWithoutUserInput = {
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -723,6 +755,7 @@ export type NotificationPreferenceUpdateWithoutUserInput = {
 
 export type NotificationPreferenceUncheckedUpdateWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -732,6 +765,7 @@ export type NotificationPreferenceUncheckedUpdateWithoutUserInput = {
 
 export type NotificationPreferenceUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -742,6 +776,7 @@ export type NotificationPreferenceUncheckedUpdateManyWithoutUserInput = {
 export type NotificationPreferenceCreateManyServerInput = {
   id?: number
   userId: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   channelId?: number | null
   isSubscribed?: boolean
@@ -749,6 +784,7 @@ export type NotificationPreferenceCreateManyServerInput = {
 }
 
 export type NotificationPreferenceUpdateWithoutServerInput = {
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -759,6 +795,7 @@ export type NotificationPreferenceUpdateWithoutServerInput = {
 export type NotificationPreferenceUncheckedUpdateWithoutServerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -768,6 +805,7 @@ export type NotificationPreferenceUncheckedUpdateWithoutServerInput = {
 export type NotificationPreferenceUncheckedUpdateManyWithoutServerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -777,6 +815,7 @@ export type NotificationPreferenceUncheckedUpdateManyWithoutServerInput = {
 export type NotificationPreferenceCreateManyChannelInput = {
   id?: number
   userId: number
+  notificationType?: $Enums.NotificationType
   scopeType: $Enums.NotificationScopeType
   serverId: number
   isSubscribed?: boolean
@@ -784,6 +823,7 @@ export type NotificationPreferenceCreateManyChannelInput = {
 }
 
 export type NotificationPreferenceUpdateWithoutChannelInput = {
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -794,6 +834,7 @@ export type NotificationPreferenceUpdateWithoutChannelInput = {
 export type NotificationPreferenceUncheckedUpdateWithoutChannelInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -803,6 +844,7 @@ export type NotificationPreferenceUncheckedUpdateWithoutChannelInput = {
 export type NotificationPreferenceUncheckedUpdateManyWithoutChannelInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  notificationType?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   scopeType?: Prisma.EnumNotificationScopeTypeFieldUpdateOperationsInput | $Enums.NotificationScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   isSubscribed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -814,6 +856,7 @@ export type NotificationPreferenceUncheckedUpdateManyWithoutChannelInput = {
 export type NotificationPreferenceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  notificationType?: boolean
   scopeType?: boolean
   serverId?: boolean
   channelId?: boolean
@@ -827,6 +870,7 @@ export type NotificationPreferenceSelect<ExtArgs extends runtime.Types.Extension
 export type NotificationPreferenceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  notificationType?: boolean
   scopeType?: boolean
   serverId?: boolean
   channelId?: boolean
@@ -840,6 +884,7 @@ export type NotificationPreferenceSelectCreateManyAndReturn<ExtArgs extends runt
 export type NotificationPreferenceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  notificationType?: boolean
   scopeType?: boolean
   serverId?: boolean
   channelId?: boolean
@@ -853,6 +898,7 @@ export type NotificationPreferenceSelectUpdateManyAndReturn<ExtArgs extends runt
 export type NotificationPreferenceSelectScalar = {
   id?: boolean
   userId?: boolean
+  notificationType?: boolean
   scopeType?: boolean
   serverId?: boolean
   channelId?: boolean
@@ -860,7 +906,7 @@ export type NotificationPreferenceSelectScalar = {
   updatedAt?: boolean
 }
 
-export type NotificationPreferenceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "scopeType" | "serverId" | "channelId" | "isSubscribed" | "updatedAt", ExtArgs["result"]["notificationPreference"]>
+export type NotificationPreferenceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "notificationType" | "scopeType" | "serverId" | "channelId" | "isSubscribed" | "updatedAt", ExtArgs["result"]["notificationPreference"]>
 export type NotificationPreferenceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
@@ -887,6 +933,7 @@ export type $NotificationPreferencePayload<ExtArgs extends runtime.Types.Extensi
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     userId: number
+    notificationType: $Enums.NotificationType
     scopeType: $Enums.NotificationScopeType
     serverId: number
     channelId: number | null
@@ -1320,6 +1367,7 @@ export interface Prisma__NotificationPreferenceClient<T, Null = never, ExtArgs e
 export interface NotificationPreferenceFieldRefs {
   readonly id: Prisma.FieldRef<"NotificationPreference", 'Int'>
   readonly userId: Prisma.FieldRef<"NotificationPreference", 'Int'>
+  readonly notificationType: Prisma.FieldRef<"NotificationPreference", 'NotificationType'>
   readonly scopeType: Prisma.FieldRef<"NotificationPreference", 'NotificationScopeType'>
   readonly serverId: Prisma.FieldRef<"NotificationPreference", 'Int'>
   readonly channelId: Prisma.FieldRef<"NotificationPreference", 'Int'>
@@ -1521,6 +1569,11 @@ export type NotificationPreferenceFindManyArgs<ExtArgs extends runtime.Types.Ext
    * Skip the first `n` NotificationPreferences.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of NotificationPreferences.
+   */
   distinct?: Prisma.NotificationPreferenceScalarFieldEnum | Prisma.NotificationPreferenceScalarFieldEnum[]
 }
 

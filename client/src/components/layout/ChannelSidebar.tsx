@@ -1,4 +1,4 @@
-import { Hash, Lock, Plus, Users2 } from 'lucide-react';
+import { Bell, Hash, Lock, Plus, Users2 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -94,6 +94,21 @@ export function ChannelSidebar({ serverId, activeChannelId, onSelectChannel }: C
             >
               <Users2 className="size-3.5" />
               Members
+            </NavLink>
+            <NavLink
+              to={ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId)}
+              onClick={onSelectChannel}
+              className={({ isActive }) =>
+                cn(
+                  'mt-1 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors',
+                  isActive
+                    ? 'bg-accent text-foreground font-medium'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                )
+              }
+            >
+              <Bell className="size-3.5" />
+              Notifications
             </NavLink>
           </div>
           {permissions.canCreateChannels ? (

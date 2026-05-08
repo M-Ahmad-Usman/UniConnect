@@ -1,5 +1,5 @@
 import { Bell, KeyRound, LogOut, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/lib/constants';
+import { parseRouteParamId } from '@/lib/route-params';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 
@@ -27,6 +28,8 @@ function getInitials(fullName: string) {
 
 export function UserDropdown() {
   const navigate = useNavigate();
+  const params = useParams();
+  const serverId = parseRouteParamId(params.serverId);
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
 
@@ -64,7 +67,15 @@ export function UserDropdown() {
             <User className="size-4" />
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS_NOTIFICATIONS)}>
+          <DropdownMenuItem
+            onClick={() =>
+              navigate(
+                serverId
+                  ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId)
+                  : ROUTES.SETTINGS_NOTIFICATIONS,
+              )
+            }
+          >
             <Bell className="size-4" />
             Notification settings
           </DropdownMenuItem>

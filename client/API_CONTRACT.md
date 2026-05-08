@@ -2543,6 +2543,7 @@ GET /api/notifications
     postId: number | null;
     post?: {
       channelId: number;
+      priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
       channel: {
         name: string;
         serverId: number;
@@ -2613,12 +2614,21 @@ GET /api/notification-preferences
 
 **Auth:** Required
 
+**Query Parameters:**
+```typescript
+{
+  serverId?: number;
+  notificationType?: 'NEW_POST' | 'ROLE_ASSIGNED';
+}
+```
+
 **Response:**
 ```typescript
 {
   success: true;
   data: Array<{
     id: number;
+    notificationType: 'NEW_POST' | 'ROLE_ASSIGNED';
     scopeType: 'SERVER' | 'CHANNEL';
     serverId: number;
     channelId: number | null;
@@ -2635,7 +2645,9 @@ GET /api/notification-preferences
 }
 ```
 
-**Note:** Default behavior: users are subscribed to all servers/channels unless explicitly unsubscribed
+**Note:** Default behavior: users are subscribed unless explicitly unsubscribed. `NEW_POST`
+preferences support `SERVER` and `CHANNEL` scope. `ROLE_ASSIGNED` preferences support
+`SERVER` scope only.
 
 #### Update Preference
 ```
@@ -2647,9 +2659,10 @@ PATCH /api/notification-preferences
 **Request Body:**
 ```typescript
 {
+  notificationType: 'NEW_POST' | 'ROLE_ASSIGNED'; // Defaults to NEW_POST for backward compatibility
   scopeType: 'SERVER' | 'CHANNEL';
   serverId: number;
-  channelId?: number;      // Required if scopeType === 'CHANNEL'
+  channelId?: number;      // Required for NEW_POST + CHANNEL
   isSubscribed: boolean;
 }
 ```
@@ -2663,7 +2676,10 @@ PATCH /api/notification-preferences
 }
 ```
 
-**Note:** Server-level unsubscribe suppresses all channel notifications for that server
+**Note:** Server-level `NEW_POST` unsubscribe suppresses all post notifications for that
+server, including urgent posts. Channel toggles are preserved but inactive while the server
+scope is muted. Server-level `ROLE_ASSIGNED` unsubscribe suppresses role-assignment
+notifications for that server.
 
 ---
 

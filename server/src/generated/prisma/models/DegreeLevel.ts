@@ -171,7 +171,7 @@ export type DegreeLevelGroupByOutputType = {
   _max: DegreeLevelMaxAggregateOutputType | null
 }
 
-type GetDegreeLevelGroupByPayload<T extends DegreeLevelGroupByArgs> = Prisma.PrismaPromise<
+export type GetDegreeLevelGroupByPayload<T extends DegreeLevelGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DegreeLevelGroupByOutputType, T['by']> &
       {
@@ -1043,6 +1043,11 @@ export type DegreeLevelFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` DegreeLevels.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of DegreeLevels.
+   */
   distinct?: Prisma.DegreeLevelScalarFieldEnum | Prisma.DegreeLevelScalarFieldEnum[]
 }
 

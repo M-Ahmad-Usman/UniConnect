@@ -53,6 +53,21 @@ const AdminDashboardPage = lazy(() =>
     default: m.AdminDashboardPage,
   })),
 );
+const NotificationInboxPage = lazy(() =>
+  import('@/features/notifications/pages/NotificationInboxPage').then((m) => ({
+    default: m.NotificationInboxPage,
+  })),
+);
+const NotificationPreferencesPage = lazy(() =>
+  import('@/features/notifications/pages/NotificationPreferencesPage').then((m) => ({
+    default: m.NotificationPreferencesPage,
+  })),
+);
+const NotificationSettingsServerPickerPage = lazy(() =>
+  import('@/features/notifications/pages/NotificationSettingsServerPickerPage').then((m) => ({
+    default: m.NotificationSettingsServerPickerPage,
+  })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -66,9 +81,6 @@ function Placeholder({ label }: { label: string }) {
 
 function ProfilePage() {
   return <Placeholder label="Profile" />;
-}
-function NotificationPreferencesPage() {
-  return <Placeholder label="Notification Preferences" />;
 }
 function NotFoundPage() {
   return <Placeholder label="Page Not Found" />;
@@ -127,16 +139,24 @@ export const router = createBrowserRouter([
                           { index: true, element: <ServerPage /> },
                           { path: 'channels/:channelId', element: <ChannelPage /> },
                           { path: 'members', element: <MemberListPage /> },
+                          {
+                            path: 'settings/notifications',
+                            element: <NotificationPreferencesPage />,
+                          },
                         ],
                       },
                     ],
                   },
+                  { path: 'notifications', element: <NotificationInboxPage /> },
                   { path: 'profile', element: <ProfilePage /> },
                   {
                     path: 'settings',
                     children: [
                       { path: 'password', element: <ChangePasswordPage /> },
-                      { path: 'notifications', element: <NotificationPreferencesPage /> },
+                      {
+                        path: 'notifications',
+                        element: <NotificationSettingsServerPickerPage />,
+                      },
                     ],
                   },
                   {

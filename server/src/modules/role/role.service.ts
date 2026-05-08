@@ -5,6 +5,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "../../shared/errors/index.js";
+import * as notificationService from "../notification/notification.service.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,24 @@ type CallerInfo = {
   userType: string;
   departmentId: number | null;
 };
+
+async function notifyRoleAssigned(
+  userId: number,
+  role: string,
+  serverId: number,
+  channelId?: number | null
+): Promise<void> {
+  try {
+    await notificationService.createRoleAssignedNotification({
+      userId,
+      role,
+      serverId,
+      channelId,
+    });
+  } catch (error) {
+    console.error("[RoleService] Failed to create role assignment notification:", error);
+  }
+}
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
@@ -227,25 +246,45 @@ async function assertCallerCanAssignModerator(
 
 // ─── Assign Role ───────────────────────────────────────────────────────────
 
-// TODO: Emit ROLE_ASSIGNED notification event (deferred from Module 10)
 export async function assignRole(input: AssignRoleInput, caller: CallerInfo) {
   const targetUser = await findActiveUserOrThrow(input.userId);
 
   switch (input.role) {
-    case "hod":
-      return assignHOD(input.scopeId!, targetUser, caller);
-    case "program_director":
-      return assignProgramDirector(input.scopeId!, targetUser, caller);
-    case "cr":
-      return assignCR(input.scopeId!, targetUser, caller);
-    case "society_president":
-      return assignSocietyPresident(input.scopeId!, targetUser, caller);
-    case "society_convenor":
-      return assignSocietyConvenor(input.scopeId!, targetUser, caller);
-    case "server_moderator":
-      return assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
-    case "channel_moderator":
-      return assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
+    case "hod": {
+      const result = await assignHOD(input.scopeId!, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      return result;
+    }
+    case "program_director": {
+      const result = await assignProgramDirector(input.scopeId!, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      return result;
+    }
+    case "cr": {
+      const result = await assignCR(input.scopeId!, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      return result;
+    }
+    case "society_president": {
+      const result = await assignSocietyPresident(input.scopeId!, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      return result;
+    }
+    case "society_convenor": {
+      const result = await assignSocietyConvenor(input.scopeId!, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      return result;
+    }
+    case "server_moderator": {
+      const result = await assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      return result;
+    }
+    case "channel_moderator": {
+      const result = await assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
+      await notifyRoleAssigned(result.userId, result.role, result.serverId, result.channelId);
+      return result;
+    }
     default:
       throw new ValidationError("Unknown role");
   }
@@ -261,7 +300,7 @@ async function assignHOD(
 
   const department = await prisma.department.findUnique({
     where: { id: departmentId },
-    select: { id: true, name: true, hodId: true },
+    select: { id: true, name: true, hodId: true, serverId: true },
   });
 
   if (!department) {
@@ -282,7 +321,13 @@ async function assignHOD(
     data: { hodId: targetUser.id },
   });
 
-  return { role: "hod", userId: targetUser.id, departmentId, departmentName: department.name };
+  return {
+    role: "hod",
+    userId: targetUser.id,
+    departmentId,
+    departmentName: department.name,
+    serverId: department.serverId,
+  };
 }
 
 async function assignProgramDirector(
@@ -294,7 +339,13 @@ async function assignProgramDirector(
 
   const program = await prisma.program.findUnique({
     where: { id: programId },
-    select: { id: true, code: true, departmentId: true, programDirectorId: true },
+    select: {
+      id: true,
+      code: true,
+      departmentId: true,
+      programDirectorId: true,
+      department: { select: { serverId: true } },
+    },
   });
 
   if (!program) {
@@ -317,7 +368,13 @@ async function assignProgramDirector(
     data: { programDirectorId: targetUser.id },
   });
 
-  return { role: "program_director", userId: targetUser.id, programId, programCode: program.code };
+  return {
+    role: "program_director",
+    userId: targetUser.id,
+    programId,
+    programCode: program.code,
+    serverId: program.department.serverId,
+  };
 }
 
 async function assignCR(
@@ -357,7 +414,7 @@ async function assignCR(
     data: { crId: targetUser.id },
   });
 
-  return { role: "cr", userId: targetUser.id, classId };
+  return { role: "cr", userId: targetUser.id, classId, serverId: classRecord.serverId };
 }
 
 async function assignSocietyPresident(
@@ -395,7 +452,13 @@ async function assignSocietyPresident(
     data: { presidentId: targetUser.id },
   });
 
-  return { role: "society_president", userId: targetUser.id, societyId, societyName: society.name };
+  return {
+    role: "society_president",
+    userId: targetUser.id,
+    societyId,
+    societyName: society.name,
+    serverId: society.serverId,
+  };
 }
 
 async function assignSocietyConvenor(
@@ -443,7 +506,13 @@ async function assignSocietyConvenor(
     });
   });
 
-  return { role: "society_convenor", userId: targetUser.id, societyId, societyName: society.name };
+  return {
+    role: "society_convenor",
+    userId: targetUser.id,
+    societyId,
+    societyName: society.name,
+    serverId: society.serverId,
+  };
 }
 
 async function assignModerator(

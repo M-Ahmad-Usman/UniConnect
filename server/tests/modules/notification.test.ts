@@ -8,6 +8,7 @@ import { resetDB } from "../helpers/db.helper.js";
 import { initializeSocket, resetIO } from "../../src/socket/index.js";
 import { appEvents, APP_EVENTS } from "../../src/shared/events.js";
 import {
+  createUser,
   createDepartment,
   createProgram,
   createClass,
@@ -252,6 +253,89 @@ describe("Module 10 - Notifications", () => {
       const recipientIds = notifications.map((n) => n.userId);
       expect(recipientIds).toContain(subscribedStudent.id);
       expect(recipientIds).not.toContain(unsubscribedStudent.id);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROLE ASSIGNMENT → NOTIFICATION GENERATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("Role assignment → notification generation", () => {
+    it("should generate a role-assigned notification when a role is assigned", async () => {
+      const u = uid();
+      const admin = await createUser({
+        email: `admin-role-ntf-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `RNTF-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-role-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/roles/assign")
+        .set("Cookie", cookies)
+        .send({
+          userId: student.id,
+          role: "server_moderator",
+          serverId: dept.serverId,
+        });
+
+      expect(res.status).toBe(200);
+
+      const notification = await prisma.notification.findFirst({
+        where: { userId: student.id, type: "ROLE_ASSIGNED" },
+        select: { title: true, message: true, postId: true },
+      });
+
+      expect(notification).not.toBeNull();
+      expect(notification!.title).toContain("Server Moderator");
+      expect(notification!.message).toContain("assigned");
+      expect(notification!.postId).toBeNull();
+    });
+
+    it("should suppress role-assigned notification when role notifications are muted", async () => {
+      const u = uid();
+      const admin = await createUser({
+        email: `admin-role-muted-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `RMUT-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-role-muted-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await createNotificationPreference(student.id, dept.serverId, {
+        notificationType: "ROLE_ASSIGNED",
+        scopeType: "SERVER",
+        isSubscribed: false,
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/roles/assign")
+        .set("Cookie", cookies)
+        .send({
+          userId: student.id,
+          role: "server_moderator",
+          serverId: dept.serverId,
+        });
+
+      expect(res.status).toBe(200);
+
+      const count = await prisma.notification.count({
+        where: { userId: student.id, type: "ROLE_ASSIGNED" },
+      });
+
+      expect(count).toBe(0);
     });
   });
 
@@ -573,8 +657,45 @@ describe("Module 10 - Notifications", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBeGreaterThanOrEqual(1);
       expect(res.body.data[0].scopeType).toBe("SERVER");
+      expect(res.body.data[0].notificationType).toBe("NEW_POST");
       expect(res.body.data[0].isSubscribed).toBe(false);
       expect(res.body.data[0].server).toBeDefined();
+    });
+
+    it("should filter preferences by server and notification type → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `PFLT-${u}` });
+      const otherDept = await createDepartment({ code: `PFLTO-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-pflt-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      await createNotificationPreference(student.id, dept.serverId, {
+        notificationType: "ROLE_ASSIGNED",
+        scopeType: "SERVER",
+        isSubscribed: false,
+      });
+      await createNotificationPreference(student.id, otherDept.serverId, {
+        notificationType: "NEW_POST",
+        scopeType: "SERVER",
+        isSubscribed: false,
+      });
+
+      const cookies = await loginAs(`stu-pflt-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .get(
+          `/api/notification-preferences?serverId=${dept.serverId}&notificationType=ROLE_ASSIGNED`
+        )
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].serverId).toBe(dept.serverId);
+      expect(res.body.data[0].notificationType).toBe("ROLE_ASSIGNED");
     });
 
     it("should return empty array when no preferences exist → 200", async () => {
@@ -629,6 +750,7 @@ describe("Module 10 - Notifications", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.isSubscribed).toBe(false);
+      expect(res.body.data.notificationType).toBe("NEW_POST");
       expect(res.body.data.scopeType).toBe("CHANNEL");
       expect(res.body.data.channelId).toBe(channel.id);
     });
@@ -657,7 +779,63 @@ describe("Module 10 - Notifications", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.isSubscribed).toBe(false);
+      expect(res.body.data.notificationType).toBe("NEW_POST");
       expect(res.body.data.scopeType).toBe("SERVER");
+    });
+
+    it("should update role assignment server preference → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ROLEP-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-rolep-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const cookies = await loginAs(`stu-rolep-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          notificationType: "ROLE_ASSIGNED",
+          scopeType: "SERVER",
+          serverId: dept.serverId,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.notificationType).toBe("ROLE_ASSIGNED");
+      expect(res.body.data.scopeType).toBe("SERVER");
+      expect(res.body.data.isSubscribed).toBe(false);
+    });
+
+    it("should reject channel-scoped role assignment preference → 400", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ROLEC-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-rolec-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const channel = await createChannel(dept.serverId, { name: `rolec-${u}` });
+
+      const cookies = await loginAs(`stu-rolec-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          notificationType: "ROLE_ASSIGNED",
+          scopeType: "CHANNEL",
+          serverId: dept.serverId,
+          channelId: channel.id,
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(400);
     });
 
     it("should re-subscribe to a channel → 200", async () => {
@@ -841,7 +1019,8 @@ describe("Module 10 - Notifications", () => {
       const notificationPromise = new Promise<unknown>((resolve, reject) => {
         const timeout = setTimeout(() => reject(new Error("Timeout waiting for notification")), 5000);
 
-        clientSocket = ioClient(`http://localhost:${serverPort}`, {
+        clientSocket = ioClient(`http://127.0.0.1:${serverPort}`, {
+          path: "/api/socket.io",
           extraHeaders: {
             cookie: `access_token=${accessToken}`,
           },
@@ -876,7 +1055,8 @@ describe("Module 10 - Notifications", () => {
     });
 
     it("should reject connection without valid token", (done) => {
-      const badClient = ioClient(`http://localhost:${serverPort}`, {
+      const badClient = ioClient(`http://127.0.0.1:${serverPort}`, {
+        path: "/api/socket.io",
         extraHeaders: {
           cookie: "access_token=invalid-token",
         },
@@ -890,7 +1070,9 @@ describe("Module 10 - Notifications", () => {
     });
 
     it("should reject connection without any cookie", (done) => {
-      const noAuthClient = ioClient(`http://localhost:${serverPort}`);
+      const noAuthClient = ioClient(`http://127.0.0.1:${serverPort}`, {
+        path: "/api/socket.io",
+      });
 
       noAuthClient.on("connect_error", (err: Error) => {
         expect(err.message).toContain("Authentication required");

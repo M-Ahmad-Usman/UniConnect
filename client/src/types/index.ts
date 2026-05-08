@@ -65,7 +65,9 @@ export type {
 // Notifications
 export type {
   Notification,
+  NotificationListParams,
   NotificationPreference,
+  NotificationPreferenceListParams,
   UpdatePreferenceRequest,
   UnreadCountResponse,
   NewNotificationPayload,

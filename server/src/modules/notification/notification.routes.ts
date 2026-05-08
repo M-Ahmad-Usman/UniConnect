@@ -3,6 +3,7 @@ import { authenticate } from "../../middleware/authenticate.js";
 import { validate } from "../../middleware/validate.js";
 import {
   listNotificationsSchema,
+  listPreferencesSchema,
   notificationIdParamSchema,
   updatePreferenceSchema,
 } from "./notification.schema.js";
@@ -52,6 +53,7 @@ const notificationPreferenceRoutes = Router();
 notificationPreferenceRoutes.get(
   "/",
   authenticate,
+  validate(listPreferencesSchema),
   handleGetPreferences
 );
 

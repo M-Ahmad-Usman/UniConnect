@@ -4,38 +4,29 @@ import { queryClient } from '@/lib/query-client';
 import { queryKeys } from '@/lib/constants';
 import { useNotificationStore } from '@/stores/notification.store';
 import type { Notification, PaginatedResponse } from '@/types';
-
-function updateNotificationCollection(
-  previous: PaginatedResponse<Notification> | undefined,
-  notificationId: number,
-) {
-  if (!previous) {
-    return previous;
-  }
-
-  return {
-    ...previous,
-    data: previous.data.map((notification) =>
-      notification.id === notificationId && notification.readAt === null
-        ? { ...notification, readAt: new Date().toISOString() }
-        : notification,
-    ),
-  };
-}
+import { markNotificationReadInCache } from '../cache';
 
 export function useMarkNotificationRead() {
   const decrementUnread = useNotificationStore((state) => state.decrementUnread);
 
   function findNotification(
     preview: PaginatedResponse<Notification> | undefined,
-    list: PaginatedResponse<Notification> | undefined,
+    lists: Array<[unknown, PaginatedResponse<Notification> | undefined]>,
     notificationId: number,
   ) {
-    return (
-      preview?.data.find((notification) => notification.id === notificationId) ??
-      list?.data.find((notification) => notification.id === notificationId) ??
-      null
-    );
+    const previewNotification = preview?.data.find((notification) => notification.id === notificationId);
+    if (previewNotification) {
+      return previewNotification;
+    }
+
+    for (const [, list] of lists) {
+      const notification = list?.data.find((item) => item.id === notificationId);
+      if (notification) {
+        return notification;
+      }
+    }
+
+    return null;
   }
 
   return useMutation({
@@ -45,39 +36,32 @@ export function useMarkNotificationRead() {
     },
     onMutate: async (notificationId: number) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.notifications.preview() });
-      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.list() });
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.all() });
 
       const previousPreview = queryClient.getQueryData<PaginatedResponse<Notification>>(
         queryKeys.notifications.preview(),
       );
-      const previousList = queryClient.getQueryData<PaginatedResponse<Notification>>(
-        queryKeys.notifications.list(),
-      );
-      const targetNotification = findNotification(previousPreview, previousList, notificationId);
+      const previousLists = queryClient.getQueriesData<PaginatedResponse<Notification>>({
+        queryKey: queryKeys.notifications.all(),
+      });
+      const targetNotification = findNotification(previousPreview, previousLists, notificationId);
 
-      queryClient.setQueryData(
-        queryKeys.notifications.preview(),
-        updateNotificationCollection(previousPreview, notificationId),
-      );
-      queryClient.setQueryData(
-        queryKeys.notifications.list(),
-        updateNotificationCollection(previousList, notificationId),
-      );
+      markNotificationReadInCache(notificationId);
 
       if (targetNotification?.readAt === null) {
         decrementUnread();
       }
 
-      return { previousPreview, previousList, shouldRestoreUnread: targetNotification?.readAt === null };
+      return { previousPreview, previousLists, shouldRestoreUnread: targetNotification?.readAt === null };
     },
     onError: (_error, _notificationId, context) => {
       if (context?.previousPreview) {
         queryClient.setQueryData(queryKeys.notifications.preview(), context.previousPreview);
       }
 
-      if (context?.previousList) {
-        queryClient.setQueryData(queryKeys.notifications.list(), context.previousList);
-      }
+      context?.previousLists.forEach(([key, value]) => {
+        queryClient.setQueryData(key, value);
+      });
 
       if (context?.shouldRestoreUnread) {
         useNotificationStore.getState().incrementUnread();

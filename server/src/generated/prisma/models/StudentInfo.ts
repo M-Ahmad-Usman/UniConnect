@@ -186,7 +186,7 @@ export type StudentInfoGroupByOutputType = {
   _max: StudentInfoMaxAggregateOutputType | null
 }
 
-type GetStudentInfoGroupByPayload<T extends StudentInfoGroupByArgs> = Prisma.PrismaPromise<
+export type GetStudentInfoGroupByPayload<T extends StudentInfoGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<StudentInfoGroupByOutputType, T['by']> &
       {
@@ -1352,6 +1352,11 @@ export type StudentInfoFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` StudentInfos.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of StudentInfos.
+   */
   distinct?: Prisma.StudentInfoScalarFieldEnum | Prisma.StudentInfoScalarFieldEnum[]
 }
 

@@ -189,7 +189,7 @@ export type ServerMembershipGroupByOutputType = {
   _max: ServerMembershipMaxAggregateOutputType | null
 }
 
-type GetServerMembershipGroupByPayload<T extends ServerMembershipGroupByArgs> = Prisma.PrismaPromise<
+export type GetServerMembershipGroupByPayload<T extends ServerMembershipGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ServerMembershipGroupByOutputType, T['by']> &
       {
@@ -1257,6 +1257,11 @@ export type ServerMembershipFindManyArgs<ExtArgs extends runtime.Types.Extension
    * Skip the first `n` ServerMemberships.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of ServerMemberships.
+   */
   distinct?: Prisma.ServerMembershipScalarFieldEnum | Prisma.ServerMembershipScalarFieldEnum[]
 }
 

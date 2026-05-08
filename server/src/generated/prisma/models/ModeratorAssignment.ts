@@ -222,7 +222,7 @@ export type ModeratorAssignmentGroupByOutputType = {
   _max: ModeratorAssignmentMaxAggregateOutputType | null
 }
 
-type GetModeratorAssignmentGroupByPayload<T extends ModeratorAssignmentGroupByArgs> = Prisma.PrismaPromise<
+export type GetModeratorAssignmentGroupByPayload<T extends ModeratorAssignmentGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ModeratorAssignmentGroupByOutputType, T['by']> &
       {
@@ -1656,6 +1656,11 @@ export type ModeratorAssignmentFindManyArgs<ExtArgs extends runtime.Types.Extens
    * Skip the first `n` ModeratorAssignments.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of ModeratorAssignments.
+   */
   distinct?: Prisma.ModeratorAssignmentScalarFieldEnum | Prisma.ModeratorAssignmentScalarFieldEnum[]
 }
 

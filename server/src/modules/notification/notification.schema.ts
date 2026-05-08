@@ -24,11 +24,25 @@ export const listNotificationsSchema = {
   }),
 };
 
+// ─── List Notification Preferences ────────────────────────────────────────
+
+export const listPreferencesSchema = {
+  query: z.object({
+    serverId: z.coerce
+      .number()
+      .int()
+      .positive({ error: "Server ID must be a positive integer" })
+      .optional(),
+    notificationType: z.enum(["NEW_POST", "ROLE_ASSIGNED"]).optional(),
+  }),
+};
+
 // ─── Update Notification Preference ────────────────────────────────────────
 
 export const updatePreferenceSchema = {
   body: z
     .object({
+      notificationType: z.enum(["NEW_POST", "ROLE_ASSIGNED"]).default("NEW_POST"),
       scopeType: z.enum(["SERVER", "CHANNEL"], {
         error: "Scope type must be SERVER or CHANNEL",
       }),
@@ -65,6 +79,18 @@ export const updatePreferenceSchema = {
       {
         error: "channelId must not be provided when scopeType is SERVER",
         path: ["channelId"],
+      }
+    )
+    .refine(
+      (data) => {
+        if (data.notificationType === "ROLE_ASSIGNED" && data.scopeType === "CHANNEL") {
+          return false;
+        }
+        return true;
+      },
+      {
+        error: "Role assignment notifications only support SERVER scope",
+        path: ["scopeType"],
       }
     ),
 };

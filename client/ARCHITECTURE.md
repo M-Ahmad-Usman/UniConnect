@@ -497,6 +497,14 @@ export const router = createBrowserRouter([
                 ],
               },
               {
+                path: 'notifications',
+                element: <NotificationInboxPage />,
+              },
+              {
+                path: 'servers/:serverId/settings/notifications',
+                element: <NotificationPreferencesPage />,
+              },
+              {
                 path: 'profile',
                 element: <ProfilePage />,
               },
@@ -509,7 +517,7 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: 'notifications',
-                    element: <NotificationPreferencesPage />,
+                    element: <NotificationSettingsServerPickerPage />,
                   },
                 ],
               },
@@ -917,6 +925,10 @@ export function connectSocket(): void {
         queryKey: ['posts', payload.post.channelId],
         refetchType: 'active',
       });
+    }
+
+    if (payload.post?.priority === 'URGENT') {
+      toast.error(payload.title, { description: payload.message });
     }
   });
 

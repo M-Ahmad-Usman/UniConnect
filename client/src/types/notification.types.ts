@@ -1,4 +1,4 @@
-import type { NotificationScopeType, NotificationType, ServerType } from './enums';
+import type { NotificationScopeType, NotificationType, PostPriority, ServerType } from './enums';
 
 // ─── Notification ───────────────────────────────────────────────────────────
 
@@ -12,6 +12,7 @@ export interface Notification {
   postId: number | null;
   post: {
     channelId: number;
+    priority: PostPriority;
     channel: {
       name: string;
       serverId: number;
@@ -23,6 +24,7 @@ export interface Notification {
 
 export interface NotificationPreference {
   id: number;
+  notificationType: NotificationType;
   scopeType: NotificationScopeType;
   serverId: number;
   channelId: number | null;
@@ -38,7 +40,23 @@ export interface NotificationPreference {
 }
 
 export interface UpdatePreferenceRequest {
+  notificationType: NotificationType;
+  scopeType: NotificationScopeType;
+  serverId: number;
+  channelId?: number;
   isSubscribed: boolean;
+}
+
+export interface NotificationListParams {
+  page?: number;
+  limit?: number;
+  type?: NotificationType;
+  unreadOnly?: boolean;
+}
+
+export interface NotificationPreferenceListParams {
+  serverId?: number;
+  notificationType?: NotificationType;
 }
 
 // ─── Unread Count ───────────────────────────────────────────────────────────
@@ -59,6 +77,7 @@ export interface NewNotificationPayload {
   createdAt: string;
   post: {
     channelId: number;
+    priority: PostPriority;
     channel: {
       name: string;
       serverId: number;

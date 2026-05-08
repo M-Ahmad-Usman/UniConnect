@@ -19,10 +19,13 @@ export const ROUTES = {
   CHANGE_PASSWORD: '/change-password',
   HOME: '/',
   SERVERS: '/servers',
+  NOTIFICATIONS: '/notifications',
   SERVER: (serverId: number | string) => `/servers/${serverId}`,
   CHANNEL: (serverId: number | string, channelId: number | string) =>
     `/servers/${serverId}/channels/${channelId}`,
   MEMBERS: (serverId: number | string) => `/servers/${serverId}/members`,
+  SERVER_NOTIFICATION_SETTINGS: (serverId: number | string) =>
+    `/servers/${serverId}/settings/notifications`,
   PROFILE: '/profile',
   SETTINGS_PASSWORD: '/settings/password',
   SETTINGS_NOTIFICATIONS: '/settings/notifications',
@@ -69,7 +72,9 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => ['notifications', params] as const,
     preview: () => ['notifications', 'preview'] as const,
     unreadCount: () => ['notifications', 'unread-count'] as const,
-    preferences: () => ['notifications', 'preferences'] as const,
+    preferencesRoot: () => ['notifications', 'preferences'] as const,
+    preferences: (params?: Record<string, unknown>) =>
+      ['notifications', 'preferences', params] as const,
   },
   roles: {
     byUser: (userId: number) => ['roles', userId] as const,

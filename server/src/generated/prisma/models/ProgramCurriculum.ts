@@ -208,7 +208,7 @@ export type ProgramCurriculumGroupByOutputType = {
   _max: ProgramCurriculumMaxAggregateOutputType | null
 }
 
-type GetProgramCurriculumGroupByPayload<T extends ProgramCurriculumGroupByArgs> = Prisma.PrismaPromise<
+export type GetProgramCurriculumGroupByPayload<T extends ProgramCurriculumGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ProgramCurriculumGroupByOutputType, T['by']> &
       {
@@ -1310,6 +1310,11 @@ export type ProgramCurriculumFindManyArgs<ExtArgs extends runtime.Types.Extensio
    * Skip the first `n` ProgramCurricula.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of ProgramCurricula.
+   */
   distinct?: Prisma.ProgramCurriculumScalarFieldEnum | Prisma.ProgramCurriculumScalarFieldEnum[]
 }
 

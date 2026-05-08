@@ -250,14 +250,19 @@ This document is the frontend integration contract for the UniConnect backend. I
 ### Notifications (`/api/notifications`)
 - `GET /`
   - Query: `page, limit, type?, unreadOnly?`
+  - `NEW_POST` items include post channel and priority metadata for routing and urgent UI.
 - `GET /unread-count`
 - `PATCH /read-all`
 - `PATCH /:id/read`
 
 ### Notification Preferences (`/api/notification-preferences`)
 - `GET /`
+  - Query: `serverId?, notificationType?`
 - `PATCH /`
-  - Body: `{ scopeType, serverId, channelId?, isSubscribed }`
+  - Body: `{ notificationType, scopeType, serverId, channelId?, isSubscribed }`
+  - `NEW_POST` supports server and channel scope.
+  - `ROLE_ASSIGNED` supports server scope only.
+  - Missing preference means subscribed.
 
 ### Admin (`/api/admin`)
 - `GET /stats`

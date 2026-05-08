@@ -1,15 +1,17 @@
 import { apiClient } from '@/api/client';
-import type { EmptyAuthResponse, Notification, PaginatedResponse, UnreadCountResponse } from '@/types';
-
-interface ListNotificationsParams {
-  page?: number;
-  limit?: number;
-  type?: 'NEW_POST' | 'ROLE_ASSIGNED';
-  unreadOnly?: boolean;
-}
+import type {
+  EmptyAuthResponse,
+  Notification,
+  NotificationListParams,
+  NotificationPreference,
+  NotificationPreferenceListParams,
+  PaginatedResponse,
+  UnreadCountResponse,
+  UpdatePreferenceRequest,
+} from '@/types';
 
 export const notificationsApi = {
-  async list(params?: ListNotificationsParams) {
+  async list(params?: NotificationListParams) {
     const response = await apiClient.get<PaginatedResponse<Notification>>('/notifications', {
       params,
     });
@@ -28,6 +30,21 @@ export const notificationsApi = {
 
   async markAllRead() {
     const response = await apiClient.patch<EmptyAuthResponse>('/notifications/read-all');
+    return response.data;
+  },
+
+  async listPreferences(params?: NotificationPreferenceListParams) {
+    const response = await apiClient.get<NotificationPreference[]>('/notification-preferences', {
+      params,
+    });
+    return response.data;
+  },
+
+  async updatePreference(payload: UpdatePreferenceRequest) {
+    const response = await apiClient.patch<NotificationPreference>(
+      '/notification-preferences',
+      payload,
+    );
     return response.data;
   },
 };

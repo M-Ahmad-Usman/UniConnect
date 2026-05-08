@@ -579,6 +579,7 @@ export async function createNotificationPreference(
   userId: number,
   serverId: number,
   overrides?: {
+    notificationType?: "NEW_POST" | "ROLE_ASSIGNED";
     scopeType?: "SERVER" | "CHANNEL";
     channelId?: number;
     isSubscribed?: boolean;
@@ -587,6 +588,7 @@ export async function createNotificationPreference(
   return prisma.notificationPreference.create({
     data: {
       userId,
+      notificationType: overrides?.notificationType ?? "NEW_POST",
       scopeType: overrides?.scopeType ?? "SERVER",
       serverId,
       channelId: overrides?.channelId ?? null,

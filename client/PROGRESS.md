@@ -22,7 +22,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module 2: Layout & Navigation | Complete | 2026-03-10 | 2026-03-10 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 3: Server & Channel Views | Complete | 2026-04-24 | 2026-04-24 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 4: Posts & Announcements | Complete | 2026-05-03 | 2026-05-03 | Production-grade feed, post detail, editor, attachments, moderation actions, cache hardening, and focused Playwright coverage |
-| Module 5: Notifications | Not Started | - | - | - |
+| Module 5: Notifications | In Progress | 2026-05-08 | - | Full inbox, per-server preferences, and type-aware backend notification preferences are under implementation |
 | Module 6: User Profile & Management | Not Started | - | - | - |
 | Module 7: Admin Dashboard & CRUD | Not Started | - | - | - |
 | Module 8: Society Management | Not Started | - | - | - |
@@ -31,6 +31,23 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-05-08 - Module 5 Notifications Implementation Started
+
+#### Implemented
+- ✅ Added the Module 5 notification inbox route, per-server notification preferences route, and server-picker fallback route
+- ✅ Added type-aware notification preferences so `NEW_POST` and `ROLE_ASSIGNED` settings can be controlled independently
+- ✅ Added role-assignment notification creation for successful role assignments, with server-level mute support
+- ✅ Hardened the notification dropdown with mark-all-read, full-inbox navigation, and context-aware settings navigation
+- ✅ Added post priority to notification payloads so urgent realtime toasts are driven by structured data
+- ✅ Added focused backend tests for role-assignment notifications and type-aware preference filtering
+
+#### Verification Notes
+- ✅ `server`: Prisma test DB reset applied all 5 migrations, including `20260508120000_type_aware_notification_preferences`
+- ✅ `server`: Prisma client regenerated
+- ✅ `server`: `npm run build`
+- ✅ `client`: `npm run type-check`
+- ⚠️ Full `tests/modules/notification.test.ts` exposed pre-existing Socket.IO test client path drift; the test client was updated to use `/api/socket.io`. Further bounded rerun is pending.
 
 ### 2026-05-08 - Module 4 Documentation and Pre-Module-5 Cleanup
 
@@ -505,15 +522,18 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| NotificationPanel dropdown | ⏳ Pending | - | Module 2 preview exists; Module 5 still needs full list behavior and mark-all-read controls |
-| NotificationItem | ⏳ Pending | - | Bold if unread, click to navigate |
-| NotificationPreferencesPage | ⏳ Pending | - | Server/channel subscription toggles |
-| SubscriptionToggle | ⏳ Pending | - | Optimistic update switch |
-| Socket.IO notification:new | ⏳ Pending | - | Foundation listener exists; Module 5 still needs final cache/toast behavior |
-| Socket.IO unread-count | ⏳ Pending | - | Foundation listener updates Zustand; Module 5 should verify and harden full workflow |
-| Navigation on click | ⏳ Pending | - | Preview navigation exists; Module 5 should cover final notification item behavior |
-| Mark as read mutation | ⏳ Pending | - | Preview mutation exists; Module 5 should finish full list integration and tests |
-| Mark all as read | ⏳ Pending | - | Optimistic reset to 0 |
+| NotificationPanel dropdown | ✅ Implemented | 2026-05-08 | Mark-all-read, full inbox link, settings link, and reusable item rendering added |
+| NotificationItem | ✅ Implemented | 2026-05-08 | Bold unread state, type icon, timestamp, and navigation callback |
+| NotificationInboxPage | ✅ Implemented | 2026-05-08 | Global paginated inbox with URL-backed unread/type/page filters |
+| NotificationPreferencesPage | ✅ Implemented | 2026-05-08 | Per-server post and role notification settings |
+| NotificationSettingsServerPickerPage | ✅ Implemented | 2026-05-08 | Fallback for user-menu access outside server context |
+| SubscriptionToggle | ✅ Implemented | 2026-05-08 | Accessible switch with pending state |
+| Socket.IO notification:new | ✅ Implemented | 2026-05-08 | Preview cache patching, invalidation, post feed refresh, and urgent toast behavior |
+| Socket.IO unread-count | ✅ Implemented | 2026-05-08 | Foundation listener remains authoritative for count sync |
+| Navigation on click | ✅ Implemented | 2026-05-08 | Shared notification target helper used by dropdown and inbox |
+| Mark as read mutation | ✅ Implemented | 2026-05-08 | Cache-wide read patching and unread rollback |
+| Mark all as read | ✅ Implemented | 2026-05-08 | Optimistic reset to 0 with cache rollback |
+| Role-assignment notifications | ✅ Implemented | 2026-05-08 | Backend emits assignment notifications and honors role preferences |
 
 ### Key Decisions
 - Do not start Module 5 until the Module 4 documentation and verification baseline is clean.

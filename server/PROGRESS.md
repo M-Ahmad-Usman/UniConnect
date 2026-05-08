@@ -1,19 +1,21 @@
 # UniConnect Backend Progress
 
 ## Document Control
-- Last Updated: 2026-03-05
+- Last Updated: 2026-05-08
 - Status: Active
 - Scope: Backend (`server/`)
 
 ## Executive Snapshot
-- Automated tests: `447/447` passing across `17` suites
+- Automated tests: baseline `447/447` passing across `17` suites; Module 10 now has 5 additional notification preference/role-notification tests pending final bounded rerun
 - Functional modules: `13/13` complete (Modules 0 to 12)
 - Hardening plan: Steps `1-35` complete
 
-## Verification Snapshot (2026-03-05)
+## Verification Snapshot (2026-05-08)
 - Verified route/middleware and security implementations in `src/`.
-- Ran full suite: `npm test -- --runInBand`.
-- Result: all suites passing.
+- Added type-aware notification preferences and role-assignment notification delivery for frontend Module 5.
+- Verified `npm run build`.
+- Reset the isolated `uniconnect_test` database and applied all 5 migrations.
+- Focused notification test rerun is pending after aligning Socket.IO test clients with `/api/socket.io`.
 
 ## Module Completion Matrix
 
@@ -29,7 +31,7 @@
 | 7 | Role Management | Complete | 42 |
 | 8 | Server and Channel Management | Complete | 59 |
 | 9 | Posts and Announcements | Complete | 46 |
-| 10 | Notifications and Socket.IO | Complete | 26 |
+| 10 | Notifications and Socket.IO | Complete | 31 |
 | 11 | Semester Transition and Curriculum | Complete | 36 |
 | 12 | Admin Dashboard | Complete | 19 |
 
@@ -47,6 +49,9 @@ None
 Details: `HARDENING_PLAN.md`, `HARDENING_LOG.md`
 
 ## Recent Key Additions
+- Type-aware notification preferences with `NEW_POST` and `ROLE_ASSIGNED` controls
+- Role-assignment notification creation with server-level mute support
+- Notification payload priority metadata for urgent frontend toasts
 - `passwordResetTokenHash` one-time token enforcement
 - `BCRYPT_ROUNDS` centralized constant
 - Shared `parseExpiry` utility extraction
