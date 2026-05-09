@@ -49,6 +49,13 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - ✅ `client`: `npm run type-check`
 - ⚠️ Full `tests/modules/notification.test.ts` exposed pre-existing Socket.IO test client path drift; the test client was updated to use `/api/socket.io`. Further bounded rerun is pending.
 
+### 2026-05-09 - Module 5 Notification UI Fixes
+
+#### Fixed
+- ✅ Fixed notification preference toggles staying in pending/loading UI after a successful mutation by checking the active mutation pending state before showing spinner state
+- ✅ Constrained the notification bell dropdown as a flex column so long notification lists scroll inside the panel and cannot cover the footer actions
+- ✅ Fixed unsubscribed users seeing stale channel feeds by refetching post feed queries whenever a channel feed mounts; notification preferences now affect notification delivery only, not feed freshness
+
 ### 2026-05-08 - Module 4 Documentation and Pre-Module-5 Cleanup
 
 #### Documentation Alignment

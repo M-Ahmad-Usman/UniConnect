@@ -32,6 +32,14 @@ function isSamePreference(
   );
 }
 
+function isPendingPreference(
+  pending: UpdatePreferenceRequest | undefined,
+  target: Omit<UpdatePreferenceRequest, 'isSubscribed'>,
+  isPending: boolean,
+) {
+  return isPending && isSamePreference(pending, target);
+}
+
 export function NotificationPreferencesPage() {
   const params = useParams();
   const serverId = parseRouteParamId(params.serverId);
@@ -126,11 +134,15 @@ export function NotificationPreferencesPage() {
           <SubscriptionToggle
             label="Post notifications for this server"
             checked={postServerSubscribed}
-            isPending={isSamePreference(updatePreference.variables, {
-              notificationType: NotificationType.NEW_POST,
-              scopeType: NotificationScopeType.SERVER,
-              serverId,
-            })}
+            isPending={isPendingPreference(
+              updatePreference.variables,
+              {
+                notificationType: NotificationType.NEW_POST,
+                scopeType: NotificationScopeType.SERVER,
+                serverId,
+              },
+              updatePreference.isPending,
+            )}
             onChange={(isSubscribedValue) =>
               mutatePreference({
                 notificationType: NotificationType.NEW_POST,
@@ -165,12 +177,16 @@ export function NotificationPreferencesPage() {
                     label={`Post notifications for ${channel.name}`}
                     checked={checked}
                     disabled={!postServerSubscribed}
-                    isPending={isSamePreference(updatePreference.variables, {
-                      notificationType: NotificationType.NEW_POST,
-                      scopeType: NotificationScopeType.CHANNEL,
-                      serverId,
-                      channelId: channel.id,
-                    })}
+                    isPending={isPendingPreference(
+                      updatePreference.variables,
+                      {
+                        notificationType: NotificationType.NEW_POST,
+                        scopeType: NotificationScopeType.CHANNEL,
+                        serverId,
+                        channelId: channel.id,
+                      },
+                      updatePreference.isPending,
+                    )}
                     onChange={(isSubscribedValue) =>
                       mutatePreference({
                         notificationType: NotificationType.NEW_POST,
@@ -204,11 +220,15 @@ export function NotificationPreferencesPage() {
           <SubscriptionToggle
             label="Role assignment notifications for this server"
             checked={roleServerSubscribed}
-            isPending={isSamePreference(updatePreference.variables, {
-              notificationType: NotificationType.ROLE_ASSIGNED,
-              scopeType: NotificationScopeType.SERVER,
-              serverId,
-            })}
+            isPending={isPendingPreference(
+              updatePreference.variables,
+              {
+                notificationType: NotificationType.ROLE_ASSIGNED,
+                scopeType: NotificationScopeType.SERVER,
+                serverId,
+              },
+              updatePreference.isPending,
+            )}
             onChange={(isSubscribedValue) =>
               mutatePreference({
                 notificationType: NotificationType.ROLE_ASSIGNED,

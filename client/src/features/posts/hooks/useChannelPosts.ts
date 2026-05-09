@@ -29,5 +29,6 @@ export function useChannelPosts(channelId: number | null, params?: PostListParam
       return lastPage.pagination.page + 1;
     },
     enabled: channelId !== null,
+    refetchOnMount: 'always',
   });
 }

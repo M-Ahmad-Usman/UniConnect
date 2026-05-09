@@ -1080,6 +1080,10 @@ export const notificationsApi = {
     - `useMarkAllAsRead` - Optimistic update: set all `readAt`, reset unread count to 0
     - `useUpdatePreference` - Optimistic toggle
 
+#### Feed Freshness Boundary
+- Notification preferences suppress notification records/socket notification events only.
+- Channel feeds remain independent and call `GET /api/channels/:id/posts` on mount via `refetchOnMount: 'always'`, so muted users still see the latest posts when they open a channel.
+
 #### Navigation Logic
 ```typescript
 // src/features/notifications/utils.ts

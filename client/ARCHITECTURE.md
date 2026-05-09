@@ -957,7 +957,7 @@ Recommended default: keep the socket on the same origin as the frontend and back
 
 ### Channel Feed Realtime
 
-Channel-scoped feed updates are handled by `useChannelPostRealtime` in the posts feature. The hook joins/leaves `channel:{id}` rooms and listens for `post:created`, `post:updated`, `post:pinned`, and `post:deleted`. Each event patches the active channel's query cache so the open feed updates even if the user is unsubscribed from notifications.
+Channel-scoped feed updates are handled by `useChannelPostRealtime` in the posts feature. The hook joins/leaves `channel:{id}` rooms and listens for `post:created`, `post:updated`, `post:pinned`, and `post:deleted`. Each event patches the active channel's query cache so the open feed updates even if the user is unsubscribed from notifications. Channel post queries also use `refetchOnMount: 'always'` so opening a channel checks the latest feed from the API even when notification preferences suppressed prior notification events.
 
 ### Connection Lifecycle
 

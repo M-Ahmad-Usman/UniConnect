@@ -32,24 +32,26 @@ export function NotificationPanel({
   const hasUnread = items.some((notification) => notification.readAt === null);
 
   return (
-    <div className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl bg-popover text-popover-foreground">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div>
-          <h3 className="text-sm font-semibold">Notifications</h3>
-          <p className="text-muted-foreground text-xs">Recent activity across your spaces.</p>
+    <div className="flex max-h-[min(34rem,calc(100vh-4rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl bg-popover text-popover-foreground">
+      <div className="shrink-0 px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Notifications</h3>
+            <p className="text-muted-foreground text-xs">Recent activity across your spaces.</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMarkAllRead}
+            disabled={!hasUnread || isMarkingAllRead}
+          >
+            <CheckCheck className="size-4" />
+            Mark read
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onMarkAllRead}
-          disabled={!hasUnread || isMarkingAllRead}
-        >
-          <CheckCheck className="size-4" />
-          Mark read
-        </Button>
       </div>
       <Separator />
-      <ScrollArea className="max-h-96">
+      <ScrollArea className="min-h-0 flex-1 overflow-hidden">
         {isLoading ? (
           <div className="space-y-3 px-4 py-4">
             {Array.from({ length: 3 }).map((_, index) => (
@@ -94,7 +96,7 @@ export function NotificationPanel({
         )}
       </ScrollArea>
       <Separator />
-      <div className="flex items-center justify-between gap-2 px-3 py-2">
+      <div className="flex shrink-0 items-center justify-between gap-2 bg-popover px-3 py-2">
         <Button variant="ghost" size="sm" onClick={onViewAll}>
           View all
         </Button>
