@@ -298,9 +298,10 @@ import { PasswordField } from './PasswordField';
 | Single Playwright | `npx playwright test e2e/file.spec.ts` |
 
 ## Current Development Focus
-- **Frontend Module 5 (Notifications):** NotificationPanel dropdown, NotificationItem, NotificationPreferencesPage, SubscriptionToggle, socket-driven real-time count/prepend, mark-read mutations.
-- **After Module 5:** Module 6 (User Profile & Admin User Management).
-- **Backend:** All 13 modules are complete with 447/447 tests passing. Backend work will resume for schema enhancements in a later phase.
+- **Frontend Module 5 (Notifications):** Complete. Includes global notifications inbox, notification bell dropdown, NotificationItem, per-server NotificationPreferencesPage, server-picker fallback, SubscriptionToggle, mark-read/mark-all-read mutations, socket-driven unread count/preview updates, urgent toasts, and feed freshness independent of notification subscriptions.
+- **Frontend Module 6 (User Profile & Admin User Management):** Complete. Includes profile page, bio editing, avatar upload and preloaded avatar display, admin user list, user creation, CSV bulk import, detail dialog, activation controls, and NTU formatted roll-number handling.
+- **Current Frontend Focus:** Module 7 (Admin Dashboard & CRUD).
+- **Backend:** Core 13 modules are complete. Module 5 introduced type-aware notification preferences (`NEW_POST` and `ROLE_ASSIGNED`) plus role-assignment notification delivery. Module 6 changed student roll numbers to NTU formatted strings. Backend generated Prisma client and migrations must remain in sync after schema changes.
 
 ## Authentication Model
 - Cookie-based auth. Frontend never handles tokens directly.

@@ -29,25 +29,23 @@ export type AggregateStudentInfo = {
 export type StudentInfoAvgAggregateOutputType = {
   studentId: number | null
   classId: number | null
-  rollNumber: number | null
 }
 
 export type StudentInfoSumAggregateOutputType = {
   studentId: number | null
   classId: number | null
-  rollNumber: number | null
 }
 
 export type StudentInfoMinAggregateOutputType = {
   studentId: number | null
   classId: number | null
-  rollNumber: number | null
+  rollNumber: string | null
 }
 
 export type StudentInfoMaxAggregateOutputType = {
   studentId: number | null
   classId: number | null
-  rollNumber: number | null
+  rollNumber: string | null
 }
 
 export type StudentInfoCountAggregateOutputType = {
@@ -61,13 +59,11 @@ export type StudentInfoCountAggregateOutputType = {
 export type StudentInfoAvgAggregateInputType = {
   studentId?: true
   classId?: true
-  rollNumber?: true
 }
 
 export type StudentInfoSumAggregateInputType = {
   studentId?: true
   classId?: true
-  rollNumber?: true
 }
 
 export type StudentInfoMinAggregateInputType = {
@@ -178,7 +174,7 @@ export type StudentInfoGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type StudentInfoGroupByOutputType = {
   studentId: number
   classId: number
-  rollNumber: number
+  rollNumber: string
   _count: StudentInfoCountAggregateOutputType | null
   _avg: StudentInfoAvgAggregateOutputType | null
   _sum: StudentInfoSumAggregateOutputType | null
@@ -207,7 +203,7 @@ export type StudentInfoWhereInput = {
   NOT?: Prisma.StudentInfoWhereInput | Prisma.StudentInfoWhereInput[]
   studentId?: Prisma.IntFilter<"StudentInfo"> | number
   classId?: Prisma.IntFilter<"StudentInfo"> | number
-  rollNumber?: Prisma.IntFilter<"StudentInfo"> | number
+  rollNumber?: Prisma.StringFilter<"StudentInfo"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   class?: Prisma.XOR<Prisma.ClassScalarRelationFilter, Prisma.ClassWhereInput>
   crOfClass?: Prisma.XOR<Prisma.ClassNullableScalarRelationFilter, Prisma.ClassWhereInput> | null
@@ -226,7 +222,7 @@ export type StudentInfoOrderByWithRelationInput = {
 
 export type StudentInfoWhereUniqueInput = Prisma.AtLeast<{
   studentId?: number
-  rollNumber?: number
+  rollNumber?: string
   AND?: Prisma.StudentInfoWhereInput | Prisma.StudentInfoWhereInput[]
   OR?: Prisma.StudentInfoWhereInput[]
   NOT?: Prisma.StudentInfoWhereInput | Prisma.StudentInfoWhereInput[]
@@ -254,11 +250,11 @@ export type StudentInfoScalarWhereWithAggregatesInput = {
   NOT?: Prisma.StudentInfoScalarWhereWithAggregatesInput | Prisma.StudentInfoScalarWhereWithAggregatesInput[]
   studentId?: Prisma.IntWithAggregatesFilter<"StudentInfo"> | number
   classId?: Prisma.IntWithAggregatesFilter<"StudentInfo"> | number
-  rollNumber?: Prisma.IntWithAggregatesFilter<"StudentInfo"> | number
+  rollNumber?: Prisma.StringWithAggregatesFilter<"StudentInfo"> | string
 }
 
 export type StudentInfoCreateInput = {
-  rollNumber: number
+  rollNumber: string
   user: Prisma.UserCreateNestedOneWithoutStudentInfoInput
   class: Prisma.ClassCreateNestedOneWithoutStudentsInput
   crOfClass?: Prisma.ClassCreateNestedOneWithoutCrInput
@@ -268,13 +264,13 @@ export type StudentInfoCreateInput = {
 export type StudentInfoUncheckedCreateInput = {
   studentId: number
   classId: number
-  rollNumber: number
+  rollNumber: string
   crOfClass?: Prisma.ClassUncheckedCreateNestedOneWithoutCrInput
   presidentOfSociety?: Prisma.SocietyUncheckedCreateNestedOneWithoutPresidentInput
 }
 
 export type StudentInfoUpdateInput = {
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutStudentInfoNestedInput
   class?: Prisma.ClassUpdateOneRequiredWithoutStudentsNestedInput
   crOfClass?: Prisma.ClassUpdateOneWithoutCrNestedInput
@@ -284,7 +280,7 @@ export type StudentInfoUpdateInput = {
 export type StudentInfoUncheckedUpdateInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
   classId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   crOfClass?: Prisma.ClassUncheckedUpdateOneWithoutCrNestedInput
   presidentOfSociety?: Prisma.SocietyUncheckedUpdateOneWithoutPresidentNestedInput
 }
@@ -292,17 +288,17 @@ export type StudentInfoUncheckedUpdateInput = {
 export type StudentInfoCreateManyInput = {
   studentId: number
   classId: number
-  rollNumber: number
+  rollNumber: string
 }
 
 export type StudentInfoUpdateManyMutationInput = {
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type StudentInfoUncheckedUpdateManyInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
   classId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type StudentInfoNullableScalarRelationFilter = {
@@ -319,7 +315,6 @@ export type StudentInfoCountOrderByAggregateInput = {
 export type StudentInfoAvgOrderByAggregateInput = {
   studentId?: Prisma.SortOrder
   classId?: Prisma.SortOrder
-  rollNumber?: Prisma.SortOrder
 }
 
 export type StudentInfoMaxOrderByAggregateInput = {
@@ -337,7 +332,6 @@ export type StudentInfoMinOrderByAggregateInput = {
 export type StudentInfoSumOrderByAggregateInput = {
   studentId?: Prisma.SortOrder
   classId?: Prisma.SortOrder
-  rollNumber?: Prisma.SortOrder
 }
 
 export type StudentInfoListRelationFilter = {
@@ -460,7 +454,7 @@ export type StudentInfoUpdateOneRequiredWithoutPresidentOfSocietyNestedInput = {
 }
 
 export type StudentInfoCreateWithoutUserInput = {
-  rollNumber: number
+  rollNumber: string
   class: Prisma.ClassCreateNestedOneWithoutStudentsInput
   crOfClass?: Prisma.ClassCreateNestedOneWithoutCrInput
   presidentOfSociety?: Prisma.SocietyCreateNestedOneWithoutPresidentInput
@@ -468,7 +462,7 @@ export type StudentInfoCreateWithoutUserInput = {
 
 export type StudentInfoUncheckedCreateWithoutUserInput = {
   classId: number
-  rollNumber: number
+  rollNumber: string
   crOfClass?: Prisma.ClassUncheckedCreateNestedOneWithoutCrInput
   presidentOfSociety?: Prisma.SocietyUncheckedCreateNestedOneWithoutPresidentInput
 }
@@ -490,7 +484,7 @@ export type StudentInfoUpdateToOneWithWhereWithoutUserInput = {
 }
 
 export type StudentInfoUpdateWithoutUserInput = {
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   class?: Prisma.ClassUpdateOneRequiredWithoutStudentsNestedInput
   crOfClass?: Prisma.ClassUpdateOneWithoutCrNestedInput
   presidentOfSociety?: Prisma.SocietyUpdateOneWithoutPresidentNestedInput
@@ -498,13 +492,13 @@ export type StudentInfoUpdateWithoutUserInput = {
 
 export type StudentInfoUncheckedUpdateWithoutUserInput = {
   classId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   crOfClass?: Prisma.ClassUncheckedUpdateOneWithoutCrNestedInput
   presidentOfSociety?: Prisma.SocietyUncheckedUpdateOneWithoutPresidentNestedInput
 }
 
 export type StudentInfoCreateWithoutCrOfClassInput = {
-  rollNumber: number
+  rollNumber: string
   user: Prisma.UserCreateNestedOneWithoutStudentInfoInput
   class: Prisma.ClassCreateNestedOneWithoutStudentsInput
   presidentOfSociety?: Prisma.SocietyCreateNestedOneWithoutPresidentInput
@@ -513,7 +507,7 @@ export type StudentInfoCreateWithoutCrOfClassInput = {
 export type StudentInfoUncheckedCreateWithoutCrOfClassInput = {
   studentId: number
   classId: number
-  rollNumber: number
+  rollNumber: string
   presidentOfSociety?: Prisma.SocietyUncheckedCreateNestedOneWithoutPresidentInput
 }
 
@@ -523,7 +517,7 @@ export type StudentInfoCreateOrConnectWithoutCrOfClassInput = {
 }
 
 export type StudentInfoCreateWithoutClassInput = {
-  rollNumber: number
+  rollNumber: string
   user: Prisma.UserCreateNestedOneWithoutStudentInfoInput
   crOfClass?: Prisma.ClassCreateNestedOneWithoutCrInput
   presidentOfSociety?: Prisma.SocietyCreateNestedOneWithoutPresidentInput
@@ -531,7 +525,7 @@ export type StudentInfoCreateWithoutClassInput = {
 
 export type StudentInfoUncheckedCreateWithoutClassInput = {
   studentId: number
-  rollNumber: number
+  rollNumber: string
   crOfClass?: Prisma.ClassUncheckedCreateNestedOneWithoutCrInput
   presidentOfSociety?: Prisma.SocietyUncheckedCreateNestedOneWithoutPresidentInput
 }
@@ -558,7 +552,7 @@ export type StudentInfoUpdateToOneWithWhereWithoutCrOfClassInput = {
 }
 
 export type StudentInfoUpdateWithoutCrOfClassInput = {
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutStudentInfoNestedInput
   class?: Prisma.ClassUpdateOneRequiredWithoutStudentsNestedInput
   presidentOfSociety?: Prisma.SocietyUpdateOneWithoutPresidentNestedInput
@@ -567,7 +561,7 @@ export type StudentInfoUpdateWithoutCrOfClassInput = {
 export type StudentInfoUncheckedUpdateWithoutCrOfClassInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
   classId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   presidentOfSociety?: Prisma.SocietyUncheckedUpdateOneWithoutPresidentNestedInput
 }
 
@@ -593,11 +587,11 @@ export type StudentInfoScalarWhereInput = {
   NOT?: Prisma.StudentInfoScalarWhereInput | Prisma.StudentInfoScalarWhereInput[]
   studentId?: Prisma.IntFilter<"StudentInfo"> | number
   classId?: Prisma.IntFilter<"StudentInfo"> | number
-  rollNumber?: Prisma.IntFilter<"StudentInfo"> | number
+  rollNumber?: Prisma.StringFilter<"StudentInfo"> | string
 }
 
 export type StudentInfoCreateWithoutPresidentOfSocietyInput = {
-  rollNumber: number
+  rollNumber: string
   user: Prisma.UserCreateNestedOneWithoutStudentInfoInput
   class: Prisma.ClassCreateNestedOneWithoutStudentsInput
   crOfClass?: Prisma.ClassCreateNestedOneWithoutCrInput
@@ -606,7 +600,7 @@ export type StudentInfoCreateWithoutPresidentOfSocietyInput = {
 export type StudentInfoUncheckedCreateWithoutPresidentOfSocietyInput = {
   studentId: number
   classId: number
-  rollNumber: number
+  rollNumber: string
   crOfClass?: Prisma.ClassUncheckedCreateNestedOneWithoutCrInput
 }
 
@@ -627,7 +621,7 @@ export type StudentInfoUpdateToOneWithWhereWithoutPresidentOfSocietyInput = {
 }
 
 export type StudentInfoUpdateWithoutPresidentOfSocietyInput = {
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutStudentInfoNestedInput
   class?: Prisma.ClassUpdateOneRequiredWithoutStudentsNestedInput
   crOfClass?: Prisma.ClassUpdateOneWithoutCrNestedInput
@@ -636,17 +630,17 @@ export type StudentInfoUpdateWithoutPresidentOfSocietyInput = {
 export type StudentInfoUncheckedUpdateWithoutPresidentOfSocietyInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
   classId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   crOfClass?: Prisma.ClassUncheckedUpdateOneWithoutCrNestedInput
 }
 
 export type StudentInfoCreateManyClassInput = {
   studentId: number
-  rollNumber: number
+  rollNumber: string
 }
 
 export type StudentInfoUpdateWithoutClassInput = {
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutStudentInfoNestedInput
   crOfClass?: Prisma.ClassUpdateOneWithoutCrNestedInput
   presidentOfSociety?: Prisma.SocietyUpdateOneWithoutPresidentNestedInput
@@ -654,14 +648,14 @@ export type StudentInfoUpdateWithoutClassInput = {
 
 export type StudentInfoUncheckedUpdateWithoutClassInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
   crOfClass?: Prisma.ClassUncheckedUpdateOneWithoutCrNestedInput
   presidentOfSociety?: Prisma.SocietyUncheckedUpdateOneWithoutPresidentNestedInput
 }
 
 export type StudentInfoUncheckedUpdateManyWithoutClassInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
-  rollNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  rollNumber?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -725,7 +719,7 @@ export type $StudentInfoPayload<ExtArgs extends runtime.Types.Extensions.Interna
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     studentId: number
     classId: number
-    rollNumber: number
+    rollNumber: string
   }, ExtArgs["result"]["studentInfo"]>
   composites: {}
 }
@@ -1155,7 +1149,7 @@ export interface Prisma__StudentInfoClient<T, Null = never, ExtArgs extends runt
 export interface StudentInfoFieldRefs {
   readonly studentId: Prisma.FieldRef<"StudentInfo", 'Int'>
   readonly classId: Prisma.FieldRef<"StudentInfo", 'Int'>
-  readonly rollNumber: Prisma.FieldRef<"StudentInfo", 'Int'>
+  readonly rollNumber: Prisma.FieldRef<"StudentInfo", 'String'>
 }
     
 

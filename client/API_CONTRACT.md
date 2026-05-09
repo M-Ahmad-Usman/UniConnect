@@ -405,7 +405,7 @@ const response = await apiClient.post('/users/bulk-import', formData, {
 });
 
 // Response includes success/failure breakdown
-// response.data: { successCount: 45, failedCount: 5, errors: [...] }
+// response.data: { successful: 45, failed: 5, errors: [...] }
 ```
 
 ---
@@ -866,7 +866,7 @@ POST /api/users
   // STUDENT:
   departmentId?: number;
   classId?: number;
-  rollNumber?: string;  // Format: YYYY-XX-XXX (e.g., 2021-CS-001)
+  rollNumber?: string;  // Format: YY-NTU-DEPT-#### (e.g., 22-NTU-CS-1184)
 }
 ```
 
@@ -877,13 +877,15 @@ POST /api/users
   data: {
     id: number;
     email: string;
-    tempPassword: string;  // Generated: TEMP_{randomString}
+    fullName: string;
+    userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    mustChangePassword: true;
   };
   message: 'User created successfully';
 }
 ```
 
-**Note:** Frontend should display temp password to admin for manual distribution. User must change password on first login.
+**Note:** Backend emails the generated temporary password to the user. The frontend should not display the password to admins. User must change password on first login.
 
 #### Bulk Import Users (CSV)
 ```
@@ -901,7 +903,7 @@ POST /api/users/bulk-import
 **CSV Format:**
 ```
 fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation
-John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,2021-CS-001,
+John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,22-NTU-CS-1184,
 Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
 ```
 
@@ -910,12 +912,11 @@ Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
 {
   success: true;
   data: {
-    successCount: number;
-    failedCount: number;
+    successful: number;
+    failed: number;
     errors: Array<{
       row: number;
-      fields: string[];
-      messages: string[];
+      message: string;
     }>;
   };
   message: 'Import completed';

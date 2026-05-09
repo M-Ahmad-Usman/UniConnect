@@ -110,6 +110,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 ### Users (`/api/users`)
 - `POST /`
   - Body: `{ fullName, email, phone, gender, userType, departmentId?, classId?, rollNumber?, designation? }`
+  - Student `rollNumber` uses NTU format such as `22-NTU-CS-1184`.
 - `POST /bulk-import`
   - Multipart field: `file` (CSV)
 - `GET /me`

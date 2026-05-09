@@ -188,7 +188,7 @@ async function ensureTeacherInfo(teacherId: number, designation: string) {
   });
 }
 
-async function ensureStudentInfo(studentId: number, classId: number, rollNumber: number) {
+async function ensureStudentInfo(studentId: number, classId: number, rollNumber: string) {
   await prisma.studentInfo.upsert({
     where: { studentId },
     update: { classId, rollNumber },
@@ -536,10 +536,10 @@ async function seedDemoWorkspace() {
   });
 
   await Promise.all([
-    ensureStudentInfo(cr.id, classRecord.id, 230001),
-    ensureStudentInfo(president.id, classRecord.id, 230002),
-    ensureStudentInfo(student.id, classRecord.id, 230003),
-    ensureStudentInfo(channelModerator.id, classRecord.id, 230004),
+    ensureStudentInfo(cr.id, classRecord.id, "23-NTU-CS-0001"),
+    ensureStudentInfo(president.id, classRecord.id, "23-NTU-CS-0002"),
+    ensureStudentInfo(student.id, classRecord.id, "23-NTU-CS-0003"),
+    ensureStudentInfo(channelModerator.id, classRecord.id, "23-NTU-CS-0004"),
   ]);
 
   classRecord = await prisma.class.update({

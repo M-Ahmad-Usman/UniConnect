@@ -15,6 +15,12 @@ function uniqueSuffix(): string {
   return `${t}${c}${r}`;
 }
 
+function uniqueRollNumber(): string {
+  uniqueCounter += 1;
+  const sequence = (uniqueCounter % 100000).toString().padStart(4, "0");
+  return `22-NTU-CS-${sequence}`;
+}
+
 // ─── Seed Helpers ──────────────────────────────────────────────────────────
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -305,7 +311,7 @@ export async function createStudentWithInfo(
   overrides?: {
     email?: string;
     fullName?: string;
-    rollNumber?: number;
+    rollNumber?: string;
     password?: string;
   }
 ) {
@@ -321,7 +327,7 @@ export async function createStudentWithInfo(
     data: {
       studentId: student.id,
       classId,
-      rollNumber: overrides?.rollNumber ?? Math.floor(Math.random() * 100000) + 1,
+      rollNumber: overrides?.rollNumber ?? uniqueRollNumber(),
     },
   });
 

@@ -32,7 +32,15 @@ export type {
   UserSummary,
   UpdateProfileRequest,
   UpdateProfileResponse,
+  CreateUserRequest,
+  CreateUserResponse,
+  UserListParams,
+  BulkImportError,
+  BulkImportResult,
 } from './user.types';
+
+// Catalog
+export type { DepartmentListItem, ProgramListItem, ClassListItem } from './catalog.types';
 
 // Servers
 export type { MemberBadge, ServerListItem, ServerDetail, ServerMember } from './server.types';

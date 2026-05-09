@@ -31,6 +31,8 @@ export const ROUTES = {
   SETTINGS_NOTIFICATIONS: '/settings/notifications',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/users',
+  ADMIN_USERS_NEW: '/admin/users/new',
+  ADMIN_USERS_IMPORT: '/admin/users/import',
   ADMIN_DEPARTMENTS: '/admin/departments',
   ADMIN_PROGRAMS: '/admin/programs',
   ADMIN_DISCIPLINES: '/admin/disciplines',
@@ -48,8 +50,16 @@ export const queryKeys = {
     me: () => ['auth', 'me'] as const,
   },
   users: {
+    me: () => ['users', 'me'] as const,
     detail: (userId: number) => ['users', userId] as const,
     list: (params?: Record<string, unknown>) => ['users', params] as const,
+  },
+  departments: {
+    list: () => ['departments'] as const,
+    programs: (departmentId: number) => ['departments', departmentId, 'programs'] as const,
+  },
+  classes: {
+    list: (params?: Record<string, unknown>) => ['classes', params] as const,
   },
   servers: {
     list: (params?: Record<string, unknown>) => ['servers', params] as const,

@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 4 Complete
-**Current Phase:** Module 4 posts and announcements are complete; Module 5 notification preferences and full notification workflows are next
+**Status:** Module 6 Complete
+**Current Phase:** Ready to start Module 7 admin dashboard and CRUD implementation
 
 ---
 
@@ -22,8 +22,8 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module 2: Layout & Navigation | Complete | 2026-03-10 | 2026-03-10 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 3: Server & Channel Views | Complete | 2026-04-24 | 2026-04-24 | Hardened after implementation and verified with unit tests, type-check, lint, production build, and focused Playwright runtime coverage |
 | Module 4: Posts & Announcements | Complete | 2026-05-03 | 2026-05-03 | Production-grade feed, post detail, editor, attachments, moderation actions, cache hardening, and focused Playwright coverage |
-| Module 5: Notifications | In Progress | 2026-05-08 | - | Full inbox, per-server preferences, and type-aware backend notification preferences are under implementation |
-| Module 6: User Profile & Management | Not Started | - | - | - |
+| Module 5: Notifications | Complete | 2026-05-08 | 2026-05-09 | Full inbox, per-server preferences, type-aware notification preferences, realtime dropdown hardening, and feed freshness fixes |
+| Module 6: User Profile & Management | Complete | 2026-05-09 | 2026-05-10 | Profile page, avatar upload, admin user list, create user, bulk import, activation actions, NTU roll-number backend contract, and avatar/header hardening verified |
 | Module 7: Admin Dashboard & CRUD | Not Started | - | - | - |
 | Module 8: Society Management | Not Started | - | - | - |
 | Module 9: Role Management | Not Started | - | - | - |
@@ -31,6 +31,39 @@ This document tracks the implementation progress of the UniConnect frontend, log
 ---
 
 ## Changelog
+
+### 2026-05-10 - Module 6 Verification and UI Hardening Completed
+
+#### Fixed
+- ✅ Fixed the user dropdown crash by wrapping Base UI menu labels in the required menu group context
+- ✅ Fixed long profile and admin-detail bios overflowing their containers by constraining height and enabling internal scrolling/wrapping
+- ✅ Synced `/users/me` profile data back into the auth store so the header avatar reflects newly uploaded profile pictures
+- ✅ Added a shared preloading user avatar component so profile/header avatars keep stable dimensions while remote images load
+
+#### Verification Notes
+- ✅ `server`: Full backend test suite confirmed passing after Module 6 fixes
+- ✅ `client`: `npm run type-check`
+- ✅ `client`: `npm run lint`
+
+### 2026-05-09 - Module 6 User Profile & Management Implementation
+
+#### Implemented
+- ✅ Added a real profile page with editable bio, profile-picture upload preview, role badges, and profile detail display
+- ✅ Added admin user list with URL-backed search, user type/department/status filters, pagination, and user detail dialog
+- ✅ Added create-user and bulk-import flows with React Hook Form/Zod validation, department/program/class selectors, CSV template download, upload progress, and errors CSV export
+- ✅ Kept temporary passwords email-only and removed stale frontend-contract guidance that exposed generated passwords to admins
+- ✅ Changed student roll numbers to NTU formatted strings, including Prisma schema, migration, backend validation, seeds, tests, frontend types, and docs
+- ✅ Fixed notification lint regressions in NotificationItem and SubscriptionToggle while restoring frontend lint health
+
+#### Verification Notes
+- ✅ `server`: Prisma client regenerated after the roll-number schema change
+- ✅ `server`: `npm run db:migrate:test` applied `20260509120000_student_roll_number_string` with local DB access
+- ✅ `server`: `npm run build`
+- ✅ `server`: Full backend test suite confirmed passing after focused Module 6 test fixes
+- ✅ `client`: `npm run type-check`
+- ✅ `client`: `npm run lint`
+- ✅ `client`: `npm run test` passes with 90 Vitest tests
+- ✅ `client`: `npm run build`
 
 ### 2026-05-08 - Module 5 Notifications Implementation Started
 
@@ -47,7 +80,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - ✅ `server`: Prisma client regenerated
 - ✅ `server`: `npm run build`
 - ✅ `client`: `npm run type-check`
-- ⚠️ Full `tests/modules/notification.test.ts` exposed pre-existing Socket.IO test client path drift; the test client was updated to use `/api/socket.io`. Further bounded rerun is pending.
+- ✅ Full backend test-suite health was later confirmed during Module 6 verification after the Socket.IO test client path was corrected to `/api/socket.io`
 
 ### 2026-05-09 - Module 5 Notification UI Fixes
 
@@ -547,7 +580,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 - Keep the existing notification bell/preview foundation in place, but treat preferences, subscription toggles, mark-all-read, and full notification workflow tests as Module 5 work.
 
 ### Challenges & Solutions
-- Module 2 introduced a lightweight notification preview, which can make Module 5 look partially complete. The current task ledger explicitly separates that foundation from the pending Module 5 implementation.
+- Module 2 introduced a lightweight notification preview, which made Module 5 look partially complete. The Module 5 ledger now distinguishes that foundation from the completed inbox, preference, subscription, and read-state workflows.
 
 ---
 
@@ -557,21 +590,23 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| ProfilePage | ⏳ Pending | - | Editable bio, avatar upload |
-| ProfilePictureUpload | ⏳ Pending | - | File picker, preview, multipart upload |
-| BioEditor | ⏳ Pending | - | Inline edit, 500 char max |
-| AdminUserListPage | ⏳ Pending | - | Table with filters |
-| CreateUserPage | ⏳ Pending | - | Conditional fields by userType |
-| BulkImportPage | ⏳ Pending | - | CSV upload, progress, result summary |
-| UserDetailDialog | ⏳ Pending | - | Full info modal |
-| Deactivate/reactivate users | ⏳ Pending | - | Confirmation + mutation |
-| Zod schemas for user creation | ⏳ Pending | - | Discriminated union by userType |
+| ProfilePage | ✅ Complete | 2026-05-09 | Editable bio, avatar upload, profile details, role badges |
+| ProfilePictureUpload | ✅ Complete | 2026-05-09 | File picker, preview, validation, multipart upload |
+| BioEditor | ✅ Complete | 2026-05-09 | Inline edit, 500 char max, optimistic cache update |
+| AdminUserListPage | ✅ Complete | 2026-05-09 | URL-backed table with search and filters |
+| CreateUserPage | ✅ Complete | 2026-05-09 | Conditional fields by userType plus department/program/class selectors |
+| BulkImportPage | ✅ Complete | 2026-05-09 | CSV upload, progress, result summary, errors CSV export |
+| UserDetailDialog | ✅ Complete | 2026-05-09 | Full info modal with activation controls |
+| Deactivate/reactivate users | ✅ Complete | 2026-05-09 | Confirmation + mutation + cache patching |
+| Zod schemas for user creation | ✅ Complete | 2026-05-09 | User-type-aware schema with NTU roll-number validation |
 
 ### Key Decisions
-- (To be logged)
+- Temporary passwords remain email-only; admins see a credential-delivery confirmation, not the generated password.
+- Student roll numbers now use NTU formatted strings such as `22-NTU-CS-1184`; backend schema and docs were updated to match.
+- Bulk-import failed-row download exports row numbers and backend error messages from the current API response.
 
 ### Challenges & Solutions
-- (To be logged)
+- Backend integration tests can be disruptive inside the constrained WSL/VS Code session; reruns should stay bounded with explicit timeout guards and focused filtering when possible.
 
 ---
 

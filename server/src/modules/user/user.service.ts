@@ -27,7 +27,7 @@ type CreateUserInput = {
   userType: "STUDENT" | "TEACHER" | "ADMIN";
   departmentId?: number;
   classId?: number;
-  rollNumber?: number;
+  rollNumber?: string;
   designation?: string;
 };
 
@@ -69,7 +69,7 @@ function normalizeCsvRow(row: Record<string, string>): CreateUserInput {
     userType: userType as "STUDENT" | "TEACHER" | "ADMIN",
     departmentId: row.departmentId ? Number.parseInt(row.departmentId, 10) : undefined,
     classId: row.classId ? Number.parseInt(row.classId, 10) : undefined,
-    rollNumber: row.rollNumber ? Number.parseInt(row.rollNumber, 10) : undefined,
+    rollNumber: row.rollNumber?.trim() ? row.rollNumber.trim().toUpperCase() : undefined,
     designation: row.designation?.trim() ? row.designation.trim() : undefined,
   };
 }

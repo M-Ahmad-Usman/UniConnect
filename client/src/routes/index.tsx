@@ -68,6 +68,20 @@ const NotificationSettingsServerPickerPage = lazy(() =>
     default: m.NotificationSettingsServerPickerPage,
   })),
 );
+const ProfilePage = lazy(() =>
+  import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+);
+const AdminUserListPage = lazy(() =>
+  import('@/features/admin/pages/AdminUserListPage').then((m) => ({
+    default: m.AdminUserListPage,
+  })),
+);
+const CreateUserPage = lazy(() =>
+  import('@/features/admin/pages/CreateUserPage').then((m) => ({ default: m.CreateUserPage })),
+);
+const BulkImportPage = lazy(() =>
+  import('@/features/admin/pages/BulkImportPage').then((m) => ({ default: m.BulkImportPage })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -79,9 +93,6 @@ function Placeholder({ label }: { label: string }) {
   );
 }
 
-function ProfilePage() {
-  return <Placeholder label="Profile" />;
-}
 function NotFoundPage() {
   return <Placeholder label="Page Not Found" />;
 }
@@ -166,16 +177,18 @@ export const router = createBrowserRouter([
                         path: 'admin',
                         element: <AdminLayout />,
                         children: [
-                          { index: true, element: <Navigate to={ROUTES.ADMIN_DASHBOARD} replace /> },
+                          {
+                            index: true,
+                            element: <Navigate to={ROUTES.ADMIN_DASHBOARD} replace />,
+                          },
                           { path: 'dashboard', element: <AdminDashboardPage /> },
                           {
                             path: 'users',
-                            element: (
-                              <AdminSectionPage
-                                title="Users"
-                                description="User management will plug into this new admin shell in a later module."
-                              />
-                            ),
+                            children: [
+                              { index: true, element: <AdminUserListPage /> },
+                              { path: 'new', element: <CreateUserPage /> },
+                              { path: 'import', element: <BulkImportPage /> },
+                            ],
                           },
                           {
                             path: 'departments',

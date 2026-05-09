@@ -1176,16 +1176,16 @@ export function getNotificationTarget(notification: Notification) {
   - **Teacher:** Department, Designation
   - **Admin:** No additional fields
 - **Password handling:**
-  - Backend auto-generates temp password `TEMP_{randomString}`
+  - Backend auto-generates and emails a temporary password
   - User must change on first login
 - Submit → `POST /api/users`
-- On success: show success toast with temp password (for manual distribution), redirect to user list
+- On success: show success toast confirming credentials were emailed, redirect to user list
 
 ##### `BulkImportPage` (`src/features/admin/pages/BulkImportPage.tsx`)
 - CSV file upload component
 - **CSV format:**
   - Headers: `fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation`
-  - Example row: `John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,2021-CS-001,`
+  - Example row: `John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,22-NTU-CS-1184,`
 - Drag-and-drop zone or "Choose file" button
 - Upload → `POST /api/users/bulk-import` (multipart/form-data)
 - **Progress indicator** during upload
@@ -1271,7 +1271,7 @@ export const createUserSchema = baseUserSchema.and(
       userType: z.literal("STUDENT"),
       departmentId: z.number().int().positive(),
       classId: z.number().int().positive(),
-      rollNumber: z.string().regex(/^\d{4}-[A-Z]{2,4}-\d{3}$/),
+      rollNumber: z.string().regex(/^\d{2}-NTU-[A-Z]{2,5}-\d{3,5}$/),
     }),
   ])
 );
@@ -1289,7 +1289,7 @@ export const updateProfileSchema = z.object({
 - ✅ Filter by user type → table updates
 - ✅ Search by name/email → table updates
 - ✅ Create user form: conditional fields render based on user type
-- ✅ Create user → success, temp password shown, user appears in list
+- ✅ Create user → success, emailed-credentials confirmation shown, user appears in list
 - ✅ Bulk import CSV → upload progress shown, result summary displays
 - ✅ Deactivate user → confirmation, mutation succeeds, status updates to inactive
 - ✅ Reactivate user → mutation succeeds, status updates to active

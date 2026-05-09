@@ -115,7 +115,7 @@ DEPARTMENT.id < USER.department_id
 STUDENT_INFO {
   student_id INTEGER PK FK
   class_id INTEGER FK // NOT NULL
-  roll_number INTEGER // UNIQUE NOT NULL
+  roll_number VARCHAR(30) // UNIQUE NOT NULL, e.g. 22-NTU-CS-1184
 }
 
 STUDENT_INFO.student_id - USER.id

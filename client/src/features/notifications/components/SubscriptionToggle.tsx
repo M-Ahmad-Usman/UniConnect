@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,13 +18,6 @@ export function SubscriptionToggle({
   isPending,
 }: SubscriptionToggleProps) {
   const [optimisticChecked, setOptimisticChecked] = useState(checked);
-
-  useEffect(() => {
-    if (!isPending) {
-      setOptimisticChecked(checked);
-    }
-  }, [checked, isPending]);
-
   const visibleChecked = isPending ? optimisticChecked : checked;
 
   return (

@@ -9,6 +9,7 @@ export interface AuthUser {
   email: string;
   userType: UserType;
   mustChangePassword: boolean;
+  profilePictureUrl?: string | null;
   roles?: ScopedRoleAssignment[];
 }
 

@@ -190,9 +190,9 @@ model User {
 }
 
 model StudentInfo {
-  studentId  Int  @id @map("student_id")
-  classId    Int  @map("class_id")
-  rollNumber Int  @unique @map("roll_number")
+  studentId  Int    @id @map("student_id")
+  classId    Int    @map("class_id")
+  rollNumber String @unique @map("roll_number") @db.VarChar(30)
 
   user  User  @relation(fields: [studentId], references: [id])
   class Class @relation(fields: [classId], references: [id])

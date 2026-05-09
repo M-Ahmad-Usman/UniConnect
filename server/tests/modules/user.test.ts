@@ -56,12 +56,13 @@ describe("Module 2 - User Management", () => {
           userType: "STUDENT",
           departmentId: dept.id,
           classId: klass.id,
-          rollNumber: 22001,
+          rollNumber: "22-NTU-CS-2001",
         });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.userType).toBe("STUDENT");
+      expect(res.body.data).not.toHaveProperty("tempPassword");
 
       const createdUserId = res.body.data.id as number;
       const [studentInfo, memberships] = await Promise.all([
@@ -70,6 +71,7 @@ describe("Module 2 - User Management", () => {
       ]);
 
       expect(studentInfo?.classId).toBe(klass.id);
+      expect(studentInfo?.rollNumber).toBe("22-NTU-CS-2001");
       expect(memberships).toHaveLength(2);
     });
 
@@ -161,7 +163,7 @@ describe("Module 2 - User Management", () => {
           userType: "STUDENT",
           departmentId: dept.id,
           classId: klass.id,
-          rollNumber: 33001,
+          rollNumber: "22-NTU-CS-3001",
         });
 
       const duplicateRes = await request(app)
@@ -175,7 +177,7 @@ describe("Module 2 - User Management", () => {
           userType: "STUDENT",
           departmentId: dept.id,
           classId: klass.id,
-          rollNumber: 33002,
+          rollNumber: "22-NTU-CS-3002",
         });
 
       expect(duplicateRes.status).toBe(409);
@@ -212,6 +214,37 @@ describe("Module 2 - User Management", () => {
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("VALIDATION_ERROR");
     });
+
+    it("should return 400 for invalid student rollNumber format", async () => {
+      const admin = await createUser({
+        email: "admin-invalid-roll@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-M2-BADROLL" });
+      const program = await createProgram(dept.id, { code: "BSCS-M2-BADROLL" });
+      const klass = await createClass(program.id, { creatorId: admin.id });
+
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/users")
+        .set("Cookie", cookies)
+        .send({
+          fullName: "Bad Roll",
+          email: "bad-roll@test.com",
+          phone: "03001118888",
+          gender: "MALE",
+          userType: "STUDENT",
+          departmentId: dept.id,
+          classId: klass.id,
+          rollNumber: "2022-CS-1184",
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    });
   });
 
   describe("POST /api/users/bulk-import", () => {
@@ -236,7 +269,7 @@ describe("Module 2 - User Management", () => {
           userType: "STUDENT",
           departmentId: String(dept.id),
           classId: String(klass.id),
-          rollNumber: "9901",
+          rollNumber: "22-NTU-CS-9901",
           designation: "",
         },
         {
@@ -323,7 +356,7 @@ describe("Module 2 - User Management", () => {
           userType: "STUDENT",
           departmentId: String(dept.id),
           classId: String(klass.id),
-          rollNumber: "9909",
+          rollNumber: "22-NTU-CS-9909",
           designation: "",
         },
       ]);

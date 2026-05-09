@@ -22,7 +22,7 @@ export interface UserProfile {
 }
 
 export interface StudentInfo {
-  rollNumber: number;
+  rollNumber: string;
   classId: number;
   class: {
     program: {
@@ -46,6 +46,7 @@ export interface UserListItem {
   departmentId: number | null;
   isActive: boolean;
   createdAt: string;
+  profilePictureUrl?: string | null;
 }
 
 // ─── User Detail (from GET /users/:id) ──────────────────────────────────────
@@ -63,7 +64,7 @@ export interface UserDetail {
   isActive: boolean;
   mustChangePassword: boolean;
   createdAt: string;
-  studentInfo: { classId: number; rollNumber: number } | null;
+  studentInfo: { classId: number; rollNumber: string } | null;
   teacherInfo: { designation: string } | null;
 }
 
@@ -77,6 +78,54 @@ export interface UpdateProfileResponse {
   id: number;
   bio: string | null;
   updatedAt: string;
+}
+
+// ─── Create / Import Users ─────────────────────────────────────────────────
+
+export interface CreateUserRequest {
+  fullName: string;
+  email: string;
+  phone: string;
+  gender: Gender;
+  userType: UserType;
+  departmentId?: number;
+  classId?: number;
+  rollNumber?: string;
+  designation?: string;
+}
+
+export interface CreateUserResponse {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  gender: Gender;
+  userType: UserType;
+  departmentId: number | null;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+  warning?: string;
+}
+
+export interface UserListParams {
+  page?: number;
+  limit?: number;
+  userType?: UserType;
+  departmentId?: number;
+  isActive?: boolean;
+  search?: string;
+}
+
+export interface BulkImportError {
+  row: number;
+  message: string;
+}
+
+export interface BulkImportResult {
+  successful: number;
+  failed: number;
+  errors: BulkImportError[];
 }
 
 // ─── User Summary (embedded in other responses) ─────────────────────────────

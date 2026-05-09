@@ -1,7 +1,7 @@
 import { Bell, KeyRound, LogOut, User } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RoleBadge } from '@/components/shared/RoleBadge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,15 +17,6 @@ import { parseRouteParamId } from '@/lib/route-params';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 
-function getInitials(fullName: string) {
-  return fullName
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 export function UserDropdown() {
   const navigate = useNavigate();
   const params = useParams();
@@ -40,13 +31,16 @@ export function UserDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" className="h-auto px-2 py-1.5" aria-label="Open user menu" />}
+        render={
+          <Button variant="ghost" className="h-auto px-2 py-1.5" aria-label="Open user menu" />
+        }
       >
         <div className="flex items-center gap-3">
-          <Avatar size="sm">
-            <AvatarImage src={undefined} alt={user.fullName} />
-            <AvatarFallback>{getInitials(user.fullName)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            size="sm"
+            fullName={user.fullName}
+            profilePictureUrl={user.profilePictureUrl}
+          />
           <div className="hidden text-left sm:block">
             <p className="max-w-32 truncate text-sm font-medium">{user.fullName}</p>
             <p className="text-muted-foreground max-w-32 truncate text-xs">{user.email}</p>
@@ -54,13 +48,15 @@ export function UserDropdown() {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>
-          <div className="space-y-1">
-            <p className="truncate text-sm font-semibold">{user.fullName}</p>
-            <p className="text-muted-foreground truncate text-xs">{user.email}</p>
-            <RoleBadge role={user.userType} className="mt-1 inline-flex" />
-          </div>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <div className="space-y-1">
+              <p className="truncate text-sm font-semibold">{user.fullName}</p>
+              <p className="text-muted-foreground truncate text-xs">{user.email}</p>
+              <RoleBadge role={user.userType} className="mt-1 inline-flex" />
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => navigate(ROUTES.PROFILE)}>

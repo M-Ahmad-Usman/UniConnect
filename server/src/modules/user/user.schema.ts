@@ -3,6 +3,13 @@ import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 const userTypeEnum = z.enum(["STUDENT", "TEACHER", "ADMIN"]);
 const genderEnum = z.enum(["MALE", "FEMALE"]);
+const rollNumberSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^\d{2}-NTU-[A-Z]{2,5}-\d{3,5}$/, {
+    error: "Roll number must use NTU format, e.g. 22-NTU-CS-1184",
+  });
 
 // ─── Create User ───────────────────────────────────────────────────────────
 
@@ -15,7 +22,7 @@ export const createUserBodySchema = z
     userType: userTypeEnum,
     departmentId: z.number().int().positive().optional(),
     classId: z.number().int().positive().optional(),
-    rollNumber: z.number().int().positive().optional(),
+    rollNumber: rollNumberSchema.optional(),
     designation: z.string().min(1, { error: "Designation is required" }).max(100).optional(),
   })
   .refine((data) => data.userType === "ADMIN" || data.departmentId !== undefined, {

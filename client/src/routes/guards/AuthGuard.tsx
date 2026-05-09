@@ -2,11 +2,11 @@ import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { usersApi } from '@/api/endpoints/users.api';
 import { useAuthStore } from '@/stores/auth.store';
+import { mapProfileToAuthUser } from '@/lib/auth-user';
 import { ROUTES } from '@/lib/constants';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
 import { ApiError } from '@/types';
-import type { AuthUser } from '@/types/auth.types';
 import type { UserProfile } from '@/types/user.types';
 
 export function AuthGuard() {
@@ -33,15 +33,7 @@ export function AuthGuard() {
         const profile: UserProfile = await usersApi.getMe();
         if (cancelled) return;
 
-        const authUser: AuthUser = {
-          id: profile.id,
-          fullName: profile.fullName,
-          email: profile.email,
-          userType: profile.userType,
-          mustChangePassword: profile.mustChangePassword,
-          roles: profile.roles,
-        };
-        setUser(authUser);
+        setUser(mapProfileToAuthUser(profile));
       } catch (error) {
         if (cancelled) return;
 

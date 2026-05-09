@@ -8,16 +8,7 @@ interface NotificationItemProps {
   onSelect: (notification: Notification) => void;
 }
 
-function getNotificationIcon(type: Notification['type']) {
-  if (type === NotificationType.ROLE_ASSIGNED) {
-    return ShieldAlert;
-  }
-
-  return Bell;
-}
-
 export function NotificationItem({ notification, onSelect }: NotificationItemProps) {
-  const Icon = getNotificationIcon(notification.type);
   const isUnread = notification.readAt === null;
 
   return (
@@ -30,7 +21,11 @@ export function NotificationItem({ notification, onSelect }: NotificationItemPro
       )}
     >
       <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Icon className="size-4" />
+        {notification.type === NotificationType.ROLE_ASSIGNED ? (
+          <ShieldAlert className="size-4" />
+        ) : (
+          <Bell className="size-4" />
+        )}
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-start gap-2">
