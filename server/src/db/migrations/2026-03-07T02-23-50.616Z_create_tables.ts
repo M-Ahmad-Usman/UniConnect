@@ -443,10 +443,6 @@ const createChannelsTable: TableCreationFunction = async (db, tableName) => {
 
     .addColumn('program_id', 'integer')
 
-    .addCheckConstraint(`chk_${tableName}_type_course_link_course_only`, sql<boolean>`(type != 'course') OR (course_id IS NOT NULL AND program_id IS NULL)`)
-    .addCheckConstraint(`chk_${tableName}_type_program_link_program_only`, sql<boolean>`(type != 'program') OR (program_id IS NOT NULL AND course_id IS NULL)`)
-    .addCheckConstraint(`chk_${tableName}_announcement_general_no_links`, sql<boolean>`(type NOT IN ('announcement', 'general')) OR (course_id IS NULL AND program_id IS NULL)`)
-
     .addColumn('is_locked', 'boolean', col => col.notNull().defaultTo(false))
     .addColumn('locked_by', 'integer')
     .addColumn('locked_at', 'timestamptz')

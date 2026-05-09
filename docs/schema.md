@@ -290,10 +290,12 @@ channels {
   // For program channels (in department server)
   program_id INT FK
 
-  // CHECK (
+  // Validate (
   // (type = 'course' AND course_id IS NOT NULL AND program_id IS NULL) OR
   // (type = 'program' AND program_id IS NOT NULL AND course_id IS NULL) OR
   // (type IN ('announcement', 'general') AND course_id IS NULL AND program_id IS NULL))
+
+  // Validate course type channels can only be created for class type servers
 
   is_locked BOOLEAN // DEFAULT FALSE
   locked_by INTEGER FK // Required when is_locked → TRUE. Cleared by trigger trg_fn_sync_lock_state when is_locked → FALSE.
