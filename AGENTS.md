@@ -19,7 +19,7 @@ uniconnect/
 - Frontend commands: run inside `client/`
 - Never run commands from the repo root.
 - Never run heavy commands like build or test simultaneously. Running heavy commands simultaneously makes the system unresponsive.
-- Make sure that every command exits cleanly and doesn't leak any memory or leave open handles.
+- Make sure that every command exits cleanly and doesn't leak any memory or leave open handles. Use heavy commands with timeout like timeout 120 <command>.
 
 ## Tech Stack
 
