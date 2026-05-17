@@ -53,6 +53,46 @@ const AdminDashboardPage = lazy(() =>
     default: m.AdminDashboardPage,
   })),
 );
+const DepartmentListPage = lazy(() =>
+  import('@/features/admin/pages/DepartmentListPage').then((m) => ({
+    default: m.DepartmentListPage,
+  })),
+);
+const DepartmentDetailPage = lazy(() =>
+  import('@/features/admin/pages/DepartmentDetailPage').then((m) => ({
+    default: m.DepartmentDetailPage,
+  })),
+);
+const ProgramListPage = lazy(() =>
+  import('@/features/admin/pages/ProgramListPage').then((m) => ({
+    default: m.ProgramListPage,
+  })),
+);
+const CurriculumPage = lazy(() =>
+  import('@/features/admin/pages/CurriculumPage').then((m) => ({
+    default: m.CurriculumPage,
+  })),
+);
+const DisciplineListPage = lazy(() =>
+  import('@/features/admin/pages/DisciplineListPage').then((m) => ({
+    default: m.DisciplineListPage,
+  })),
+);
+const ClassListPage = lazy(() =>
+  import('@/features/admin/pages/ClassListPage').then((m) => ({
+    default: m.ClassListPage,
+  })),
+);
+const ClassDetailPage = lazy(() =>
+  import('@/features/admin/pages/ClassDetailPage').then((m) => ({
+    default: m.ClassDetailPage,
+  })),
+);
+const CourseListPage = lazy(() =>
+  import('@/features/admin/pages/CourseListPage').then((m) => ({
+    default: m.CourseListPage,
+  })),
+);
 const NotificationInboxPage = lazy(() =>
   import('@/features/notifications/pages/NotificationInboxPage').then((m) => ({
     default: m.NotificationInboxPage,
@@ -192,49 +232,27 @@ export const router = createBrowserRouter([
                           },
                           {
                             path: 'departments',
-                            element: (
-                              <AdminSectionPage
-                                title="Departments"
-                                description="Department CRUD will land on top of the current admin navigation structure."
-                              />
-                            ),
+                            children: [
+                              { index: true, element: <DepartmentListPage /> },
+                              { path: ':departmentId', element: <DepartmentDetailPage /> },
+                            ],
                           },
                           {
                             path: 'programs',
-                            element: (
-                              <AdminSectionPage
-                                title="Programs"
-                                description="Program management screens are intentionally deferred beyond Module 2."
-                              />
-                            ),
+                            children: [
+                              { index: true, element: <ProgramListPage /> },
+                              { path: ':programId/curriculum', element: <CurriculumPage /> },
+                            ],
                           },
-                          {
-                            path: 'disciplines',
-                            element: (
-                              <AdminSectionPage
-                                title="Disciplines"
-                                description="Discipline management will reuse this admin shell once its CRUD flows are implemented."
-                              />
-                            ),
-                          },
+                          { path: 'disciplines', element: <DisciplineListPage /> },
                           {
                             path: 'classes',
-                            element: (
-                              <AdminSectionPage
-                                title="Classes"
-                                description="Class management is deferred, but its route and navigation slot are now in place."
-                              />
-                            ),
+                            children: [
+                              { index: true, element: <ClassListPage /> },
+                              { path: ':classId', element: <ClassDetailPage /> },
+                            ],
                           },
-                          {
-                            path: 'courses',
-                            element: (
-                              <AdminSectionPage
-                                title="Courses"
-                                description="Course management and channel generation will land in later modules."
-                              />
-                            ),
-                          },
+                          { path: 'courses', element: <CourseListPage /> },
                           {
                             path: 'societies',
                             element: (

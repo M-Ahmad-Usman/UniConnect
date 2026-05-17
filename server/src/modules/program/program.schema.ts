@@ -1,10 +1,22 @@
 import { z } from "zod";
+import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
 export const programIdParamSchema = {
   params: z.object({
     id: z.coerce.number().int().positive({ error: "Program ID must be a positive integer" }),
+  }),
+};
+
+// ─── List Programs ─────────────────────────────────────────────────────────
+
+export const listProgramsSchema = {
+  query: paginationQuerySchema.extend({
+    departmentId: z.coerce.number().int().positive({ error: "Department ID must be a positive integer" }).optional(),
+    disciplineId: z.coerce.number().int().positive({ error: "Discipline ID must be a positive integer" }).optional(),
+    degreeLevelId: z.coerce.number().int().positive({ error: "Degree level ID must be a positive integer" }).optional(),
+    search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
   }),
 };
 

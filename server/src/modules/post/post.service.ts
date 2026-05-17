@@ -12,6 +12,7 @@ import {
 } from "../../shared/utils/pagination.js";
 import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
+import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
 import { emitToChannel } from "../../socket/index.js";
@@ -392,6 +393,7 @@ export async function createPost(
 
     emitToChannel(channelId, "post:created", { channelId, post: response });
 
+    invalidateSystemStatsCache();
     return response;
   }
 
@@ -422,6 +424,7 @@ export async function createPost(
 
   emitToChannel(channelId, "post:created", { channelId, post: response });
 
+  invalidateSystemStatsCache();
   return response;
 }
 
@@ -611,6 +614,7 @@ export async function deletePost(postId: number, caller: CallerInfo) {
     postId,
   });
 
+  invalidateSystemStatsCache();
   return null;
 }
 

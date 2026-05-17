@@ -1,6 +1,8 @@
 import { prisma } from "../../config/prisma.js";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
+import { invalidateSystemStatsCache } from "../admin/admin.service.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -19,7 +21,9 @@ type AssignCourseInput = {
 
 type ListClassesQuery = {
   programId?: number;
+  departmentId?: number;
   semester?: number;
+  section?: "A" | "B";
   page?: number;
   limit?: number;
 };
@@ -50,6 +54,30 @@ const classListSelect = {
         select: {
           id: true,
           name: true,
+          code: true,
+        },
+      },
+      discipline: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      degreeLevel: {
+        select: {
+          id: true,
+          level: true,
+        },
+      },
+    },
+  },
+  cr: {
+    select: {
+      studentId: true,
+      user: {
+        select: {
+          fullName: true,
+          email: true,
         },
       },
     },
@@ -195,7 +223,7 @@ export async function createClass(
 
   await assertHodOrAdmin(userId, userType, program.departmentId);
 
-  return prisma.$transaction(async (tx) => {
+  const classRecord = await prisma.$transaction(async (tx) => {
     const serverName = `${program.code} - S${data.currentSemester} - Section ${data.section}`;
 
     const server = await tx.server.create({
@@ -239,14 +267,19 @@ export async function createClass(
 
     return classRecord;
   });
+
+  invalidateSystemStatsCache();
+  return classRecord;
 }
 
 export async function listClasses(query: ListClassesQuery) {
   const { page, limit, skip, take } = parsePagination(query);
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.ClassWhereInput = {};
   if (query.programId) where.programId = query.programId;
+  if (query.departmentId) where.program = { departmentId: query.departmentId };
   if (query.semester) where.currentSemester = query.semester;
+  if (query.section) where.section = query.section;
 
   const [classes, total] = await Promise.all([
     prisma.class.findMany({

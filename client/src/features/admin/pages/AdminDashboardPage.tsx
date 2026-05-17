@@ -1,42 +1,88 @@
+import { Activity, BookOpenText, Server, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const dashboardCards = [
-  {
-    title: 'Navigation shell ready',
-    description: 'Admin navigation is now available inside the authenticated shell.',
-  },
-  {
-    title: 'CRUD modules pending',
-    description: 'User, catalog, and role management screens will land in the next admin-focused modules.',
-  },
-  {
-    title: 'Current focus',
-    description: 'Module 2 establishes layout, route flow, and safe placeholders for future admin actions.',
-  },
-];
+import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { useAdminStats } from '../hooks/useAdminStats';
+import { AdminPageHeader } from '../components/AdminDataPrimitives';
 
 export function AdminDashboardPage() {
+  const statsQuery = useAdminStats();
+
+  if (statsQuery.isLoading) {
+    return <LoadingSpinner fullPage />;
+  }
+
+  if (statsQuery.isError || !statsQuery.data) {
+    return (
+      <EmptyState
+        icon={Activity}
+        title="Dashboard unavailable"
+        description="Could not load system statistics."
+        action={{ label: 'Retry', onClick: () => void statsQuery.refetch() }}
+      />
+    );
+  }
+
+  const { users, servers, posts } = statsQuery.data;
+
+  const cards = [
+    {
+      title: 'Total users',
+      value: users.total,
+      icon: Users,
+      detail: `${users.admins} admins · ${users.teachers} teachers · ${users.students} students`,
+    },
+    {
+      title: 'Active users',
+      value: users.active,
+      icon: Activity,
+      detail: `${Math.max(users.total - users.active, 0)} inactive accounts`,
+    },
+    {
+      title: 'Servers',
+      value: servers.total,
+      icon: Server,
+      detail: `${servers.department} departments · ${servers.class} classes · ${servers.society} societies`,
+    },
+    {
+      title: 'Posts',
+      value: posts.total,
+      icon: BookOpenText,
+      detail: 'Non-deleted announcements and posts',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <p className="text-muted-foreground text-sm">Administration</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Admin dashboard</h1>
-        <p className="text-muted-foreground max-w-2xl text-sm">
-          This workspace now has the correct admin shell and route structure. Data-heavy CRUD pages will plug into this layout next.
-        </p>
+    <section className="space-y-5">
+      <AdminPageHeader
+        title="Admin dashboard"
+        description="System-wide operational snapshot for users, servers, and communication activity."
+        actions={
+          <Button type="button" variant="outline" onClick={() => void statsQuery.refetch()}>
+            <Activity className="size-4" />
+            Refresh
+          </Button>
+        }
+      />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
+
+          return (
+            <Card key={card.title} size="sm">
+              <CardHeader className="grid-cols-[1fr_auto] items-center">
+                <CardTitle className="text-sm text-muted-foreground">{card.title}</CardTitle>
+                <Icon className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-3xl font-semibold tabular-nums">{card.value}</p>
+                <p className="text-sm text-muted-foreground">{card.detail}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        {dashboardCards.map((card) => (
-          <Card key={card.title}>
-            <CardHeader>
-              <CardTitle className="text-base">{card.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm">{card.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+    </section>
   );
 }

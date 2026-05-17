@@ -33,7 +33,9 @@ export const createClassSchema = {
 export const listClassesSchema = {
   query: z.object({
     programId: z.coerce.number().int().positive({ error: "Program ID must be a positive integer" }).optional(),
+    departmentId: z.coerce.number().int().positive({ error: "Department ID must be a positive integer" }).optional(),
     semester: z.coerce.number().int().positive({ error: "Semester must be a positive integer" }).optional(),
+    section: z.enum(["A", "B"], { error: "Section must be either 'A' or 'B'" }).optional(),
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(50).default(20),
   }),

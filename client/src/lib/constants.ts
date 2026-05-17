@@ -34,9 +34,13 @@ export const ROUTES = {
   ADMIN_USERS_NEW: '/admin/users/new',
   ADMIN_USERS_IMPORT: '/admin/users/import',
   ADMIN_DEPARTMENTS: '/admin/departments',
+  ADMIN_DEPARTMENT: (departmentId: number | string) => `/admin/departments/${departmentId}`,
   ADMIN_PROGRAMS: '/admin/programs',
+  ADMIN_PROGRAM_CURRICULUM: (programId: number | string) =>
+    `/admin/programs/${programId}/curriculum`,
   ADMIN_DISCIPLINES: '/admin/disciplines',
   ADMIN_CLASSES: '/admin/classes',
+  ADMIN_CLASS: (classId: number | string) => `/admin/classes/${classId}`,
   ADMIN_COURSES: '/admin/courses',
   ADMIN_SOCIETIES: '/admin/societies',
   ADMIN_ROLES: '/admin/roles',
@@ -56,12 +60,37 @@ export const queryKeys = {
   },
   departments: {
     list: () => ['departments'] as const,
+    detail: (departmentId: number) => ['departments', departmentId] as const,
+    stats: (departmentId: number) => ['departments', departmentId, 'stats'] as const,
     programs: (departmentId: number) => ['departments', departmentId, 'programs'] as const,
   },
+  degreeLevels: {
+    list: () => ['degree-levels'] as const,
+  },
+  disciplines: {
+    list: () => ['disciplines'] as const,
+  },
+  programs: {
+    all: () => ['programs'] as const,
+    list: (params?: Record<string, unknown>) => ['programs', params] as const,
+    detail: (programId: number) => ['programs', programId] as const,
+    curriculumRoot: (programId: number) => ['programs', programId, 'curriculum'] as const,
+    curriculum: (programId: number, params?: Record<string, unknown>) =>
+      ['programs', programId, 'curriculum', params] as const,
+  },
   classes: {
+    all: () => ['classes'] as const,
     list: (params?: Record<string, unknown>) => ['classes', params] as const,
+    detail: (classId: number) => ['classes', classId] as const,
+    courses: (classId: number) => ['classes', classId, 'courses'] as const,
+  },
+  courses: {
+    all: () => ['courses'] as const,
+    list: (params?: Record<string, unknown>) => ['courses', params] as const,
+    detail: (courseId: number) => ['courses', courseId] as const,
   },
   servers: {
+    all: () => ['servers'] as const,
     list: (params?: Record<string, unknown>) => ['servers', params] as const,
     detail: (serverId: number) => ['servers', serverId] as const,
     channels: (serverId: number, params?: Record<string, unknown>) =>
@@ -99,6 +128,7 @@ export const queryKeys = {
   },
   admin: {
     stats: () => ['admin', 'stats'] as const,
+    usersRoot: () => ['admin', 'users'] as const,
     users: (params?: Record<string, unknown>) => ['admin', 'users', params] as const,
   },
 } as const;

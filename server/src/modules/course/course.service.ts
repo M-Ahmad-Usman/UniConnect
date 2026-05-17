@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma.js";
 import { ConflictError, NotFoundError } from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ type UpdateCourseInput = {
 
 type ListCoursesQuery = {
   departmentId?: number;
+  search?: string;
   page?: number;
   limit?: number;
 };
@@ -82,8 +84,14 @@ export async function createCourse(data: CreateCourseInput) {
 export async function listCourses(query: ListCoursesQuery) {
   const { page, limit, skip, take } = parsePagination(query);
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.CourseWhereInput = {};
   if (query.departmentId) where.departmentId = query.departmentId;
+  if (query.search) {
+    where.OR = [
+      { title: { contains: query.search, mode: "insensitive" } },
+      { code: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
 
   const [courses, total] = await Promise.all([
     prisma.course.findMany({

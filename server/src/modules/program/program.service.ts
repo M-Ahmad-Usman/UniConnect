@@ -1,11 +1,22 @@
 import { prisma } from "../../config/prisma.js";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../shared/errors/index.js";
+import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 type UpdateProgramInput = {
   semesters?: number;
   code?: string;
+};
+
+type ListProgramsQuery = {
+  page?: unknown;
+  limit?: unknown;
+  departmentId?: number;
+  disciplineId?: number;
+  degreeLevelId?: number;
+  search?: string;
 };
 
 type AddCurriculumInput = {
@@ -36,6 +47,36 @@ const programSelect = {
     select: {
       id: true,
       level: true,
+    },
+  },
+} as const;
+
+const programDetailSelect = {
+  ...programSelect,
+  department: {
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      serverId: true,
+    },
+  },
+  programDirector: {
+    select: {
+      teacherId: true,
+      designation: true,
+      user: {
+        select: {
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      classes: true,
+      curriculum: true,
     },
   },
 } as const;
@@ -72,6 +113,53 @@ async function assertHodOrAdmin(
 }
 
 // ─── Service Functions ─────────────────────────────────────────────────────
+
+export async function listPrograms(query: ListProgramsQuery) {
+  const { page, limit, skip, take } = parsePagination(query);
+
+  const where: Prisma.ProgramWhereInput = {};
+  if (query.departmentId !== undefined) where.departmentId = query.departmentId;
+  if (query.disciplineId !== undefined) where.disciplineId = query.disciplineId;
+  if (query.degreeLevelId !== undefined) where.degreeLevelId = query.degreeLevelId;
+  if (query.search) {
+    where.OR = [
+      { code: { contains: query.search, mode: "insensitive" } },
+      { department: { name: { contains: query.search, mode: "insensitive" } } },
+      { department: { code: { contains: query.search, mode: "insensitive" } } },
+      { discipline: { name: { contains: query.search, mode: "insensitive" } } },
+      { degreeLevel: { level: { contains: query.search, mode: "insensitive" } } },
+    ];
+  }
+
+  const [programs, total] = await prisma.$transaction([
+    prisma.program.findMany({
+      where,
+      select: programDetailSelect,
+      orderBy: [{ department: { name: "asc" } }, { code: "asc" }],
+      skip,
+      take,
+    }),
+    prisma.program.count({ where }),
+  ]);
+
+  return {
+    data: programs,
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function getProgramById(id: number) {
+  const program = await prisma.program.findUnique({
+    where: { id },
+    select: programDetailSelect,
+  });
+
+  if (!program) {
+    throw new NotFoundError("Program not found");
+  }
+
+  return program;
+}
 
 export async function updateProgram(id: number, data: UpdateProgramInput) {
   const program = await prisma.program.findUnique({

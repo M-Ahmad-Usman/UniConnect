@@ -104,6 +104,10 @@ export function clearStatsCache(): void {
   statsCache = null;
 }
 
+export function invalidateSystemStatsCache(): void {
+  statsCache = null;
+}
+
 export async function getSystemStats(): Promise<SystemStats> {
   const now = Date.now();
   if (statsCache && now - statsCache.cachedAt < STATS_CACHE_TTL_MS) {

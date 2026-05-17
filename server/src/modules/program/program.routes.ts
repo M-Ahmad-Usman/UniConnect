@@ -3,12 +3,16 @@ import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
 import { validate } from "../../middleware/validate.js";
 import {
+  programIdParamSchema,
+  listProgramsSchema,
   updateProgramSchema,
   getCurriculumSchema,
   addCurriculumSchema,
   removeCurriculumSchema,
 } from "./program.schema.js";
 import {
+  handleListPrograms,
+  handleGetProgramById,
   handleUpdateProgram,
   handleGetCurriculum,
   handleAddCurriculum,
@@ -16,6 +20,20 @@ import {
 } from "./program.controller.js";
 
 const router = Router();
+
+router.get(
+  "/",
+  authenticate,
+  validate(listProgramsSchema),
+  handleListPrograms
+);
+
+router.get(
+  "/:id",
+  authenticate,
+  validate(programIdParamSchema),
+  handleGetProgramById
+);
 
 router.patch(
   "/:id",

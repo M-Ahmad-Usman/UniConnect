@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Gender, UserType } from '@/types';
 
 const numericIdSchema = z.number().int().positive('Select a valid option');
+const requiredNumericIdSchema = z.coerce.number().int().positive('Select a valid option');
 const optionalNumericIdSchema = z
   .string()
   .transform((value) => (value === '' ? undefined : Number(value)))
@@ -133,3 +134,74 @@ export function validateCsvFile(file: File) {
 
   return null;
 }
+
+const shortCodeSchema = z
+  .string()
+  .trim()
+  .min(1, 'Code is required')
+  .max(20, 'Code must be at most 20 characters')
+  .transform((value) => value.toUpperCase());
+
+export const departmentSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long'),
+  code: shortCodeSchema,
+});
+
+export const disciplineSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long'),
+});
+
+export const programSchema = z.object({
+  disciplineId: requiredNumericIdSchema,
+  degreeLevelId: requiredNumericIdSchema,
+  semesters: z.coerce.number().int().min(1, 'Minimum is 1').max(10, 'Maximum is 10'),
+  code: shortCodeSchema,
+});
+
+export const updateProgramSchema = z.object({
+  semesters: z.coerce.number().int().min(1, 'Minimum is 1').max(10, 'Maximum is 10'),
+  code: shortCodeSchema,
+});
+
+export const classSchema = z.object({
+  programId: requiredNumericIdSchema,
+  currentSemester: z.coerce.number().int().min(1, 'Minimum is 1').max(10, 'Maximum is 10'),
+  academicYear: z.coerce.number().int().min(2000, 'Invalid year').max(2100, 'Invalid year'),
+  admissionYear: z.coerce.number().int().min(2000, 'Invalid year').max(2100, 'Invalid year'),
+  section: z.enum(['A', 'B'], 'Select a section'),
+});
+
+export const courseSchema = z.object({
+  title: z.string().trim().min(1, 'Title is required').max(50, 'Title is too long'),
+  code: z
+    .string()
+    .trim()
+    .min(1, 'Code is required')
+    .max(50, 'Code is too long')
+    .transform((value) => value.toUpperCase()),
+  creditHours: z.coerce.number().int().min(1, 'Minimum is 1').max(6, 'Maximum is 6'),
+  departmentId: requiredNumericIdSchema,
+});
+
+export const updateCourseSchema = courseSchema.omit({ departmentId: true });
+
+export const curriculumSchema = z.object({
+  courseId: requiredNumericIdSchema,
+  semesterNumber: z.coerce.number().int().min(1, 'Minimum is 1').max(10, 'Maximum is 10'),
+  batchYear: z.coerce.number().int().min(2000, 'Invalid year').max(2100, 'Invalid year'),
+});
+
+export const teacherAssignmentSchema = z.object({
+  courseId: requiredNumericIdSchema,
+  teacherId: requiredNumericIdSchema,
+});
+
+export type DepartmentFormValues = z.output<typeof departmentSchema>;
+export type DisciplineFormValues = z.output<typeof disciplineSchema>;
+export type ProgramFormValues = z.output<typeof programSchema>;
+export type UpdateProgramFormValues = z.output<typeof updateProgramSchema>;
+export type ClassFormValues = z.output<typeof classSchema>;
+export type CourseFormValues = z.output<typeof courseSchema>;
+export type UpdateCourseFormValues = z.output<typeof updateCourseSchema>;
+export type CurriculumFormValues = z.output<typeof curriculumSchema>;
+export type TeacherAssignmentFormValues = z.output<typeof teacherAssignmentSchema>;

@@ -25,6 +25,41 @@ beforeAll(async () => {
   await resetDB();
 });
 
+describe("Module 7 - Class List Filters", () => {
+  it("should filter classes by departmentId and section", async () => {
+    const admin = await createUser({
+      email: `admin-class-filter-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const deptA = await createDepartment({ code: `CFA-${uid()}` });
+    const deptB = await createDepartment({ code: `CFB-${uid()}` });
+    const programA = await createProgram(deptA.id, { semesters: 8 });
+    const programB = await createProgram(deptB.id, { semesters: 8 });
+    const classA = await createClass(programA.id, { section: "A" });
+    await createClass(programA.id, { section: "B", currentSemester: 2 });
+    await createClass(programB.id, { section: "A" });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+
+    const res = await request(app)
+      .get("/api/classes")
+      .query({ departmentId: deptA.id, section: "A" })
+      .set("Cookie", cookies);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: classA.id, section: "A" })])
+    );
+    expect(
+      res.body.data.every(
+        (klass: { section: string; program: { department: { id: number } } }) =>
+          klass.section === "A" && klass.program.department.id === deptA.id
+      )
+    ).toBe(true);
+  });
+});
+
 afterEach(() => {
   jest.restoreAllMocks();
 });

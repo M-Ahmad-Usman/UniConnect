@@ -9,7 +9,7 @@ export function useBulkImportUsers() {
     mutationFn: ({ file, onProgress }: { file: File; onProgress?: (progress: number) => void }) =>
       usersApi.bulkImport(file, onProgress),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.usersRoot() });
     },
   });
 }

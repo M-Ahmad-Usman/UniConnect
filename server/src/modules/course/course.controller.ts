@@ -21,6 +21,7 @@ export async function handleListCourses(req: Request, res: Response): Promise<vo
   const query = req.query as Record<string, string | undefined>;
   const result = await courseService.listCourses({
     departmentId: query.departmentId ? Number(query.departmentId) : undefined,
+    search: query.search,
     page: query.page ? Number(query.page) : undefined,
     limit: query.limit ? Number(query.limit) : undefined,
   });

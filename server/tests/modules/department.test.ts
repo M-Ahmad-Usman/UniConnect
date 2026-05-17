@@ -6,6 +6,7 @@ import { resetDB } from "../helpers/db.helper.js";
 import {
   createUser,
   createDepartment,
+  createProgram,
   createDiscipline,
   createDegreeLevelIfNeeded,
   loginAs,
@@ -13,6 +14,80 @@ import {
 
 beforeAll(async () => {
   await resetDB();
+});
+
+describe("Module 7 - Academic Lookup and Program Admin Endpoints", () => {
+  it("should list degree levels for authenticated users", async () => {
+    const user = await createUser({
+      email: `degree-level-user-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const degreeLevel = await createDegreeLevelIfNeeded("Bachelors");
+    const cookies = await loginAs(user.email, "Pass@1234");
+
+    const res = await request(app)
+      .get("/api/degree-levels")
+      .set("Cookie", cookies);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: degreeLevel.id, level: "Bachelors" })])
+    );
+  });
+
+  it("should allow admin to rename a discipline", async () => {
+    const admin = await createUser({
+      email: `admin-disc-update-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const discipline = await createDiscipline({ name: `Rename-Me-${Date.now()}` });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+
+    const res = await request(app)
+      .patch(`/api/disciplines/${discipline.id}`)
+      .set("Cookie", cookies)
+      .send({ name: `Renamed-${Date.now()}` });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.id).toBe(discipline.id);
+    expect(res.body.data.name).toContain("Renamed-");
+  });
+
+  it("should list and fetch program detail through /api/programs", async () => {
+    const admin = await createUser({
+      email: `admin-program-list-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const dept = await createDepartment({ code: `M7-PL-${Date.now().toString().slice(-5)}` });
+    const program = await createProgram(dept.id, { code: `M7PL-${Date.now().toString().slice(-5)}` });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+
+    const listRes = await request(app)
+      .get("/api/programs")
+      .query({ departmentId: dept.id, search: program.code })
+      .set("Cookie", cookies);
+
+    expect(listRes.status).toBe(200);
+    expect(listRes.body.success).toBe(true);
+    expect(listRes.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: program.id, code: program.code })])
+    );
+    expect(listRes.body.pagination).toBeDefined();
+
+    const detailRes = await request(app)
+      .get(`/api/programs/${program.id}`)
+      .set("Cookie", cookies);
+
+    expect(detailRes.status).toBe(200);
+    expect(detailRes.body.success).toBe(true);
+    expect(detailRes.body.data.department.id).toBe(dept.id);
+    expect(detailRes.body.data._count).toBeDefined();
+  });
 });
 
 afterEach(() => {

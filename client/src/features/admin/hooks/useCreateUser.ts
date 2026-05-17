@@ -8,7 +8,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: usersApi.create,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.usersRoot() });
     },
   });
 }

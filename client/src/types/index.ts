@@ -40,7 +40,25 @@ export type {
 } from './user.types';
 
 // Catalog
-export type { DepartmentListItem, ProgramListItem, ClassListItem } from './catalog.types';
+export type {
+  DepartmentListItem,
+  DepartmentDetail,
+  DepartmentStats,
+  DegreeLevel,
+  Discipline,
+  ProgramListItem,
+  ProgramDetail,
+  ProgramListParams,
+  ClassListItem,
+  ClassDetail,
+  ClassListParams,
+  CourseListItem,
+  CourseDetail,
+  CourseListParams,
+  CurriculumEntry,
+  ClassCourseAssignment,
+  TeacherAssignmentInput,
+} from './catalog.types';
 
 // Servers
 export type { MemberBadge, ServerListItem, ServerDetail, ServerMember } from './server.types';

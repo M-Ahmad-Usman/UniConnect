@@ -19,11 +19,11 @@ const adminNavItems = [
 export function AdminLayout() {
   return (
     <div className="grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)]">
-      <aside className="rounded-2xl border border-border bg-card p-3">
+      <aside className="rounded-lg border border-border bg-background p-3">
         <div className="px-2 pb-3">
           <p className="text-sm font-semibold">Admin navigation</p>
           <p className="text-muted-foreground text-xs">
-            The shell is live now; CRUD sections will fill in incrementally.
+            Academic operations and system management.
           </p>
         </div>
         <nav className="grid gap-1">
@@ -48,7 +48,7 @@ export function AdminLayout() {
           })}
         </nav>
       </aside>
-      <section className="min-w-0 rounded-2xl border border-border bg-card p-4 lg:p-6">
+      <section className="min-w-0">
         <Outlet />
       </section>
     </div>

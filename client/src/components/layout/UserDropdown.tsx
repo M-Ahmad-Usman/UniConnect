@@ -1,4 +1,4 @@
-import { Bell, KeyRound, LogOut, User } from 'lucide-react';
+import { Bell, KeyRound, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { UserAvatar } from '@/components/shared/UserAvatar';
@@ -16,6 +16,7 @@ import { ROUTES } from '@/lib/constants';
 import { parseRouteParamId } from '@/lib/route-params';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useLogout';
+import { UserType } from '@/types';
 
 export function UserDropdown() {
   const navigate = useNavigate();
@@ -59,6 +60,12 @@ export function UserDropdown() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          {user.userType === UserType.ADMIN ? (
+            <DropdownMenuItem onClick={() => navigate(ROUTES.ADMIN_DASHBOARD)}>
+              <LayoutDashboard className="size-4" />
+              Admin dashboard
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onClick={() => navigate(ROUTES.PROFILE)}>
             <User className="size-4" />
             Profile

@@ -23,6 +23,40 @@ beforeAll(async () => {
   await resetDB();
 });
 
+describe("Module 7 - Course Search Filters", () => {
+  it("should search courses by code or title", async () => {
+    const admin = await createUser({
+      email: `admin-crs-search-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const dept = await createDepartment({ code: `SRCH-${uid()}` });
+    const matching = await createCourse(dept.id, {
+      title: "Advanced Weaving Systems",
+      code: `AWS-${uid()}`,
+    });
+    await createCourse(dept.id, {
+      title: "Unrelated Course",
+      code: `UNR-${uid()}`,
+    });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+
+    const res = await request(app)
+      .get("/api/courses")
+      .query({ departmentId: dept.id, search: "weaving" })
+      .set("Cookie", cookies);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: matching.id })])
+    );
+    expect(res.body.data.every((course: { title: string; code: string }) =>
+      `${course.title} ${course.code}`.toLowerCase().includes("weaving")
+    )).toBe(true);
+  });
+});
+
 afterEach(() => {
   jest.restoreAllMocks();
 });

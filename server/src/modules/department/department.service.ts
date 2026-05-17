@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma.js";
 import { ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
+import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { AuthUser } from "../../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -77,7 +78,7 @@ const programSelect = {
 // ─── Department Service Functions ──────────────────────────────────────────
 
 export async function createDepartment(data: CreateDepartmentInput, createdById: number) {
-  return prisma.$transaction(async (tx) => {
+  const department = await prisma.$transaction(async (tx) => {
     const server = await tx.server.create({
       data: {
         name: data.name,
@@ -107,6 +108,9 @@ export async function createDepartment(data: CreateDepartmentInput, createdById:
 
     return department;
   });
+
+  invalidateSystemStatsCache();
+  return department;
 }
 
 export async function listDepartments() {

@@ -25,3 +25,15 @@ export async function handleListDisciplines(_req: Request, res: Response): Promi
 
   res.status(StatusCodes.OK).json(response);
 }
+
+export async function handleUpdateDiscipline(req: Request, res: Response): Promise<void> {
+  const discipline = await disciplineService.updateDiscipline(Number(req.params.id), req.body.name);
+
+  const response: ApiResponse<typeof discipline> = {
+    success: true,
+    data: discipline,
+    message: "Discipline updated successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}

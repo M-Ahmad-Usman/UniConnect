@@ -9,7 +9,7 @@ function patchUserStatus(
   isActive: boolean,
 ) {
   queryClient.setQueriesData<{ data: UserListItem[] }>(
-    { queryKey: queryKeys.admin.users() },
+    { queryKey: queryKeys.admin.usersRoot() },
     (current) =>
       current
         ? {

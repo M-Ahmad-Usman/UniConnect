@@ -15,6 +15,7 @@ import {
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import type { AuthUser, PaginatedResponse } from "../../shared/types/index.js";
 import { getUserRoles } from "../../middleware/authorize.js";
+import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import { createUserBodySchema } from "./user.schema.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -259,9 +260,11 @@ export async function createUser(input: CreateUserInput) {
     await emailService.sendTempPasswordEmail(createdUser.email, tempPassword);
   } catch (error) {
     console.error("Failed to send temp-password email:", error);
+    invalidateSystemStatsCache();
     return { ...createdUser, warning: "User created but welcome email could not be sent. Please share the credentials manually." };
   }
 
+  invalidateSystemStatsCache();
   return createdUser;
 }
 
@@ -587,6 +590,8 @@ export async function deactivateUser(targetUserId: number, requestingUserId: num
       data: { revokedAt: new Date() },
     }),
   ]);
+
+  invalidateSystemStatsCache();
 }
 
 export async function reactivateUser(targetUserId: number) {
@@ -607,4 +612,6 @@ export async function reactivateUser(targetUserId: number) {
     where: { id: targetUserId },
     data: { isActive: true },
   });
+
+  invalidateSystemStatsCache();
 }

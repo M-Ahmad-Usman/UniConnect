@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Gender, UserType } from '@/types';
-import { createUserSchema, toCreateUserPayload, validateCsvFile } from '../schemas';
+import {
+  createUserSchema,
+  teacherAssignmentSchema,
+  toCreateUserPayload,
+  validateCsvFile,
+} from '../schemas';
 
 const baseInput = {
   fullName: 'Ayesha Khan',
@@ -84,5 +89,20 @@ describe('validateCsvFile', () => {
   it('rejects non-csv files', () => {
     const file = new File(['{}'], 'users.json', { type: 'application/json' });
     expect(validateCsvFile(file)).toBe('Upload a CSV file.');
+  });
+});
+
+describe('teacherAssignmentSchema', () => {
+  it('coerces selected IDs for class course assignments', () => {
+    expect(teacherAssignmentSchema.parse({ courseId: '12', teacherId: '7' })).toEqual({
+      courseId: 12,
+      teacherId: 7,
+    });
+  });
+
+  it('rejects empty selections', () => {
+    expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherId: '' }).success).toBe(
+      false,
+    );
   });
 });

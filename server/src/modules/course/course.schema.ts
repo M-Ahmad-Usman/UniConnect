@@ -39,6 +39,7 @@ export const createCourseSchema = {
 export const listCoursesSchema = {
   query: paginationQuerySchema.extend({
     departmentId: z.coerce.number().int().positive({ error: "Department ID must be a positive integer" }).optional(),
+    search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
   }),
 };
 

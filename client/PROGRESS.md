@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 6 Complete
-**Current Phase:** Ready to start Module 7 admin dashboard and CRUD implementation
+**Status:** Module 7 Implemented
+**Current Phase:** Module 7 verification complete; ready for runtime/E2E hardening or Module 8
 
 ---
 
@@ -24,13 +24,31 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module 4: Posts & Announcements | Complete | 2026-05-03 | 2026-05-03 | Production-grade feed, post detail, editor, attachments, moderation actions, cache hardening, and focused Playwright coverage |
 | Module 5: Notifications | Complete | 2026-05-08 | 2026-05-09 | Full inbox, per-server preferences, type-aware notification preferences, realtime dropdown hardening, and feed freshness fixes |
 | Module 6: User Profile & Management | Complete | 2026-05-09 | 2026-05-10 | Profile page, avatar upload, admin user list, create user, bulk import, activation actions, NTU roll-number backend contract, and avatar/header hardening verified |
-| Module 7: Admin Dashboard & CRUD | Not Started | - | - | - |
+| Module 7: Admin Dashboard & CRUD | Implemented | 2026-05-10 | 2026-05-10 | Admin dashboard, academic CRUD screens, curriculum, class course assignment, semester progression wizard, and backend contract hardening |
 | Module 8: Society Management | Not Started | - | - | - |
 | Module 9: Role Management | Not Started | - | - | - |
 
 ---
 
 ## Changelog
+
+### 2026-05-10 - Module 7 Admin Dashboard and Academic CRUD Implemented
+
+#### Implemented
+- ✅ Replaced admin placeholders with real dashboard, department, program, discipline, class, curriculum, and course management routes
+- ✅ Added URL-backed filters and pagination for scalable program, class, and course tables
+- ✅ Added create/update dialogs for departments, programs, disciplines, classes, courses, and curriculum entries with RHF/Zod validation
+- ✅ Added class detail course assignment/removal and semester progression wizard with required next-semester teacher assignments
+- ✅ Added backend degree-level lookup, program list/detail endpoints, discipline rename, course search, class department/section filters, and dashboard stats cache invalidation
+- ✅ Added focused backend integration coverage for new Module 7 API surfaces
+
+#### Verification Notes
+- ✅ `server`: `timeout 120 npm run build`
+- ✅ `server`: focused admin/catalog tests pass with 129 Jest tests
+- ✅ `client`: `npm run type-check`
+- ✅ `client`: `npm run lint`
+- ✅ `client`: `npm run test` passes with 90 Vitest tests
+- ✅ `client`: `npm run build`
 
 ### 2026-05-10 - Module 6 Verification and UI Hardening Completed
 
@@ -616,23 +634,27 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| AdminDashboardPage | ⏳ Pending | - | Stat cards: users, servers, posts |
-| DepartmentListPage + CRUD | ⏳ Pending | - | Table, create/edit dialogs |
-| DepartmentDetailPage | ⏳ Pending | - | Overview + programs tabs |
-| ProgramListPage + CRUD | ⏳ Pending | - | Table, create/edit dialogs |
-| CurriculumPage | ⏳ Pending | - | Semester grouping, add/remove courses |
-| DisciplineListPage + CRUD | ⏳ Pending | - | Simple list + create |
-| ClassListPage + CRUD | ⏳ Pending | - | Table with filters, create dialog |
-| ClassDetailPage | ⏳ Pending | - | Overview, courses, semester progression tabs |
-| AssignCourseDialog | ⏳ Pending | - | Course + teacher selection |
-| SemesterProgressionButton | ⏳ Pending | - | Confirmation dialog, mutation |
-| CourseListPage + CRUD | ⏳ Pending | - | Table, create/edit dialogs |
+| AdminDashboardPage | ✅ Complete | 2026-05-10 | Real stats cards from `/api/admin/stats` |
+| DepartmentListPage + CRUD | ✅ Complete | 2026-05-10 | Table, create/edit dialogs |
+| DepartmentDetailPage | ✅ Complete | 2026-05-10 | Overview, stats, programs management |
+| ProgramListPage + CRUD | ✅ Complete | 2026-05-10 | Paginated table, filters, edit dialogs |
+| CurriculumPage | ✅ Complete | 2026-05-10 | Semester grouping, batch filter, add/remove courses |
+| DisciplineListPage + CRUD | ✅ Complete | 2026-05-10 | Create and rename flows |
+| ClassListPage + CRUD | ✅ Complete | 2026-05-10 | Table with filters, create dialog |
+| ClassDetailPage | ✅ Complete | 2026-05-10 | Overview, assigned courses, semester progression wizard |
+| AssignCourseDialog | ✅ Complete | 2026-05-10 | Course + teacher selection |
+| SemesterProgressionButton | ✅ Complete | 2026-05-10 | Wizard validates next-semester teacher assignments |
+| CourseListPage + CRUD | ✅ Complete | 2026-05-10 | Search/filter table, create/edit dialogs |
 
 ### Key Decisions
-- (To be logged)
+- Module 7 remains admin-only in the frontend; HOD-facing management can be added with permission UI work.
+- HOD, Program Director, and CR assignment is deferred to Module 9 role management.
+- Academic records do not hard-delete in Module 7; destructive archive/delete policy remains a future schema decision.
+- Degree levels are served by backend lookup instead of hardcoded frontend IDs.
 
 ### Challenges & Solutions
-- (To be logged)
+- Added missing backend read endpoints and filters needed by scalable admin tables.
+- Used a semester progression wizard so teacher assignments are collected before the atomic progression mutation.
 
 ---
 

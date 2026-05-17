@@ -1,7 +1,38 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import type { ApiResponse } from "../../shared/types/index.js";
+import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as programService from "./program.service.js";
+
+export async function handleListPrograms(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const result = await programService.listPrograms({
+    departmentId: query.departmentId ? Number(query.departmentId) : undefined,
+    disciplineId: query.disciplineId ? Number(query.disciplineId) : undefined,
+    degreeLevelId: query.degreeLevelId ? Number(query.degreeLevelId) : undefined,
+    search: query.search,
+    page: query.page ? Number(query.page) : undefined,
+    limit: query.limit ? Number(query.limit) : undefined,
+  });
+
+  const response: PaginatedResponse<(typeof result.data)[number]> = {
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleGetProgramById(req: Request, res: Response): Promise<void> {
+  const program = await programService.getProgramById(Number(req.params.id));
+
+  const response: ApiResponse<typeof program> = {
+    success: true,
+    data: program,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
 
 export async function handleUpdateProgram(req: Request, res: Response): Promise<void> {
   const program = await programService.updateProgram(Number(req.params.id), req.body);
