@@ -842,67 +842,24 @@ export const postsApi = {
 ### Permission-Aware UI
 
 ```typescript
-// src/hooks/usePermissions.ts
-export function usePermissions() {
-  const { user } = useAuthStore();
-
-  if (user?.userType === 'ADMIN') {
-    return {
-      canManageChannels: () => true,
-      canPinPosts: () => true,
-      canDeactivateUsers: () => true,
-    };
-  }
-
-  const roles = user?.roles || [];
-
-  return {
-    canManageChannels: (serverId: number) => {
-      // Check management roles only inside the active server scope.
-      return roles.some(
-        (role) =>
-          role.serverId === serverId &&
-          ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role)
-      );
-    },
-
-    canPinPosts: (channelId: number) => {
-      // Channel-scoped roles must match the active channel; server-scoped roles
-      // may act anywhere within their assigned server.
-      return roles.some(
-        (role) =>
-          role.role === 'server_moderator' ||
-          (role.role === 'channel_moderator' && role.channelId === channelId)
-      );
-    },
-
-    canDeactivateUsers: () => false,
-  };
+// src/hooks/useMyPermissions.ts
+export function useMyPermissions() {
+  return useQuery({
+    queryKey: queryKeys.permissions.me(),
+    queryFn: permissionsApi.getMe,
+  });
 }
 ```
 
-**Can Component:**
-```typescript
-// src/components/shared/Can.tsx
-export interface CanProps {
-  action: keyof ReturnType<typeof usePermissions>;
-  serverId?: number;
-  channelId?: number;
-  children: React.ReactNode;
-}
+Permission-sensitive UI now prefers backend-provided grouped capability payloads:
 
-export function Can({ action, serverId, channelId, children }: CanProps) {
-  const permissions = usePermissions();
-  const allowed = permissions[action]?.(serverId || channelId);
+- `/api/permissions/me` drives global navigation and workspace entry.
+- `GET /api/classes/:id` returns `permissions` for class-detail actions.
+- `GET /api/societies/:id` returns `viewer` and `permissions` for society-detail tabs, queries, and actions.
+- Local role helpers remain only for lightweight optimistic rendering and legacy channel affordances.
+- Mutations never trust frontend booleans; backend services recompute authorization.
 
-  return allowed ? <>{children}</> : null;
-}
-
-// Usage
-<Can action="canManageChannels" serverId={serverId}>
-  <Button>Create Channel</Button>
-</Can>
-```
+When `auth:roles-updated` arrives, the socket client refreshes `/api/users/me` and invalidates permissions, class, society, server, and role query keys before permission-sensitive UI is reused.
 
 ---
 

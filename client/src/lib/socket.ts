@@ -72,8 +72,7 @@ export function connectSocket(): void {
     void usersApi.getMe().then((profile) => {
       useAuthStore.getState().setUser(mapProfileToAuthUser(profile));
       queryClient.setQueryData(queryKeys.users.me(), profile);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+      invalidateRoleSensitiveQueries();
     });
   });
 
@@ -95,4 +94,13 @@ export function disconnectSocket(): void {
 
 export function getSocket(): Socket | null {
   return socket;
+}
+
+export function invalidateRoleSensitiveQueries(): void {
+  void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.permissions.me() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.societies.all() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.roles.all() });
 }

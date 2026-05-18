@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
-import type { ScopedRoleAssignment } from '@/types';
+import type { ClassPermissions, ScopedRoleAssignment, SocietyPermissions } from '@/types';
 import { ServerType, UserType } from '@/types';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -19,6 +19,46 @@ function hasMatchingRole(
     (roleAssignment) =>
       roleAssignment.serverId === serverId && acceptedRoles.includes(roleAssignment.role),
   );
+}
+
+export function getDefaultClassPermissions(): ClassPermissions {
+  return {
+    canViewStudents: false,
+    canManageStudents: false,
+    canAssignCourses: false,
+    canRemoveCourses: false,
+    canReplaceCourseTeacher: false,
+    canAdvanceSemester: false,
+    canGraduate: false,
+    canManageChannels: false,
+    canAssignModerators: false,
+  };
+}
+
+export function getDefaultSocietyPermissions(): SocietyPermissions {
+  return {
+    canViewMembers: false,
+    canManageMembers: false,
+    canViewJoinRequests: false,
+    canReviewJoinRequests: false,
+    canEditInfo: false,
+    canChangeLeadership: false,
+    canManageChannels: false,
+    canAssignModerators: false,
+    canSubmitJoinRequest: false,
+  };
+}
+
+export function getClassPermissions(
+  permissions: ClassPermissions | null | undefined,
+): ClassPermissions {
+  return permissions ?? getDefaultClassPermissions();
+}
+
+export function getSocietyPermissions(
+  permissions: SocietyPermissions | null | undefined,
+): SocietyPermissions {
+  return permissions ?? getDefaultSocietyPermissions();
 }
 
 export function canManageChannelsInServer(

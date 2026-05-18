@@ -160,6 +160,10 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `GET /`
   - Query: `page, limit, programId?, semester?`
 - `GET /:id`
+  - Returns class detail plus caller-specific `permissions`:
+    - `canViewStudents`, `canManageStudents`, `canAssignCourses`, `canRemoveCourses`
+    - `canReplaceCourseTeacher`, `canAdvanceSemester`, `canGraduate`
+    - `canManageChannels`, `canAssignModerators`
 - `POST /:id/courses`
   - Body: `{ courseId, teacherId }`
 - `GET /:id/courses`
@@ -183,6 +187,8 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `GET /`
   - Query: `page, limit, departmentId?`
 - `GET /:id`
+  - Returns society detail plus `viewer: { isMember, requestStatus }` and caller-specific `permissions`.
+  - Member visibility remains restricted to members, society leadership, and admins.
 - `GET /:id/my-membership`
   - Returns `{ isMember, requestStatus, requestedAt, reviewedAt }` for the authenticated user
 - `PATCH /:id`
@@ -222,6 +228,14 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `GET /users/:id`
   - Returns contextual role assignments for the target user, including department/program/class/society metadata and explicit moderation roles
   - Role changes emit `auth:roles-updated` to affected users so clients can refetch `/api/users/me`
+
+### Permissions (`/api/permissions`)
+- `GET /me`
+  - Returns grouped boolean capabilities for current-user navigation and UI gating.
+  - Shape: `{ global, roleWorkspace, scopes }`.
+  - Does not return assignable users or broad target lists.
+  - Frontend must still rely on backend mutation authorization; capability booleans are not write authorization.
+  - Role changes emit `auth:roles-updated`; clients should refresh `/api/users/me`, `/api/permissions/me`, and active permission-sensitive queries.
 
 ### Servers (`/api/servers`)
 - `GET /`

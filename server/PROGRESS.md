@@ -6,11 +6,13 @@
 - Scope: Backend (`server/`)
 
 ## Executive Snapshot
-- Automated tests: baseline `459/459` passing across `17` suites
+- Automated tests: baseline `459/459` passing across `17` suites; Module 1 permission foundation focused suite adds `4` passing tests
 - Functional modules: `13/13` complete (Modules 0 to 12)
 - Hardening plan: Steps `1-35` complete
 
 ## Verification Snapshot (2026-05-18)
+- Verified `timeout 120 npm test -- tests/modules/permission.test.ts`.
+- Verified `timeout 120 npm test -- tests/modules/class.test.ts tests/modules/society.test.ts tests/modules/role.test.ts tests/modules/user.test.ts`.
 - Verified `timeout 120 npm run build`.
 - Applied the isolated test database migrations with `timeout 120 npm run db:migrate:test`.
 - Focused society, role, and notification integration suites passed with 125 Jest tests.
@@ -49,6 +51,8 @@ None
 Details: `HARDENING_PLAN.md`, `HARDENING_LOG.md`
 
 ## Recent Key Additions
+- Backend-driven permission capability foundation with `/api/permissions/me`.
+- Caller-specific class and society detail permission payloads for frontend UI gating.
 - Type-aware notification preferences with `NEW_POST` and `ROLE_ASSIGNED` controls
 - Role-assignment notification creation with server-level mute support
 - Society join request approval/rejection notifications with `SOCIETY_REQUEST_REVIEWED`

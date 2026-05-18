@@ -540,8 +540,8 @@ Backend sets a timer based on JWT expiry. When token expires:
 **Payload:** (none)
 
 Emitted to the affected user after role assignment, role revocation, or society leadership changes.
-The frontend should refetch `/api/users/me` and any role-dependent queries before rendering
-permission-gated actions.
+The frontend should refetch `/api/users/me`, `/api/permissions/me`, server/class/society detail
+queries, and role-dependent queries before rendering permission-gated actions.
 
 ---
 
@@ -553,6 +553,55 @@ permission-gated actions.
 ```
 GET /api/health
 ```
+
+#### Current User Permissions
+```
+GET /api/permissions/me
+```
+
+**Auth:** Required
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: {
+    global: {
+      canAccessAdminDashboard: boolean;
+      canAccessAcademicWorkspace: boolean;
+      canAccessRoleManagement: boolean;
+      canManageUsers: boolean;
+      canManageCatalog: boolean;
+      canCreateClass: boolean;
+      canCreateSociety: boolean;
+    };
+    roleWorkspace: {
+      canOpenRoleManagement: boolean;
+      canAssignHod: boolean;
+      canAssignProgramDirector: boolean;
+      canAssignCR: boolean;
+      canAssignSocietyPresident: boolean;
+      canAssignSocietyConvenor: boolean;
+      canAssignServerModerator: boolean;
+      canAssignChannelModerator: boolean;
+      canRevokeRoles: boolean;
+    };
+    scopes: {
+      hodDepartmentIds: number[];
+      directedProgramIds: number[];
+      crClassIds: number[];
+      societyLeadershipIds: number[];
+      moderatorServerIds: number[];
+      moderatorChannelIds: number[];
+    };
+  };
+}
+```
+
+**Notes:**
+- Used for navigation and permission-aware UI gating only.
+- Mutations still recompute authorization on the backend.
+- Does not return assignable users or broad role-management option lists.
 
 **Auth:** None
 
@@ -1380,7 +1429,26 @@ GET /api/classes/:id
 
 **Auth:** Required
 
-**Response:** Same shape as list item, plus nested `server` object
+**Response:** Same shape as list item, plus counts and caller-specific permissions:
+```typescript
+{
+  success: true;
+  data: ClassListItem & {
+    _count: { students: number; teaches: number };
+    permissions: {
+      canViewStudents: boolean;
+      canManageStudents: boolean;
+      canAssignCourses: boolean;
+      canRemoveCourses: boolean;
+      canReplaceCourseTeacher: boolean;
+      canAdvanceSemester: boolean;
+      canGraduate: boolean;
+      canManageChannels: boolean;
+      canAssignModerators: boolean;
+    };
+  };
+}
+```
 
 #### Create Class (Admin/Teacher)
 ```
@@ -1682,7 +1750,31 @@ GET /api/societies/:id
 
 **Auth:** Required
 
-**Response:** Same shape as list item, plus `serverId` and `server.id`
+**Response:** Same shape as list item, plus `serverId`, `server.id`, viewer status, and caller-specific permissions:
+```typescript
+{
+  success: true;
+  data: SocietyListItem & {
+    serverId: number;
+    server: { id: number; _count: { memberships: number } };
+    viewer: {
+      isMember: boolean;
+      requestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+    };
+    permissions: {
+      canViewMembers: boolean;
+      canManageMembers: boolean;
+      canViewJoinRequests: boolean;
+      canReviewJoinRequests: boolean;
+      canEditInfo: boolean;
+      canChangeLeadership: boolean;
+      canManageChannels: boolean;
+      canAssignModerators: boolean;
+      canSubmitJoinRequest: boolean;
+    };
+  };
+}
+```
 
 #### Get My Membership Status
 ```

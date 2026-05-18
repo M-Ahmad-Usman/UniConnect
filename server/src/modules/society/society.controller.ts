@@ -38,7 +38,7 @@ export async function handleListSocieties(req: Request, res: Response): Promise<
 }
 
 export async function handleGetSociety(req: Request, res: Response): Promise<void> {
-  const society = await societyService.getSocietyById(Number(req.params.id));
+  const society = await societyService.getSocietyById(Number(req.params.id), req.user!.id);
 
   const response: ApiResponse<typeof society> = {
     success: true,

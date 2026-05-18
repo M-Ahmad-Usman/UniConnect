@@ -1,5 +1,6 @@
 import type { MembershipRequestStatus, UserType } from './enums';
 import type { PaginationParams } from './api.types';
+import type { SocietyPermissions } from './permission.types';
 
 // ─── Society List Item ──────────────────────────────────────────────────────
 
@@ -26,6 +27,11 @@ export interface SocietyDetail extends SocietyListItem {
     id: number;
     _count: { memberships: number };
   };
+  viewer: {
+    isMember: boolean;
+    requestStatus: MembershipRequestStatus | null;
+  };
+  permissions: SocietyPermissions;
 }
 
 // ─── Society Membership Request ─────────────────────────────────────────────

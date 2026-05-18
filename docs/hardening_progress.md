@@ -2,7 +2,7 @@
 
 ## Document Control
 - Created: 2026-05-18
-- Status: Not started
+- Status: In progress
 - Plan reference: `docs/hardening_plan.md`
 
 ## Status Legend
@@ -16,7 +16,7 @@
 
 | Module | Title | Status | Owner | Started | Completed | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Permission Policy Foundation | Not started | TBD |  |  |  |
+| 1 | Permission Policy Foundation | Complete | Codex | 2026-05-18 | 2026-05-18 | Focused permission tests, regression slices, build, and type-check pass |
 | 2 | Academic and Class Management Hardening | Not started | TBD |  |  |  |
 | 3 | Society Management UX and Access Hardening | Not started | TBD |  |  |  |
 | 4 | Role Management Hardening | Not started | TBD |  |  |  |
@@ -27,36 +27,43 @@
 ## Module 1 Checklist: Permission Policy Foundation
 
 ### Implementation
-- [ ] Create canonical role/capability matrix.
-- [ ] Extract or standardize backend scoped permission helpers.
-- [ ] Add capability data to class detail responses.
-- [ ] Add capability data to society detail responses.
-- [ ] Add role-management bootstrap or scoped option endpoints.
-- [ ] Update frontend permission helpers to consume backend capabilities.
-- [ ] Ensure role-update socket events invalidate permission-sensitive state.
+- [x] Create canonical role/capability matrix.
+- [x] Extract or standardize backend scoped permission helpers.
+- [x] Add capability data to class detail responses.
+- [x] Add capability data to society detail responses.
+- [x] Add role-management bootstrap or scoped option endpoints.
+- [x] Update frontend permission helpers to consume backend capabilities.
+- [x] Ensure role-update socket events invalidate permission-sensitive state.
 
 ### Tests
-- [ ] Backend tests for admin capabilities.
-- [ ] Backend tests for HOD own-department capabilities.
-- [ ] Backend tests for PD own-program capabilities.
-- [ ] Backend tests for CR communication/moderator capabilities only.
-- [ ] Backend tests for society leader capabilities.
-- [ ] Frontend tests for action visibility from capabilities.
-- [ ] Frontend tests for role-update invalidation behavior.
+- [x] Backend tests for admin capabilities.
+- [x] Backend tests for HOD own-department capabilities.
+- [x] Backend tests for PD own-program capabilities.
+- [x] Backend tests for CR communication/moderator capabilities only.
+- [x] Backend tests for society leader capabilities.
+- [x] Frontend tests for action visibility from capabilities.
+- [x] Frontend tests for role-update invalidation behavior.
 
 ### Documentation
-- [ ] Update `docs/functional_requirements.md`.
-- [ ] Update `client/API_CONTRACT.md`.
-- [ ] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
-- [ ] Update `client/ARCHITECTURE.md`.
-- [ ] Update `client/PROGRESS.md`.
-- [ ] Update `server/PROGRESS.md`.
+- [x] Update `docs/functional_requirements.md`.
+- [x] Update `client/API_CONTRACT.md`.
+- [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
+- [x] Update `client/ARCHITECTURE.md`.
+- [x] Update `client/PROGRESS.md`.
+- [x] Update `server/PROGRESS.md`.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd server && timeout 120 npm test -- tests/modules/permission.test.ts`
+  - `cd server && timeout 120 npm test -- tests/modules/class.test.ts tests/modules/society.test.ts tests/modules/role.test.ts tests/modules/user.test.ts`
+  - `cd server && timeout 120 npm run build`
+  - `cd client && timeout 120 npm run test -- src/hooks/__tests__/usePermissions.test.ts src/lib/__tests__/socket.test.ts`
+  - `cd client && timeout 120 npm run type-check`
 - Result:
-  - Not verified.
+  - Focused Module 1 backend and frontend tests pass.
+  - Existing class, society, role, and user backend regression slices pass.
+  - Backend build and frontend type-check pass.
+  - Backend database-backed tests require local PostgreSQL test DB access outside the filesystem sandbox.
 
 ## Module 2 Checklist: Academic and Class Management Hardening
 

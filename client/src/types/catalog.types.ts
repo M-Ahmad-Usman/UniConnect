@@ -1,5 +1,6 @@
 import type { Section } from './enums';
 import type { PaginationParams } from './api.types';
+import type { ClassPermissions } from './permission.types';
 
 export interface DepartmentListItem {
   id: number;
@@ -116,6 +117,7 @@ export interface ClassDetail extends ClassListItem {
     students: number;
     teaches: number;
   };
+  permissions: ClassPermissions;
 }
 
 export interface ClassListParams extends PaginationParams {

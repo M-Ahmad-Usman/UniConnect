@@ -241,7 +241,7 @@
 | User | Create Channels | Delete/Lock Channels | Assign Moderators | Assign Roles |
 |------|-----------------|---------------------|-------------------|------------------|
 | Admin | ✅ Everywhere | ✅ Everywhere | ✅ Everywhere | ✅ All roles |
-| HOD | ✅ Dept server | ✅ Dept server | ✅ Dept server | ✅ CR, PD, Convenor and President within department |
+| HOD | ✅ Dept server | ✅ Dept server | ✅ Dept, class, and society servers within department | ✅ CR, PD, Convenor and President within department |
 | CR | ✅ Class server | ✅ Class server | ✅ Class server | ❌ |
 | Society Convenor | ✅ Society server | ✅ Society server | ✅ Society server | ✅ President |
 | Society President | ✅ Society server | ✅ Society server | ✅ Society server | ❌ |
@@ -255,6 +255,17 @@
 | Program Director | - | Only for their program |
 
 **Class Server Creation:** Class Server must be automatically created when a class is created.
+
+### 5.4 Backend Capability Contract
+
+The backend exposes grouped boolean capabilities for permission-aware UI. Capability payloads are false by default and are used for navigation and query/action gating only; all write endpoints must still recompute authorization server-side.
+
+| Area | Capability Highlights |
+|------|----------------------|
+| Global | Admin dashboard access, academic workspace access, role workspace access, user management, catalog management, class creation, society creation |
+| Class Detail | Student viewing/management, course assignment/removal/replacement, semester progression, graduation, channel management, moderator assignment |
+| Society Detail | Member visibility, member management, join request review, info editing, leadership changes, channel management, moderator assignment, join request submission |
+| Role Workspace | Open role management, assign/revoke scoped roles, assign/revoke server and channel moderators |
 
 ---
 

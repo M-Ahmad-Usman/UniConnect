@@ -32,6 +32,19 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 ## Changelog
 
+### 2026-05-18 - Module 1 Permission Policy Foundation Implemented
+
+#### Implemented
+- ✅ Added frontend permission capability types and `/api/permissions/me` endpoint client
+- ✅ Added `useMyPermissions()` for backend-driven global permission bootstrap data
+- ✅ Extended class and society detail types with caller-specific backend permission payloads
+- ✅ Added false-by-default class/society permission helpers for safe UI gating
+- ✅ Updated `auth:roles-updated` handling to invalidate permissions, class, society, server, and role queries
+
+#### Verification Notes
+- ✅ `client`: `timeout 120 npm run test -- src/hooks/__tests__/usePermissions.test.ts src/lib/__tests__/socket.test.ts`
+- ✅ `client`: `timeout 120 npm run type-check`
+
 ### 2026-05-18 - Module 8 Society Management and Module 9 Role Management Implemented
 
 #### Implemented

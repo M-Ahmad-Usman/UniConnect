@@ -42,7 +42,7 @@ export async function handleListClasses(req: Request, res: Response): Promise<vo
 }
 
 export async function handleGetClass(req: Request, res: Response): Promise<void> {
-  const classRecord = await classService.getClassById(Number(req.params.id));
+  const classRecord = await classService.getClassById(Number(req.params.id), req.user!.id);
 
   const response: ApiResponse<typeof classRecord> = {
     success: true,

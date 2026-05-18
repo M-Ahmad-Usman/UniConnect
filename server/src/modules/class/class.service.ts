@@ -1,6 +1,10 @@
 import { prisma } from "../../config/prisma.js";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
+import {
+  buildClassPermissions,
+  getPermissionContext,
+} from "../../shared/permissions/index.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -298,7 +302,7 @@ export async function listClasses(query: ListClassesQuery) {
   };
 }
 
-export async function getClassById(id: number) {
+export async function getClassById(id: number, callerUserId: number) {
   const classRecord = await prisma.class.findUnique({
     where: { id },
     select: classDetailSelect,
@@ -308,7 +312,19 @@ export async function getClassById(id: number) {
     throw new NotFoundError("Class not found");
   }
 
-  return classRecord;
+  const context = await getPermissionContext(callerUserId);
+  const permissions = buildClassPermissions(context, {
+    id: classRecord.id,
+    serverId: classRecord.serverId,
+    crId: classRecord.cr?.studentId ?? null,
+    programId: classRecord.program.id,
+    departmentId: classRecord.program.department.id,
+  });
+
+  return {
+    ...classRecord,
+    permissions,
+  };
 }
 
 export async function assignCourseToClass(

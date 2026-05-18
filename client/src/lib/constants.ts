@@ -61,6 +61,9 @@ export const queryKeys = {
     detail: (userId: number) => ['users', userId] as const,
     list: (params?: Record<string, unknown>) => ['users', params] as const,
   },
+  permissions: {
+    me: () => ['permissions', 'me'] as const,
+  },
   departments: {
     list: () => ['departments'] as const,
     detail: (departmentId: number) => ['departments', departmentId] as const,
@@ -119,6 +122,7 @@ export const queryKeys = {
       ['notifications', 'preferences', params] as const,
   },
   roles: {
+    all: () => ['roles'] as const,
     byUser: (userId: number) => ['roles', userId] as const,
     currentUser: () => ['roles', 'current-user'] as const,
   },

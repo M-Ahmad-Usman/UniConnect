@@ -2,6 +2,10 @@ import type { MembershipRequestStatus } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
 import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
+import {
+  buildSocietyPermissions,
+  getPermissionContext,
+} from "../../shared/permissions/index.js";
 import { emitToUser } from "../../socket/index.js";
 import * as notificationService from "../notification/notification.service.js";
 
@@ -378,17 +382,64 @@ export async function listSocieties(query: ListSocietiesQuery) {
   };
 }
 
-export async function getSocietyById(id: number) {
-  const society = await prisma.society.findUnique({
+export async function getSocietyById(id: number, callerUserId: number) {
+  const [society, target] = await Promise.all([
+    prisma.society.findUnique({
     where: { id },
     select: societyDetailSelect,
-  });
+    }),
+    prisma.society.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        serverId: true,
+        departmentId: true,
+        isActive: true,
+        president: { select: { user: { select: { id: true } } } },
+        convenor: { select: { user: { select: { id: true } } } },
+        department: { select: { hodId: true } },
+      },
+    }),
+  ]);
 
-  if (!society) {
+  if (!society || !target) {
     throw new NotFoundError("Society not found");
   }
 
-  return society;
+  const [context, membership, request] = await Promise.all([
+    getPermissionContext(callerUserId),
+    prisma.serverMembership.findUnique({
+      where: { userId_serverId: { userId: callerUserId, serverId: target.serverId } },
+      select: { userId: true },
+    }),
+    prisma.societyMembershipRequest.findUnique({
+      where: { societyId_userId: { societyId: id, userId: callerUserId } },
+      select: { status: true },
+    }),
+  ]);
+  const viewer = {
+    isMember: Boolean(membership),
+    requestStatus: request?.status ?? null,
+  };
+  const permissions = buildSocietyPermissions(
+    context,
+    {
+      id: target.id,
+      serverId: target.serverId,
+      departmentId: target.departmentId,
+      isActive: target.isActive,
+      presidentUserId: target.president.user.id,
+      convenorUserId: target.convenor.user.id,
+      departmentHodId: target.department.hodId,
+    },
+    viewer
+  );
+
+  return {
+    ...society,
+    viewer,
+    permissions,
+  };
 }
 
 export async function updateSociety(id: number, data: UpdateSocietyInput, caller: CallerInfo) {

@@ -112,6 +112,16 @@ export type {
   RevokeRoleRequest,
 } from './role.types';
 
+// Permissions
+export type {
+  GlobalPermissions,
+  ClassPermissions,
+  SocietyPermissions,
+  RoleWorkspacePermissions,
+  PermissionScopeSummary,
+  MyPermissions,
+} from './permission.types';
+
 // Societies
 export type {
   SocietyListItem,

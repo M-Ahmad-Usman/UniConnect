@@ -18,7 +18,7 @@ uniconnect/
 - Backend commands: run inside `server/`
 - Frontend commands: run inside `client/`
 - Never run commands from the repo root.
-- Never run heavy commands like build or test simultaneously. Running heavy commands simultaneously makes the system unresponsive.
+- Never run heavy commands like `npm test` simultaneously. Running heavy commands simultaneously makes the system unresponsive.
 - Make sure that every command exits cleanly and doesn't leak any memory or leave open handles. Use heavy commands with timeout like timeout 120 <command>.
 
 ## Tech Stack
@@ -296,12 +296,6 @@ import { PasswordField } from './PasswordField';
 | E2E tests | `npm run test:e2e` |
 | Single Vitest | `npx vitest run path/to/test.ts` |
 | Single Playwright | `npx playwright test e2e/file.spec.ts` |
-
-## Current Development Focus
-- **Frontend Module 5 (Notifications):** Complete. Includes global notifications inbox, notification bell dropdown, NotificationItem, per-server NotificationPreferencesPage, server-picker fallback, SubscriptionToggle, mark-read/mark-all-read mutations, socket-driven unread count/preview updates, urgent toasts, and feed freshness independent of notification subscriptions.
-- **Frontend Module 6 (User Profile & Admin User Management):** Complete. Includes profile page, bio editing, avatar upload and preloaded avatar display, admin user list, user creation, CSV bulk import, detail dialog, activation controls, and NTU formatted roll-number handling.
-- **Current Frontend Focus:** Module 7 (Admin Dashboard & CRUD).
-- **Backend:** Core 13 modules are complete. Module 5 introduced type-aware notification preferences (`NEW_POST` and `ROLE_ASSIGNED`) plus role-assignment notification delivery. Module 6 changed student roll numbers to NTU formatted strings. Backend generated Prisma client and migrations must remain in sync after schema changes.
 
 ## Authentication Model
 - Cookie-based auth. Frontend never handles tokens directly.
