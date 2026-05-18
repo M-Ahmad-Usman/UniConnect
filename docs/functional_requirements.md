@@ -1,6 +1,6 @@
 # Functional Requirements - UniConnect
 
-**Version:** 2.1 (MVP Focused)  
+**Version:** 2.1
 **Team:** Muhammad Ahmad, Awais Hanif, Wasif Ali
 **Supervisor:** Mr. Nasir Mahmood | **Co-Supervisor:** Dr. Hamid Ali
 
@@ -193,9 +193,9 @@
 
 | ID | Requirement |
 |----|-------------|
-| FR-64 | Students can browse societies within their department |
+| FR-64 | Students can browse societies across the university |
 | FR-65 | Students can send a join request to a society |
-| FR-66 | Society Convenor/President can approve or reject join requests |
+| FR-66 | Society Convenor/President can approve or reject join requests, and the requester is notified of the decision |
 | FR-67 | Society Convenor/President can manually add students to the society |
 | FR-68 | Society Convenor/President can remove members from the society |
 | FR-69 | When a join request is approved, the student is auto-added to the society server |

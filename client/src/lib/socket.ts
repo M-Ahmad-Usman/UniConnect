@@ -4,6 +4,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useNotificationStore } from '@/stores/notification.store';
 import { queryClient } from '@/lib/query-client';
 import { queryKeys, ROUTES } from '@/lib/constants';
+import { usersApi } from '@/api/endpoints/users.api';
+import { mapProfileToAuthUser } from '@/lib/auth-user';
 import { PostPriority } from '@/types';
 import type { NewNotificationPayload, PaginatedResponse, Notification, UnreadCountPayload } from '@/types';
 
@@ -64,6 +66,15 @@ export function connectSocket(): void {
 
   socket.on('notification:unread-count', (payload: UnreadCountPayload) => {
     useNotificationStore.getState().setUnreadCount(payload.count);
+  });
+
+  socket.on('auth:roles-updated', () => {
+    void usersApi.getMe().then((profile) => {
+      useAuthStore.getState().setUser(mapProfileToAuthUser(profile));
+      queryClient.setQueryData(queryKeys.users.me(), profile);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+    });
   });
 
   socket.on('auth:expired', () => {

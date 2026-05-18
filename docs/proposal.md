@@ -69,6 +69,7 @@ Currently, National Textile University lacks a unified digital platform for publ
 - **Hierarchical role-based access control** - 3 main user types (Admin, Teacher, Student) with explicit server-level and channel-level moderation roles
 - **Channel-based organization** - Users browse specific channels for announcements (no information overload)
 - **Role-based posting permissions** - Only authorized users can post in specific channels
+- **Society participation workflow** - Students can browse societies, request membership, and receive approval/rejection notifications
 - **Official badge verification** - Role-based badges for authentic announcements
 
 ---

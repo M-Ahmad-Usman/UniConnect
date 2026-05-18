@@ -1,21 +1,21 @@
 # UniConnect Backend Progress
 
 ## Document Control
-- Last Updated: 2026-05-08
+- Last Updated: 2026-05-18
 - Status: Active
 - Scope: Backend (`server/`)
 
 ## Executive Snapshot
-- Automated tests: baseline `447/447` passing across `17` suites; Module 10 now has 5 additional notification preference/role-notification tests pending final bounded rerun
+- Automated tests: baseline `459/459` passing across `17` suites
 - Functional modules: `13/13` complete (Modules 0 to 12)
 - Hardening plan: Steps `1-35` complete
 
-## Verification Snapshot (2026-05-08)
-- Verified route/middleware and security implementations in `src/`.
-- Added type-aware notification preferences and role-assignment notification delivery for frontend Module 5.
-- Verified `npm run build`.
-- Reset the isolated `uniconnect_test` database and applied all 5 migrations.
-- Focused notification test rerun is pending after aligning Socket.IO test clients with `/api/socket.io`.
+## Verification Snapshot (2026-05-18)
+- Verified `timeout 120 npm run build`.
+- Applied the isolated test database migrations with `timeout 120 npm run db:migrate:test`.
+- Focused society, role, and notification integration suites passed with 125 Jest tests.
+- Full backend suite passed with 459 Jest tests.
+- Added frontend Module 8/9 support endpoints, join request review notifications, and role refresh events.
 
 ## Module Completion Matrix
 
@@ -51,6 +51,9 @@ Details: `HARDENING_PLAN.md`, `HARDENING_LOG.md`
 ## Recent Key Additions
 - Type-aware notification preferences with `NEW_POST` and `ROLE_ASSIGNED` controls
 - Role-assignment notification creation with server-level mute support
+- Society join request approval/rejection notifications with `SOCIETY_REQUEST_REVIEWED`
+- Society membership status and member-candidate endpoints for role-based frontend workflows
+- `auth:roles-updated` socket event for affected users after role changes
 - Notification payload priority metadata for urgent frontend toasts
 - `passwordResetTokenHash` one-time token enforcement
 - `BCRYPT_ROUNDS` centralized constant

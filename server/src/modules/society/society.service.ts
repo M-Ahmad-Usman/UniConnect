@@ -2,6 +2,8 @@ import type { MembershipRequestStatus } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
 import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
+import { emitToUser } from "../../socket/index.js";
+import * as notificationService from "../notification/notification.service.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -37,6 +39,12 @@ type PaginationQuery = {
   limit?: number;
 };
 
+type MemberCandidatesQuery = {
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
 type CallerInfo = {
   id: number;
   userType: string;
@@ -52,7 +60,7 @@ const societyListSelect = {
   isActive: true,
   createdAt: true,
   department: {
-    select: { id: true, name: true },
+    select: { id: true, name: true, serverId: true },
   },
   president: {
     select: {
@@ -62,6 +70,11 @@ const societyListSelect = {
   convenor: {
     select: {
       user: { select: { id: true, fullName: true, email: true } },
+    },
+  },
+  server: {
+    select: {
+      _count: { select: { memberships: true } },
     },
   },
 } as const;
@@ -85,11 +98,19 @@ const joinRequestSelect = {
   requestedAt: true,
   reviewedAt: true,
   user: {
-    select: { id: true, fullName: true, email: true },
+    select: { id: true, fullName: true, email: true, profilePictureUrl: true },
   },
   reviewer: {
     select: { id: true, fullName: true },
   },
+} as const;
+
+const memberCandidateSelect = {
+  id: true,
+  fullName: true,
+  email: true,
+  userType: true,
+  profilePictureUrl: true,
 } as const;
 
 const memberSelect = {
@@ -191,6 +212,67 @@ function isCallerHODOrAdmin(
   if (caller.userType === "ADMIN") return true;
   if (society.department.hodId === caller.id) return true;
   return false;
+}
+
+function emitRolesUpdated(userId: number): void {
+  emitToUser(userId, "auth:roles-updated", { userId });
+}
+
+async function createSocietyRequestReviewedNotification(input: {
+  userId: number;
+  societyName: string;
+  status: "APPROVED" | "REJECTED";
+}): Promise<void> {
+  try {
+    await notificationService.createSocietyRequestReviewedNotification(input);
+  } catch (error) {
+    console.error("[SOCIETY] Failed to create membership review notification", { error });
+  }
+}
+
+async function resolveSocietyMemberBadges(
+  serverId: number,
+  memberUserIds: number[]
+): Promise<Map<number, string[]>> {
+  const badgeMap = new Map<number, string[]>();
+
+  const addBadge = (userId: number, badge: string) => {
+    const current = badgeMap.get(userId) ?? [];
+    current.push(badge);
+    badgeMap.set(userId, current);
+  };
+
+  if (memberUserIds.length === 0) return badgeMap;
+
+  const [society, moderators] = await Promise.all([
+    prisma.society.findUnique({
+      where: { serverId },
+      select: {
+        president: { select: { user: { select: { id: true } } } },
+        convenor: { select: { user: { select: { id: true } } } },
+      },
+    }),
+    prisma.moderatorAssignment.findMany({
+      where: { serverId, userId: { in: memberUserIds } },
+      select: { userId: true, scopeType: true },
+    }),
+  ]);
+
+  if (society) {
+    const presidentUserId = society.president.user.id;
+    const convenorUserId = society.convenor.user.id;
+    if (memberUserIds.includes(presidentUserId)) addBadge(presidentUserId, "president");
+    if (memberUserIds.includes(convenorUserId)) addBadge(convenorUserId, "convenor");
+  }
+
+  for (const moderator of moderators) {
+    addBadge(
+      moderator.userId,
+      moderator.scopeType === "SERVER" ? "server_moderator" : "channel_moderator"
+    );
+  }
+
+  return badgeMap;
 }
 
 // ─── Service Functions ─────────────────────────────────────────────────────
@@ -327,7 +409,7 @@ export async function updateSociety(id: number, data: UpdateSocietyInput, caller
     }
   }
 
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const updateData: Record<string, unknown> = {};
 
     if (data.name !== undefined) updateData.name = data.name;
@@ -393,6 +475,17 @@ export async function updateSociety(id: number, data: UpdateSocietyInput, caller
       select: societyListSelect,
     });
   });
+
+  if (data.presidentId !== undefined) {
+    emitRolesUpdated(data.presidentId);
+    emitRolesUpdated(society.president.user.id);
+  }
+  if (data.convenorId !== undefined) {
+    emitRolesUpdated(data.convenorId);
+    emitRolesUpdated(society.convenor.user.id);
+  }
+
+  return updated;
 }
 
 export async function submitJoinRequest(societyId: number, userId: number) {
@@ -503,7 +596,8 @@ export async function reviewJoinRequest(
     throw new ConflictError("This request has already been reviewed");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const requestUserId = request.userId;
+  const updated = await prisma.$transaction(async (tx) => {
     const updated = await tx.societyMembershipRequest.update({
       where: { id: requestId },
       data: {
@@ -515,17 +609,26 @@ export async function reviewJoinRequest(
     });
 
     if (status === "APPROVED") {
-      await tx.serverMembership.create({
-        data: {
-          userId: request.userId,
+      await tx.serverMembership.createMany({
+        data: [{
+          userId: requestUserId,
           serverId: society.serverId,
           isAutoJoined: false,
-        },
+        }],
+        skipDuplicates: true,
       });
     }
 
     return updated;
   });
+
+  await createSocietyRequestReviewedNotification({
+    userId: requestUserId,
+    societyName: society.name,
+    status,
+  });
+
+  return updated;
 }
 
 export async function addMember(societyId: number, userId: number, caller: CallerInfo) {
@@ -651,8 +754,85 @@ export async function listMembers(societyId: number, query: PaginationQuery, cal
     prisma.serverMembership.count({ where }),
   ]);
 
+  const badgeMap = await resolveSocietyMemberBadges(
+    society.serverId,
+    members.map((member) => member.userId)
+  );
+
   return {
-    data: members,
+    data: members.map((member) => ({
+      ...member,
+      badges: badgeMap.get(member.userId) ?? [],
+    })),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function getMyMembershipStatus(societyId: number, userId: number) {
+  const society = await findSocietyOrThrow(societyId);
+
+  const [membership, request] = await Promise.all([
+    prisma.serverMembership.findUnique({
+      where: { userId_serverId: { userId, serverId: society.serverId } },
+      select: { userId: true },
+    }),
+    prisma.societyMembershipRequest.findUnique({
+      where: { societyId_userId: { societyId, userId } },
+      select: { status: true, requestedAt: true, reviewedAt: true },
+    }),
+  ]);
+
+  return {
+    isMember: Boolean(membership),
+    requestStatus: request?.status ?? null,
+    requestedAt: request?.requestedAt ?? null,
+    reviewedAt: request?.reviewedAt ?? null,
+  };
+}
+
+export async function listMemberCandidates(
+  societyId: number,
+  query: MemberCandidatesQuery,
+  caller: CallerInfo
+) {
+  const society = await findSocietyOrThrow(societyId);
+
+  if (!isCallerAuthorized(society, caller)) {
+    throw new ForbiddenError("You do not have permission to add members");
+  }
+
+  const { page, limit, skip, take } = parsePagination(query);
+  const search = query.search?.trim();
+  const where = {
+    userType: "STUDENT" as const,
+    isActive: true,
+    departmentId: society.departmentId,
+    serverMemberships: {
+      none: { serverId: society.serverId },
+    },
+    ...(search
+      ? {
+          OR: [
+            { fullName: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: memberCandidateSelect,
+      orderBy: [{ fullName: "asc" }, { id: "asc" }],
+      skip,
+      take,
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: users,
     pagination: buildPaginationResponse(page, limit, total),
   };
 }

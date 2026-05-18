@@ -6,6 +6,7 @@ import {
   ValidationError,
 } from "../../shared/errors/index.js";
 import * as notificationService from "../notification/notification.service.js";
+import { emitToUser } from "../../socket/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,10 @@ async function notifyRoleAssigned(
   } catch (error) {
     console.error("[RoleService] Failed to create role assignment notification:", error);
   }
+}
+
+function emitRolesUpdated(userId: number): void {
+  emitToUser(userId, "auth:roles-updated", { userId });
 }
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
@@ -253,36 +258,43 @@ export async function assignRole(input: AssignRoleInput, caller: CallerInfo) {
     case "hod": {
       const result = await assignHOD(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     case "program_director": {
       const result = await assignProgramDirector(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     case "cr": {
       const result = await assignCR(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     case "society_president": {
       const result = await assignSocietyPresident(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     case "society_convenor": {
       const result = await assignSocietyConvenor(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     case "server_moderator": {
       const result = await assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     case "channel_moderator": {
       const result = await assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId, result.channelId);
+      emitRolesUpdated(result.userId);
       return result;
     }
     default:
@@ -451,6 +463,7 @@ async function assignSocietyPresident(
     where: { id: societyId },
     data: { presidentId: targetUser.id },
   });
+  emitRolesUpdated(society.presidentId);
 
   return {
     role: "society_president",
@@ -505,6 +518,7 @@ async function assignSocietyConvenor(
       update: {},
     });
   });
+  emitRolesUpdated(society.convenorId);
 
   return {
     role: "society_convenor",
@@ -594,7 +608,8 @@ async function assignModerator(
 // ─── Revoke Role ───────────────────────────────────────────────────────────
 
 export async function revokeRole(input: RevokeRoleInput, caller: CallerInfo) {
-  switch (input.role) {
+  const result = await (async () => {
+    switch (input.role) {
     case "hod":
       return revokeHOD(input.scopeId!, input.userId, caller);
     case "program_director":
@@ -607,7 +622,11 @@ export async function revokeRole(input: RevokeRoleInput, caller: CallerInfo) {
       return revokeModerator("channel_moderator", input.serverId!, input.channelId!, input.userId, caller);
     default:
       throw new ValidationError("Unknown role");
-  }
+    }
+  })();
+
+  emitRolesUpdated(input.userId);
+  return result;
 }
 
 async function revokeHOD(departmentId: number, userId: number, caller: CallerInfo) {
@@ -753,11 +772,17 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
       }),
       prisma.program.findMany({
         where: { programDirectorId: userId },
-        select: { id: true, code: true },
+        select: { id: true, code: true, department: { select: { name: true } } },
       }),
       prisma.class.findMany({
         where: { crId: userId },
-        select: { id: true, serverId: true },
+        select: {
+          id: true,
+          serverId: true,
+          currentSemester: true,
+          section: true,
+          program: { select: { code: true } },
+        },
       }),
       prisma.society.findMany({
         where: { presidentId: userId },
@@ -769,38 +794,76 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
       }),
       prisma.moderatorAssignment.findMany({
         where: { userId },
-        select: { id: true, serverId: true, channelId: true, scopeType: true },
+        select: {
+          id: true,
+          serverId: true,
+          channelId: true,
+          scopeType: true,
+          server: { select: { name: true } },
+          channel: { select: { name: true } },
+        },
       }),
     ]);
 
   const roles: Array<Record<string, unknown>> = [];
 
   for (const dept of hodDepartments) {
-    roles.push({ role: "hod", departmentId: dept.id, departmentName: dept.name });
+    roles.push({
+      role: "hod",
+      departmentId: dept.id,
+      departmentName: dept.name,
+      scopeContext: `HOD of ${dept.name}`,
+    });
   }
 
   for (const prog of directedPrograms) {
-    roles.push({ role: "program_director", programId: prog.id, programCode: prog.code });
+    roles.push({
+      role: "program_director",
+      programId: prog.id,
+      programCode: prog.code,
+      scopeContext: `Program Director of ${prog.code} (${prog.department.name})`,
+    });
   }
 
   for (const cls of crClasses) {
-    roles.push({ role: "cr", classId: cls.id });
+    roles.push({
+      role: "cr",
+      classId: cls.id,
+      serverId: cls.serverId,
+      scopeContext: `CR of ${cls.program.code}-${cls.currentSemester}${cls.section}`,
+    });
   }
 
   for (const soc of presidentSocieties) {
-    roles.push({ role: "society_president", societyId: soc.id, societyName: soc.name });
+    roles.push({
+      role: "society_president",
+      societyId: soc.id,
+      societyName: soc.name,
+      scopeContext: `President of ${soc.name}`,
+    });
   }
 
   for (const soc of convenorSocieties) {
-    roles.push({ role: "society_convenor", societyId: soc.id, societyName: soc.name });
+    roles.push({
+      role: "society_convenor",
+      societyId: soc.id,
+      societyName: soc.name,
+      scopeContext: `Convenor of ${soc.name}`,
+    });
   }
 
   for (const mod of moderatorAssignments) {
+    const isChannel = mod.scopeType === "CHANNEL";
     roles.push({
-      role: mod.scopeType === "CHANNEL" ? "channel_moderator" : "server_moderator",
+      role: isChannel ? "channel_moderator" : "server_moderator",
       serverId: mod.serverId,
       channelId: mod.channelId,
       scopeType: mod.scopeType.toLowerCase(),
+      serverName: mod.server.name,
+      channelName: mod.channel?.name ?? null,
+      scopeContext: isChannel
+        ? `Channel Moderator of #${mod.channel?.name ?? "unknown"} in ${mod.server.name}`
+        : `Server Moderator of ${mod.server.name}`,
     });
   }
 

@@ -20,7 +20,11 @@ function parsePage(value: string | null) {
 }
 
 function parseType(value: string | null) {
-  if (value === NotificationType.NEW_POST || value === NotificationType.ROLE_ASSIGNED) {
+  if (
+    value === NotificationType.NEW_POST ||
+    value === NotificationType.ROLE_ASSIGNED ||
+    value === NotificationType.SOCIETY_REQUEST_REVIEWED
+  ) {
     return value;
   }
 
@@ -126,6 +130,13 @@ export function NotificationInboxPage() {
           onClick={() => updateFilter({ type: NotificationType.ROLE_ASSIGNED })}
         >
           Roles
+        </Button>
+        <Button
+          variant={type === NotificationType.SOCIETY_REQUEST_REVIEWED ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => updateFilter({ type: NotificationType.SOCIETY_REQUEST_REVIEWED })}
+        >
+          Societies
         </Button>
         {pagination ? <Badge variant="outline">{pagination.total} total</Badge> : null}
       </div>

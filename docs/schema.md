@@ -377,7 +377,7 @@ NOTIFICATION {
   id SERIAL PK
   user_id INTEGER FK // NOT NULL
   post_id INTEGER FK 
-  type VARCHAR(50) // enum ['new_post', 'role_assigned']
+  type VARCHAR(50) // enum ['new_post', 'role_assigned', 'society_request_reviewed']
   title VARCHAR(200) // NOT NULL
   message TEXT
   read_at TIMESTAMP
@@ -390,13 +390,14 @@ NOTIFICATION.post_id > POST.id
 NOTIFICATION_PREFERENCE {
   id SERIAL PK
   user_id INTEGER FK
+  notification_type VARCHAR(50) // enum ['new_post', 'role_assigned', 'society_request_reviewed']; preferences currently use new_post and role_assigned
   scope_type VARCHAR(20) // enum['server, 'channel']
   server_id INTEGER FK
   channel_id INTEGER FK
   is_subscribed BOOLEAN // DEFAULT TRUE
   updated_at TIMESTAMP
 
-  // UNIQUE(user_id, scope_type, server_id, COALESCE(channel_id, 0))
+  // UNIQUE(user_id, notification_type, scope_type, server_id, COALESCE(channel_id, 0))
 }
 
 NOTIFICATION_PREFERENCE.user_id > USER.id

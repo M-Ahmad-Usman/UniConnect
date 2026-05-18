@@ -64,8 +64,9 @@ enum ModeratorScopeType {
 }
 
 enum NotificationType {
-  NEW_POST       @map("new_post")
-  ROLE_ASSIGNED  @map("role_assigned")
+  NEW_POST                 @map("new_post")
+  ROLE_ASSIGNED            @map("role_assigned")
+  SOCIETY_REQUEST_REVIEWED @map("society_request_reviewed")
 
   @@map("notification_type")
 }
@@ -257,6 +258,7 @@ model Society {
 
   membershipRequests SocietyMembershipRequest[]
 
+  @@index([departmentId])
   @@map("societies")
 }
 
@@ -341,6 +343,7 @@ model ServerMembership {
 
   @@id([userId, serverId])
   @@index([serverId])
+  @@index([userId])
   @@map("server_memberships")
 }
 
@@ -358,6 +361,8 @@ model SocietyMembershipRequest {
   reviewer User?   @relation("MembershipReviewer", fields: [reviewedBy], references: [id])
 
   @@unique([societyId, userId])
+  @@index([societyId, status, requestedAt])
+  @@index([userId, status])
   @@map("society_membership_requests")
 }
 
@@ -502,6 +507,7 @@ model Notification {
   post Post? @relation(fields: [postId], references: [id])
 
   @@index([userId, readAt])
+  @@index([userId, type, createdAt])
   @@index([postId])
   @@map("notifications")
 }

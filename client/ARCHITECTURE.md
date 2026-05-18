@@ -217,16 +217,14 @@ client/
 │   │   ├── posts/               # Post feed, creation, editing
 │   │   ├── notifications/       # Notifications
 │   │   ├── profile/             # User profile
-│   │   ├── admin/               # Admin dashboard and CRUD
-│   │   ├── societies/           # Society management
-│   │   └── roles/               # Role assignment
+│   │   ├── admin/               # Admin dashboard and academic CRUD
+│   │   ├── societies/           # Role-based society management workspace
+│   │   └── roles/               # Role-based assignment workspace
 │   │
 │   ├── hooks/                   # Shared custom hooks
-│   │   ├── useAuth.ts           # Auth helpers
-│   │   ├── usePagination.ts     # Pagination logic
-│   │   ├── useDebounce.ts       # Debounce hook
 │   │   ├── usePermissions.ts    # Permission checks
-│   │   └── useLocalStorage.ts   # Local storage wrapper
+│   │   ├── useMediaQuery.ts     # Responsive behavior
+│   │   └── useDebouncedValue.ts # Debounce hook
 │   │
 │   ├── lib/                     # Utilities and configuration
 │   │   ├── socket.ts            # Socket.IO client
@@ -507,6 +505,18 @@ export const router = createBrowserRouter([
               {
                 path: 'profile',
                 element: <ProfilePage />,
+              },
+              {
+                path: 'societies',
+                element: <SocietyListPage />,
+              },
+              {
+                path: 'societies/:societyId',
+                element: <SocietyDetailPage />,
+              },
+              {
+                path: 'roles',
+                element: <RoleManagementPage />,
               },
               {
                 path: 'settings',
@@ -900,7 +910,10 @@ export function Can({ action, serverId, channelId, children }: CanProps) {
 
 ### Socket.IO Setup
 
-The socket client is managed centrally in `src/lib/socket.ts`. The module keeps a singleton `Socket` instance and exposes `connectSocket()`, `disconnectSocket()`, and `getSocket()` helpers. Core event listeners are registered inside `connectSocket()` so every connection automatically handles notifications and auth-expiry events.
+The socket client is managed centrally in `src/lib/socket.ts`. The module keeps a singleton
+`Socket` instance and exposes `connectSocket()`, `disconnectSocket()`, and `getSocket()` helpers.
+Core event listeners are registered inside `connectSocket()` so every connection automatically
+handles notifications, role-context refreshes, and auth-expiry events.
 
 ```typescript
 // src/lib/socket.ts

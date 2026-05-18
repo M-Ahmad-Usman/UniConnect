@@ -42,14 +42,15 @@ export const Section = {
 export type Section = (typeof Section)[keyof typeof Section];
 
 export const ModeratorScopeType = {
-  SERVER: 'SERVER',
-  CHANNEL: 'CHANNEL',
+  SERVER: 'server',
+  CHANNEL: 'channel',
 } as const;
 export type ModeratorScopeType = (typeof ModeratorScopeType)[keyof typeof ModeratorScopeType];
 
 export const NotificationType = {
   NEW_POST: 'NEW_POST',
   ROLE_ASSIGNED: 'ROLE_ASSIGNED',
+  SOCIETY_REQUEST_REVIEWED: 'SOCIETY_REQUEST_REVIEWED',
 } as const;
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 

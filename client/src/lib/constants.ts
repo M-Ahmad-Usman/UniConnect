@@ -26,6 +26,9 @@ export const ROUTES = {
   MEMBERS: (serverId: number | string) => `/servers/${serverId}/members`,
   SERVER_NOTIFICATION_SETTINGS: (serverId: number | string) =>
     `/servers/${serverId}/settings/notifications`,
+  SOCIETIES: '/societies',
+  SOCIETY: (societyId: number | string) => `/societies/${societyId}`,
+  ROLES: '/roles',
   PROFILE: '/profile',
   SETTINGS_PASSWORD: '/settings/password',
   SETTINGS_NOTIFICATIONS: '/settings/notifications',
@@ -117,14 +120,19 @@ export const queryKeys = {
   },
   roles: {
     byUser: (userId: number) => ['roles', userId] as const,
+    currentUser: () => ['roles', 'current-user'] as const,
   },
   societies: {
+    all: () => ['societies'] as const,
     list: (params?: Record<string, unknown>) => ['societies', params] as const,
     detail: (societyId: number) => ['societies', societyId] as const,
+    myMembership: (societyId: number) => ['societies', societyId, 'my-membership'] as const,
     requests: (societyId: number, params?: Record<string, unknown>) =>
       ['societies', societyId, 'requests', params] as const,
     members: (societyId: number, params?: Record<string, unknown>) =>
       ['societies', societyId, 'members', params] as const,
+    candidates: (societyId: number, params?: Record<string, unknown>) =>
+      ['societies', societyId, 'candidates', params] as const,
   },
   admin: {
     stats: () => ['admin', 'stats'] as const,

@@ -1,4 +1,5 @@
-import type { MembershipRequestStatus } from './enums';
+import type { MembershipRequestStatus, UserType } from './enums';
+import type { PaginationParams } from './api.types';
 
 // ─── Society List Item ──────────────────────────────────────────────────────
 
@@ -9,9 +10,12 @@ export interface SocietyListItem {
   departmentId: number;
   isActive: boolean;
   createdAt: string;
-  department: { id: number; name: string };
+  department: { id: number; name: string; serverId: number };
   president: { user: { id: number; fullName: string; email: string } };
   convenor: { user: { id: number; fullName: string; email: string } };
+  server: {
+    _count: { memberships: number };
+  };
 }
 
 // ─── Society Detail ─────────────────────────────────────────────────────────
@@ -33,8 +37,41 @@ export interface SocietyMembershipRequest {
   status: MembershipRequestStatus;
   requestedAt: string;
   reviewedAt: string | null;
-  user: { id: number; fullName: string; email: string };
+  user: { id: number; fullName: string; email: string; profilePictureUrl: string | null };
   reviewer: { id: number; fullName: string } | null;
+}
+
+export interface SocietyMember {
+  userId: number;
+  joinedAt: string;
+  isAutoJoined: boolean;
+  badges: string[];
+  user: {
+    id: number;
+    fullName: string;
+    email: string;
+    userType: UserType;
+    profilePictureUrl: string | null;
+  };
+}
+
+export interface SocietyMembershipStatus {
+  isMember: boolean;
+  requestStatus: MembershipRequestStatus | null;
+  requestedAt: string | null;
+  reviewedAt: string | null;
+}
+
+export interface SocietyListParams extends PaginationParams {
+  departmentId?: number;
+}
+
+export interface SocietyRequestListParams extends PaginationParams {
+  status?: MembershipRequestStatus;
+}
+
+export interface SocietyCandidateParams extends PaginationParams {
+  search?: string;
 }
 
 // ─── Create / Update Society ────────────────────────────────────────────────

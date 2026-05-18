@@ -1,5 +1,7 @@
 import type { NotificationScopeType, NotificationType, PostPriority, ServerType } from './enums';
 
+export type NotificationPreferenceType = Exclude<NotificationType, 'SOCIETY_REQUEST_REVIEWED'>;
+
 // ─── Notification ───────────────────────────────────────────────────────────
 
 export interface Notification {
@@ -24,7 +26,7 @@ export interface Notification {
 
 export interface NotificationPreference {
   id: number;
-  notificationType: NotificationType;
+  notificationType: NotificationPreferenceType;
   scopeType: NotificationScopeType;
   serverId: number;
   channelId: number | null;
@@ -40,7 +42,7 @@ export interface NotificationPreference {
 }
 
 export interface UpdatePreferenceRequest {
-  notificationType: NotificationType;
+  notificationType: NotificationPreferenceType;
   scopeType: NotificationScopeType;
   serverId: number;
   channelId?: number;
@@ -56,7 +58,7 @@ export interface NotificationListParams {
 
 export interface NotificationPreferenceListParams {
   serverId?: number;
-  notificationType?: NotificationType;
+  notificationType?: NotificationPreferenceType;
 }
 
 // ─── Unread Count ───────────────────────────────────────────────────────────

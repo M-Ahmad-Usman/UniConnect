@@ -2,8 +2,8 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 7 Implemented
-**Current Phase:** Module 7 verification complete; ready for runtime/E2E hardening or Module 8
+**Status:** Module 9 Implemented
+**Current Phase:** Modules 8 and 9 verification complete; ready for focused E2E hardening
 
 ---
 
@@ -25,12 +25,33 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Module 5: Notifications | Complete | 2026-05-08 | 2026-05-09 | Full inbox, per-server preferences, type-aware notification preferences, realtime dropdown hardening, and feed freshness fixes |
 | Module 6: User Profile & Management | Complete | 2026-05-09 | 2026-05-10 | Profile page, avatar upload, admin user list, create user, bulk import, activation actions, NTU roll-number backend contract, and avatar/header hardening verified |
 | Module 7: Admin Dashboard & CRUD | Implemented | 2026-05-10 | 2026-05-10 | Admin dashboard, academic CRUD screens, curriculum, class course assignment, semester progression wizard, and backend contract hardening |
-| Module 8: Society Management | Not Started | - | - | - |
-| Module 9: Role Management | Not Started | - | - | - |
+| Module 8: Society Management | Complete | 2026-05-17 | 2026-05-18 | Role-based society workspace, join request workflow, member management, backend contract hardening, and requester notifications |
+| Module 9: Role Management | Complete | 2026-05-17 | 2026-05-18 | Role assignment/revocation workspace, scoped role context, role refresh socket event, and permission-aware UI |
 
 ---
 
 ## Changelog
+
+### 2026-05-18 - Module 8 Society Management and Module 9 Role Management Implemented
+
+#### Implemented
+- ✅ Added role-based `/societies`, `/societies/:societyId`, and `/roles` workspaces outside the admin dashboard
+- ✅ Kept `/admin/societies`, `/admin/societies/:id`, and `/admin/roles` as compatibility redirects
+- ✅ Added profile-menu access for society and role management, then removed duplicate Societies/Roles entries from the admin dashboard sidebar
+- ✅ Added society list/detail, create/edit, membership summary, join request review, member list, and member candidate flows
+- ✅ Added role assignment/revocation UI with contextual scope pickers and enriched current-role display
+- ✅ Added `SOCIETY_REQUEST_REVIEWED` notifications for join request approval/rejection
+- ✅ Added backend support for membership/candidate lookups, admin-aware society permissions, role-refresh socket events, notification filtering, and schema migration
+
+#### Verification Notes
+- ✅ `server`: `timeout 120 npm run build`
+- ✅ `server`: `timeout 120 npm run db:migrate:test`
+- ✅ `server`: focused society/role/notification integration tests pass with 125 Jest tests
+- ✅ `server`: full backend suite passes with 459 Jest tests
+- ✅ `client`: `npm run type-check`
+- ✅ `client`: `npm run lint`
+- ✅ `client`: `npm run test` passes with 92 Vitest tests
+- ✅ `client`: `npm run build`
 
 ### 2026-05-10 - Module 7 Admin Dashboard and Academic CRUD Implemented
 
@@ -664,20 +685,23 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| SocietyListPage | ⏳ Pending | - | Card grid, filter by department |
-| CreateSocietyDialog | ⏳ Pending | - | Name, description, president, convenor |
-| SocietyDetailPage | ⏳ Pending | - | Overview, members, join requests tabs |
-| JoinRequestButton | ⏳ Pending | - | Student join request flow |
-| JoinRequestList | ⏳ Pending | - | Approve/reject actions |
-| SocietyMemberList | ⏳ Pending | - | Paginated list with remove |
-| AddMemberDialog | ⏳ Pending | - | Search + add student |
-| Permission checks | ⏳ Pending | - | Convenor/president/admin only |
+| SocietyListPage | ✅ Complete | 2026-05-18 | Role-based `/societies` route with card grid and department filter |
+| CreateSocietyDialog | ✅ Complete | 2026-05-18 | Name, description, department, president, convenor |
+| SocietyDetailPage | ✅ Complete | 2026-05-18 | Overview, members, and join request tabs |
+| JoinRequestButton | ✅ Complete | 2026-05-18 | Membership-aware request flow |
+| JoinRequestList | ✅ Complete | 2026-05-18 | Approve/reject actions with requester notifications |
+| SocietyMemberList | ✅ Complete | 2026-05-18 | Paginated members with role badges and remove actions |
+| AddMemberDialog | ✅ Complete | 2026-05-18 | Search-backed member candidate picker |
+| Permission checks | ✅ Complete | 2026-05-18 | Admin, HOD, convenor, and president aware actions |
 
 ### Key Decisions
-- (To be logged)
+- Societies live outside the admin dashboard because the workspace is used by admins, HODs, convenors, presidents, and students.
+- All authenticated users can browse societies; management actions remain permission-gated.
+- Join request approval/rejection creates a persisted notification for the requester.
 
 ### Challenges & Solutions
-- (To be logged)
+- Added backend membership and member-candidate endpoints so the frontend can avoid broad user queries.
+- Preserved `/admin/societies` deep links with redirects while moving the primary entry point to the profile menu.
 
 ---
 
@@ -687,20 +711,23 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 | Task | Status | Date | Notes |
 |------|--------|------|-------|
-| RoleManagementPage | ⏳ Pending | - | User search + role assignment UI |
-| UserRolesView | ⏳ Pending | - | Current roles with scope context |
-| AssignRoleForm | ⏳ Pending | - | Dynamic form adapting to role type |
-| RevokeRoleButton | ⏳ Pending | - | Confirmation + mutation |
-| RoleScopePicker | ⏳ Pending | - | Loads entities based on role |
-| usePermissions hook | ⏳ Pending | - | Permission checks across app |
-| Can component | ⏳ Pending | - | Conditional rendering by permission |
-| Apply permission-aware UI | ⏳ Pending | - | All modules: hide unauthorized actions |
+| RoleManagementPage | ✅ Complete | 2026-05-18 | User search plus assignment/revocation workflow |
+| UserRolesView | ✅ Complete | 2026-05-18 | Current roles with scope context |
+| AssignRoleForm | ✅ Complete | 2026-05-18 | Dynamic form adapting to role type |
+| RevokeRoleButton | ✅ Complete | 2026-05-18 | Confirmation-backed revoke mutation |
+| RoleScopePicker | ✅ Complete | 2026-05-18 | Loads entities based on selected role |
+| usePermissions hook | ✅ Complete | 2026-05-18 | Shared permission checks used by role-aware UI |
+| Can component | ✅ Complete | 2026-05-18 | Existing permission component retained for conditional UI |
+| Apply permission-aware UI | ✅ Complete | 2026-05-18 | Society/role actions and navigation are permission-aware |
 
 ### Key Decisions
-- (To be logged)
+- Role management lives outside the admin dashboard because delegated managers can use parts of the workspace.
+- Society leadership roles are changed through society update flows; the role revoke endpoint handles HOD, Program Director, CR, and moderator roles.
+- Successful role changes emit `auth:roles-updated` so authenticated clients can refresh their scoped role context.
 
 ### Challenges & Solutions
-- (To be logged)
+- Enriched `GET /api/roles/users/:id` with display-ready scope context to keep frontend role rendering deterministic.
+- Kept `/admin/roles` as a redirect for old links while moving the primary entry point to the profile menu.
 
 ---
 

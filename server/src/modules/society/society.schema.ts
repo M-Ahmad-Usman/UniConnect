@@ -159,3 +159,12 @@ export const listMembersSchema = {
   }),
   query: paginationQuerySchema,
 };
+
+export const listMemberCandidatesSchema = {
+  params: z.object({
+    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+  }),
+  query: paginationQuerySchema.extend({
+    search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
+  }),
+};

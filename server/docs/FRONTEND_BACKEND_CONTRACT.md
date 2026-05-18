@@ -179,21 +179,30 @@ This document is the frontend integration contract for the UniConnect backend. I
 ### Societies (`/api/societies`)
 - `POST /`
   - Body: `{ name, description?, departmentId, presidentId, convenorId }`
+  - Auth: admin or HOD for the target department
 - `GET /`
   - Query: `page, limit, departmentId?`
 - `GET /:id`
+- `GET /:id/my-membership`
+  - Returns `{ isMember, requestStatus, requestedAt, reviewedAt }` for the authenticated user
 - `PATCH /:id`
   - Body: `{ name?, description?, presidentId?, convenorId? }`
+  - Auth: info changes by admin, department HOD, convenor, or president; leadership changes by admin or department HOD
 - `POST /:id/join-request`
 - `GET /:id/join-requests`
   - Query: `page, limit, status?`
+  - Auth: admin, convenor, or president
 - `PATCH /:id/join-requests/:requestId`
   - Body: `{ status: "APPROVED" | "REJECTED" }`
+  - Approval adds server membership; approval and rejection notify the requester with `SOCIETY_REQUEST_REVIEWED`
 - `POST /:id/members`
   - Body: `{ userId }`
 - `DELETE /:id/members/:userId`
 - `GET /:id/members`
   - Query: `page, limit`
+- `GET /:id/member-candidates`
+  - Query: `page, limit, search?`
+  - Returns active same-department students who are not already society server members
 
 ### Roles (`/api/roles`)
 - `POST /assign`
@@ -212,6 +221,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Society leadership roles are changed via society update endpoints, not revoke
 - `GET /users/:id`
   - Returns contextual role assignments for the target user, including department/program/class/society metadata and explicit moderation roles
+  - Role changes emit `auth:roles-updated` to affected users so clients can refetch `/api/users/me`
 
 ### Servers (`/api/servers`)
 - `GET /`
@@ -252,6 +262,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `GET /`
   - Query: `page, limit, type?, unreadOnly?`
   - `NEW_POST` items include post channel and priority metadata for routing and urgent UI.
+  - `SOCIETY_REQUEST_REVIEWED` items are emitted when a society join request is approved or rejected.
 - `GET /unread-count`
 - `PATCH /read-all`
 - `PATCH /:id/read`
@@ -263,6 +274,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Body: `{ notificationType, scopeType, serverId, channelId?, isSubscribed }`
   - `NEW_POST` supports server and channel scope.
   - `ROLE_ASSIGNED` supports server scope only.
+  - `SOCIETY_REQUEST_REVIEWED` does not use notification preferences.
   - Missing preference means subscribed.
 
 ### Admin (`/api/admin`)

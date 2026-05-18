@@ -13,6 +13,7 @@ import {
   addMemberSchema,
   removeMemberSchema,
   listMembersSchema,
+  listMemberCandidatesSchema,
 } from "./society.schema.js";
 import {
   handleCreateSociety,
@@ -25,6 +26,8 @@ import {
   handleAddMember,
   handleRemoveMember,
   handleListMembers,
+  handleGetMyMembershipStatus,
+  handleListMemberCandidates,
 } from "./society.controller.js";
 
 const router = Router();
@@ -34,7 +37,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize({ userTypes: ["TEACHER"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(createSocietySchema),
   handleCreateSociety
 );
@@ -56,9 +59,16 @@ router.get(
 router.patch(
   "/:id",
   authenticate,
-  authorize({ userTypes: ["TEACHER", "STUDENT"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(updateSocietySchema),
   handleUpdateSociety
+);
+
+router.get(
+  "/:id/my-membership",
+  authenticate,
+  validate(societyIdParamSchema),
+  handleGetMyMembershipStatus
 );
 
 // ─── Join Requests ─────────────────────────────────────────────────────────
@@ -74,7 +84,7 @@ router.post(
 router.get(
   "/:id/join-requests",
   authenticate,
-  authorize({ userTypes: ["TEACHER", "STUDENT"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(listJoinRequestsSchema),
   handleListJoinRequests
 );
@@ -82,7 +92,7 @@ router.get(
 router.patch(
   "/:id/join-requests/:requestId",
   authenticate,
-  authorize({ userTypes: ["TEACHER", "STUDENT"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(reviewJoinRequestSchema),
   handleReviewJoinRequest
 );
@@ -92,7 +102,7 @@ router.patch(
 router.post(
   "/:id/members",
   authenticate,
-  authorize({ userTypes: ["TEACHER", "STUDENT"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(addMemberSchema),
   handleAddMember
 );
@@ -100,15 +110,23 @@ router.post(
 router.delete(
   "/:id/members/:userId",
   authenticate,
-  authorize({ userTypes: ["TEACHER", "STUDENT"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(removeMemberSchema),
   handleRemoveMember
 );
 
 router.get(
+  "/:id/member-candidates",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
+  validate(listMemberCandidatesSchema),
+  handleListMemberCandidates
+);
+
+router.get(
   "/:id/members",
   authenticate,
-  authorize({ userTypes: ["TEACHER", "STUDENT"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(listMembersSchema),
   handleListMembers
 );

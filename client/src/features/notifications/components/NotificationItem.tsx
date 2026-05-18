@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, ShieldAlert } from 'lucide-react';
+import { Bell, ChevronRight, ShieldAlert, UserCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { NotificationType, type Notification } from '@/types';
@@ -23,6 +23,8 @@ export function NotificationItem({ notification, onSelect }: NotificationItemPro
       <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         {notification.type === NotificationType.ROLE_ASSIGNED ? (
           <ShieldAlert className="size-4" />
+        ) : notification.type === NotificationType.SOCIETY_REQUEST_REVIEWED ? (
+          <UserCheck className="size-4" />
         ) : (
           <Bell className="size-4" />
         )}

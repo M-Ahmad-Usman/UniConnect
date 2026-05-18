@@ -12,8 +12,6 @@ const adminNavItems = [
   { label: 'Disciplines', to: ROUTES.ADMIN_DISCIPLINES, icon: Shield },
   { label: 'Classes', to: ROUTES.ADMIN_CLASSES, icon: GraduationCap },
   { label: 'Courses', to: ROUTES.ADMIN_COURSES, icon: BookOpen },
-  { label: 'Societies', to: ROUTES.ADMIN_SOCIETIES, icon: Building2 },
-  { label: 'Roles', to: ROUTES.ADMIN_ROLES, icon: Shield },
 ];
 
 export function AdminLayout() {

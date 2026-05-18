@@ -1,4 +1,4 @@
-import { Bell, KeyRound, LayoutDashboard, LogOut, User } from 'lucide-react';
+import { Bell, Building2, KeyRound, LayoutDashboard, LogOut, Shield, User } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { UserAvatar } from '@/components/shared/UserAvatar';
@@ -24,6 +24,13 @@ export function UserDropdown() {
   const serverId = parseRouteParamId(params.serverId);
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
+  const canManageRoles =
+    user?.userType === UserType.ADMIN ||
+    user?.roles?.some((role) =>
+      ['hod', 'program_director', 'cr', 'society_president', 'society_convenor'].includes(
+        role.role,
+      ),
+    );
 
   if (!user) {
     return null;
@@ -70,6 +77,16 @@ export function UserDropdown() {
             <User className="size-4" />
             Profile
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate(ROUTES.SOCIETIES)}>
+            <Building2 className="size-4" />
+            Societies
+          </DropdownMenuItem>
+          {canManageRoles ? (
+            <DropdownMenuItem onClick={() => navigate(ROUTES.ROLES)}>
+              <Shield className="size-4" />
+              Roles
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             onClick={() =>
               navigate(

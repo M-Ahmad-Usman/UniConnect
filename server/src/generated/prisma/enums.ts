@@ -72,7 +72,8 @@ export type ModeratorScopeType = (typeof ModeratorScopeType)[keyof typeof Modera
 
 export const NotificationType = {
   NEW_POST: 'NEW_POST',
-  ROLE_ASSIGNED: 'ROLE_ASSIGNED'
+  ROLE_ASSIGNED: 'ROLE_ASSIGNED',
+  SOCIETY_REQUEST_REVIEWED: 'SOCIETY_REQUEST_REVIEWED'
 } as const
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]

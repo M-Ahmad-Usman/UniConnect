@@ -134,13 +134,15 @@ Official references:
 - Implemented foundation: shared error boundary, toast system, typed API client, Zustand stores, Socket.IO client, and backend-aligned type layer
 
 ### Admin Features
-- Planned: system dashboard with statistics
-- Planned: user management with create, deactivate, and bulk import flows
-- Planned: department, program, and discipline CRUD
-- Planned: class management with semester progression
-- Planned: course management and assignments
-- Planned: role assignment with scoped permissions
-- Planned: society management
+- Implemented: system dashboard with statistics
+- Implemented: user management with create, deactivate, and bulk import flows
+- Implemented: department, program, and discipline CRUD
+- Implemented: class management with semester progression
+- Implemented: course management and assignments
+
+### Delegated Management Features
+- Implemented: role assignment with scoped permissions, available from the profile menu
+- Implemented: society browsing, creation, membership, and join request review, available from the profile menu
 
 ---
 
@@ -322,13 +324,13 @@ VITE_SOCKET_URL=http://localhost:4000
 | Module 2: Layout & Navigation | ✅ Complete |
 | Module 3: Server & Channel Views | ✅ Complete |
 | Module 4: Posts & Announcements | ✅ Complete |
-| Module 5: Notifications | ⏳ Not Started |
-| Module 6: User Profile & Management | ⏳ Not Started |
-| Module 7: Admin Dashboard & CRUD | ⏳ Not Started |
-| Module 8: Society Management | ⏳ Not Started |
-| Module 9: Role Management | ⏳ Not Started |
+| Module 5: Notifications | ✅ Complete |
+| Module 6: User Profile & Management | ✅ Complete |
+| Module 7: Admin Dashboard & CRUD | ✅ Complete |
+| Module 8: Society Management | ✅ Complete |
+| Module 9: Role Management | ✅ Complete |
 
-**Progress:** 5/10 modules complete
+**Progress:** 10/10 modules complete
 
 ---
 

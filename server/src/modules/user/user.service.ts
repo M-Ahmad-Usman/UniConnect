@@ -49,6 +49,7 @@ interface ListUsersQuery {
   userType?: unknown;
   departmentId?: unknown;
   isActive?: unknown;
+  search?: unknown;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -79,11 +80,13 @@ function parseUserListFilters(query: ListUsersQuery): {
   userType?: "STUDENT" | "TEACHER" | "ADMIN";
   departmentId?: number;
   isActive?: boolean;
+  search?: string;
 } {
   const filters: {
     userType?: "STUDENT" | "TEACHER" | "ADMIN";
     departmentId?: number;
     isActive?: boolean;
+    search?: string;
   } = {};
 
   if (query.userType && typeof query.userType === "string") {
@@ -106,6 +109,13 @@ function parseUserListFilters(query: ListUsersQuery): {
       filters.isActive = true;
     } else if (value === false || value === "false") {
       filters.isActive = false;
+    }
+  }
+
+  if (query.search && typeof query.search === "string") {
+    const trimmed = query.search.trim();
+    if (trimmed.length > 0) {
+      filters.search = trimmed;
     }
   }
 
@@ -429,6 +439,7 @@ export async function listUsers(
     userType?: "STUDENT" | "TEACHER" | "ADMIN";
     departmentId?: number;
     isActive?: boolean;
+    OR?: Array<{ fullName: { contains: string; mode: "insensitive" } } | { email: { contains: string; mode: "insensitive" } }>;
   } = {};
 
   if (filters.userType) {
@@ -448,6 +459,13 @@ export async function listUsers(
     where.departmentId = departmentId;
   } else {
     throw new ForbiddenError("Insufficient permissions");
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { fullName: { contains: filters.search, mode: "insensitive" } },
+      { email: { contains: filters.search, mode: "insensitive" } },
+    ];
   }
 
   const [users, total] = await prisma.$transaction([

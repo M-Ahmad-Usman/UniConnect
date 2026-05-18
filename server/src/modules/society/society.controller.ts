@@ -166,3 +166,38 @@ export async function handleListMembers(req: Request, res: Response): Promise<vo
 
   res.status(StatusCodes.OK).json(response);
 }
+
+export async function handleGetMyMembershipStatus(req: Request, res: Response): Promise<void> {
+  const result = await societyService.getMyMembershipStatus(Number(req.params.id), req.user!.id);
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleListMemberCandidates(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const result = await societyService.listMemberCandidates(
+    Number(req.params.id),
+    {
+      search: query.search,
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+    },
+    {
+      id: req.user!.id,
+      userType: req.user!.userType,
+    }
+  );
+
+  const response: PaginatedResponse<(typeof result.data)[number]> = {
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}

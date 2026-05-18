@@ -1,4 +1,9 @@
-import type { Notification, NotificationListParams, NotificationPreference } from '@/types';
+import type {
+  Notification,
+  NotificationListParams,
+  NotificationPreference,
+  NotificationPreferenceType,
+} from '@/types';
 import { NotificationScopeType, NotificationType } from '@/types';
 import { ROUTES } from '@/lib/constants';
 
@@ -18,6 +23,10 @@ export function getNotificationTarget(notification: Notification) {
     return serverId ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId) : ROUTES.PROFILE;
   }
 
+  if (notification.type === NotificationType.SOCIETY_REQUEST_REVIEWED) {
+    return ROUTES.SOCIETIES;
+  }
+
   const serverId = notification.post?.channel.serverId;
   const channelId = notification.post?.channelId;
 
@@ -31,7 +40,7 @@ export function getNotificationTarget(notification: Notification) {
 export function findPreference(
   preferences: NotificationPreference[] | undefined,
   match: {
-    notificationType: NotificationType;
+    notificationType: NotificationPreferenceType;
     scopeType: NotificationScopeType;
     serverId: number;
     channelId?: number | null;

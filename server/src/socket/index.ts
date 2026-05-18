@@ -194,6 +194,12 @@ export function emitToChannel(channelId: number, event: string, data: unknown): 
   }
 }
 
+export function emitToUser(userId: number, event: string, data: unknown): void {
+  if (io) {
+    io.to(`user:${userId}`).emit(event, data);
+  }
+}
+
 /**
  * Reset the Socket.IO instance (for testing).
  */

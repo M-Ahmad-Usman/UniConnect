@@ -31,25 +31,21 @@ export interface UserRole {
   societyId?: number;
   societyName?: string;
   serverId?: number;
+  serverName?: string;
   channelId?: number | null;
+  channelName?: string | null;
   scopeType?: ModeratorScopeType;
+  scopeContext?: string;
 }
 
 // ─── Role Assignment ────────────────────────────────────────────────────────
 
-export interface AssignRoleRequest {
-  userId: number;
-  role: RoleName;
-  scopeId?: number;
-  serverId?: number;
-  channelId?: number;
-  scopeType?: ModeratorScopeType;
-}
+export type AssignRoleRequest =
+  | { userId: number; role: Exclude<RoleName, ModerationRoleName>; scopeId: number }
+  | { userId: number; role: 'server_moderator'; serverId: number }
+  | { userId: number; role: 'channel_moderator'; serverId: number; channelId: number };
 
-export interface RevokeRoleRequest {
-  userId: number;
-  role: RevokableRoleName;
-  scopeId?: number;
-  serverId?: number;
-  channelId?: number;
-}
+export type RevokeRoleRequest =
+  | { userId: number; role: Exclude<RevokableRoleName, ModerationRoleName>; scopeId: number }
+  | { userId: number; role: 'server_moderator'; serverId: number }
+  | { userId: number; role: 'channel_moderator'; serverId: number; channelId: number };

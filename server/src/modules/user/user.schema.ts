@@ -61,6 +61,7 @@ export const listUsersSchema = {
     userType: userTypeEnum.optional(),
     departmentId: z.coerce.number().int().positive().optional(),
     isActive: z.enum(["true", "false"]).optional(),
+    search: z.string().trim().max(100).optional(),
   }),
 };
 

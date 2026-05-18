@@ -121,8 +121,49 @@ async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
   });
 
   if (!membership) {
-    throw new ForbiddenError("You are not a member of this server");
+    const canManage = await canManageServer(caller.id, serverId);
+    if (!canManage) {
+      throw new ForbiddenError("You are not a member of this server");
+    }
   }
+}
+
+async function canManageServer(userId: number, serverId: number): Promise<boolean> {
+  const [department, classRecord, society] = await Promise.all([
+    prisma.department.findFirst({
+      where: { hodId: userId },
+      select: { id: true, serverId: true },
+    }),
+    prisma.class.findFirst({
+      where: { crId: userId },
+      select: { serverId: true },
+    }),
+    prisma.society.findFirst({
+      where: { OR: [{ presidentId: userId }, { convenorId: userId }] },
+      select: { serverId: true },
+    }),
+  ]);
+
+  if (department) {
+    if (department.serverId === serverId) return true;
+
+    const scopedServer = await prisma.server.findFirst({
+      where: {
+        id: serverId,
+        OR: [
+          { class: { program: { departmentId: department.id } } },
+          { society: { departmentId: department.id } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (scopedServer) return true;
+  }
+
+  if (classRecord?.serverId === serverId) return true;
+  if (society?.serverId === serverId) return true;
+
+  return false;
 }
 
 async function findServerOrThrow(serverId: number) {

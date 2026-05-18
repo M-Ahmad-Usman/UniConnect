@@ -1485,8 +1485,12 @@ export const departmentsApi = {
 #### Routes
 | Route | Component |
 |-------|-----------|
-| `/admin/societies` | `SocietyListPage` |
-| `/admin/societies/:id` | `SocietyDetailPage` |
+| `/societies` | `SocietyListPage` |
+| `/societies/:societyId` | `SocietyDetailPage` |
+
+`/admin/societies` and `/admin/societies/:id` are compatibility redirects only. Society
+management is exposed from the authenticated user profile menu because convenors, presidents,
+HODs, and admins can all use this workspace.
 
 #### Components
 
@@ -1546,7 +1550,10 @@ export const societiesApi = {
     axios.get<Society[]>('/societies', { params }),
 
   get: (id: number) =>
-    axios.get<SocietyDetail>('/societies/${id}'),
+    axios.get<SocietyDetail>(`/societies/${id}`),
+
+  getMyMembership: (id: number) =>
+    axios.get<SocietyMembershipSummary>(`/societies/${id}/my-membership`),
 
   create: (data: CreateSocietyDto) =>
     axios.post('/societies', data),
@@ -1566,6 +1573,9 @@ export const societiesApi = {
   addMember: (societyId: number, userId: number) =>
     axios.post(`/societies/${societyId}/members`, { userId }),
 
+  listMemberCandidates: (societyId: number, params?: MemberCandidateParams) =>
+    axios.get<PaginatedResponse<MemberCandidate>>(`/societies/${societyId}/member-candidates`, { params }),
+
   removeMember: (societyId: number, userId: number) =>
     axios.delete(`/societies/${societyId}/members/${userId}`),
 
@@ -1576,9 +1586,11 @@ export const societiesApi = {
 
 #### Permission Checks
 - **Create society:** Only HOD or Admin
-- **Edit society:** Only convenor, president, or admin
-- **Approve/reject join requests:** Only convenor or president
-- **Add/remove members:** Only convenor or president
+- **Edit society:** Info changes by convenor, president, HOD, or admin; leadership changes by HOD or admin
+- **Approve/reject join requests:** Convenor, president, or admin
+- **Add/remove members:** Convenor, president, or admin
+- **Browse societies:** All authenticated users can browse active societies
+- **Join request review notification:** Approval/rejection emits `SOCIETY_REQUEST_REVIEWED` to the requester
 
 #### Verification
 - ✅ Society list loads with cards
@@ -1601,7 +1613,10 @@ export const societiesApi = {
 #### Routes
 | Route | Component |
 |-------|-----------|
-| `/admin/roles` | `RoleManagementPage` |
+| `/roles` | `RoleManagementPage` |
+
+`/admin/roles` is a compatibility redirect only. Role management is exposed from the authenticated
+user profile menu for admins and delegated role managers instead of the admin dashboard sidebar.
 
 #### Components
 

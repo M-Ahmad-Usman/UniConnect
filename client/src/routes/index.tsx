@@ -3,7 +3,6 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AppShell } from '@/components/layout/AppShell';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { AdminSectionPage } from '@/features/admin/pages/AdminSectionPage';
 import { AuthGuard } from './guards/AuthGuard';
 import { MustChangePasswordGuard } from './guards/MustChangePasswordGuard';
 import { AdminGuard } from './guards/AdminGuard';
@@ -122,6 +121,21 @@ const CreateUserPage = lazy(() =>
 const BulkImportPage = lazy(() =>
   import('@/features/admin/pages/BulkImportPage').then((m) => ({ default: m.BulkImportPage })),
 );
+const SocietyListPage = lazy(() =>
+  import('@/features/societies/pages/SocietyListPage').then((m) => ({
+    default: m.SocietyListPage,
+  })),
+);
+const SocietyDetailPage = lazy(() =>
+  import('@/features/societies/pages/SocietyDetailPage').then((m) => ({
+    default: m.SocietyDetailPage,
+  })),
+);
+const RoleManagementPage = lazy(() =>
+  import('@/features/roles/pages/RoleManagementPage').then((m) => ({
+    default: m.RoleManagementPage,
+  })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -201,6 +215,14 @@ export const router = createBrowserRouter([
                   { path: 'notifications', element: <NotificationInboxPage /> },
                   { path: 'profile', element: <ProfilePage /> },
                   {
+                    path: 'societies',
+                    children: [
+                      { index: true, element: <SocietyListPage /> },
+                      { path: ':societyId', element: <SocietyDetailPage /> },
+                    ],
+                  },
+                  { path: 'roles', element: <RoleManagementPage /> },
+                  {
                     path: 'settings',
                     children: [
                       { path: 'password', element: <ChangePasswordPage /> },
@@ -253,24 +275,8 @@ export const router = createBrowserRouter([
                             ],
                           },
                           { path: 'courses', element: <CourseListPage /> },
-                          {
-                            path: 'societies',
-                            element: (
-                              <AdminSectionPage
-                                title="Societies"
-                                description="Society administration is queued for later modules, not Module 2."
-                              />
-                            ),
-                          },
-                          {
-                            path: 'roles',
-                            element: (
-                              <AdminSectionPage
-                                title="Roles"
-                                description="Role assignment and permission management will build on this shell later."
-                              />
-                            ),
-                          },
+                          { path: 'societies', element: <Navigate to={ROUTES.SOCIETIES} replace /> },
+                          { path: 'roles', element: <Navigate to={ROUTES.ROLES} replace /> },
                         ],
                       },
                     ],

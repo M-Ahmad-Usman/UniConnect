@@ -1,8 +1,8 @@
 # UniConnect API Contract Reference
 
-**Version:** 1.1
+**Version:** 1.2
 **Backend API Version:** 1.0.0
-**Last Updated:** 2026-04-24
+**Last Updated:** 2026-05-18
 
 This document provides a complete reference for all API endpoints available to the UniConnect frontend. It includes request/response examples, error handling patterns, and integration notes.
 
@@ -466,7 +466,7 @@ const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
 ```typescript
 {
   id: number;
-  type: 'NEW_POST' | 'ROLE_ASSIGNED';
+  type: 'NEW_POST' | 'ROLE_ASSIGNED' | 'SOCIETY_REQUEST_REVIEWED';
   title: string;
   message: string | null;
   readAt: string | null;
@@ -535,6 +535,13 @@ Backend sets a timer based on JWT expiry. When token expires:
 1. Server emits `auth:expired` event
 2. Server disconnects socket
 3. Frontend should handle reconnection after refresh
+
+#### `auth:roles-updated`
+**Payload:** (none)
+
+Emitted to the affected user after role assignment, role revocation, or society leadership changes.
+The frontend should refetch `/api/users/me` and any role-dependent queries before rendering
+permission-gated actions.
 
 ---
 
@@ -1637,20 +1644,31 @@ GET /api/societies
     name: string;
     description: string | null;
     departmentId: number;
-    presidentId: number;
-    convenorId: number;
-    serverId: number;
     isActive: boolean;
-    president: {
+    createdAt: string;
+    department: {
       id: number;
-      fullName: string;
+      name: string;
+      serverId: number;
+    };
+    president: {
+      user: {
+        id: number;
+        fullName: string;
+        email: string;
+      };
     };
     convenor: {
-      id: number;
-      fullName: string;
+      user: {
+        id: number;
+        fullName: string;
+        email: string;
+      };
     };
-    _count: {
-      memberships: number;
+    server: {
+      _count: {
+        memberships: number;
+      };
     };
   }>;
   pagination: { ... };
@@ -1664,14 +1682,34 @@ GET /api/societies/:id
 
 **Auth:** Required
 
-**Response:** Same shape as list item, plus nested department and server
+**Response:** Same shape as list item, plus `serverId` and `server.id`
 
-#### Create Society (Teacher)
+#### Get My Membership Status
+```
+GET /api/societies/:id/my-membership
+```
+
+**Auth:** Required
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: {
+    isMember: boolean;
+    requestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+    requestedAt: string | null;
+    reviewedAt: string | null;
+  };
+}
+```
+
+#### Create Society
 ```
 POST /api/societies
 ```
 
-**Auth:** Teacher only
+**Auth:** Admin or HOD for the target department
 
 **Request Body:**
 ```typescript
@@ -1684,24 +1722,15 @@ POST /api/societies
 }
 ```
 
-**Response:**
-```typescript
-{
-  success: true;
-  data: {
-    id: number;
-    serverId: number;  // Auto-created server
-  };
-  message: 'Society created successfully';
-}
-```
+**Response:** Created `SocietyListItem`; server is auto-created.
 
-#### Update Society (Teacher/Student with role)
+#### Update Society
 ```
 PATCH /api/societies/:id
 ```
 
-**Auth:** Requires teacher, student with president/convenor role, or admin
+**Auth:** Info-only changes require admin, HOD for the department, convenor, or president.
+Leadership changes require admin or HOD for the department.
 
 **Request Body:**
 ```typescript
@@ -1714,13 +1743,7 @@ PATCH /api/societies/:id
 ```
 
 **Response:**
-```json
-{
-  "success": true,
-  "data": {},
-  "message": "Society updated successfully"
-}
-```
+Updated `SocietyListItem`
 
 #### Submit Join Request (Student)
 ```
@@ -1745,7 +1768,7 @@ POST /api/societies/:id/join-request
 GET /api/societies/:id/join-requests
 ```
 
-**Auth:** Requires student/teacher with role, or admin
+**Auth:** Admin, convenor, or president
 
 **Query Parameters:**
 ```typescript
@@ -1784,7 +1807,7 @@ GET /api/societies/:id/join-requests
 PATCH /api/societies/:id/join-requests/:requestId
 ```
 
-**Auth:** Requires student/teacher with role, or admin
+**Auth:** Admin, convenor, or president
 
 **Request Body:**
 ```typescript
@@ -1802,14 +1825,15 @@ PATCH /api/societies/:id/join-requests/:requestId
 }
 ```
 
-**Note:** Approval adds user to society server (ServerMembership)
+**Note:** Approval adds the user to the society server membership and both approval and
+rejection create a `SOCIETY_REQUEST_REVIEWED` notification for the requester.
 
 #### Add Member Directly
 ```
 POST /api/societies/:id/members
 ```
 
-**Auth:** Requires student/teacher with role, or admin
+**Auth:** Admin, convenor, or president
 
 **Request Body:**
 ```typescript
@@ -1832,7 +1856,7 @@ POST /api/societies/:id/members
 DELETE /api/societies/:id/members/:userId
 ```
 
-**Auth:** Requires student/teacher with role, or admin
+**Auth:** Admin, convenor, or president
 
 **Response:**
 ```json
@@ -1848,13 +1872,44 @@ DELETE /api/societies/:id/members/:userId
 GET /api/societies/:id/members
 ```
 
-**Auth:** Requires student/teacher with role, or admin
+**Auth:** Admin, convenor, or president
 
 **Query Parameters:**
 ```typescript
 {
   page?: number;
   limit?: number;
+}
+```
+
+#### List Member Candidates
+```
+GET /api/societies/:id/member-candidates
+```
+
+**Auth:** Admin, convenor, or president
+
+**Query Parameters:**
+```typescript
+{
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: Array<{
+    id: number;
+    fullName: string;
+    email: string;
+    userType: 'STUDENT';
+    profilePictureUrl: string | null;
+  }>;
+  pagination: { ... };
 }
 ```
 
@@ -1993,6 +2048,8 @@ POST /api/roles/revoke
 
 **Note:** Society president and convenor cannot be revoked via this endpoint (must update society)
 
+**Realtime:** Successful assignment/revocation emits `auth:roles-updated` to the affected user.
+
 #### Get User Roles
 ```
 GET /api/roles/users/:id
@@ -2004,29 +2061,29 @@ GET /api/roles/users/:id
 ```typescript
 {
   success: true;
-  data: Array<
-    | { role: 'hod'; departmentId: number; departmentName: string }
-    | { role: 'program_director'; programId: number; programCode: string }
-    | { role: 'cr'; classId: number }
-    | { role: 'society_president' | 'society_convenor'; societyId: number; societyName: string }
-    | {
-        role: 'server_moderator' | 'channel_moderator';
-        serverId: number;
-        channelId: number | null;
-        scopeType: 'server' | 'channel';
-      }
-  >;
-}
-```
-```typescript
-{
-  success: true;
   data: Array<{
-    role: string;
+    role:
+      | 'hod'
+      | 'program_director'
+      | 'cr'
+      | 'society_president'
+      | 'society_convenor'
+      | 'server_moderator'
+      | 'channel_moderator';
+    departmentId?: number;
+    departmentName?: string;
+    programId?: number;
+    programCode?: string;
+    classId?: number;
+    societyId?: number;
+    societyName?: string;
     scopeId?: number;
     serverId?: number;
+    serverName?: string;
     channelId?: number;
-    scopeContext: string;  // e.g., "HOD of Computer Science Department"
+    channelName?: string | null;
+    scopeType?: 'server' | 'channel';
+    scopeContext?: string;  // e.g., "HOD of Computer Science Department"
   }>;
 }
 ```
@@ -2525,7 +2582,7 @@ GET /api/notifications
 {
   page?: number;
   limit?: number;
-  type?: 'NEW_POST' | 'ROLE_ASSIGNED';
+  type?: 'NEW_POST' | 'ROLE_ASSIGNED' | 'SOCIETY_REQUEST_REVIEWED';
   unreadOnly?: boolean;  // Default: false
 }
 ```
@@ -2536,7 +2593,7 @@ GET /api/notifications
   success: true;
   data: Array<{
     id: number;
-    type: 'NEW_POST' | 'ROLE_ASSIGNED';
+    type: 'NEW_POST' | 'ROLE_ASSIGNED' | 'SOCIETY_REQUEST_REVIEWED';
     title: string;
     message: string | null;
     readAt: string | null;
@@ -2648,7 +2705,8 @@ GET /api/notification-preferences
 
 **Note:** Default behavior: users are subscribed unless explicitly unsubscribed. `NEW_POST`
 preferences support `SERVER` and `CHANNEL` scope. `ROLE_ASSIGNED` preferences support
-`SERVER` scope only.
+`SERVER` scope only. `SOCIETY_REQUEST_REVIEWED` is a transactional user notification and
+does not use notification preferences.
 
 #### Update Preference
 ```

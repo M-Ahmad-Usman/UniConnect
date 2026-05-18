@@ -55,6 +55,12 @@ type CreateRoleAssignedNotificationInput = {
   role: string;
 };
 
+type CreateSocietyRequestReviewedNotificationInput = {
+  userId: number;
+  societyName: string;
+  status: "APPROVED" | "REJECTED";
+};
+
 // ─── Select Constants ──────────────────────────────────────────────────────
 
 const notificationListSelect = {
@@ -313,6 +319,26 @@ export async function createRoleAssignedNotification(
       type: "ROLE_ASSIGNED",
       title: `${roleLabel} assigned`,
       message,
+    },
+    select: notificationListSelect,
+  });
+
+  emitToUser(input.userId, "notification:new", notification);
+  await emitUnreadCount(input.userId);
+}
+
+export async function createSocietyRequestReviewedNotification(
+  input: CreateSocietyRequestReviewedNotificationInput
+): Promise<void> {
+  const isApproved = input.status === "APPROVED";
+  const notification = await prisma.notification.create({
+    data: {
+      userId: input.userId,
+      type: "SOCIETY_REQUEST_REVIEWED",
+      title: isApproved ? "Society request approved" : "Society request rejected",
+      message: isApproved
+        ? `Your request to join ${input.societyName} was approved`
+        : `Your request to join ${input.societyName} was rejected`,
     },
     select: notificationListSelect,
   });
