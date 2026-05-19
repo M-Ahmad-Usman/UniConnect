@@ -8,7 +8,7 @@
     "dev:e2e": "dotenv -e .env.e2e -- nodemon",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "dotenv -e .env.test -- node --experimental-vm-modules node_modules/.bin/jest --runInBand --detectOpenHandles",
+    "test": "NODE_OPTIONS='--max-old-space-size=2048' dotenv -e .env.test -- node --experimental-vm-modules node_modules/.bin/jest --runInBand",
     "test:coverage": "dotenv -e .env.test -- node --experimental-vm-modules node_modules/.bin/jest --runInBand --forceExit --coverage",
     "db:migrate": "prisma migrate dev",
     "db:migrate:test": "dotenv -e .env.test -- prisma migrate deploy",
