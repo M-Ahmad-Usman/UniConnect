@@ -28,9 +28,13 @@ export async function handleListClasses(req: Request, res: Response): Promise<vo
     departmentId: query.departmentId ? Number(query.departmentId) : undefined,
     semester: query.semester ? Number(query.semester) : undefined,
     section: query.section === "A" || query.section === "B" ? query.section : undefined,
+    status:
+      query.status === "ACTIVE" || query.status === "GRADUATED" || query.status === "ALL"
+        ? query.status
+        : undefined,
     page: query.page ? Number(query.page) : undefined,
     limit: query.limit ? Number(query.limit) : undefined,
-  });
+  }, req.user!.id);
 
   const response: PaginatedResponse<(typeof result.data)[number]> = {
     success: true,
@@ -72,11 +76,29 @@ export async function handleAssignCourse(req: Request, res: Response): Promise<v
 }
 
 export async function handleListClassCourses(req: Request, res: Response): Promise<void> {
-  const courses = await classService.listClassCourses(Number(req.params.id));
+  const courses = await classService.listClassCourses(Number(req.params.id), req.user!.id);
 
   const response: ApiResponse<typeof courses> = {
     success: true,
     data: courses,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleReplaceCourseTeacher(req: Request, res: Response): Promise<void> {
+  const assignment = await classService.replaceClassCourseTeacher(
+    Number(req.params.id),
+    Number(req.params.courseId),
+    req.body,
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Course teacher replaced successfully",
   };
 
   res.status(StatusCodes.OK).json(response);
@@ -113,6 +135,105 @@ export async function handleAdvanceSemester(req: Request, res: Response): Promis
     success: true,
     data: result,
     message: "Semester advanced successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleListClassStudents(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const result = await classService.listClassStudents(
+    Number(req.params.id),
+    {
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+      search: query.search,
+    },
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: PaginatedResponse<(typeof result.data)[number]> = {
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleListStudentCandidates(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const result = await classService.listStudentCandidates(
+    Number(req.params.id),
+    {
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+      search: query.search,
+    },
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: PaginatedResponse<(typeof result.data)[number]> = {
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleTransferStudent(req: Request, res: Response): Promise<void> {
+  const student = await classService.transferStudentToClass(
+    Number(req.params.id),
+    req.body,
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: ApiResponse<typeof student> = {
+    success: true,
+    data: student,
+    message: "Student transferred successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleListTeacherCandidates(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const result = await classService.listTeacherCandidates(
+    Number(req.params.id),
+    {
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+      search: query.search,
+    },
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: PaginatedResponse<(typeof result.data)[number]> = {
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleGraduateClass(req: Request, res: Response): Promise<void> {
+  const result = await classService.graduateClass(
+    Number(req.params.id),
+    req.user!.id,
+    req.user!.userType
+  );
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    message: "Class graduated successfully",
   };
 
   res.status(StatusCodes.OK).json(response);

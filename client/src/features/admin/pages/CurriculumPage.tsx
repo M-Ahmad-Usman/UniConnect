@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ROUTES } from '@/lib/constants';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { parsePositiveInt } from '../utils';
 import {
   useAddCurriculum,
@@ -25,12 +26,14 @@ export function CurriculumPage() {
   const batchYear = parsePositiveInt(searchParams.get('batchYear'));
   const [addOpen, setAddOpen] = useState(false);
   const [removing, setRemoving] = useState<CurriculumEntry | null>(null);
+  const permissionsQuery = useMyPermissions();
   const programQuery = useProgram(programId);
   const curriculumQuery = useCurriculum(programId, { batchYear });
   const addCurriculum = useAddCurriculum(programId ?? 0);
   const removeCurriculum = useRemoveCurriculum(programId ?? 0);
   const departmentId = programQuery.data?.departmentId;
-  const coursesQuery = useAdminCourses({ page: 1, limit: 50, departmentId });
+  const canManageCurriculum = permissionsQuery.data?.global.canManageCatalog ?? false;
+  const coursesQuery = useAdminCourses({ page: 1, limit: 50, departmentId }, canManageCurriculum);
   const curriculum = useMemo(() => curriculumQuery.data ?? [], [curriculumQuery.data]);
 
   const grouped = useMemo(() => {
@@ -66,14 +69,16 @@ export function CurriculumPage() {
         description={`${program.department.code} · ${program.discipline.name} · ${program.degreeLevel.level}`}
         actions={
           <>
-            <Link to={ROUTES.ADMIN_PROGRAMS} className={buttonVariants({ variant: 'outline' })}>
+            <Link to={ROUTES.ACADEMICS_CLASSES} className={buttonVariants({ variant: 'outline' })}>
               <ArrowLeft className="size-4" />
-              Programs
+              Classes
             </Link>
-            <Button type="button" onClick={() => setAddOpen(true)}>
-              <Plus className="size-4" />
-              Add course
-            </Button>
+            {canManageCurriculum ? (
+              <Button type="button" onClick={() => setAddOpen(true)}>
+                <Plus className="size-4" />
+                Add course
+              </Button>
+            ) : null}
           </>
         }
       />
@@ -124,10 +129,12 @@ export function CurriculumPage() {
                         <td className="px-4 py-3">{entry.course.creditHours}</td>
                         <td className="px-4 py-3">{entry.batchYear}</td>
                         <td className="px-4 py-3 text-right">
-                          <Button type="button" variant="ghost" size="icon-sm" onClick={() => setRemoving(entry)}>
-                            <Trash2 className="size-4" />
-                            <span className="sr-only">Remove curriculum entry</span>
-                          </Button>
+                          {canManageCurriculum ? (
+                            <Button type="button" variant="ghost" size="icon-sm" onClick={() => setRemoving(entry)}>
+                              <Trash2 className="size-4" />
+                              <span className="sr-only">Remove curriculum entry</span>
+                            </Button>
+                          ) : null}
                         </td>
                       </tr>
                     ))}

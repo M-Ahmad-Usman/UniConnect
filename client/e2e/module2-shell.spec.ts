@@ -26,7 +26,9 @@ test.describe('Module 2 shell flows', () => {
     await page.goto(`/servers/${serverId}`);
 
     await expect(page).toHaveURL(new RegExp(`/servers/${serverId}/channels/${announcementChannelId}$`));
-    await expect(page.getByRole('heading', { name: module2Fixtures.announcementChannelName })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: module2Fixtures.announcementChannelName, exact: true }),
+    ).toBeVisible();
 
     const searchInput = page.getByPlaceholder('Search posts in this channel');
     await searchInput.fill('Architecture');

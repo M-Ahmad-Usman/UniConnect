@@ -158,18 +158,33 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `POST /`
   - Body: `{ programId, currentSemester, academicYear, admissionYear, section }`
 - `GET /`
-  - Query: `page, limit, programId?, semester?`
+  - Query: `page, limit, programId?, departmentId?, semester?, section?, status?`
+  - `status` accepts `ACTIVE`, `GRADUATED`, or `ALL`; default is `ACTIVE`.
+  - Results are scoped to admins, own-department HODs, and own-program Program Directors.
 - `GET /:id`
-  - Returns class detail plus caller-specific `permissions`:
+  - Returns class detail plus `status`, graduation metadata, and caller-specific `permissions`:
     - `canViewStudents`, `canManageStudents`, `canAssignCourses`, `canRemoveCourses`
     - `canReplaceCourseTeacher`, `canAdvanceSemester`, `canGraduate`
     - `canManageChannels`, `canAssignModerators`
 - `POST /:id/courses`
   - Body: `{ courseId, teacherId }`
+  - Course must be in the class current-semester curriculum; teacher must be active.
 - `GET /:id/courses`
+- `GET /:id/students`
+- `GET /:id/student-candidates`
+  - Query: `page, limit, search?`
+- `POST /:id/students`
+  - Body: `{ studentId }`
+  - Transfers an existing same-department active student into the target class.
+- `GET /:id/teacher-candidates`
+  - Query: `page, limit, search?`
+- `PATCH /:id/courses/:courseId/teacher`
+  - Body: `{ teacherId }`
 - `DELETE /:id/courses/:courseId`
 - `POST /:id/semester-progression`
   - Body: `{ teacherAssignments: [{ courseId, teacherId }] }`
+- `POST /:id/graduation`
+  - Final-semester active classes only; locks class channels and keeps history visible.
 
 ### Courses (`/api/courses`)
 - `POST /`

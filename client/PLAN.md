@@ -1308,11 +1308,19 @@ export const updateProfileSchema = z.object({
 | `/admin/departments` | `DepartmentListPage` |
 | `/admin/departments/:id` | `DepartmentDetailPage` |
 | `/admin/departments/:id/programs` | `ProgramListPage` (nested) |
-| `/admin/programs/:id/curriculum` | `CurriculumPage` |
+| `/admin/programs/:id/curriculum` | Redirect to `/academics/programs/:id/curriculum` |
 | `/admin/disciplines` | `DisciplineListPage` |
-| `/admin/classes` | `ClassListPage` |
-| `/admin/classes/:id` | `ClassDetailPage` |
+| `/admin/classes` | Redirect to `/academics/classes` |
+| `/admin/classes/:id` | Redirect to `/academics/classes/:id` |
 | `/admin/courses` | `CourseListPage` |
+| `/academics/classes` | `ClassListPage` behind `AcademicGuard` |
+| `/academics/classes/:id` | `ClassDetailPage` behind `AcademicGuard` |
+| `/academics/programs/:id/curriculum` | `CurriculumPage` behind `AcademicGuard` |
+
+The `/academics/*` workspace is delegated through backend capabilities, not `ADMIN`
+status alone. Admins, HODs, and Program Directors can enter when
+`/api/permissions/me` returns `global.canAccessAcademicWorkspace`; admin academic
+routes remain compatibility redirects.
 
 #### Components
 
@@ -1349,7 +1357,7 @@ export const updateProfileSchema = z.object({
 ##### `ProgramListPage` (`src/features/admin/components/ProgramListPage.tsx`)
 - Table with columns: Code, Discipline, Degree Level, Semesters, Program Director, Actions
 - "Create Program" button → opens `CreateProgramDialog`
-- Click row → navigate to `/admin/programs/:id/curriculum`
+- Click row → navigate to `/academics/programs/:id/curriculum`
 
 ##### `CreateProgramDialog` (`src/features/admin/components/CreateProgramDialog.tsx`)
 - Form fields:
@@ -1365,6 +1373,9 @@ export const updateProfileSchema = z.object({
 - Grouped by semester (accordion or tabs)
 - Each semester: table of courses with columns: Course Code, Title, Credit Hours, Batch Year, Remove Button
 - "Add Course" button → `AddCurriculumDialog`
+- Mutating controls are permission-aware. HODs and admins can maintain curriculum in
+  their allowed academic scope; Program Directors can reach curriculum context through
+  class workflows but do not receive class progression/graduation controls.
 
 ##### `AddCurriculumDialog` (`src/features/admin/components/AddCurriculumDialog.tsx`)
 - Form fields:
@@ -1382,10 +1393,11 @@ export const updateProfileSchema = z.object({
 - Submit → `POST /api/disciplines`
 
 ##### `ClassListPage` (`src/features/admin/pages/ClassListPage.tsx`)
-- Table with columns: Program, Section, Current Semester, Academic Year, CR, Server, Actions
-- Filters: Program (dropdown), Section (A/B)
-- "Create Class" button → `CreateClassDialog`
-- Click row → navigate to `/admin/classes/:id`
+- Table with columns: Program, Section, Current Semester, Academic Year, Status, CR, Server, Actions
+- Filters: Program, Section, Status, and search where supported by the backend
+- Defaults to active classes; graduated classes are available through the status filter
+- "Create Class" button is shown only when backend capabilities allow class creation
+- Click row → navigate to `/academics/classes/:id`
 
 ##### `CreateClassDialog` (`src/features/admin/components/CreateClassDialog.tsx`)
 - Form fields:
@@ -1400,28 +1412,45 @@ export const updateProfileSchema = z.object({
 ##### `ClassDetailPage` (`src/features/admin/pages/ClassDetailPage.tsx`)
 - Tabs:
   1. **Overview** - Class info (read-only)
-  2. **Courses** - Assigned courses with teacher info, assign/remove actions
-  3. **Semester Progression** - Button to advance semester
+  2. **Students** - Student roster and transfer/enroll actions when allowed
+  3. **Courses** - Assigned courses with teacher info, assign/remove/replace actions
+  4. **Semester Progression** - HOD/admin-only progression and final-semester graduation
 
 **Courses Tab:**
-- Table: Course Code, Title, Teacher, Actions (Remove)
+- Table: Course Code, Title, Teacher, Actions (Remove, Replace Teacher)
 - "Assign Course" button → `AssignCourseDialog`
+- "Replace Teacher" is available to admins, HODs, and Program Directors with the
+  backend `canReplaceCourseTeacher` class capability.
+- Teacher candidates are active teachers and are intentionally not restricted to the
+  class department, because NTU can assign cross-department teachers to class courses.
+
+**Students Tab:**
+- Fetches `GET /api/classes/:id/students` only when `canViewStudents` is true.
+- HOD/admin class managers can enroll or transfer students where the backend allows it.
+- Transfers preserve class server membership by removing the source class membership and
+  adding the target class membership in the same academic flow.
 
 ##### `AssignCourseDialog` (`src/features/admin/components/AssignCourseDialog.tsx`)
 - Form fields:
   - Course (dropdown from curriculum for this program's current semester)
-  - Teacher (dropdown of teachers in this department)
+  - Teacher (dropdown of active teachers; cross-department teachers are valid)
 - Submit → `POST /api/classes/:id/courses`
 
 ##### `SemesterProgressionButton` (`src/features/admin/components/SemesterProgressionButton.tsx`)
-- Big red button: "Advance to Next Semester"
-- Click → opens confirmation dialog with explanation:
-  - "This will increment the current semester by 1."
-  - "All course channels will be archived."
-  - "All teacher-course assignments (TEACHES) will be cleared."
-  - "This action cannot be undone."
+- HOD/admin-only progression action for active, non-final-semester classes.
+- Click → opens assignment dialog for the next semester's curriculum and required teachers.
 - Confirm → `POST /api/classes/:id/semester-progression`
-- On success: invalidate class query, show success toast, refresh page
+- On success: invalidate class query, show success toast, refresh academic state
+
+##### `GraduateClassButton` (`src/features/admin/components/GraduateClassButton.tsx`)
+- HOD/admin-only final-semester graduation action.
+- Click → opens confirmation dialog with explanation:
+  - "This class will be marked as graduated."
+  - "Course channels will be archived and locked."
+  - "Course teacher assignments will be cleared."
+  - "Graduated classes are read-only in the academic workspace."
+- Confirm → `POST /api/classes/:id/graduate`
+- On success: invalidate class list/detail queries and show the graduated read-only state.
 
 ##### `CourseListPage` (`src/features/admin/pages/CourseListPage.tsx`)
 - Table: Code, Title, Credit Hours, Department, Actions
@@ -1471,8 +1500,12 @@ export const departmentsApi = {
 - ✅ Create class → class created with server
 - ✅ Class detail shows assigned courses
 - ✅ Assign course → teacher assigned to course for this class
+- ✅ Replace course teacher → teacher assignment and class server membership sync
 - ✅ Remove course assignment → teacher removed
 - ✅ Semester progression → confirmation dialog, progression succeeds, semester incremented, channels archived
+- ✅ Graduation → final-semester class becomes read-only and course channels are archived/locked
+- ✅ Academic workspace access and class actions follow backend capabilities for admin, HOD, and Program Director users
+- ✅ Cross-department teacher assignment remains valid for class-course assignments
 - ✅ Course list loads, create/edit course works
 
 ---

@@ -86,6 +86,13 @@ enum MembershipRequestStatus {
   @@map("membership_request_status")
 }
 
+enum ClassStatus {
+  ACTIVE    @map("active")
+  GRADUATED @map("graduated")
+
+  @@map("class_status")
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────
 
 model DegreeLevel {
@@ -183,6 +190,7 @@ model User {
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
   refreshTokens           RefreshToken[]
+  graduatedClasses        Class[] @relation("ClassGraduator")
 
   societyMembershipRequests SocietyMembershipRequest[] @relation("MembershipRequester")
   reviewedMembershipRequests SocietyMembershipRequest[] @relation("MembershipReviewer")
@@ -228,15 +236,20 @@ model Class {
   section         Section
   crId            Int?    @unique @map("cr_id")
   serverId        Int     @unique @map("server_id")
+  status          ClassStatus @default(ACTIVE)
+  graduatedAt     DateTime? @map("graduated_at")
+  graduatedBy     Int? @map("graduated_by")
 
   program  Program      @relation(fields: [programId], references: [id])
   cr       StudentInfo? @relation("ClassCR", fields: [crId], references: [studentId])
   server   Server       @relation("ClassServer", fields: [serverId], references: [id])
+  graduator User?       @relation("ClassGraduator", fields: [graduatedBy], references: [id])
 
   students StudentInfo[]
   teaches  Teaches[]
 
   @@unique([programId, currentSemester, section, admissionYear])
+  @@index([status])
   @@map("classes")
 }
 
@@ -392,6 +405,7 @@ model Teaches {
   class   Class       @relation(fields: [classId], references: [id])
 
   @@id([teacherId, courseId, classId])
+  @@unique([classId, courseId])
   @@map("teaches")
 }
 

@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, Plus } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '@/lib/constants';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
+import { ClassStatus, type Section } from '@/types';
 import { parsePositiveInt } from '../utils';
 import { useDepartments } from '../hooks/useDepartments';
 import { useAdminClasses, useCreateClass, usePrograms } from '../hooks/useAcademicCatalog';
@@ -14,10 +17,17 @@ import {
 } from '../components/AdminDataPrimitives';
 import { ClassDialog } from '../components/CatalogDialogs';
 import type { ClassFormValues } from '../schemas';
-import type { Section } from '@/types';
 
 function parseSection(value: string | null): Section | undefined {
   return value === 'A' || value === 'B' ? value : undefined;
+}
+
+function parseStatus(value: string | null): ClassStatus | 'ALL' | undefined {
+  if (value === ClassStatus.ACTIVE || value === ClassStatus.GRADUATED || value === 'ALL') {
+    return value;
+  }
+
+  return undefined;
 }
 
 export function ClassListPage() {
@@ -28,6 +38,9 @@ export function ClassListPage() {
   const programId = parsePositiveInt(searchParams.get('programId'));
   const semester = parsePositiveInt(searchParams.get('semester'));
   const section = parseSection(searchParams.get('section'));
+  const status = parseStatus(searchParams.get('status'));
+  const permissionsQuery = useMyPermissions();
+  const canListClasses = permissionsQuery.data?.global.canAccessAcademicWorkspace ?? false;
 
   const classesQuery = useAdminClasses({
     page,
@@ -36,23 +49,26 @@ export function ClassListPage() {
     programId,
     semester,
     section,
-  });
+    status,
+  }, canListClasses);
   const departmentsQuery = useDepartments();
   const programsQuery = usePrograms({ page: 1, limit: 50, departmentId });
   const createClass = useCreateClass();
   const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
   const programs = programsQuery.data?.data ?? [];
   const classes = classesQuery.data?.data ?? [];
+  const canCreateClass = permissionsQuery.data?.global.canCreateClass ?? false;
 
   function updateFilter(updates: {
     departmentId?: string;
     programId?: string;
     semester?: string;
     section?: string;
+    status?: string;
     page?: number;
   }) {
     const next = new URLSearchParams(searchParams);
-    for (const key of ['departmentId', 'programId', 'semester', 'section'] as const) {
+    for (const key of ['departmentId', 'programId', 'semester', 'section', 'status'] as const) {
       if (key in updates) {
         const value = updates[key];
         if (value) next.set(key, value);
@@ -70,20 +86,31 @@ export function ClassListPage() {
     await createClass.mutateAsync(values);
   }
 
+  if (!canListClasses && !permissionsQuery.isLoading) {
+    return (
+      <EmptyState
+        title="Academic list unavailable"
+        description="You do not have permission to browse managed classes."
+      />
+    );
+  }
+
   return (
     <section className="space-y-5">
       <AdminPageHeader
         title="Classes"
         description="Manage class servers and academic class metadata."
         actions={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            Create class
-          </Button>
+          canCreateClass ? (
+            <Button type="button" onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              Create class
+            </Button>
+          ) : null
         }
       />
       <div className="rounded-lg border bg-background p-3">
-        <div className="grid gap-3 lg:grid-cols-4">
+        <div className="grid gap-3 lg:grid-cols-5">
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Department</span>
             <select className={inputClassName} value={departmentId ?? ''} onChange={(event) => updateFilter({ departmentId: event.target.value })}>
@@ -118,17 +145,25 @@ export function ClassListPage() {
               <option value="B">B</option>
             </select>
           </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Status</span>
+            <select className={inputClassName} value={status ?? ''} onChange={(event) => updateFilter({ status: event.target.value })}>
+              <option value="">Active</option>
+              <option value={ClassStatus.GRADUATED}>Graduated</option>
+              <option value="ALL">All</option>
+            </select>
+          </label>
         </div>
       </div>
       <div className="overflow-hidden rounded-lg border bg-background">
         <DataState
-          isLoading={classesQuery.isLoading}
+          isLoading={classesQuery.isLoading || permissionsQuery.isLoading}
           isError={classesQuery.isError}
           onRetry={() => void classesQuery.refetch()}
           empty={classes.length === 0}
         >
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[980px] text-sm">
               <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">Program</th>
@@ -136,6 +171,7 @@ export function ClassListPage() {
                   <th className="px-4 py-3 font-medium">Semester</th>
                   <th className="px-4 py-3 font-medium">Section</th>
                   <th className="px-4 py-3 font-medium">Academic year</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">CR</th>
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
@@ -148,9 +184,10 @@ export function ClassListPage() {
                     <td className="px-4 py-3">{klass.currentSemester}</td>
                     <td className="px-4 py-3">{klass.section}</td>
                     <td className="px-4 py-3">{klass.academicYear}</td>
+                    <td className="px-4 py-3">{klass.status === ClassStatus.GRADUATED ? 'Graduated' : 'Active'}</td>
                     <td className="px-4 py-3">{klass.cr?.user.fullName ?? 'Not assigned'}</td>
                     <td className="px-4 py-3 text-right">
-                      <Link to={ROUTES.ADMIN_CLASS(klass.id)} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                      <Link to={ROUTES.ACADEMICS_CLASS(klass.id)} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
                         <Eye className="size-4" />
                         Open
                       </Link>

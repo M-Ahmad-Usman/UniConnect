@@ -76,6 +76,7 @@ export interface ClassPermissionTarget {
   crId: number | null;
   programId: number;
   departmentId: number;
+  status?: string;
 }
 
 export interface SocietyPermissionTarget {
@@ -301,12 +302,16 @@ export function buildClassPermissions(
   }
 
   if (context.user.userType === "ADMIN") {
-    return allClassPermissions();
+    return classRecord.status === "GRADUATED"
+      ? readOnlyClassPermissions(true)
+      : allClassPermissions();
   }
 
   const isHod = context.scopes.hodDepartmentIds.includes(classRecord.departmentId);
   if (isHod) {
-    return allClassPermissions();
+    return classRecord.status === "GRADUATED"
+      ? readOnlyClassPermissions(true)
+      : allClassPermissions();
   }
 
   const isPd = context.scopes.directedProgramIds.includes(classRecord.programId);
@@ -315,13 +320,13 @@ export function buildClassPermissions(
   return {
     canViewStudents: false,
     canManageStudents: false,
-    canAssignCourses: isPd,
-    canRemoveCourses: isPd,
-    canReplaceCourseTeacher: isPd,
+    canAssignCourses: isPd && classRecord.status !== "GRADUATED",
+    canRemoveCourses: isPd && classRecord.status !== "GRADUATED",
+    canReplaceCourseTeacher: isPd && classRecord.status !== "GRADUATED",
     canAdvanceSemester: false,
     canGraduate: false,
-    canManageChannels: isCr,
-    canAssignModerators: isCr,
+    canManageChannels: isCr && classRecord.status !== "GRADUATED",
+    canAssignModerators: isCr && classRecord.status !== "GRADUATED",
   };
 }
 
@@ -390,6 +395,20 @@ function allClassPermissions(): ClassPermissions {
     canGraduate: true,
     canManageChannels: true,
     canAssignModerators: true,
+  };
+}
+
+function readOnlyClassPermissions(canViewStudents: boolean): ClassPermissions {
+  return {
+    canViewStudents,
+    canManageStudents: false,
+    canAssignCourses: false,
+    canRemoveCourses: false,
+    canReplaceCourseTeacher: false,
+    canAdvanceSemester: false,
+    canGraduate: false,
+    canManageChannels: false,
+    canAssignModerators: false,
   };
 }
 

@@ -7,7 +7,9 @@ import {
 } from './helpers/auth';
 
 async function signIn(page: Page, email: string, password: string) {
-  await page.goto('/login');
+  if (!page.url().endsWith('/login')) {
+    await page.goto('/login');
+  }
   await page.getByLabel('Email').fill(email);
   await page.locator('#login-password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
@@ -43,7 +45,7 @@ test.describe('reset password flow', () => {
     await signIn(page, e2eUsers.resetPassword.email, updatedPassword);
 
     await expect(page).toHaveURL(/\/servers$/);
-    await expect(page.getByText('Servers')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open user menu' })).toBeVisible();
   });
 
   test('reset password shows an error for an invalid token', async ({ page }) => {

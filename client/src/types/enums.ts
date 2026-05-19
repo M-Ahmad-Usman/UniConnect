@@ -41,6 +41,12 @@ export const Section = {
 } as const;
 export type Section = (typeof Section)[keyof typeof Section];
 
+export const ClassStatus = {
+  ACTIVE: 'ACTIVE',
+  GRADUATED: 'GRADUATED',
+} as const;
+export type ClassStatus = (typeof ClassStatus)[keyof typeof ClassStatus];
+
 export const ModeratorScopeType = {
   SERVER: 'server',
   CHANNEL: 'channel',

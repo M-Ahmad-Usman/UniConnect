@@ -1,4 +1,4 @@
-import { UserType, type BulkImportError } from '@/types';
+import { ClassStatus, UserType, type BulkImportError, type ClassDetail } from '@/types';
 
 export const USER_PAGE_SIZE = 20;
 
@@ -35,6 +35,47 @@ export function userListParamsToRecord(params: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined && value !== ''),
   );
+}
+
+export function getClassDetailActionState(
+  klass:
+    | Pick<ClassDetail, 'currentSemester' | 'status' | 'program' | 'permissions'>
+    | null
+    | undefined,
+) {
+  const permissions = klass?.permissions;
+  const isGraduated = klass?.status === ClassStatus.GRADUATED;
+  const canViewStudents = permissions?.canViewStudents ?? false;
+  const canManageStudents = (permissions?.canManageStudents ?? false) && !isGraduated;
+  const canAssignCourses = (permissions?.canAssignCourses ?? false) && !isGraduated;
+  const canReplaceCourseTeacher =
+    (permissions?.canReplaceCourseTeacher ?? false) && !isGraduated;
+  const canRemoveCourses = (permissions?.canRemoveCourses ?? false) && !isGraduated;
+  const totalSemesters = klass?.program.semesters;
+  const currentSemester = klass?.currentSemester;
+  const hasSemesterMetadata =
+    typeof totalSemesters === 'number' && typeof currentSemester === 'number';
+  const canAdvanceSemester =
+    (permissions?.canAdvanceSemester ?? false) &&
+    !isGraduated &&
+    hasSemesterMetadata &&
+    currentSemester < totalSemesters;
+  const canGraduate =
+    (permissions?.canGraduate ?? false) &&
+    !isGraduated &&
+    hasSemesterMetadata &&
+    currentSemester === totalSemesters;
+
+  return {
+    isGraduated,
+    canViewStudents,
+    canManageStudents,
+    canAssignCourses,
+    canReplaceCourseTeacher,
+    canRemoveCourses,
+    canAdvanceSemester,
+    canGraduate,
+  };
 }
 
 export function buildBulkImportErrorCsv(errors: BulkImportError[]) {

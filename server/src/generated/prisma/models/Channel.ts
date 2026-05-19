@@ -1019,10 +1019,6 @@ export type EnumChannelTypeFieldUpdateOperationsInput = {
   set?: $Enums.ChannelType
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type ChannelCreateNestedManyWithoutCourseInput = {
   create?: Prisma.XOR<Prisma.ChannelCreateWithoutCourseInput, Prisma.ChannelUncheckedCreateWithoutCourseInput> | Prisma.ChannelCreateWithoutCourseInput[] | Prisma.ChannelUncheckedCreateWithoutCourseInput[]
   connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutCourseInput | Prisma.ChannelCreateOrConnectWithoutCourseInput[]

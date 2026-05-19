@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import type { z } from 'zod';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Wand2 } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Plus, RefreshCw, Trash2, UserRoundPlus, Wand2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,52 +18,84 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ROUTES } from '@/lib/constants';
-import { UserType, type CourseListItem, type TeacherAssignmentInput } from '@/types';
-import { parsePositiveInt } from '../utils';
-import { useAdminUsers } from '../hooks/useAdminUsers';
+import type { ClassCourseAssignment, CourseListItem, TeacherAssignmentInput } from '@/types';
+import { getClassDetailActionState, parsePositiveInt } from '../utils';
 import {
   useAdminClass,
   useAdminClassCourses,
   useAssignClassCourse,
   useAdvanceSemester,
+  useClassStudents,
   useCurriculum,
+  useGraduateClass,
   useRemoveClassCourse,
+  useReplaceCourseTeacher,
+  useStudentCandidates,
+  useTeacherCandidates,
+  useTransferClassStudent,
 } from '../hooks/useAcademicCatalog';
 import { AdminPageHeader, DataState, inputClassName } from '../components/AdminDataPrimitives';
 import { AssignCourseDialog } from '../components/CatalogDialogs';
+import {
+  replaceTeacherSchema,
+  transferStudentSchema,
+  type ReplaceTeacherFormValues,
+  type TransferStudentFormValues,
+} from '../schemas';
 
 export function ClassDetailPage() {
   const classId = parsePositiveInt(useParams().classId ?? null) ?? null;
   const [assignOpen, setAssignOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
+  const [graduationOpen, setGraduationOpen] = useState(false);
   const [removingCourseId, setRemovingCourseId] = useState<number | null>(null);
+  const [replacingAssignment, setReplacingAssignment] = useState<ClassCourseAssignment | null>(null);
   const [teacherByCourse, setTeacherByCourse] = useState<Record<number, number>>({});
 
   const classQuery = useAdminClass(classId);
+  const klass = classQuery.data;
+  const {
+    isGraduated,
+    canViewStudents,
+    canManageStudents,
+    canAssignCourses,
+    canReplaceCourseTeacher,
+    canRemoveCourses,
+    canAdvanceSemester,
+    canGraduate,
+  } = getClassDetailActionState(klass);
+
   const coursesQuery = useAdminClassCourses(classId);
+  const studentsQuery = useClassStudents(classId, { page: 1, limit: 50 }, canViewStudents);
+  const studentCandidatesQuery = useStudentCandidates(
+    classId,
+    { page: 1, limit: 50 },
+    transferOpen && canManageStudents,
+  );
+  const teacherCandidatesQuery = useTeacherCandidates(
+    classId,
+    { page: 1, limit: 50 },
+    canAssignCourses || canReplaceCourseTeacher || canAdvanceSemester,
+  );
   const assignCourse = useAssignClassCourse(classId ?? 0);
+  const transferStudent = useTransferClassStudent(classId ?? 0);
+  const replaceTeacher = useReplaceCourseTeacher(classId ?? 0);
   const removeCourse = useRemoveClassCourse(classId ?? 0);
   const advanceSemester = useAdvanceSemester(classId ?? 0);
+  const graduateClass = useGraduateClass(classId ?? 0);
 
-  const klass = classQuery.data;
   const departmentId = klass?.program.department.id;
   const currentCurriculumQuery = useCurriculum(
     klass?.program.id ?? null,
     klass ? { semesterNumber: klass.currentSemester, batchYear: klass.admissionYear } : {},
   );
   const nextCurriculumQuery = useCurriculum(
-    klass?.program.id ?? null,
+    canAdvanceSemester && klass ? klass.program.id : null,
     klass
       ? { semesterNumber: klass.currentSemester + 1, batchYear: klass.admissionYear }
       : {},
   );
-  const teachersQuery = useAdminUsers({
-    page: 1,
-    limit: 50,
-    userType: UserType.TEACHER,
-    departmentId,
-    isActive: true,
-  });
 
   const curriculumCourses: CourseListItem[] = useMemo(
     () =>
@@ -69,10 +105,23 @@ export function ClassDetailPage() {
       })),
     [currentCurriculumQuery.data, departmentId],
   );
-  const nextCurriculum = nextCurriculumQuery.data ?? [];
-  const teachers = useMemo(() => teachersQuery.data?.data ?? [], [teachersQuery.data]);
+  const teacherOptions = useMemo(
+    () =>
+      (teacherCandidatesQuery.data?.data ?? []).map((teacher) => ({
+        id: teacher.user.id,
+        fullName: teacher.user.fullName,
+        email: teacher.user.email,
+      })),
+    [teacherCandidatesQuery.data],
+  );
+  const validTeacherIds = useMemo(
+    () => new Set(teacherOptions.map((teacher) => teacher.id)),
+    [teacherOptions],
+  );
   const assignments = coursesQuery.data ?? [];
-  const validTeacherIds = useMemo(() => new Set(teachers.map((teacher) => teacher.id)), [teachers]);
+  const students = studentsQuery.data?.data ?? [];
+  const studentCandidates = studentCandidatesQuery.data?.data ?? [];
+  const nextCurriculum = nextCurriculumQuery.data ?? [];
 
   if (!classId) {
     return <EmptyState title="Invalid class" description="The requested class ID is invalid." />;
@@ -91,9 +140,7 @@ export function ClassDetailPage() {
   }
 
   async function handleAdvance() {
-    if (!canProgress) {
-      return;
-    }
+    if (!canProgress) return;
 
     const teacherAssignments: TeacherAssignmentInput[] = nextCurriculum.map((entry) => ({
       courseId: entry.course.id,
@@ -105,6 +152,7 @@ export function ClassDetailPage() {
   }
 
   const canProgress =
+    canAdvanceSemester &&
     !nextCurriculumQuery.isLoading &&
     !nextCurriculumQuery.isError &&
     (nextCurriculum.length === 0 ||
@@ -120,30 +168,69 @@ export function ClassDetailPage() {
         description={`${klass.program.department.name} · Admission ${klass.admissionYear} · Server #${klass.serverId}`}
         actions={
           <>
-            <Link to={ROUTES.ADMIN_CLASSES} className={buttonVariants({ variant: 'outline' })}>
+            <Link to={ROUTES.ACADEMICS_CLASSES} className={buttonVariants({ variant: 'outline' })}>
               <ArrowLeft className="size-4" />
               Classes
             </Link>
-            <Button type="button" onClick={() => setAssignOpen(true)}>
-              <Plus className="size-4" />
-              Assign course
-            </Button>
+            {canAssignCourses ? (
+              <Button type="button" onClick={() => setAssignOpen(true)}>
+                <Plus className="size-4" />
+                Assign course
+              </Button>
+            ) : null}
+            {canManageStudents ? (
+              <Button type="button" variant="outline" onClick={() => setTransferOpen(true)}>
+                <UserRoundPlus className="size-4" />
+                Transfer student
+              </Button>
+            ) : null}
+            {canGraduate ? (
+              <Button type="button" variant="outline" onClick={() => setGraduationOpen(true)}>
+                <GraduationCap className="size-4" />
+                Graduate
+              </Button>
+            ) : null}
           </>
         }
       />
-      <div className="grid gap-3 rounded-lg border bg-background p-4 sm:grid-cols-4">
+
+      <div className="grid gap-3 rounded-lg border bg-background p-4 sm:grid-cols-5">
         <Info label="Program" value={klass.program.code} />
         <Info label="Current semester" value={klass.currentSemester} />
         <Info label="Students" value={klass._count.students} />
         <Info label="CR" value={klass.cr?.user.fullName ?? 'Not assigned'} />
+        <div>
+          <p className="text-xs uppercase text-muted-foreground">Status</p>
+          <Badge variant={isGraduated ? 'secondary' : 'outline'} className="mt-1">
+            {isGraduated ? 'Graduated' : 'Active'}
+          </Badge>
+        </div>
       </div>
+
+      {isGraduated ? (
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          This class is graduated. Academic mutations are disabled and class channels are read-only.
+        </div>
+      ) : null}
+
+      {canViewStudents ? (
+        <ClassStudentsSection
+          isLoading={studentsQuery.isLoading}
+          isError={studentsQuery.isError}
+          students={students}
+          onRetry={() => void studentsQuery.refetch()}
+        />
+      ) : null}
+
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Assigned courses</h2>
-          <Button type="button" variant="outline" onClick={() => setProgressionOpen(true)}>
-            <Wand2 className="size-4" />
-            Semester progression
-          </Button>
+          {canAdvanceSemester ? (
+            <Button type="button" variant="outline" onClick={() => setProgressionOpen(true)}>
+              <Wand2 className="size-4" />
+              Semester progression
+            </Button>
+          ) : null}
         </div>
         <div className="overflow-hidden rounded-lg border bg-background">
           <DataState
@@ -152,7 +239,7 @@ export function ClassDetailPage() {
             onRetry={() => void coursesQuery.refetch()}
             empty={assignments.length === 0}
           >
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-205 text-sm">
               <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">Course</th>
@@ -171,15 +258,30 @@ export function ClassDetailPage() {
                     <td className="px-4 py-3">{assignment.teacher.user.fullName}</td>
                     <td className="px-4 py-3">{assignment.course.creditHours}</td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => setRemovingCourseId(assignment.courseId)}
-                      >
-                        <Trash2 className="size-4" />
-                        <span className="sr-only">Remove course assignment</span>
-                      </Button>
+                      <div className="inline-flex gap-1">
+                        {canReplaceCourseTeacher ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setReplacingAssignment(assignment)}
+                          >
+                            <RefreshCw className="size-4" />
+                            <span className="sr-only">Replace teacher</span>
+                          </Button>
+                        ) : null}
+                        {canRemoveCourses ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setRemovingCourseId(assignment.courseId)}
+                          >
+                            <Trash2 className="size-4" />
+                            <span className="sr-only">Remove course assignment</span>
+                          </Button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -188,13 +290,38 @@ export function ClassDetailPage() {
           </DataState>
         </div>
       </div>
+
       <AssignCourseDialog
         open={assignOpen}
         onOpenChange={setAssignOpen}
         courses={curriculumCourses}
-        teachers={teachers}
+        teachers={teacherOptions}
         loading={assignCourse.isPending}
         onSubmit={handleAssign}
+      />
+      <TransferStudentDialog
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+        candidates={studentCandidates}
+        loading={transferStudent.isPending || studentCandidatesQuery.isLoading}
+        onSubmit={async (values) => {
+          await transferStudent.mutateAsync(values.studentId);
+        }}
+      />
+      <ReplaceTeacherDialog
+        open={replacingAssignment !== null}
+        onOpenChange={(open) => !open && setReplacingAssignment(null)}
+        assignment={replacingAssignment}
+        teachers={teacherOptions}
+        loading={replaceTeacher.isPending}
+        onSubmit={async (values) => {
+          if (!replacingAssignment) return;
+          await replaceTeacher.mutateAsync({
+            courseId: replacingAssignment.courseId,
+            teacherId: values.teacherId,
+          });
+          setReplacingAssignment(null);
+        }}
       />
       <ConfirmDialog
         open={removingCourseId !== null}
@@ -206,6 +333,16 @@ export function ClassDetailPage() {
         onConfirm={async () => {
           if (removingCourseId === null) return;
           await removeCourse.mutateAsync(removingCourseId);
+        }}
+      />
+      <ConfirmDialog
+        open={graduationOpen}
+        onOpenChange={setGraduationOpen}
+        title="Graduate class"
+        description="This marks the class as graduated and locks all class channels so history stays readable."
+        confirmLabel="Graduate"
+        onConfirm={async () => {
+          await graduateClass.mutateAsync();
         }}
       />
       <Dialog open={progressionOpen} onOpenChange={setProgressionOpen}>
@@ -236,17 +373,14 @@ export function ClassDetailPage() {
                     const selectedTeacherId = parsePositiveInt(event.target.value);
                     setTeacherByCourse((current) => {
                       const next = { ...current };
-                      if (selectedTeacherId) {
-                        next[entry.course.id] = selectedTeacherId;
-                      } else {
-                        delete next[entry.course.id];
-                      }
+                      if (selectedTeacherId) next[entry.course.id] = selectedTeacherId;
+                      else delete next[entry.course.id];
                       return next;
                     });
                   }}
                 >
                   <option value="">Select teacher</option>
-                  {teachers.map((teacher) => (
+                  {teacherOptions.map((teacher) => (
                     <option key={teacher.id} value={teacher.id}>
                       {teacher.fullName}
                     </option>
@@ -264,6 +398,188 @@ export function ClassDetailPage() {
         </DialogContent>
       </Dialog>
     </section>
+  );
+}
+
+function ClassStudentsSection({
+  isLoading,
+  isError,
+  students,
+  onRetry,
+}: {
+  isLoading: boolean;
+  isError: boolean;
+  students: Array<{
+    studentId: number;
+    rollNumber: string;
+    user: { fullName: string; email: string };
+    class: { program: { code: string }; currentSemester: number; section: string };
+  }>;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <h2 className="text-lg font-semibold">Students</h2>
+      <div className="overflow-hidden rounded-lg border bg-background">
+        <DataState isLoading={isLoading} isError={isError} onRetry={onRetry} empty={students.length === 0}>
+          <table className="w-full min-w-190 text-sm">
+            <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Roll number</th>
+                <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Class</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {students.map((student) => (
+                <tr key={student.studentId}>
+                  <td className="px-4 py-3 font-medium">{student.user.fullName}</td>
+                  <td className="px-4 py-3">{student.rollNumber}</td>
+                  <td className="px-4 py-3">{student.user.email}</td>
+                  <td className="px-4 py-3">
+                    {student.class.program.code} · S{student.class.currentSemester}
+                    {student.class.section}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </DataState>
+      </div>
+    </div>
+  );
+}
+
+function TransferStudentDialog({
+  open,
+  onOpenChange,
+  candidates,
+  loading,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  candidates: Array<{
+    studentId: number;
+    rollNumber: string;
+    user: { fullName: string; email: string };
+    class: { program: { code: string }; currentSemester: number; section: string };
+  }>;
+  loading: boolean;
+  onSubmit: (values: TransferStudentFormValues) => Promise<void>;
+}) {
+  const form = useForm<z.input<typeof transferStudentSchema>, unknown, TransferStudentFormValues>({
+    resolver: zodResolver(transferStudentSchema),
+    defaultValues: { studentId: 0 },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Transfer student</DialogTitle>
+          <DialogDescription>Only same-department students with an existing class are eligible.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit(async (values) => {
+            await onSubmit(values);
+            onOpenChange(false);
+            form.reset({ studentId: 0 });
+          })}
+        >
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Student</span>
+            <select className={inputClassName} {...form.register('studentId')}>
+              <option value="">Select student</option>
+              {candidates.map((student) => (
+                <option key={student.studentId} value={student.studentId}>
+                  {student.user.fullName} · {student.rollNumber} · {student.class.program.code} S
+                  {student.class.currentSemester}
+                  {student.class.section}
+                </option>
+              ))}
+            </select>
+            {form.formState.errors.studentId ? (
+              <span className="block text-sm text-destructive">
+                {form.formState.errors.studentId.message}
+              </span>
+            ) : null}
+          </label>
+          <DialogFooter>
+            <Button type="submit" disabled={loading}>
+              Transfer
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReplaceTeacherDialog({
+  open,
+  onOpenChange,
+  assignment,
+  teachers,
+  loading,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  assignment: ClassCourseAssignment | null;
+  teachers: Array<{ id: number; fullName: string; email: string }>;
+  loading: boolean;
+  onSubmit: (values: ReplaceTeacherFormValues) => Promise<void>;
+}) {
+  const form = useForm<z.input<typeof replaceTeacherSchema>, unknown, ReplaceTeacherFormValues>({
+    resolver: zodResolver(replaceTeacherSchema),
+    defaultValues: { teacherId: 0 },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Replace teacher</DialogTitle>
+          <DialogDescription>
+            {assignment
+              ? `${assignment.course.code} remains assigned and its channel stays active.`
+              : 'Select a replacement teacher.'}
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit(async (values) => {
+            await onSubmit(values);
+            form.reset({ teacherId: 0 });
+          })}
+        >
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Teacher</span>
+            <select className={inputClassName} {...form.register('teacherId')}>
+              <option value="">Select teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.fullName} · {teacher.email}
+                </option>
+              ))}
+            </select>
+            {form.formState.errors.teacherId ? (
+              <span className="block text-sm text-destructive">
+                {form.formState.errors.teacherId.message}
+              </span>
+            ) : null}
+          </label>
+          <DialogFooter>
+            <Button type="submit" disabled={loading}>
+              Replace
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

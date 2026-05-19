@@ -9,15 +9,17 @@ async function signIn(page: Parameters<typeof test>[0]['page'], email: string, p
 }
 
 test.describe('authentication flows', () => {
+  test.describe.configure({ mode: 'serial' });
+
   test('login with valid credentials redirects to the server list', async ({ page }) => {
     await signIn(page, e2eUsers.student.email, e2eUsers.student.password);
 
     await expect(page).toHaveURL(/\/servers$/);
-    await expect(page.getByText('Servers')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open user menu' })).toBeVisible();
   });
 
   test('login with invalid credentials shows an inline error', async ({ page }) => {
-    await signIn(page, e2eUsers.student.email, 'WrongPassword@123');
+    await signIn(page, e2eUsers.invalidLogin.email, 'WrongPassword@123');
 
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByText('Invalid credentials')).toBeVisible();

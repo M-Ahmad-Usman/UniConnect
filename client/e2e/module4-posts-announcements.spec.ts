@@ -8,7 +8,9 @@ import {
 } from './helpers/module4';
 
 async function signIn(page: Page, email: string, password: string) {
-  await page.goto('/login');
+  if (!page.url().endsWith('/login')) {
+    await page.goto('/login');
+  }
   await page.getByLabel('Email').fill(email);
   await page.locator('#login-password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
@@ -116,8 +118,10 @@ test.describe('Module 4 posts and announcements', () => {
     await expect(page.getByRole('button', { name: 'New post' })).toHaveCount(0);
 
     await page.context().clearCookies();
-    await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
-    await page.goto(`/servers/${serverId}/channels/${lockedCourseChannelId}`);
-    await expect(page.getByRole('button', { name: 'New post' })).toHaveCount(0);
+    const managerPage = await page.context().newPage();
+    await signIn(managerPage, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
+    await managerPage.goto(`/servers/${serverId}/channels/${lockedCourseChannelId}`);
+    await expect(managerPage.getByRole('button', { name: 'New post' })).toHaveCount(0);
+    await managerPage.close();
   });
 });

@@ -9,6 +9,7 @@ import {
   createCourse,
   createProgram,
   createClass,
+  createCurriculum,
   createTeacherWithInfo,
   loginAs,
 } from "../helpers/factory.js";
@@ -354,6 +355,7 @@ describe("Module 5 - Course Management", () => {
       const cls2 = await createClass(program.id, { creatorId: admin.id, section: "B" });
       const oldCode = `OLD-${uid()}`;
       const course = await createCourse(dept.id, { code: oldCode });
+      await createCurriculum(program.id, course.id, cls1.currentSemester, cls1.admissionYear);
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       // Create a teacher and assign the course to the class to trigger auto-created channel
@@ -361,15 +363,17 @@ describe("Module 5 - Course Management", () => {
         email: `teacher-sync-${uid()}@test.com`,
       });
 
-      await request(app)
+      const assignFirst = await request(app)
         .post(`/api/classes/${cls1.id}/courses`)
         .set("Cookie", cookies)
         .send({ courseId: course.id, teacherId: teacher.id });
+      expect(assignFirst.status).toBe(201);
 
-      await request(app)
+      const assignSecond = await request(app)
         .post(`/api/classes/${cls2.id}/courses`)
         .set("Cookie", cookies)
         .send({ courseId: course.id, teacherId: teacher.id });
+      expect(assignSecond.status).toBe(201);
 
       // Verify the auto-created channels exist with the old code
       const channelsBefore = await prisma.channel.findMany({

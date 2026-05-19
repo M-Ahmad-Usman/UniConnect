@@ -522,6 +522,330 @@ async function seedModule2Data(pool: Pool) {
   );
 }
 
+async function createAcademicClass(
+  pool: Pool,
+  input: {
+    programId: number;
+    createdBy: number;
+    serverName: string;
+    currentSemester: number;
+    section: 'A' | 'B';
+  },
+) {
+  const serverResult = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Class'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    [input.serverName, 'Academic hardening class fixture.', input.createdBy],
+  );
+  const serverId = serverResult.rows[0]?.id;
+
+  if (!serverId) {
+    throw new Error(`Academic class server could not be created: ${input.serverName}`);
+  }
+
+  const classResult = await pool.query<{ id: number; server_id: number }>(
+    `
+      INSERT INTO classes (
+        program_id,
+        current_semester,
+        academic_year,
+        admission_year,
+        section,
+        server_id
+      )
+      VALUES ($1, $2, 2026, 2026, $3::section, $4)
+      RETURNING id, server_id
+    `,
+    [input.programId, input.currentSemester, input.section, serverId],
+  );
+  const classRecord = classResult.rows[0];
+
+  if (!classRecord) {
+    throw new Error(`Academic class could not be created: ${input.serverName}`);
+  }
+
+  return classRecord;
+}
+
+async function seedModule2AcademicHardeningData(pool: Pool) {
+  const hodId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicHod.email);
+  const pdId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicPd.email);
+  const oldTeacherId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicOldTeacher.email);
+  const crossTeacherId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicCrossTeacher.email);
+  const progressTeacherId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleAcademicProgressTeacher.email,
+  );
+  const graduateTeacherId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleAcademicGraduateTeacher.email,
+  );
+  const transferStudentId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleAcademicTransferStudent.email,
+  );
+
+  if (
+    !hodId ||
+    !pdId ||
+    !oldTeacherId ||
+    !crossTeacherId ||
+    !progressTeacherId ||
+    !graduateTeacherId ||
+    !transferStudentId
+  ) {
+    throw new Error('Academic hardening E2E users were not created before seeding data.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO teacher_info (teacher_id, designation)
+      VALUES
+        ($1, 'Professor'),
+        ($2, 'Program Director'),
+        ($3, 'Lecturer'),
+        ($4, 'Visiting Lecturer'),
+        ($5, 'Assistant Professor'),
+        ($6, 'Senior Lecturer')
+    `,
+    [hodId, pdId, oldTeacherId, crossTeacherId, progressTeacherId, graduateTeacherId],
+  );
+
+  const academicDeptServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Department'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['Academic Hardening Department', 'Department fixture for academic hardening.', hodId],
+  );
+  const crossDeptServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Department'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['Academic Cross Department', 'Cross-department teacher fixture.', hodId],
+  );
+  const academicServerId = academicDeptServer.rows[0]?.id;
+  const crossServerId = crossDeptServer.rows[0]?.id;
+
+  if (!academicServerId || !crossServerId) {
+    throw new Error('Academic hardening department servers could not be created.');
+  }
+
+  const academicDept = await pool.query<{ id: number }>(
+    `
+      INSERT INTO departments (name, code, hod_id, server_id)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    `,
+    ['E2E Academic Department', 'E2E-ACAD', hodId, academicServerId],
+  );
+  const crossDept = await pool.query<{ id: number }>(
+    `
+      INSERT INTO departments (name, code, server_id)
+      VALUES ($1, $2, $3)
+      RETURNING id
+    `,
+    ['E2E Cross Department', 'E2E-XDEP', crossServerId],
+  );
+  const academicDeptId = academicDept.rows[0]?.id;
+  const crossDeptId = crossDept.rows[0]?.id;
+
+  if (!academicDeptId || !crossDeptId) {
+    throw new Error('Academic hardening departments could not be created.');
+  }
+
+  await pool.query(
+    `
+      UPDATE users
+      SET department_id = CASE
+        WHEN id = $4 THEN $2::int
+        ELSE $1::int
+      END
+      WHERE id = ANY($3::int[])
+    `,
+    [
+      academicDeptId,
+      crossDeptId,
+      [
+        hodId,
+        pdId,
+        oldTeacherId,
+        progressTeacherId,
+        graduateTeacherId,
+        transferStudentId,
+        crossTeacherId,
+      ],
+      crossTeacherId,
+    ],
+  );
+
+  const degreeResult = await pool.query<{ id: number }>(
+    'INSERT INTO degree_levels (level) VALUES ($1) RETURNING id',
+    ['E2E Bachelor'],
+  );
+  const disciplineResult = await pool.query<{ id: number }>(
+    'INSERT INTO disciplines (name) VALUES ($1) RETURNING id',
+    ['E2E Academic Discipline'],
+  );
+  const degreeLevelId = degreeResult.rows[0]?.id;
+  const disciplineId = disciplineResult.rows[0]?.id;
+
+  if (!degreeLevelId || !disciplineId) {
+    throw new Error('Academic hardening catalog records could not be created.');
+  }
+
+  const programResult = await pool.query<{ id: number }>(
+    `
+      INSERT INTO programs (
+        department_id,
+        discipline_id,
+        degree_level_id,
+        semesters,
+        code,
+        program_director_id
+      )
+      VALUES ($1, $2, $3, 8, 'E2EACAD', $4)
+      RETURNING id
+    `,
+    [academicDeptId, disciplineId, degreeLevelId, pdId],
+  );
+  const programId = programResult.rows[0]?.id;
+
+  if (!programId) {
+    throw new Error('Academic hardening program could not be created.');
+  }
+
+  const transferSource = await createAcademicClass(pool, {
+    programId,
+    createdBy: hodId,
+    serverName: 'Academic Transfer Source Class',
+    currentSemester: 1,
+    section: 'A',
+  });
+  await createAcademicClass(pool, {
+    programId,
+    createdBy: hodId,
+    serverName: 'Academic Transfer Target Class',
+    currentSemester: 1,
+    section: 'B',
+  });
+  const replaceClass = await createAcademicClass(pool, {
+    programId,
+    createdBy: hodId,
+    serverName: 'Academic Teacher Replacement Class',
+    currentSemester: 2,
+    section: 'A',
+  });
+  await createAcademicClass(pool, {
+    programId,
+    createdBy: hodId,
+    serverName: 'Academic Semester Progression Class',
+    currentSemester: 3,
+    section: 'A',
+  });
+  const graduationClass = await createAcademicClass(pool, {
+    programId,
+    createdBy: hodId,
+    serverName: 'Academic Graduation Class',
+    currentSemester: 8,
+    section: 'A',
+  });
+
+  await pool.query(
+    `
+      INSERT INTO student_info (student_id, class_id, roll_number)
+      VALUES ($1, $2, '26-NTU-E2E-001')
+    `,
+    [transferStudentId, transferSource.id],
+  );
+  await pool.query(
+    `
+      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
+      VALUES ($1, $2, true)
+    `,
+    [transferStudentId, transferSource.server_id],
+  );
+
+  const courses = await pool.query<{ id: number; code: string }>(
+    `
+      INSERT INTO courses (title, code, credit_hours, department_id)
+      VALUES
+        ('Replacement Systems', 'E2E-RP-101', 3, $1),
+        ('Progression Studio', 'E2E-SP-401', 3, $1),
+        ('Graduation Seminar', 'E2E-GR-801', 3, $1)
+      RETURNING id, code
+    `,
+    [academicDeptId],
+  );
+  const replacementCourse = courses.rows.find((course) => course.code === 'E2E-RP-101');
+  const progressionCourse = courses.rows.find((course) => course.code === 'E2E-SP-401');
+  const graduationCourse = courses.rows.find((course) => course.code === 'E2E-GR-801');
+
+  if (!replacementCourse || !progressionCourse || !graduationCourse) {
+    throw new Error('Academic hardening courses could not be created.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO program_curriculum (program_id, course_id, semester_number, batch_year)
+      VALUES
+        ($1, $2, 2, 2026),
+        ($1, $3, 4, 2026),
+        ($1, $4, 8, 2026)
+    `,
+    [programId, replacementCourse.id, progressionCourse.id, graduationCourse.id],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO teaches (teacher_id, course_id, class_id)
+      VALUES
+        ($1, $2, $3),
+        ($4, $5, $6)
+    `,
+    [
+      oldTeacherId,
+      replacementCourse.id,
+      replaceClass.id,
+      graduateTeacherId,
+      graduationCourse.id,
+      graduationClass.id,
+    ],
+  );
+  await pool.query(
+    `
+      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
+      VALUES
+        ($1, $2, true),
+        ($3, $4, true)
+    `,
+    [oldTeacherId, replaceClass.server_id, graduateTeacherId, graduationClass.server_id],
+  );
+  await pool.query(
+    `
+      INSERT INTO channels (server_id, name, type, course_id, is_auto_created, created_by, created_at)
+      VALUES
+        ($1, $2, 'course'::channel_type, $3, true, $4, NOW()),
+        ($5, $6, 'course'::channel_type, $7, true, $4, NOW())
+    `,
+    [
+      replaceClass.server_id,
+      replacementCourse.code,
+      replacementCourse.id,
+      hodId,
+      graduationClass.server_id,
+      graduationCourse.code,
+      graduationCourse.id,
+    ],
+  );
+}
+
 export default async function globalSetup() {
   const pool = createDbPool();
 
@@ -534,6 +858,7 @@ export default async function globalSetup() {
 
     await seedModule3Permissions(pool);
     await seedModule2Data(pool);
+    await seedModule2AcademicHardeningData(pool);
     await seedModule3Data(pool);
     await seedModule4Data(pool);
   } finally {

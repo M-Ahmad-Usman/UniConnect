@@ -9,6 +9,12 @@
 
 ## Overview
 
+### 2026-05-18 - Hardening Module 2 Academic Workspace Implemented
+- ✅ Added canonical `/academics/classes`, class detail, and curriculum routes with admin academic URL redirects.
+- ✅ Added permission-aware class UI for student transfer, teacher replacement, semester progression, graduation, and graduated read-only state.
+- ✅ Replaced broad teacher/student selection in class workflows with scoped class candidate APIs.
+- ✅ Verified `npm run type-check` passes after the Module 2 frontend changes.
+
 This document tracks the implementation progress of the UniConnect frontend, logging all completed tasks, key decisions, challenges encountered, and solutions applied. It serves as a historical record of the project's development journey.
 
 ---

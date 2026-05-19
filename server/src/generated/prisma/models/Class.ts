@@ -34,6 +34,7 @@ export type ClassAvgAggregateOutputType = {
   admissionYear: number | null
   crId: number | null
   serverId: number | null
+  graduatedBy: number | null
 }
 
 export type ClassSumAggregateOutputType = {
@@ -44,6 +45,7 @@ export type ClassSumAggregateOutputType = {
   admissionYear: number | null
   crId: number | null
   serverId: number | null
+  graduatedBy: number | null
 }
 
 export type ClassMinAggregateOutputType = {
@@ -55,6 +57,9 @@ export type ClassMinAggregateOutputType = {
   section: $Enums.Section | null
   crId: number | null
   serverId: number | null
+  status: $Enums.ClassStatus | null
+  graduatedAt: Date | null
+  graduatedBy: number | null
 }
 
 export type ClassMaxAggregateOutputType = {
@@ -66,6 +71,9 @@ export type ClassMaxAggregateOutputType = {
   section: $Enums.Section | null
   crId: number | null
   serverId: number | null
+  status: $Enums.ClassStatus | null
+  graduatedAt: Date | null
+  graduatedBy: number | null
 }
 
 export type ClassCountAggregateOutputType = {
@@ -77,6 +85,9 @@ export type ClassCountAggregateOutputType = {
   section: number
   crId: number
   serverId: number
+  status: number
+  graduatedAt: number
+  graduatedBy: number
   _all: number
 }
 
@@ -89,6 +100,7 @@ export type ClassAvgAggregateInputType = {
   admissionYear?: true
   crId?: true
   serverId?: true
+  graduatedBy?: true
 }
 
 export type ClassSumAggregateInputType = {
@@ -99,6 +111,7 @@ export type ClassSumAggregateInputType = {
   admissionYear?: true
   crId?: true
   serverId?: true
+  graduatedBy?: true
 }
 
 export type ClassMinAggregateInputType = {
@@ -110,6 +123,9 @@ export type ClassMinAggregateInputType = {
   section?: true
   crId?: true
   serverId?: true
+  status?: true
+  graduatedAt?: true
+  graduatedBy?: true
 }
 
 export type ClassMaxAggregateInputType = {
@@ -121,6 +137,9 @@ export type ClassMaxAggregateInputType = {
   section?: true
   crId?: true
   serverId?: true
+  status?: true
+  graduatedAt?: true
+  graduatedBy?: true
 }
 
 export type ClassCountAggregateInputType = {
@@ -132,6 +151,9 @@ export type ClassCountAggregateInputType = {
   section?: true
   crId?: true
   serverId?: true
+  status?: true
+  graduatedAt?: true
+  graduatedBy?: true
   _all?: true
 }
 
@@ -230,6 +252,9 @@ export type ClassGroupByOutputType = {
   section: $Enums.Section
   crId: number | null
   serverId: number
+  status: $Enums.ClassStatus
+  graduatedAt: Date | null
+  graduatedBy: number | null
   _count: ClassCountAggregateOutputType | null
   _avg: ClassAvgAggregateOutputType | null
   _sum: ClassSumAggregateOutputType | null
@@ -264,9 +289,13 @@ export type ClassWhereInput = {
   section?: Prisma.EnumSectionFilter<"Class"> | $Enums.Section
   crId?: Prisma.IntNullableFilter<"Class"> | number | null
   serverId?: Prisma.IntFilter<"Class"> | number
+  status?: Prisma.EnumClassStatusFilter<"Class"> | $Enums.ClassStatus
+  graduatedAt?: Prisma.DateTimeNullableFilter<"Class"> | Date | string | null
+  graduatedBy?: Prisma.IntNullableFilter<"Class"> | number | null
   program?: Prisma.XOR<Prisma.ProgramScalarRelationFilter, Prisma.ProgramWhereInput>
   cr?: Prisma.XOR<Prisma.StudentInfoNullableScalarRelationFilter, Prisma.StudentInfoWhereInput> | null
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
+  graduator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   students?: Prisma.StudentInfoListRelationFilter
   teaches?: Prisma.TeachesListRelationFilter
 }
@@ -280,9 +309,13 @@ export type ClassOrderByWithRelationInput = {
   section?: Prisma.SortOrder
   crId?: Prisma.SortOrderInput | Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  graduatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   program?: Prisma.ProgramOrderByWithRelationInput
   cr?: Prisma.StudentInfoOrderByWithRelationInput
   server?: Prisma.ServerOrderByWithRelationInput
+  graduator?: Prisma.UserOrderByWithRelationInput
   students?: Prisma.StudentInfoOrderByRelationAggregateInput
   teaches?: Prisma.TeachesOrderByRelationAggregateInput
 }
@@ -300,9 +333,13 @@ export type ClassWhereUniqueInput = Prisma.AtLeast<{
   academicYear?: Prisma.IntFilter<"Class"> | number
   admissionYear?: Prisma.IntFilter<"Class"> | number
   section?: Prisma.EnumSectionFilter<"Class"> | $Enums.Section
+  status?: Prisma.EnumClassStatusFilter<"Class"> | $Enums.ClassStatus
+  graduatedAt?: Prisma.DateTimeNullableFilter<"Class"> | Date | string | null
+  graduatedBy?: Prisma.IntNullableFilter<"Class"> | number | null
   program?: Prisma.XOR<Prisma.ProgramScalarRelationFilter, Prisma.ProgramWhereInput>
   cr?: Prisma.XOR<Prisma.StudentInfoNullableScalarRelationFilter, Prisma.StudentInfoWhereInput> | null
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
+  graduator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   students?: Prisma.StudentInfoListRelationFilter
   teaches?: Prisma.TeachesListRelationFilter
 }, "id" | "crId" | "serverId" | "programId_currentSemester_section_admissionYear">
@@ -316,6 +353,9 @@ export type ClassOrderByWithAggregationInput = {
   section?: Prisma.SortOrder
   crId?: Prisma.SortOrderInput | Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  graduatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ClassCountOrderByAggregateInput
   _avg?: Prisma.ClassAvgOrderByAggregateInput
   _max?: Prisma.ClassMaxOrderByAggregateInput
@@ -335,6 +375,9 @@ export type ClassScalarWhereWithAggregatesInput = {
   section?: Prisma.EnumSectionWithAggregatesFilter<"Class"> | $Enums.Section
   crId?: Prisma.IntNullableWithAggregatesFilter<"Class"> | number | null
   serverId?: Prisma.IntWithAggregatesFilter<"Class"> | number
+  status?: Prisma.EnumClassStatusWithAggregatesFilter<"Class"> | $Enums.ClassStatus
+  graduatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Class"> | Date | string | null
+  graduatedBy?: Prisma.IntNullableWithAggregatesFilter<"Class"> | number | null
 }
 
 export type ClassCreateInput = {
@@ -342,9 +385,12 @@ export type ClassCreateInput = {
   academicYear: number
   admissionYear: number
   section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
   program: Prisma.ProgramCreateNestedOneWithoutClassesInput
   cr?: Prisma.StudentInfoCreateNestedOneWithoutCrOfClassInput
   server: Prisma.ServerCreateNestedOneWithoutClassInput
+  graduator?: Prisma.UserCreateNestedOneWithoutGraduatedClassesInput
   students?: Prisma.StudentInfoCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutClassInput
 }
@@ -358,6 +404,9 @@ export type ClassUncheckedCreateInput = {
   section: $Enums.Section
   crId?: number | null
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
   students?: Prisma.StudentInfoUncheckedCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutClassInput
 }
@@ -367,9 +416,12 @@ export type ClassUpdateInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   program?: Prisma.ProgramUpdateOneRequiredWithoutClassesNestedInput
   cr?: Prisma.StudentInfoUpdateOneWithoutCrOfClassNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutClassNestedInput
+  graduator?: Prisma.UserUpdateOneWithoutGraduatedClassesNestedInput
   students?: Prisma.StudentInfoUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutClassNestedInput
 }
@@ -383,6 +435,9 @@ export type ClassUncheckedUpdateInput = {
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   students?: Prisma.StudentInfoUncheckedUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutClassNestedInput
 }
@@ -396,6 +451,9 @@ export type ClassCreateManyInput = {
   section: $Enums.Section
   crId?: number | null
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
 }
 
 export type ClassUpdateManyMutationInput = {
@@ -403,6 +461,8 @@ export type ClassUpdateManyMutationInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ClassUncheckedUpdateManyInput = {
@@ -414,6 +474,9 @@ export type ClassUncheckedUpdateManyInput = {
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ClassListRelationFilter = {
@@ -452,6 +515,9 @@ export type ClassCountOrderByAggregateInput = {
   section?: Prisma.SortOrder
   crId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  graduatedAt?: Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrder
 }
 
 export type ClassAvgOrderByAggregateInput = {
@@ -462,6 +528,7 @@ export type ClassAvgOrderByAggregateInput = {
   admissionYear?: Prisma.SortOrder
   crId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrder
 }
 
 export type ClassMaxOrderByAggregateInput = {
@@ -473,6 +540,9 @@ export type ClassMaxOrderByAggregateInput = {
   section?: Prisma.SortOrder
   crId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  graduatedAt?: Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrder
 }
 
 export type ClassMinOrderByAggregateInput = {
@@ -484,6 +554,9 @@ export type ClassMinOrderByAggregateInput = {
   section?: Prisma.SortOrder
   crId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  graduatedAt?: Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrder
 }
 
 export type ClassSumOrderByAggregateInput = {
@@ -494,6 +567,7 @@ export type ClassSumOrderByAggregateInput = {
   admissionYear?: Prisma.SortOrder
   crId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
+  graduatedBy?: Prisma.SortOrder
 }
 
 export type ClassCreateNestedManyWithoutProgramInput = {
@@ -535,6 +609,48 @@ export type ClassUncheckedUpdateManyWithoutProgramNestedInput = {
   connect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
   update?: Prisma.ClassUpdateWithWhereUniqueWithoutProgramInput | Prisma.ClassUpdateWithWhereUniqueWithoutProgramInput[]
   updateMany?: Prisma.ClassUpdateManyWithWhereWithoutProgramInput | Prisma.ClassUpdateManyWithWhereWithoutProgramInput[]
+  deleteMany?: Prisma.ClassScalarWhereInput | Prisma.ClassScalarWhereInput[]
+}
+
+export type ClassCreateNestedManyWithoutGraduatorInput = {
+  create?: Prisma.XOR<Prisma.ClassCreateWithoutGraduatorInput, Prisma.ClassUncheckedCreateWithoutGraduatorInput> | Prisma.ClassCreateWithoutGraduatorInput[] | Prisma.ClassUncheckedCreateWithoutGraduatorInput[]
+  connectOrCreate?: Prisma.ClassCreateOrConnectWithoutGraduatorInput | Prisma.ClassCreateOrConnectWithoutGraduatorInput[]
+  createMany?: Prisma.ClassCreateManyGraduatorInputEnvelope
+  connect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+}
+
+export type ClassUncheckedCreateNestedManyWithoutGraduatorInput = {
+  create?: Prisma.XOR<Prisma.ClassCreateWithoutGraduatorInput, Prisma.ClassUncheckedCreateWithoutGraduatorInput> | Prisma.ClassCreateWithoutGraduatorInput[] | Prisma.ClassUncheckedCreateWithoutGraduatorInput[]
+  connectOrCreate?: Prisma.ClassCreateOrConnectWithoutGraduatorInput | Prisma.ClassCreateOrConnectWithoutGraduatorInput[]
+  createMany?: Prisma.ClassCreateManyGraduatorInputEnvelope
+  connect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+}
+
+export type ClassUpdateManyWithoutGraduatorNestedInput = {
+  create?: Prisma.XOR<Prisma.ClassCreateWithoutGraduatorInput, Prisma.ClassUncheckedCreateWithoutGraduatorInput> | Prisma.ClassCreateWithoutGraduatorInput[] | Prisma.ClassUncheckedCreateWithoutGraduatorInput[]
+  connectOrCreate?: Prisma.ClassCreateOrConnectWithoutGraduatorInput | Prisma.ClassCreateOrConnectWithoutGraduatorInput[]
+  upsert?: Prisma.ClassUpsertWithWhereUniqueWithoutGraduatorInput | Prisma.ClassUpsertWithWhereUniqueWithoutGraduatorInput[]
+  createMany?: Prisma.ClassCreateManyGraduatorInputEnvelope
+  set?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  disconnect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  delete?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  connect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  update?: Prisma.ClassUpdateWithWhereUniqueWithoutGraduatorInput | Prisma.ClassUpdateWithWhereUniqueWithoutGraduatorInput[]
+  updateMany?: Prisma.ClassUpdateManyWithWhereWithoutGraduatorInput | Prisma.ClassUpdateManyWithWhereWithoutGraduatorInput[]
+  deleteMany?: Prisma.ClassScalarWhereInput | Prisma.ClassScalarWhereInput[]
+}
+
+export type ClassUncheckedUpdateManyWithoutGraduatorNestedInput = {
+  create?: Prisma.XOR<Prisma.ClassCreateWithoutGraduatorInput, Prisma.ClassUncheckedCreateWithoutGraduatorInput> | Prisma.ClassCreateWithoutGraduatorInput[] | Prisma.ClassUncheckedCreateWithoutGraduatorInput[]
+  connectOrCreate?: Prisma.ClassCreateOrConnectWithoutGraduatorInput | Prisma.ClassCreateOrConnectWithoutGraduatorInput[]
+  upsert?: Prisma.ClassUpsertWithWhereUniqueWithoutGraduatorInput | Prisma.ClassUpsertWithWhereUniqueWithoutGraduatorInput[]
+  createMany?: Prisma.ClassCreateManyGraduatorInputEnvelope
+  set?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  disconnect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  delete?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  connect?: Prisma.ClassWhereUniqueInput | Prisma.ClassWhereUniqueInput[]
+  update?: Prisma.ClassUpdateWithWhereUniqueWithoutGraduatorInput | Prisma.ClassUpdateWithWhereUniqueWithoutGraduatorInput[]
+  updateMany?: Prisma.ClassUpdateManyWithWhereWithoutGraduatorInput | Prisma.ClassUpdateManyWithWhereWithoutGraduatorInput[]
   deleteMany?: Prisma.ClassScalarWhereInput | Prisma.ClassScalarWhereInput[]
 }
 
@@ -588,6 +704,14 @@ export type EnumSectionFieldUpdateOperationsInput = {
   set?: $Enums.Section
 }
 
+export type EnumClassStatusFieldUpdateOperationsInput = {
+  set?: $Enums.ClassStatus
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type ClassCreateNestedOneWithoutServerInput = {
   create?: Prisma.XOR<Prisma.ClassCreateWithoutServerInput, Prisma.ClassUncheckedCreateWithoutServerInput>
   connectOrCreate?: Prisma.ClassCreateOrConnectWithoutServerInput
@@ -639,8 +763,11 @@ export type ClassCreateWithoutProgramInput = {
   academicYear: number
   admissionYear: number
   section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
   cr?: Prisma.StudentInfoCreateNestedOneWithoutCrOfClassInput
   server: Prisma.ServerCreateNestedOneWithoutClassInput
+  graduator?: Prisma.UserCreateNestedOneWithoutGraduatedClassesInput
   students?: Prisma.StudentInfoCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutClassInput
 }
@@ -653,6 +780,9 @@ export type ClassUncheckedCreateWithoutProgramInput = {
   section: $Enums.Section
   crId?: number | null
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
   students?: Prisma.StudentInfoUncheckedCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutClassInput
 }
@@ -695,6 +825,64 @@ export type ClassScalarWhereInput = {
   section?: Prisma.EnumSectionFilter<"Class"> | $Enums.Section
   crId?: Prisma.IntNullableFilter<"Class"> | number | null
   serverId?: Prisma.IntFilter<"Class"> | number
+  status?: Prisma.EnumClassStatusFilter<"Class"> | $Enums.ClassStatus
+  graduatedAt?: Prisma.DateTimeNullableFilter<"Class"> | Date | string | null
+  graduatedBy?: Prisma.IntNullableFilter<"Class"> | number | null
+}
+
+export type ClassCreateWithoutGraduatorInput = {
+  currentSemester: number
+  academicYear: number
+  admissionYear: number
+  section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  program: Prisma.ProgramCreateNestedOneWithoutClassesInput
+  cr?: Prisma.StudentInfoCreateNestedOneWithoutCrOfClassInput
+  server: Prisma.ServerCreateNestedOneWithoutClassInput
+  students?: Prisma.StudentInfoCreateNestedManyWithoutClassInput
+  teaches?: Prisma.TeachesCreateNestedManyWithoutClassInput
+}
+
+export type ClassUncheckedCreateWithoutGraduatorInput = {
+  id?: number
+  programId: number
+  currentSemester: number
+  academicYear: number
+  admissionYear: number
+  section: $Enums.Section
+  crId?: number | null
+  serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  students?: Prisma.StudentInfoUncheckedCreateNestedManyWithoutClassInput
+  teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutClassInput
+}
+
+export type ClassCreateOrConnectWithoutGraduatorInput = {
+  where: Prisma.ClassWhereUniqueInput
+  create: Prisma.XOR<Prisma.ClassCreateWithoutGraduatorInput, Prisma.ClassUncheckedCreateWithoutGraduatorInput>
+}
+
+export type ClassCreateManyGraduatorInputEnvelope = {
+  data: Prisma.ClassCreateManyGraduatorInput | Prisma.ClassCreateManyGraduatorInput[]
+  skipDuplicates?: boolean
+}
+
+export type ClassUpsertWithWhereUniqueWithoutGraduatorInput = {
+  where: Prisma.ClassWhereUniqueInput
+  update: Prisma.XOR<Prisma.ClassUpdateWithoutGraduatorInput, Prisma.ClassUncheckedUpdateWithoutGraduatorInput>
+  create: Prisma.XOR<Prisma.ClassCreateWithoutGraduatorInput, Prisma.ClassUncheckedCreateWithoutGraduatorInput>
+}
+
+export type ClassUpdateWithWhereUniqueWithoutGraduatorInput = {
+  where: Prisma.ClassWhereUniqueInput
+  data: Prisma.XOR<Prisma.ClassUpdateWithoutGraduatorInput, Prisma.ClassUncheckedUpdateWithoutGraduatorInput>
+}
+
+export type ClassUpdateManyWithWhereWithoutGraduatorInput = {
+  where: Prisma.ClassScalarWhereInput
+  data: Prisma.XOR<Prisma.ClassUpdateManyMutationInput, Prisma.ClassUncheckedUpdateManyWithoutGraduatorInput>
 }
 
 export type ClassCreateWithoutStudentsInput = {
@@ -702,9 +890,12 @@ export type ClassCreateWithoutStudentsInput = {
   academicYear: number
   admissionYear: number
   section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
   program: Prisma.ProgramCreateNestedOneWithoutClassesInput
   cr?: Prisma.StudentInfoCreateNestedOneWithoutCrOfClassInput
   server: Prisma.ServerCreateNestedOneWithoutClassInput
+  graduator?: Prisma.UserCreateNestedOneWithoutGraduatedClassesInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutClassInput
 }
 
@@ -717,6 +908,9 @@ export type ClassUncheckedCreateWithoutStudentsInput = {
   section: $Enums.Section
   crId?: number | null
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutClassInput
 }
 
@@ -730,8 +924,11 @@ export type ClassCreateWithoutCrInput = {
   academicYear: number
   admissionYear: number
   section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
   program: Prisma.ProgramCreateNestedOneWithoutClassesInput
   server: Prisma.ServerCreateNestedOneWithoutClassInput
+  graduator?: Prisma.UserCreateNestedOneWithoutGraduatedClassesInput
   students?: Prisma.StudentInfoCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutClassInput
 }
@@ -744,6 +941,9 @@ export type ClassUncheckedCreateWithoutCrInput = {
   admissionYear: number
   section: $Enums.Section
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
   students?: Prisma.StudentInfoUncheckedCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutClassInput
 }
@@ -769,9 +969,12 @@ export type ClassUpdateWithoutStudentsInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   program?: Prisma.ProgramUpdateOneRequiredWithoutClassesNestedInput
   cr?: Prisma.StudentInfoUpdateOneWithoutCrOfClassNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutClassNestedInput
+  graduator?: Prisma.UserUpdateOneWithoutGraduatedClassesNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutClassNestedInput
 }
 
@@ -784,6 +987,9 @@ export type ClassUncheckedUpdateWithoutStudentsInput = {
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutClassNestedInput
 }
 
@@ -803,8 +1009,11 @@ export type ClassUpdateWithoutCrInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   program?: Prisma.ProgramUpdateOneRequiredWithoutClassesNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutClassNestedInput
+  graduator?: Prisma.UserUpdateOneWithoutGraduatedClassesNestedInput
   students?: Prisma.StudentInfoUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutClassNestedInput
 }
@@ -817,6 +1026,9 @@ export type ClassUncheckedUpdateWithoutCrInput = {
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   students?: Prisma.StudentInfoUncheckedUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutClassNestedInput
 }
@@ -826,8 +1038,11 @@ export type ClassCreateWithoutServerInput = {
   academicYear: number
   admissionYear: number
   section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
   program: Prisma.ProgramCreateNestedOneWithoutClassesInput
   cr?: Prisma.StudentInfoCreateNestedOneWithoutCrOfClassInput
+  graduator?: Prisma.UserCreateNestedOneWithoutGraduatedClassesInput
   students?: Prisma.StudentInfoCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutClassInput
 }
@@ -840,6 +1055,9 @@ export type ClassUncheckedCreateWithoutServerInput = {
   admissionYear: number
   section: $Enums.Section
   crId?: number | null
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
   students?: Prisma.StudentInfoUncheckedCreateNestedManyWithoutClassInput
   teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutClassInput
 }
@@ -865,8 +1083,11 @@ export type ClassUpdateWithoutServerInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   program?: Prisma.ProgramUpdateOneRequiredWithoutClassesNestedInput
   cr?: Prisma.StudentInfoUpdateOneWithoutCrOfClassNestedInput
+  graduator?: Prisma.UserUpdateOneWithoutGraduatedClassesNestedInput
   students?: Prisma.StudentInfoUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutClassNestedInput
 }
@@ -879,6 +1100,9 @@ export type ClassUncheckedUpdateWithoutServerInput = {
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   students?: Prisma.StudentInfoUncheckedUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutClassNestedInput
 }
@@ -888,9 +1112,12 @@ export type ClassCreateWithoutTeachesInput = {
   academicYear: number
   admissionYear: number
   section: $Enums.Section
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
   program: Prisma.ProgramCreateNestedOneWithoutClassesInput
   cr?: Prisma.StudentInfoCreateNestedOneWithoutCrOfClassInput
   server: Prisma.ServerCreateNestedOneWithoutClassInput
+  graduator?: Prisma.UserCreateNestedOneWithoutGraduatedClassesInput
   students?: Prisma.StudentInfoCreateNestedManyWithoutClassInput
 }
 
@@ -903,6 +1130,9 @@ export type ClassUncheckedCreateWithoutTeachesInput = {
   section: $Enums.Section
   crId?: number | null
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
   students?: Prisma.StudentInfoUncheckedCreateNestedManyWithoutClassInput
 }
 
@@ -927,9 +1157,12 @@ export type ClassUpdateWithoutTeachesInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   program?: Prisma.ProgramUpdateOneRequiredWithoutClassesNestedInput
   cr?: Prisma.StudentInfoUpdateOneWithoutCrOfClassNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutClassNestedInput
+  graduator?: Prisma.UserUpdateOneWithoutGraduatedClassesNestedInput
   students?: Prisma.StudentInfoUpdateManyWithoutClassNestedInput
 }
 
@@ -942,6 +1175,9 @@ export type ClassUncheckedUpdateWithoutTeachesInput = {
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   students?: Prisma.StudentInfoUncheckedUpdateManyWithoutClassNestedInput
 }
 
@@ -953,6 +1189,9 @@ export type ClassCreateManyProgramInput = {
   section: $Enums.Section
   crId?: number | null
   serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+  graduatedBy?: number | null
 }
 
 export type ClassUpdateWithoutProgramInput = {
@@ -960,8 +1199,11 @@ export type ClassUpdateWithoutProgramInput = {
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cr?: Prisma.StudentInfoUpdateOneWithoutCrOfClassNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutClassNestedInput
+  graduator?: Prisma.UserUpdateOneWithoutGraduatedClassesNestedInput
   students?: Prisma.StudentInfoUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutClassNestedInput
 }
@@ -974,6 +1216,9 @@ export type ClassUncheckedUpdateWithoutProgramInput = {
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   students?: Prisma.StudentInfoUncheckedUpdateManyWithoutClassNestedInput
   teaches?: Prisma.TeachesUncheckedUpdateManyWithoutClassNestedInput
 }
@@ -986,6 +1231,64 @@ export type ClassUncheckedUpdateManyWithoutProgramInput = {
   section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
   crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  graduatedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type ClassCreateManyGraduatorInput = {
+  id?: number
+  programId: number
+  currentSemester: number
+  academicYear: number
+  admissionYear: number
+  section: $Enums.Section
+  crId?: number | null
+  serverId: number
+  status?: $Enums.ClassStatus
+  graduatedAt?: Date | string | null
+}
+
+export type ClassUpdateWithoutGraduatorInput = {
+  currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
+  academicYear?: Prisma.IntFieldUpdateOperationsInput | number
+  admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
+  section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  program?: Prisma.ProgramUpdateOneRequiredWithoutClassesNestedInput
+  cr?: Prisma.StudentInfoUpdateOneWithoutCrOfClassNestedInput
+  server?: Prisma.ServerUpdateOneRequiredWithoutClassNestedInput
+  students?: Prisma.StudentInfoUpdateManyWithoutClassNestedInput
+  teaches?: Prisma.TeachesUpdateManyWithoutClassNestedInput
+}
+
+export type ClassUncheckedUpdateWithoutGraduatorInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  programId?: Prisma.IntFieldUpdateOperationsInput | number
+  currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
+  academicYear?: Prisma.IntFieldUpdateOperationsInput | number
+  admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
+  section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  students?: Prisma.StudentInfoUncheckedUpdateManyWithoutClassNestedInput
+  teaches?: Prisma.TeachesUncheckedUpdateManyWithoutClassNestedInput
+}
+
+export type ClassUncheckedUpdateManyWithoutGraduatorInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  programId?: Prisma.IntFieldUpdateOperationsInput | number
+  currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
+  academicYear?: Prisma.IntFieldUpdateOperationsInput | number
+  admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
+  section?: Prisma.EnumSectionFieldUpdateOperationsInput | $Enums.Section
+  crId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClassStatusFieldUpdateOperationsInput | $Enums.ClassStatus
+  graduatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -1037,9 +1340,13 @@ export type ClassSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   section?: boolean
   crId?: boolean
   serverId?: boolean
+  status?: boolean
+  graduatedAt?: boolean
+  graduatedBy?: boolean
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
+  graduator?: boolean | Prisma.Class$graduatorArgs<ExtArgs>
   students?: boolean | Prisma.Class$studentsArgs<ExtArgs>
   teaches?: boolean | Prisma.Class$teachesArgs<ExtArgs>
   _count?: boolean | Prisma.ClassCountOutputTypeDefaultArgs<ExtArgs>
@@ -1054,9 +1361,13 @@ export type ClassSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   section?: boolean
   crId?: boolean
   serverId?: boolean
+  status?: boolean
+  graduatedAt?: boolean
+  graduatedBy?: boolean
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
+  graduator?: boolean | Prisma.Class$graduatorArgs<ExtArgs>
 }, ExtArgs["result"]["class"]>
 
 export type ClassSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1068,9 +1379,13 @@ export type ClassSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   section?: boolean
   crId?: boolean
   serverId?: boolean
+  status?: boolean
+  graduatedAt?: boolean
+  graduatedBy?: boolean
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
+  graduator?: boolean | Prisma.Class$graduatorArgs<ExtArgs>
 }, ExtArgs["result"]["class"]>
 
 export type ClassSelectScalar = {
@@ -1082,13 +1397,17 @@ export type ClassSelectScalar = {
   section?: boolean
   crId?: boolean
   serverId?: boolean
+  status?: boolean
+  graduatedAt?: boolean
+  graduatedBy?: boolean
 }
 
-export type ClassOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "programId" | "currentSemester" | "academicYear" | "admissionYear" | "section" | "crId" | "serverId", ExtArgs["result"]["class"]>
+export type ClassOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "programId" | "currentSemester" | "academicYear" | "admissionYear" | "section" | "crId" | "serverId" | "status" | "graduatedAt" | "graduatedBy", ExtArgs["result"]["class"]>
 export type ClassInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
+  graduator?: boolean | Prisma.Class$graduatorArgs<ExtArgs>
   students?: boolean | Prisma.Class$studentsArgs<ExtArgs>
   teaches?: boolean | Prisma.Class$teachesArgs<ExtArgs>
   _count?: boolean | Prisma.ClassCountOutputTypeDefaultArgs<ExtArgs>
@@ -1097,11 +1416,13 @@ export type ClassIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
+  graduator?: boolean | Prisma.Class$graduatorArgs<ExtArgs>
 }
 export type ClassIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
+  graduator?: boolean | Prisma.Class$graduatorArgs<ExtArgs>
 }
 
 export type $ClassPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1110,6 +1431,7 @@ export type $ClassPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     program: Prisma.$ProgramPayload<ExtArgs>
     cr: Prisma.$StudentInfoPayload<ExtArgs> | null
     server: Prisma.$ServerPayload<ExtArgs>
+    graduator: Prisma.$UserPayload<ExtArgs> | null
     students: Prisma.$StudentInfoPayload<ExtArgs>[]
     teaches: Prisma.$TeachesPayload<ExtArgs>[]
   }
@@ -1122,6 +1444,9 @@ export type $ClassPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     section: $Enums.Section
     crId: number | null
     serverId: number
+    status: $Enums.ClassStatus
+    graduatedAt: Date | null
+    graduatedBy: number | null
   }, ExtArgs["result"]["class"]>
   composites: {}
 }
@@ -1519,6 +1844,7 @@ export interface Prisma__ClassClient<T, Null = never, ExtArgs extends runtime.Ty
   program<T extends Prisma.ProgramDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProgramDefaultArgs<ExtArgs>>): Prisma.Prisma__ProgramClient<runtime.Types.Result.GetResult<Prisma.$ProgramPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   cr<T extends Prisma.Class$crArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Class$crArgs<ExtArgs>>): Prisma.Prisma__StudentInfoClient<runtime.Types.Result.GetResult<Prisma.$StudentInfoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   server<T extends Prisma.ServerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ServerDefaultArgs<ExtArgs>>): Prisma.Prisma__ServerClient<runtime.Types.Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  graduator<T extends Prisma.Class$graduatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Class$graduatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   students<T extends Prisma.Class$studentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Class$studentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudentInfoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   teaches<T extends Prisma.Class$teachesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Class$teachesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeachesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1558,6 +1884,9 @@ export interface ClassFieldRefs {
   readonly section: Prisma.FieldRef<"Class", 'Section'>
   readonly crId: Prisma.FieldRef<"Class", 'Int'>
   readonly serverId: Prisma.FieldRef<"Class", 'Int'>
+  readonly status: Prisma.FieldRef<"Class", 'ClassStatus'>
+  readonly graduatedAt: Prisma.FieldRef<"Class", 'DateTime'>
+  readonly graduatedBy: Prisma.FieldRef<"Class", 'Int'>
 }
     
 
@@ -1975,6 +2304,25 @@ export type Class$crArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs =
    */
   include?: Prisma.StudentInfoInclude<ExtArgs> | null
   where?: Prisma.StudentInfoWhereInput
+}
+
+/**
+ * Class.graduator
+ */
+export type Class$graduatorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

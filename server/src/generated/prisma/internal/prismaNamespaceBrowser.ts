@@ -180,7 +180,10 @@ export const ClassScalarFieldEnum = {
   admissionYear: 'admissionYear',
   section: 'section',
   crId: 'crId',
-  serverId: 'serverId'
+  serverId: 'serverId',
+  status: 'status',
+  graduatedAt: 'graduatedAt',
+  graduatedBy: 'graduatedBy'
 } as const
 
 export type ClassScalarFieldEnum = (typeof ClassScalarFieldEnum)[keyof typeof ClassScalarFieldEnum]

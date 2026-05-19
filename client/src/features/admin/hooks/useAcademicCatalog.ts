@@ -18,6 +18,7 @@ import type {
   UpdateCourseRequest,
   UpdateDepartmentRequest,
   UpdateProgramRequest,
+  CandidateParams,
 } from '@/api/endpoints/catalog.api';
 
 export function useDepartment(departmentId: number | null) {
@@ -71,7 +72,7 @@ export function useCurriculum(
   programId: number | null,
   params: { semesterNumber?: number; batchYear?: number } = {},
 ) {
-  const normalized = userListParamsToRecord(params);
+  const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
     queryKey: programId
@@ -98,21 +99,71 @@ export function useAdminClassCourses(classId: number | null) {
   });
 }
 
-export function useAdminClasses(params: ClassListParams) {
+export function useClassStudents(
+  classId: number | null,
+  params: CandidateParams = {},
+  enabled = true,
+) {
+  const normalized = userListParamsToRecord({ ...params });
+
+  return useQuery({
+    queryKey: classId
+      ? queryKeys.classes.students(classId, normalized)
+      : ['classes', null, 'students'],
+    queryFn: () => catalogApi.listClassStudents(classId!, params),
+    enabled: classId !== null && enabled,
+  });
+}
+
+export function useStudentCandidates(
+  classId: number | null,
+  params: CandidateParams = {},
+  enabled = true,
+) {
+  const normalized = userListParamsToRecord({ ...params });
+
+  return useQuery({
+    queryKey: classId
+      ? queryKeys.classes.studentCandidates(classId, normalized)
+      : ['classes', null, 'student-candidates'],
+    queryFn: () => catalogApi.listStudentCandidates(classId!, params),
+    enabled: classId !== null && enabled,
+  });
+}
+
+export function useTeacherCandidates(
+  classId: number | null,
+  params: CandidateParams = {},
+  enabled = true,
+) {
+  const normalized = userListParamsToRecord({ ...params });
+
+  return useQuery({
+    queryKey: classId
+      ? queryKeys.classes.teacherCandidates(classId, normalized)
+      : ['classes', null, 'teacher-candidates'],
+    queryFn: () => catalogApi.listTeacherCandidates(classId!, params),
+    enabled: classId !== null && enabled,
+  });
+}
+
+export function useAdminClasses(params: ClassListParams, enabled = true) {
   const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
     queryKey: queryKeys.classes.list(normalized),
     queryFn: () => catalogApi.listClasses(params),
+    enabled,
   });
 }
 
-export function useAdminCourses(params: CourseListParams) {
+export function useAdminCourses(params: CourseListParams, enabled = true) {
   const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
     queryKey: queryKeys.courses.list(normalized),
     queryFn: () => catalogApi.listCourses(params),
+    enabled,
   });
 }
 
@@ -222,6 +273,37 @@ export function useAssignClassCourse(classId: number) {
   });
 }
 
+export function useTransferClassStudent(classId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (studentId: number) => catalogApi.transferStudent(classId, studentId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.students(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.studentCandidates(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+      toast.success('Student transferred');
+    },
+  });
+}
+
+export function useReplaceCourseTeacher(classId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ courseId, teacherId }: { courseId: number; teacherId: number }) =>
+      catalogApi.replaceCourseTeacher(classId, courseId, teacherId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+      toast.success('Teacher replaced');
+    },
+  });
+}
+
 export function useRemoveClassCourse(classId: number) {
   const queryClient = useQueryClient();
 
@@ -247,6 +329,21 @@ export function useAdvanceSemester(classId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Semester advanced');
+    },
+  });
+}
+
+export function useGraduateClass(classId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => catalogApi.graduateClass(classId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+      toast.success('Class graduated');
     },
   });
 }

@@ -318,6 +318,7 @@ export type UserWhereInput = {
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
+  graduatedClasses?: Prisma.ClassListRelationFilter
   societyMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
 }
@@ -356,6 +357,7 @@ export type UserOrderByWithRelationInput = {
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
   refreshTokens?: Prisma.RefreshTokenOrderByRelationAggregateInput
+  graduatedClasses?: Prisma.ClassOrderByRelationAggregateInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestOrderByRelationAggregateInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestOrderByRelationAggregateInput
 }
@@ -397,6 +399,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
+  graduatedClasses?: Prisma.ClassListRelationFilter
   societyMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
 }, "id" | "email">
@@ -477,6 +480,7 @@ export type UserCreateInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -514,6 +518,7 @@ export type UserUncheckedCreateInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -550,6 +555,7 @@ export type UserUpdateInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -587,6 +593,7 @@ export type UserUncheckedUpdateInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -815,6 +822,22 @@ export type UserUpdateOneRequiredWithoutTeacherInfoNestedInput = {
   upsert?: Prisma.UserUpsertWithoutTeacherInfoInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTeacherInfoInput, Prisma.UserUpdateWithoutTeacherInfoInput>, Prisma.UserUncheckedUpdateWithoutTeacherInfoInput>
+}
+
+export type UserCreateNestedOneWithoutGraduatedClassesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutGraduatedClassesInput, Prisma.UserUncheckedCreateWithoutGraduatedClassesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutGraduatedClassesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutGraduatedClassesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutGraduatedClassesInput, Prisma.UserUncheckedCreateWithoutGraduatedClassesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutGraduatedClassesInput
+  upsert?: Prisma.UserUpsertWithoutGraduatedClassesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGraduatedClassesInput, Prisma.UserUpdateWithoutGraduatedClassesInput>, Prisma.UserUncheckedUpdateWithoutGraduatedClassesInput>
 }
 
 export type UserCreateNestedOneWithoutCreatedServersInput = {
@@ -1102,6 +1125,7 @@ export type UserCreateWithoutDepartmentInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1138,6 +1162,7 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1220,6 +1245,7 @@ export type UserCreateWithoutStudentInfoInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1256,6 +1282,7 @@ export type UserUncheckedCreateWithoutStudentInfoInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1307,6 +1334,7 @@ export type UserUpdateWithoutStudentInfoInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -1343,6 +1371,7 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -1378,6 +1407,7 @@ export type UserCreateWithoutTeacherInfoInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1414,6 +1444,7 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1465,6 +1496,7 @@ export type UserUpdateWithoutTeacherInfoInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -1486,6 +1518,169 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserCreateWithoutGraduatedClassesInput = {
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  isActive?: boolean
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutGraduatedClassesInput = {
+  id?: number
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  isActive?: boolean
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutGraduatedClassesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutGraduatedClassesInput, Prisma.UserUncheckedCreateWithoutGraduatedClassesInput>
+}
+
+export type UserUpsertWithoutGraduatedClassesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutGraduatedClassesInput, Prisma.UserUncheckedUpdateWithoutGraduatedClassesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutGraduatedClassesInput, Prisma.UserUncheckedCreateWithoutGraduatedClassesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutGraduatedClassesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutGraduatedClassesInput, Prisma.UserUncheckedUpdateWithoutGraduatedClassesInput>
+}
+
+export type UserUpdateWithoutGraduatedClassesInput = {
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutGraduatedClassesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
@@ -1536,6 +1731,7 @@ export type UserCreateWithoutCreatedServersInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1572,6 +1768,7 @@ export type UserUncheckedCreateWithoutCreatedServersInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1623,6 +1820,7 @@ export type UserUpdateWithoutCreatedServersInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -1659,6 +1857,7 @@ export type UserUncheckedUpdateWithoutCreatedServersInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -1694,6 +1893,7 @@ export type UserCreateWithoutLockedChannelsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1730,6 +1930,7 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1770,6 +1971,7 @@ export type UserCreateWithoutDeletedChannelsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1806,6 +2008,7 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1846,6 +2049,7 @@ export type UserCreateWithoutCreatedChannelsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1882,6 +2086,7 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1922,6 +2127,7 @@ export type UserCreateWithoutArchivedChannelsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -1958,6 +2164,7 @@ export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2009,6 +2216,7 @@ export type UserUpdateWithoutLockedChannelsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -2045,6 +2253,7 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2091,6 +2300,7 @@ export type UserUpdateWithoutDeletedChannelsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -2127,6 +2337,7 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2173,6 +2384,7 @@ export type UserUpdateWithoutCreatedChannelsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -2209,6 +2421,7 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2255,6 +2468,7 @@ export type UserUpdateWithoutArchivedChannelsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -2291,6 +2505,7 @@ export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2326,6 +2541,7 @@ export type UserCreateWithoutServerMembershipsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -2362,6 +2578,7 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2413,6 +2630,7 @@ export type UserUpdateWithoutServerMembershipsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -2449,6 +2667,7 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2485,6 +2704,7 @@ export type UserCreateWithoutSocietyMembershipRequestsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
@@ -2521,6 +2741,7 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
 
@@ -2561,6 +2782,7 @@ export type UserCreateWithoutReviewedMembershipRequestsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
 }
 
@@ -2597,6 +2819,7 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -2648,6 +2871,7 @@ export type UserUpdateWithoutSocietyMembershipRequestsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
@@ -2684,6 +2908,7 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
@@ -2730,6 +2955,7 @@ export type UserUpdateWithoutReviewedMembershipRequestsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
 }
 
@@ -2766,6 +2992,7 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -2800,6 +3027,7 @@ export type UserCreateWithoutAuthoredPostsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -2836,6 +3064,7 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2876,6 +3105,7 @@ export type UserCreateWithoutDeletedPostsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -2912,6 +3142,7 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2952,6 +3183,7 @@ export type UserCreateWithoutUpdatedPostsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -2988,6 +3220,7 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3028,6 +3261,7 @@ export type UserCreateWithoutPinnedPostsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -3064,6 +3298,7 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3115,6 +3350,7 @@ export type UserUpdateWithoutAuthoredPostsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3151,6 +3387,7 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3197,6 +3434,7 @@ export type UserUpdateWithoutDeletedPostsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3233,6 +3471,7 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3279,6 +3518,7 @@ export type UserUpdateWithoutUpdatedPostsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3315,6 +3555,7 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3361,6 +3602,7 @@ export type UserUpdateWithoutPinnedPostsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3397,6 +3639,7 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3432,6 +3675,7 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -3468,6 +3712,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3508,6 +3753,7 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -3544,6 +3790,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3595,6 +3842,7 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3631,6 +3879,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3677,6 +3926,7 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3713,6 +3963,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3748,6 +3999,7 @@ export type UserCreateWithoutNotificationsInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -3784,6 +4036,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3835,6 +4088,7 @@ export type UserUpdateWithoutNotificationsInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -3871,6 +4125,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3906,6 +4161,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -3942,6 +4198,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3993,6 +4250,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -4029,6 +4287,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -4064,6 +4323,7 @@ export type UserCreateWithoutRefreshTokensInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
@@ -4100,6 +4360,7 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -4151,6 +4412,7 @@ export type UserUpdateWithoutRefreshTokensInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -4187,6 +4449,7 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -4239,6 +4502,7 @@ export type UserUpdateWithoutDepartmentInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
@@ -4275,6 +4539,7 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -4317,6 +4582,7 @@ export type UserCountOutputType = {
   notifications: number
   notificationPreferences: number
   refreshTokens: number
+  graduatedClasses: number
   societyMembershipRequests: number
   reviewedMembershipRequests: number
 }
@@ -4337,6 +4603,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
   notificationPreferences?: boolean | UserCountOutputTypeCountNotificationPreferencesArgs
   refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
+  graduatedClasses?: boolean | UserCountOutputTypeCountGraduatedClassesArgs
   societyMembershipRequests?: boolean | UserCountOutputTypeCountSocietyMembershipRequestsArgs
   reviewedMembershipRequests?: boolean | UserCountOutputTypeCountReviewedMembershipRequestsArgs
 }
@@ -4459,6 +4726,13 @@ export type UserCountOutputTypeCountRefreshTokensArgs<ExtArgs extends runtime.Ty
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountGraduatedClassesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ClassWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountSocietyMembershipRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.SocietyMembershipRequestWhereInput
 }
@@ -4505,6 +4779,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
+  graduatedClasses?: boolean | Prisma.User$graduatedClassesArgs<ExtArgs>
   societyMembershipRequests?: boolean | Prisma.User$societyMembershipRequestsArgs<ExtArgs>
   reviewedMembershipRequests?: boolean | Prisma.User$reviewedMembershipRequestsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -4586,6 +4861,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
+  graduatedClasses?: boolean | Prisma.User$graduatedClassesArgs<ExtArgs>
   societyMembershipRequests?: boolean | Prisma.User$societyMembershipRequestsArgs<ExtArgs>
   reviewedMembershipRequests?: boolean | Prisma.User$reviewedMembershipRequestsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -4618,6 +4894,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
     refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
+    graduatedClasses: Prisma.$ClassPayload<ExtArgs>[]
     societyMembershipRequests: Prisma.$SocietyMembershipRequestPayload<ExtArgs>[]
     reviewedMembershipRequests: Prisma.$SocietyMembershipRequestPayload<ExtArgs>[]
   }
@@ -5049,6 +5326,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.User$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   refreshTokens<T extends Prisma.User$refreshTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  graduatedClasses<T extends Prisma.User$graduatedClassesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$graduatedClassesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClassPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   societyMembershipRequests<T extends Prisma.User$societyMembershipRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$societyMembershipRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocietyMembershipRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviewedMembershipRequests<T extends Prisma.User$reviewedMembershipRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedMembershipRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocietyMembershipRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -5910,6 +6188,30 @@ export type User$refreshTokensArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.RefreshTokenScalarFieldEnum | Prisma.RefreshTokenScalarFieldEnum[]
+}
+
+/**
+ * User.graduatedClasses
+ */
+export type User$graduatedClassesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Class
+   */
+  select?: Prisma.ClassSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Class
+   */
+  omit?: Prisma.ClassOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ClassInclude<ExtArgs> | null
+  where?: Prisma.ClassWhereInput
+  orderBy?: Prisma.ClassOrderByWithRelationInput | Prisma.ClassOrderByWithRelationInput[]
+  cursor?: Prisma.ClassWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ClassScalarFieldEnum | Prisma.ClassScalarFieldEnum[]
 }
 
 /**

@@ -94,3 +94,11 @@ export const MembershipRequestStatus = {
 } as const
 
 export type MembershipRequestStatus = (typeof MembershipRequestStatus)[keyof typeof MembershipRequestStatus]
+
+
+export const ClassStatus = {
+  ACTIVE: 'ACTIVE',
+  GRADUATED: 'GRADUATED'
+} as const
+
+export type ClassStatus = (typeof ClassStatus)[keyof typeof ClassStatus]

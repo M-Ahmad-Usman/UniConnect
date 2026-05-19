@@ -18,7 +18,6 @@ import type {
   DepartmentListItem,
   Discipline,
   ProgramListItem,
-  UserListItem,
 } from '@/types';
 import { FormField, inputClassName } from './AdminDataPrimitives';
 import {
@@ -520,7 +519,7 @@ export function AssignCourseDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courses: CourseListItem[];
-  teachers: UserListItem[];
+  teachers: Array<{ id: number; fullName: string; email: string }>;
   loading: boolean;
   onSubmit: (values: { courseId: number; teacherId: number }) => Promise<void>;
 }) {

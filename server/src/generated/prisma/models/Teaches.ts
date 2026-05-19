@@ -223,6 +223,7 @@ export type TeachesOrderByWithRelationInput = {
 }
 
 export type TeachesWhereUniqueInput = Prisma.AtLeast<{
+  classId_courseId?: Prisma.TeachesClassIdCourseIdCompoundUniqueInput
   teacherId_courseId_classId?: Prisma.TeachesTeacherIdCourseIdClassIdCompoundUniqueInput
   AND?: Prisma.TeachesWhereInput | Prisma.TeachesWhereInput[]
   OR?: Prisma.TeachesWhereInput[]
@@ -233,7 +234,7 @@ export type TeachesWhereUniqueInput = Prisma.AtLeast<{
   teacher?: Prisma.XOR<Prisma.TeacherInfoScalarRelationFilter, Prisma.TeacherInfoWhereInput>
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
   class?: Prisma.XOR<Prisma.ClassScalarRelationFilter, Prisma.ClassWhereInput>
-}, "teacherId_courseId_classId">
+}, "teacherId_courseId_classId" | "classId_courseId">
 
 export type TeachesOrderByWithAggregationInput = {
   teacherId?: Prisma.SortOrder
@@ -303,6 +304,11 @@ export type TeachesListRelationFilter = {
 
 export type TeachesOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type TeachesClassIdCourseIdCompoundUniqueInput = {
+  classId: number
+  courseId: number
 }
 
 export type TeachesTeacherIdCourseIdClassIdCompoundUniqueInput = {

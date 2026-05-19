@@ -1,11 +1,13 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AppShell } from '@/components/layout/AppShell';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { AcademicLayout } from '@/components/layout/AcademicLayout';
 import { AuthGuard } from './guards/AuthGuard';
 import { MustChangePasswordGuard } from './guards/MustChangePasswordGuard';
 import { AdminGuard } from './guards/AdminGuard';
+import { AcademicGuard } from './guards/AcademicGuard';
 import { ForceChangePasswordGuard } from './guards/ForceChangePasswordGuard';
 import { GuestGuard } from './guards/GuestGuard';
 import { ROUTES } from '@/lib/constants';
@@ -151,6 +153,16 @@ function NotFoundPage() {
   return <Placeholder label="Page Not Found" />;
 }
 
+function RedirectToAcademicClass() {
+  const { classId } = useParams();
+  return <Navigate to={ROUTES.ACADEMICS_CLASS(classId ?? '')} replace />;
+}
+
+function RedirectToAcademicCurriculum() {
+  const { programId } = useParams();
+  return <Navigate to={ROUTES.ACADEMICS_PROGRAM_CURRICULUM(programId ?? '')} replace />;
+}
+
 // ─── Suspense wrapper for lazy-loaded routes ───────────────────────────────
 
 function SuspenseOutlet() {
@@ -223,6 +235,29 @@ export const router = createBrowserRouter([
                   },
                   { path: 'roles', element: <RoleManagementPage /> },
                   {
+                    element: <AcademicGuard />,
+                    children: [
+                      {
+                        path: 'academics',
+                        element: <AcademicLayout />,
+                        children: [
+                          { index: true, element: <Navigate to={ROUTES.ACADEMICS_CLASSES} replace /> },
+                          {
+                            path: 'classes',
+                            children: [
+                              { index: true, element: <ClassListPage /> },
+                              { path: ':classId', element: <ClassDetailPage /> },
+                            ],
+                          },
+                          {
+                            path: 'programs/:programId/curriculum',
+                            element: <CurriculumPage />,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
                     path: 'settings',
                     children: [
                       { path: 'password', element: <ChangePasswordPage /> },
@@ -263,15 +298,24 @@ export const router = createBrowserRouter([
                             path: 'programs',
                             children: [
                               { index: true, element: <ProgramListPage /> },
-                              { path: ':programId/curriculum', element: <CurriculumPage /> },
+                              {
+                                path: ':programId/curriculum',
+                                element: <RedirectToAcademicCurriculum />,
+                              },
                             ],
                           },
                           { path: 'disciplines', element: <DisciplineListPage /> },
                           {
                             path: 'classes',
                             children: [
-                              { index: true, element: <ClassListPage /> },
-                              { path: ':classId', element: <ClassDetailPage /> },
+                              {
+                                index: true,
+                                element: <Navigate to={ROUTES.ACADEMICS_CLASSES} replace />,
+                              },
+                              {
+                                path: ':classId',
+                                element: <RedirectToAcademicClass />,
+                              },
                             ],
                           },
                           { path: 'courses', element: <CourseListPage /> },

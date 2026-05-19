@@ -1392,9 +1392,14 @@ GET /api/classes
   page?: number;
   limit?: number;
   programId?: number;
+  departmentId?: number;
   semester?: number;
+  section?: 'A' | 'B';
+  status?: 'ACTIVE' | 'GRADUATED' | 'ALL'; // default ACTIVE
 }
 ```
+
+**Visibility:** scoped to admins, own-department HODs, and own-program Program Directors.
 
 **Response:**
 ```typescript
@@ -1409,6 +1414,9 @@ GET /api/classes
     section: 'A' | 'B';
     crId: number | null;
     serverId: number;
+    status: 'ACTIVE' | 'GRADUATED';
+    graduatedAt: string | null;
+    graduatedBy: number | null;
     program: {
       code: string;
       discipline: { name: string };
@@ -1429,7 +1437,7 @@ GET /api/classes/:id
 
 **Auth:** Required
 
-**Response:** Same shape as list item, plus counts and caller-specific permissions:
+**Response:** Same shape as list item, plus counts, graduation metadata, and caller-specific permissions:
 ```typescript
 {
   success: true;
@@ -1456,6 +1464,8 @@ POST /api/classes
 ```
 
 **Auth:** Admin or Teacher
+
+**Rules:** Course must be in the class current-semester curriculum. Teacher must be active.
 
 **Request Body:**
 ```typescript
@@ -1506,6 +1516,33 @@ POST /api/classes/:id/courses
 
 **Note:** Also creates auto-channel for this course in class server
 
+#### Class Students (Admin/HOD)
+```
+GET /api/classes/:id/students
+GET /api/classes/:id/student-candidates?page&limit&search
+POST /api/classes/:id/students
+```
+
+`POST` body:
+```typescript
+{ studentId: number }
+```
+
+Transfers an existing active same-department student into the class and synchronizes class server membership.
+
+#### Teacher Candidates and Replacement
+```
+GET /api/classes/:id/teacher-candidates?page&limit&search
+PATCH /api/classes/:id/courses/:courseId/teacher
+```
+
+`PATCH` body:
+```typescript
+{ teacherId: number }
+```
+
+Replacement keeps the course channel active and synchronizes auto teacher membership.
+
 #### List Courses for Class
 ```
 GET /api/classes/:id/courses
@@ -1552,6 +1589,13 @@ DELETE /api/classes/:id/courses/:courseId
 ```
 
 **Note:** Also archives the course channel
+
+#### Graduate Class (Admin/HOD)
+```
+POST /api/classes/:id/graduation
+```
+
+Final-semester active classes only. Graduation marks the class as `GRADUATED`, locks class channels, and keeps history visible.
 
 #### Semester Progression (Admin/Teacher)
 ```

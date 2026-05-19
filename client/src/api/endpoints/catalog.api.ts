@@ -4,6 +4,7 @@ import type {
   ClassDetail,
   ClassListItem,
   ClassListParams,
+  ClassStudent,
   CourseDetail,
   CourseListItem,
   CourseListParams,
@@ -17,6 +18,7 @@ import type {
   ProgramDetail,
   ProgramListParams,
   ProgramListItem,
+  TeacherCandidate,
   TeacherAssignmentInput,
 } from '@/types';
 
@@ -69,6 +71,12 @@ export interface AddCurriculumRequest {
 export interface CurriculumParams {
   semesterNumber?: number;
   batchYear?: number;
+}
+
+export interface CandidateParams {
+  page?: number;
+  limit?: number;
+  search?: string;
 }
 
 export const catalogApi = {
@@ -194,6 +202,37 @@ export const catalogApi = {
     return response.data;
   },
 
+  async listClassStudents(classId: number, params: CandidateParams = {}) {
+    const response = await apiClient.get<PaginatedResponse<ClassStudent>>(
+      `/classes/${classId}/students`,
+      { params },
+    );
+    return response.data;
+  },
+
+  async listStudentCandidates(classId: number, params: CandidateParams = {}) {
+    const response = await apiClient.get<PaginatedResponse<ClassStudent>>(
+      `/classes/${classId}/student-candidates`,
+      { params },
+    );
+    return response.data;
+  },
+
+  async transferStudent(classId: number, studentId: number) {
+    const response = await apiClient.post<ClassStudent>(`/classes/${classId}/students`, {
+      studentId,
+    });
+    return response.data;
+  },
+
+  async listTeacherCandidates(classId: number, params: CandidateParams = {}) {
+    const response = await apiClient.get<PaginatedResponse<TeacherCandidate>>(
+      `/classes/${classId}/teacher-candidates`,
+      { params },
+    );
+    return response.data;
+  },
+
   async assignCourse(classId: number, payload: TeacherAssignmentInput) {
     const response = await apiClient.post<ClassCourseAssignment>(
       `/classes/${classId}/courses`,
@@ -207,10 +246,23 @@ export const catalogApi = {
     return response.data;
   },
 
+  async replaceCourseTeacher(classId: number, courseId: number, teacherId: number) {
+    const response = await apiClient.patch<ClassCourseAssignment>(
+      `/classes/${classId}/courses/${courseId}/teacher`,
+      { teacherId },
+    );
+    return response.data;
+  },
+
   async advanceSemester(classId: number, teacherAssignments: TeacherAssignmentInput[]) {
     const response = await apiClient.post<ClassDetail>(`/classes/${classId}/semester-progression`, {
       teacherAssignments,
     });
+    return response.data;
+  },
+
+  async graduateClass(classId: number) {
+    const response = await apiClient.post<ClassDetail>(`/classes/${classId}/graduation`);
     return response.data;
   },
 

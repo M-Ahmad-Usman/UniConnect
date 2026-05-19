@@ -182,7 +182,8 @@ client/
 │   │   │   ├── NotificationBell.tsx
 │   │   │   ├── UserDropdown.tsx
 │   │   │   ├── MobileDrawer.tsx
-│   │   │   └── AdminLayout.tsx
+│   │   │   ├── AdminLayout.tsx
+│   │   │   └── AcademicLayout.tsx
 │   │   │
 │   │   └── shared/              # Shared reusable components
 │   │       ├── ErrorBoundary.tsx
@@ -217,7 +218,7 @@ client/
 │   │   ├── posts/               # Post feed, creation, editing
 │   │   ├── notifications/       # Notifications
 │   │   ├── profile/             # User profile
-│   │   ├── admin/               # Admin dashboard and academic CRUD
+│   │   ├── admin/               # Admin dashboard and academic management screens
 │   │   ├── societies/           # Role-based society management workspace
 │   │   └── roles/               # Role-based assignment workspace
 │   │
@@ -253,7 +254,8 @@ client/
 │   │   └── guards/              # Route protection
 │   │       ├── AuthGuard.tsx
 │   │       ├── MustChangePasswordGuard.tsx
-│   │       └── AdminGuard.tsx
+│   │       ├── AdminGuard.tsx
+│   │       └── AcademicGuard.tsx
 │   │
 │   ├── App.tsx                  # Root app component
 │   └── main.tsx                 # Entry point
@@ -532,6 +534,21 @@ export const router = createBrowserRouter([
                 ],
               },
               {
+                element: <AcademicGuard />,
+                children: [
+                  {
+                    path: 'academics',
+                    element: <AcademicLayout />,
+                    children: [
+                      { index: true, element: <Navigate to={ROUTES.ACADEMICS_CLASSES} replace /> },
+                      { path: 'classes', element: <ClassListPage /> },
+                      { path: 'classes/:classId', element: <ClassDetailPage /> },
+                      { path: 'programs/:programId/curriculum', element: <CurriculumPage /> },
+                    ],
+                  },
+                ],
+              },
+              {
                 element: <AdminGuard />,
                 children: [
                   {
@@ -542,7 +559,8 @@ export const router = createBrowserRouter([
                         path: 'dashboard',
                         element: <AdminDashboardPage />,
                       },
-                      // ... all admin routes
+                      // Admin dashboard, users, departments, programs, disciplines, and courses.
+                      // Academic class and curriculum routes redirect into /academics.
                     ],
                   },
                 ],
@@ -563,7 +581,7 @@ export const router = createBrowserRouter([
 
 ### Route Guards
 
-Five guards protect different areas of the route tree:
+Six guards protect different areas of the route tree:
 
 **GuestGuard** — wraps public routes (`/login`, `/forgot-password`, `/reset-password`). If the Zustand store already holds an authenticated session, the user is redirected to `/servers` instead of seeing the public page.
 
@@ -636,6 +654,11 @@ export function ForceChangePasswordGuard() {
 ```
 
 **AdminGuard** — checks `user.userType === UserType.ADMIN`. Non-admins see an "Access Denied" page with a link back to the home route.
+
+**AcademicGuard** — reads `/api/permissions/me` through `useMyPermissions()` and allows
+entry only when `global.canAccessAcademicWorkspace` is true. This intentionally covers
+admins, HODs, and Program Directors without treating academic management as an
+admin-only route group.
 
 ---
 
@@ -854,12 +877,22 @@ export function useMyPermissions() {
 Permission-sensitive UI now prefers backend-provided grouped capability payloads:
 
 - `/api/permissions/me` drives global navigation and workspace entry.
+- `/academics/*` is guarded by `global.canAccessAcademicWorkspace`; legacy admin class
+  and curriculum routes redirect into the academic workspace.
 - `GET /api/classes/:id` returns `permissions` for class-detail actions.
 - `GET /api/societies/:id` returns `viewer` and `permissions` for society-detail tabs, queries, and actions.
 - Local role helpers remain only for lightweight optimistic rendering and legacy channel affordances.
 - Mutations never trust frontend booleans; backend services recompute authorization.
 
 When `auth:roles-updated` arrives, the socket client refreshes `/api/users/me` and invalidates permissions, class, society, server, and role query keys before permission-sensitive UI is reused.
+
+Academic class screens derive UI state through `getClassDetailActionState()`, which
+combines backend class capabilities with read-only graduation rules. Student rosters,
+course candidates, and teacher candidate queries are enabled only when the current
+capability allows the matching action, preventing avoidable 403s from hidden tabs or
+actions. Teacher assignment candidates are active teachers across departments; the
+frontend must not narrow them to the class department because cross-department teaching
+is a supported NTU workflow.
 
 ---
 
@@ -1097,6 +1130,9 @@ export const queryClient = new QueryClient({
 - Use a dedicated setup project plus `storageState` once authenticated multi-role flows become common
 - The current setup lives in `client/playwright.config.ts` with tests under `client/e2e/`
 - The current auth suite covers page rendering, login success and failure, forced password change, forgot-password silent success, reset-password success and failure, logout, and protected-route redirects
+- Academic hardening E2E coverage seeds delegated HOD/PD users and verifies student
+  transfer, cross-department teacher replacement, semester progression, and graduation
+  through the browser against the e2e database.
 
 ### Runtime Testing Pyramid
 - Unit tests verify pure logic cheaply

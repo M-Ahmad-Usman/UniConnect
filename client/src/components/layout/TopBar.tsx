@@ -25,7 +25,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
   const serverId = parseRouteParamId(params.serverId);
   const channelId = parseRouteParamId(params.channelId);
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
-  const isChannelRoute = serverId !== null && channelId !== null && !isAdminRoute;
+  const isAcademicRoute = location.pathname.startsWith('/academics');
+  const isWorkspaceRoute = isAdminRoute || isAcademicRoute;
+  const isChannelRoute = serverId !== null && channelId !== null && !isWorkspaceRoute;
   const serverQuery = useServerDetail(serverId);
   const channelQuery = useServerChannels(serverId, false);
   const searchParamValue = parseSearchParam(searchParams.get('search'));
@@ -70,7 +72,7 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="flex h-16 items-center justify-between gap-4 px-4 lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          {!isAdminRoute ? (
+          {!isWorkspaceRoute ? (
             <Button
               type="button"
               variant="ghost"
@@ -84,9 +86,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
           ) : null}
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2 text-sm font-medium">
-              {isAdminRoute ? (
+              {isAdminRoute || isAcademicRoute ? (
                 <>
-                  <span>Admin</span>
+                  <span>{isAdminRoute ? 'Admin' : 'Academics'}</span>
                   <Badge variant="outline">Workspace</Badge>
                 </>
               ) : (
@@ -106,8 +108,10 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
               )}
             </div>
             <p className="text-muted-foreground line-clamp-1 text-xs">
-              {isAdminRoute
-                ? 'System administration and catalog maintenance.'
+              {isWorkspaceRoute
+                ? isAdminRoute
+                  ? 'System administration and catalog maintenance.'
+                  : 'Delegated academic class operations.'
                 : hasNavigationError
                   ? 'Some workspace details failed to load. You can still navigate and retry by refreshing.'
                   : activeChannel?.description ??
@@ -117,7 +121,7 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {hasNavigationError && !isAdminRoute ? (
+          {hasNavigationError && !isWorkspaceRoute ? (
             <Badge variant="outline" className="hidden gap-1 md:inline-flex">
               <AlertCircle className="size-3.5" />
               Partial data unavailable

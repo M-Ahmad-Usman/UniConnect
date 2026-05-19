@@ -10,6 +10,11 @@
 - Functional modules: `13/13` complete (Modules 0 to 12)
 - Hardening plan: Steps `1-35` complete
 
+## Hardening Update (2026-05-18)
+- Implemented Module 2 academic/class management hardening: class lifecycle fields, graduation metadata, one-teacher-per-class-course uniqueness, scoped class APIs, student transfer, teacher replacement, and graduation.
+- Hardened membership synchronization for student transfer, course removal/replacement, semester progression, and graduated read-only class channels.
+- Verified Prisma generation, test migration application, and backend build. DB-backed Jest class suite exceeded the 120s command timeout and needs follow-up split verification.
+
 ## Verification Snapshot (2026-05-18)
 - Verified `timeout 120 npm test -- tests/modules/permission.test.ts`.
 - Verified `timeout 120 npm test -- tests/modules/class.test.ts tests/modules/society.test.ts tests/modules/role.test.ts tests/modules/user.test.ts`.

@@ -1,4 +1,4 @@
-import type { Section } from './enums';
+import type { ClassStatus, Section } from './enums';
 import type { PaginationParams } from './api.types';
 import type { ClassPermissions } from './permission.types';
 
@@ -86,9 +86,13 @@ export interface ClassListItem {
   admissionYear: number;
   section: Section;
   serverId: number;
+  status: ClassStatus;
+  graduatedAt: string | null;
+  graduatedBy: number | null;
   program: {
     id: number;
     code: string;
+    semesters?: number;
     department: {
       id: number;
       name: string;
@@ -125,6 +129,7 @@ export interface ClassListParams extends PaginationParams {
   departmentId?: number;
   semester?: number;
   section?: Section;
+  status?: ClassStatus | 'ALL';
 }
 
 export interface CourseListItem {
@@ -182,4 +187,37 @@ export interface ClassCourseAssignment {
 export interface TeacherAssignmentInput {
   courseId: number;
   teacherId: number;
+}
+
+export interface ClassStudent {
+  studentId: number;
+  rollNumber: string;
+  user: {
+    id: number;
+    fullName: string;
+    email: string;
+    departmentId: number | null;
+    isActive: boolean;
+  };
+  class: {
+    id: number;
+    currentSemester: number;
+    section: Section;
+    program: {
+      id: number;
+      code: string;
+    };
+  };
+}
+
+export interface TeacherCandidate {
+  teacherId: number;
+  designation: string;
+  user: {
+    id: number;
+    fullName: string;
+    email: string;
+    departmentId: number | null;
+    isActive: boolean;
+  };
 }

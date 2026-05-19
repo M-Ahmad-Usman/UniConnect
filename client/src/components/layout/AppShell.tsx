@@ -15,6 +15,8 @@ export function AppShell() {
   const serverId = parseRouteParamId(params.serverId);
   const channelId = parseRouteParamId(params.channelId);
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
+  const isAcademicRoute = location.pathname.startsWith('/academics');
+  const isWorkspaceRoute = isAdminRoute || isAcademicRoute;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>('servers');
 
@@ -28,12 +30,12 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {!isAdminRoute ? (
+      {!isWorkspaceRoute ? (
         <aside className="hidden h-screen w-16 shrink-0 lg:block">
           <ServerSidebar activeServerId={serverId} />
         </aside>
       ) : null}
-      {!isAdminRoute ? (
+      {!isWorkspaceRoute ? (
         <aside className="hidden h-screen w-72 shrink-0 lg:block">
           <ChannelSidebar serverId={serverId} activeChannelId={channelId} />
         </aside>
@@ -49,7 +51,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
-      {!isAdminRoute ? (
+      {!isWorkspaceRoute ? (
         <MobileDrawer
           open={drawerOpen}
           onOpenChange={setDrawerOpen}

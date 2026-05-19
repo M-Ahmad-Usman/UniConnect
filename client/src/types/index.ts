@@ -57,6 +57,8 @@ export type {
   CourseListParams,
   CurriculumEntry,
   ClassCourseAssignment,
+  ClassStudent,
+  TeacherCandidate,
   TeacherAssignmentInput,
 } from './catalog.types';
 

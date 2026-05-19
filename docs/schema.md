@@ -138,12 +138,16 @@ CLASS {
   section VARCHAR(1) // NOT NULL enum['A', 'B']
   cr_id INTEGER FK // UNIQUE cannot set NOT NULL constraint due to chicken-egg prob. Enforce NOT NULL in application layer.
   server_id INTEGER FK // UNIQUE NOT NULL
+  status VARCHAR(20) // NOT NULL enum ['active', 'graduated']; defaults to active
+  graduated_at TIMESTAMP // nullable; set when final-semester class is graduated
+  graduated_by INTEGER FK // nullable; references USER.id
   // Constraint CHECK (cr belongs to this class)
   // UNIQUE (program_id, current_semester, section, admission_year)
 }
 
 CLASS.cr_id - STUDENT_INFO.student_id
 CLASS.program_id > PROGRAM.id
+CLASS.graduated_by > USER.id
 
 // Class must have only one server
 CLASS.server_id - SERVER.id
@@ -274,6 +278,7 @@ TEACHES {
   teacher_id INTEGER PK FK
   course_id INTEGER PK FK
   class_id INTEGER PK FK
+  // UNIQUE (class_id, course_id) ensures one active teacher per class-course.
 }
 
 // One teacher can teach many courses to many classes

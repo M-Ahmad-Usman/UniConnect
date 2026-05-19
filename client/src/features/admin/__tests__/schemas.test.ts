@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { Gender, UserType } from '@/types';
 import {
   createUserSchema,
+  replaceTeacherSchema,
   teacherAssignmentSchema,
   toCreateUserPayload,
+  transferStudentSchema,
   validateCsvFile,
 } from '../schemas';
 
@@ -104,5 +106,19 @@ describe('teacherAssignmentSchema', () => {
     expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherId: '' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('class hardening form schemas', () => {
+  it('validates selected transfer students', () => {
+    expect(transferStudentSchema.parse({ studentId: '42' })).toEqual({ studentId: 42 });
+    expect(transferStudentSchema.safeParse({ studentId: '' }).success).toBe(false);
+    expect(transferStudentSchema.safeParse({ studentId: '0' }).success).toBe(false);
+  });
+
+  it('validates selected replacement teachers', () => {
+    expect(replaceTeacherSchema.parse({ teacherId: '17' })).toEqual({ teacherId: 17 });
+    expect(replaceTeacherSchema.safeParse({ teacherId: '' }).success).toBe(false);
+    expect(replaceTeacherSchema.safeParse({ teacherId: '-1' }).success).toBe(false);
   });
 });

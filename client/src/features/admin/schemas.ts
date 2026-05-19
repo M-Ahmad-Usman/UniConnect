@@ -196,6 +196,14 @@ export const teacherAssignmentSchema = z.object({
   teacherId: requiredNumericIdSchema,
 });
 
+export const transferStudentSchema = z.object({
+  studentId: requiredNumericIdSchema,
+});
+
+export const replaceTeacherSchema = z.object({
+  teacherId: requiredNumericIdSchema,
+});
+
 export type DepartmentFormValues = z.output<typeof departmentSchema>;
 export type DisciplineFormValues = z.output<typeof disciplineSchema>;
 export type ProgramFormValues = z.output<typeof programSchema>;
@@ -205,3 +213,5 @@ export type CourseFormValues = z.output<typeof courseSchema>;
 export type UpdateCourseFormValues = z.output<typeof updateCourseSchema>;
 export type CurriculumFormValues = z.output<typeof curriculumSchema>;
 export type TeacherAssignmentFormValues = z.output<typeof teacherAssignmentSchema>;
+export type TransferStudentFormValues = z.output<typeof transferStudentSchema>;
+export type ReplaceTeacherFormValues = z.output<typeof replaceTeacherSchema>;

@@ -7,9 +7,13 @@ import {
   listClassesSchema,
   classIdParamSchema,
   assignCourseSchema,
+  classCandidateQuerySchema,
   listClassCoursesSchema,
   removeCourseSchema,
+  replaceCourseTeacherSchema,
   semesterProgressionSchema,
+  transferStudentSchema,
+  graduationSchema,
 } from "./class.schema.js";
 import {
   handleCreateClass,
@@ -19,6 +23,12 @@ import {
   handleListClassCourses,
   handleRemoveCourse,
   handleAdvanceSemester,
+  handleListClassStudents,
+  handleListStudentCandidates,
+  handleTransferStudent,
+  handleListTeacherCandidates,
+  handleReplaceCourseTeacher,
+  handleGraduateClass,
 } from "./class.controller.js";
 
 const router = Router();
@@ -59,6 +69,46 @@ router.get(
   handleListClassCourses
 );
 
+router.get(
+  "/:id/students",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(classCandidateQuerySchema),
+  handleListClassStudents
+);
+
+router.get(
+  "/:id/student-candidates",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(classCandidateQuerySchema),
+  handleListStudentCandidates
+);
+
+router.post(
+  "/:id/students",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(transferStudentSchema),
+  handleTransferStudent
+);
+
+router.get(
+  "/:id/teacher-candidates",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(classCandidateQuerySchema),
+  handleListTeacherCandidates
+);
+
+router.patch(
+  "/:id/courses/:courseId/teacher",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(replaceCourseTeacherSchema),
+  handleReplaceCourseTeacher
+);
+
 router.delete(
   "/:id/courses/:courseId",
   authenticate,
@@ -75,6 +125,14 @@ router.post(
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(semesterProgressionSchema),
   handleAdvanceSemester
+);
+
+router.post(
+  "/:id/graduation",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(graduationSchema),
+  handleGraduateClass
 );
 
 export default router;

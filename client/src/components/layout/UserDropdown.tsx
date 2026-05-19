@@ -1,4 +1,13 @@
-import { Bell, Building2, KeyRound, LayoutDashboard, LogOut, Shield, User } from 'lucide-react';
+import {
+  Bell,
+  Building2,
+  GraduationCap,
+  KeyRound,
+  LayoutDashboard,
+  LogOut,
+  Shield,
+  User,
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { UserAvatar } from '@/components/shared/UserAvatar';
@@ -16,6 +25,7 @@ import { ROUTES } from '@/lib/constants';
 import { parseRouteParamId } from '@/lib/route-params';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useLogout';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { UserType } from '@/types';
 
 export function UserDropdown() {
@@ -24,13 +34,11 @@ export function UserDropdown() {
   const serverId = parseRouteParamId(params.serverId);
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
-  const canManageRoles =
-    user?.userType === UserType.ADMIN ||
-    user?.roles?.some((role) =>
-      ['hod', 'program_director', 'cr', 'society_president', 'society_convenor'].includes(
-        role.role,
-      ),
-    );
+  const permissionsQuery = useMyPermissions();
+  const canAccessAdminDashboard =
+    permissionsQuery.data?.global.canAccessAdminDashboard ?? (user?.userType === UserType.ADMIN);
+  const canManageRoles = permissionsQuery.data?.roleWorkspace.canOpenRoleManagement ?? false;
+  const canAccessAcademics = permissionsQuery.data?.global.canAccessAcademicWorkspace ?? false;
 
   if (!user) {
     return null;
@@ -67,7 +75,7 @@ export function UserDropdown() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {user.userType === UserType.ADMIN ? (
+          {canAccessAdminDashboard ? (
             <DropdownMenuItem onClick={() => navigate(ROUTES.ADMIN_DASHBOARD)}>
               <LayoutDashboard className="size-4" />
               Admin dashboard
@@ -81,6 +89,12 @@ export function UserDropdown() {
             <Building2 className="size-4" />
             Societies
           </DropdownMenuItem>
+          {canAccessAcademics ? (
+            <DropdownMenuItem onClick={() => navigate(ROUTES.ACADEMICS_CLASSES)}>
+              <GraduationCap className="size-4" />
+              Academics
+            </DropdownMenuItem>
+          ) : null}
           {canManageRoles ? (
             <DropdownMenuItem onClick={() => navigate(ROUTES.ROLES)}>
               <Shield className="size-4" />

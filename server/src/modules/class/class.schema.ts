@@ -36,8 +36,29 @@ export const listClassesSchema = {
     departmentId: z.coerce.number().int().positive({ error: "Department ID must be a positive integer" }).optional(),
     semester: z.coerce.number().int().positive({ error: "Semester must be a positive integer" }).optional(),
     section: z.enum(["A", "B"], { error: "Section must be either 'A' or 'B'" }).optional(),
+    status: z.enum(["ACTIVE", "GRADUATED", "ALL"]).optional(),
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(50).default(20),
+  }),
+};
+
+export const classCandidateQuerySchema = {
+  params: z.object({
+    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+  }),
+  query: z.object({
+    search: z.string().trim().min(1).max(100).optional(),
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(50).default(20),
+  }),
+};
+
+export const transferStudentSchema = {
+  params: z.object({
+    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+  }),
+  body: z.object({
+    studentId: z.number().int().positive({ error: "Student ID must be a positive integer" }),
   }),
 };
 
@@ -70,6 +91,16 @@ export const removeCourseSchema = {
   }),
 };
 
+export const replaceCourseTeacherSchema = {
+  params: z.object({
+    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    courseId: z.coerce.number().int().positive({ error: "Course ID must be a positive integer" }),
+  }),
+  body: z.object({
+    teacherId: z.number().int().positive({ error: "Teacher ID must be a positive integer" }),
+  }),
+};
+
 // ─── Semester Progression ──────────────────────────────────────────────────
 
 export const semesterProgressionSchema = {
@@ -85,5 +116,11 @@ export const semesterProgressionSchema = {
         })
       )
       .default([]),
+  }),
+};
+
+export const graduationSchema = {
+  params: z.object({
+    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
   }),
 };

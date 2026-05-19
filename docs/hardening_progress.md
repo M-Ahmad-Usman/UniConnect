@@ -17,7 +17,7 @@
 | Module | Title | Status | Owner | Started | Completed | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Permission Policy Foundation | Complete | Codex | 2026-05-18 | 2026-05-18 | Focused permission tests, regression slices, build, and type-check pass |
-| 2 | Academic and Class Management Hardening | Not started | TBD |  |  |  |
+| 2 | Academic and Class Management Hardening | Complete | Codex | 2026-05-18 | 2026-05-19 | Backend/frontend implementation, focused unit tests, DB-backed backend tests, Playwright academic flows, and docs complete |
 | 3 | Society Management UX and Access Hardening | Not started | TBD |  |  |  |
 | 4 | Role Management Hardening | Not started | TBD |  |  |  |
 | 5 | Security Hardening | Not started | TBD |  |  |  |
@@ -68,51 +68,74 @@
 ## Module 2 Checklist: Academic and Class Management Hardening
 
 ### Implementation
-- [ ] Add delegated academic workspace routes.
-- [ ] Preserve or redirect admin academic routes.
-- [ ] Add permission-aware class tabs and actions.
-- [ ] Add class student list API.
-- [ ] Add class student enroll/transfer API.
-- [ ] Implement transfer membership sync.
-- [ ] Add one-teacher-per-class-course database constraint.
-- [ ] Add replace-teacher API.
-- [ ] Add replace-teacher UI.
-- [ ] Add class graduation/archive schema fields.
-- [ ] Add class graduation API.
-- [ ] Add graduated class filtering and UI state.
-- [ ] Keep semester progression admin/HOD-only.
+- [x] Add delegated academic workspace routes.
+- [x] Preserve or redirect admin academic routes.
+- [x] Add permission-aware class tabs and actions.
+- [x] Add class student list API.
+- [x] Add class student enroll/transfer API.
+- [x] Implement transfer membership sync.
+- [x] Add one-teacher-per-class-course database constraint.
+- [x] Add replace-teacher API.
+- [x] Add replace-teacher UI.
+- [x] Add class graduation/archive schema fields.
+- [x] Add class graduation API.
+- [x] Add graduated class filtering and UI state.
+- [x] Keep semester progression admin/HOD-only.
 
 ### Tests
-- [ ] Backend tests for HOD class management.
-- [ ] Backend tests for PD course/teacher assignment only.
-- [ ] Backend tests that PD cannot progress or graduate classes.
-- [ ] Backend tests that CR cannot mutate academic records.
-- [ ] Backend tests for student transfer and membership sync.
-- [ ] Backend tests for cross-department transfer rejection.
-- [ ] Backend tests for teacher replacement and membership sync.
-- [ ] Backend tests for graduation/archive behavior.
-- [ ] Frontend tests for role-based tabs/actions.
-- [ ] Frontend tests for transfer form validation.
-- [ ] Frontend tests for replace-teacher form validation.
-- [ ] Playwright HOD transfer flow.
-- [ ] Playwright PD teacher replacement flow.
-- [ ] Playwright HOD semester progression flow.
-- [ ] Playwright graduation flow.
+- [x] Backend tests for HOD class management.
+- [x] Backend tests for PD course/teacher assignment only.
+- [x] Backend tests that PD cannot progress or graduate classes.
+- [x] Backend tests that CR cannot mutate academic records.
+- [x] Backend tests for student transfer and membership sync.
+- [x] Backend tests for cross-department transfer rejection.
+- [x] Backend tests for teacher replacement and membership sync.
+- [x] Backend tests for graduation/archive behavior.
+- [x] Frontend tests for role-based tabs/actions.
+- [x] Frontend tests for transfer form validation.
+- [x] Frontend tests for replace-teacher form validation.
+- [x] Playwright HOD transfer flow.
+- [x] Playwright PD teacher replacement flow.
+- [x] Playwright HOD semester progression flow.
+- [x] Playwright graduation flow.
 
 ### Documentation
-- [ ] Update `docs/schema.md`.
-- [ ] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
-- [ ] Update `client/API_CONTRACT.md`.
-- [ ] Update `client/PLAN.md`.
-- [ ] Update `client/ARCHITECTURE.md`.
-- [ ] Update `client/PROGRESS.md`.
-- [ ] Update `server/PROGRESS.md`.
+- [x] Update `docs/schema.md`.
+- [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
+- [x] Update `client/API_CONTRACT.md`.
+- [x] Update `client/PLAN.md`.
+- [x] Update `client/ARCHITECTURE.md`.
+- [x] Update `client/PROGRESS.md`.
+- [x] Update `server/PROGRESS.md`.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd server && npx prisma generate`
+  - `cd server && timeout 120 npm run build`
+  - `cd server && timeout 120 npm run db:migrate:test`
+  - `cd server && timeout 120 npm test -- tests/modules/class.test.ts`
+  - `cd server && timeout 120 npm test -- tests/modules/class.test.ts -t "POST /api/classes/:id/courses"`
+  - `cd client && timeout 120 npm run type-check`
+  - `cd server && timeout 120 npm test -- tests/modules/class.test.ts -t "Module 2 - Academic class hardening"`
+  - `cd server && timeout 120 npm test -- tests/modules/course.test.ts`
+  - `cd client && timeout 120 npm run lint`
+  - `cd client && timeout 120 npm run test -- src/features/admin/__tests__/schemas.test.ts src/features/admin/__tests__/utils.test.ts`
+  - `cd client && timeout 120 npm run type-check`
+  - `cd client && timeout 300 npx playwright test e2e/module2-academics.spec.ts`
 - Result:
-  - Not verified.
+  - Prisma generate, backend build, test migration, frontend type-check, and frontend lint pass.
+  - DB-backed class and course Jest slices pass when run with local PostgreSQL test DB access outside the filesystem sandbox.
+  - Frontend admin schema/action-state Vitest coverage passes.
+  - Module 2 Playwright academic flows pass for HOD transfer, PD cross-department teacher replacement, HOD semester progression, and HOD graduation.
+
+### Current verification:
+
+- server: npm run build passed
+- server: full npm test passed, 471/471
+- client: full npm run test passed, 103/103
+- client: npm run lint passed
+- client: npm run type-check passed
+- client: full npx playwright test passed, 25/25
 
 ## Module 3 Checklist: Society Management UX and Access Hardening
 
