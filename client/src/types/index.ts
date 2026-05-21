@@ -106,12 +106,23 @@ export type {
 // Roles
 export type {
   RoleName,
+  AssignableRoleName,
   ModerationRoleName,
   RevokableRoleName,
   ScopedRoleAssignment,
   UserRole,
   AssignRoleRequest,
   RevokeRoleRequest,
+  RoleOption,
+  RoleScopeOption,
+  RoleChannelOption,
+  RoleUserOption,
+  RevokableRoleAssignment,
+  RoleOptionParams,
+  AssignableScopesParams,
+  AssignableChannelsParams,
+  AssignableUsersParams,
+  RevokableRolesParams,
 } from './role.types';
 
 // Permissions

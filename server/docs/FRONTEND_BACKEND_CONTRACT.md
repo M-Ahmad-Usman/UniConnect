@@ -232,13 +232,32 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Returns same-department students with `StudentInfo` for president or same-department teachers with `TeacherInfo` for convenor
 
 ### Roles (`/api/roles`)
+- `GET /assignable`
+  - Returns only caller-assignable role options.
+  - Role values are `hod | program_director | cr | server_moderator | channel_moderator`.
+  - Society president/convenor are intentionally excluded; use society update endpoints for leadership changes.
+- `GET /assignable-scopes`
+  - Query: `role, page, limit, search?`
+  - Returns paginated caller-authorized department/program/class/server options.
+  - Filled unique scopes are returned disabled with `currentAssignee`.
+- `GET /assignable-channels`
+  - Query: `serverId, page, limit, search?`
+  - Returns non-deleted and non-archived channels for a caller-assignable server. Locked channels are still selectable.
+- `GET /assignable-users`
+  - Query: `role, scopeId?, serverId?, channelId?, page, limit, search?`
+  - Returns paginated active users valid for the selected role/scope.
+  - Moderator candidates are active server members and exclude users already assigned for the same moderator scope.
+- `GET /revokable`
+  - Query: `role, scopeId?, serverId?, channelId?, page, limit, search?`
+  - Returns only caller-revokable assignments with a server-provided `revokePayload`.
 - `POST /assign`
   - Body for scoped organizational roles: `{ userId, role, scopeId }`
-    - `role` in `hod | program_director | cr | society_president | society_convenor`
+    - `role` in `hod | program_director | cr`
   - Body for moderation roles:
     - `{ userId, role: "server_moderator", serverId }`
     - `{ userId, role: "channel_moderator", serverId, channelId }`
   - Success data echoes the assigned role context (`role`, `userId`, and relevant scope ids)
+  - `society_president` and `society_convenor` are rejected here; use `PATCH /api/societies/:id`
 - `POST /revoke`
   - Body for revokable scoped roles: `{ userId, role, scopeId }`
     - `role` in `hod | program_director | cr`

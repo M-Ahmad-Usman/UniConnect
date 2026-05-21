@@ -2,12 +2,18 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Module 9 Implemented
-**Current Phase:** Modules 8 and 9 verification complete; ready for focused E2E hardening
+**Status:** Hardening Module 4 Complete
+**Current Phase:** Role management hardening verified; ready for Module 5 security hardening
 
 ---
 
 ## Overview
+
+### 2026-05-21 - Hardening Module 4 Role Management Completed
+- ✅ Replaced broad role-management frontend loading with backend-scoped assignable role, scope, channel, user, and revokable-assignment queries.
+- ✅ Added clean unavailable state for users without role-management actions.
+- ✅ Removed society leadership from generic role assignment UI; society president/convenor changes stay in society workflows.
+- ✅ Verified focused role Vitest coverage, type-check, lint, and Playwright role-management flows.
 
 ### 2026-05-18 - Hardening Module 2 Academic Workspace Implemented
 - ✅ Added canonical `/academics/classes`, class detail, and curriculum routes with admin academic URL redirects.
@@ -745,12 +751,14 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 ### Key Decisions
 - Role management lives outside the admin dashboard because delegated managers can use parts of the workspace.
-- Society leadership roles are changed through society update flows; the role revoke endpoint handles HOD, Program Director, CR, and moderator roles.
+- Society leadership roles are changed through society update flows; generic role assign/revoke handles HOD, Program Director, CR, and moderator roles.
+- Role assignment/revocation options come from backend-scoped lazy endpoints; the frontend no longer loads broad catalog/user/server lists for this workspace.
 - Successful role changes emit `auth:roles-updated` so authenticated clients can refresh their scoped role context.
 
 ### Challenges & Solutions
 - Enriched `GET /api/roles/users/:id` with display-ready scope context to keep frontend role rendering deterministic.
 - Kept `/admin/roles` as a redirect for old links while moving the primary entry point to the profile menu.
+- Added `GET /api/roles/revokable` so scoped managers revoke only assignments the backend confirms they can manage.
 
 ---
 

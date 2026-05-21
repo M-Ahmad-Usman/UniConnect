@@ -184,10 +184,16 @@
 |----|-------------|
 | FR-58 | Admin can assign any role/sub-role to users |
 | FR-59 | HOD can assign CR and Program Director within their department |
-| FR-60 | HOD can assign Society Convenor, Society President, Server Moderator, and Channel Moderator within their department |
+| FR-60 | HOD can assign Server Moderator and Channel Moderator within department, class, and society servers in their department; society Convenor/President changes are managed through society create/edit workflows |
 | FR-61 | CR can assign Server Moderator and Channel Moderator in their class server |
 | FR-62 | Society Convenor/President can assign Server Moderator and Channel Moderator in their society server |
 | FR-63 | Role changes take effect immediately |
+
+**Role management hardening notes:**
+- The role-management workspace loads only backend-scoped assignable roles, scopes, users, channels, and revokable assignments for the current caller.
+- Program Directors can assign/revoke CRs for active classes in their own program.
+- Generic role assignment/revocation does not manage society president or society convenor roles; those leadership changes stay on society endpoints.
+- Filled unique scopes such as HOD, Program Director, and CR are visible as unavailable options until the current assignment is revoked or changed through the appropriate workflow.
 
 #### 4.9 Society Membership
 

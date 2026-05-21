@@ -1,7 +1,7 @@
 # UniConnect Backend Progress
 
 ## Document Control
-- Last Updated: 2026-05-18
+- Last Updated: 2026-05-21
 - Status: Active
 - Scope: Backend (`server/`)
 
@@ -19,6 +19,11 @@
 - Implemented Module 3 society access hardening: university-wide ordinary member candidates, department-scoped leadership candidate lookup, and explicit HOD privacy boundaries.
 - Added `/api/societies/leadership-candidates` for admin/HOD president/convenor selection without broad user-list queries.
 - Verified backend build and focused society integration tests.
+
+## Hardening Update (2026-05-21)
+- Implemented Module 4 role-management hardening with scoped lazy option endpoints for assignable roles, scopes, channels, users, and revokable assignments.
+- Removed society president/convenor changes from generic role assignment; society leadership remains managed through society endpoints.
+- Verified backend build and focused role integration tests, now 47/47 passing.
 
 ## Verification Snapshot (2026-05-18)
 - Verified `timeout 120 npm test -- tests/modules/permission.test.ts`.
@@ -40,7 +45,7 @@
 | 4 | Class Management | Complete | 36 |
 | 5 | Course Management | Complete | 16 |
 | 6 | Society Management | Complete | 52 |
-| 7 | Role Management | Complete | 42 |
+| 7 | Role Management | Complete | 47 |
 | 8 | Server and Channel Management | Complete | 59 |
 | 9 | Posts and Announcements | Complete | 46 |
 | 10 | Notifications and Socket.IO | Complete | 31 |
@@ -67,6 +72,7 @@ Details: `HARDENING_PLAN.md`, `HARDENING_LOG.md`
 - Role-assignment notification creation with server-level mute support
 - Society join request approval/rejection notifications with `SOCIETY_REQUEST_REVIEWED`
 - Society membership status, university-wide member-candidate, and department-scoped leadership-candidate endpoints for role-based frontend workflows
+- Scoped role-management option endpoints: `/api/roles/assignable`, `/assignable-scopes`, `/assignable-channels`, `/assignable-users`, and `/revokable`
 - `auth:roles-updated` socket event for affected users after role changes
 - Notification payload priority metadata for urgent frontend toasts
 - `passwordResetTokenHash` one-time token enforcement

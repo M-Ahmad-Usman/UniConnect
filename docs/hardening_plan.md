@@ -229,20 +229,23 @@ Make the role-management workspace safe for scoped managers by loading only assi
 - Replace broad frontend role-management loading with backend-driven scoped options:
   - assignable roles for caller.
   - assignable scopes for selected role.
+  - assignable channels for selected server when assigning channel moderators.
   - assignable target users for selected role/scope.
-  - revokable role assignments for selected target user.
+  - revokable role assignments for selected role/scope.
 - Add or refine endpoints as needed, for example:
   - `GET /api/roles/assignable`
   - `GET /api/roles/assignable-scopes?role=...`
+  - `GET /api/roles/assignable-channels?serverId=...`
   - `GET /api/roles/assignable-users?role=...&scopeId=...`
+  - `GET /api/roles/revokable?role=...`
 - Enforce role-management access:
   - admin sees all valid role actions.
-  - HOD sees department-scoped PD, CR, society leadership, and moderator actions.
-  - PD sees CR assignment for own-program classes if backend policy permits.
+  - HOD sees department-scoped PD, CR, and moderator actions; society leadership changes remain in society workflows.
+  - PD sees CR assignment for own-program classes.
   - CR sees moderator delegation for own class server.
   - society president/convenor see moderator delegation for own society server.
   - users with no assignable or viewable role actions cannot open a functional management page.
-- Keep society president/convenor leadership changes through society endpoints, not generic revoke.
+- Keep society president/convenor leadership changes through society endpoints, not generic assign/revoke.
 - Ensure backend rejects out-of-scope IDs even if the frontend is manipulated.
 - Add clearer UI:
   - hide irrelevant role options.
@@ -264,6 +267,7 @@ Make the role-management workspace safe for scoped managers by loading only assi
   - revoke payload builder handles scoped roles and moderation roles.
 - Playwright:
   - HOD assigns CR within department.
+  - PD assigns CR within own program.
   - CR assigns a server moderator in own class server and cannot select another server.
   - society leader assigns society server moderator.
 

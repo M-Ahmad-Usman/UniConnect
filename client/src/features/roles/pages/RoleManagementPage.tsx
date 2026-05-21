@@ -1,161 +1,166 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ShieldPlus, Trash2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { RoleBadge } from '@/components/shared/RoleBadge';
-import { catalogApi } from '@/api/endpoints/catalog.api';
-import { usersApi } from '@/api/endpoints/users.api';
-import { societiesApi } from '@/api/endpoints/societies.api';
-import { serversApi } from '@/api/endpoints/servers.api';
-import { DEFAULT_PAGE_SIZE, queryKeys } from '@/lib/constants';
-import { inputClassName, AdminPageHeader, DataState } from '@/features/admin/components/AdminDataPrimitives';
-import { useAssignRole, useRevokeRole, useUserRoles } from '../hooks/useRoles';
-import type { AssignRoleRequest, RevokeRoleRequest, RoleName, UserRole } from '@/types';
-import { UserType } from '@/types';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
+import { AdminPageHeader, DataState, inputClassName } from '@/features/admin/components/AdminDataPrimitives';
+import type { AssignableRoleName, RoleScopeOption } from '@/types';
+import {
+  useAssignableChannels,
+  useAssignableRoles,
+  useAssignableRoleScopes,
+  useAssignableRoleUsers,
+  useAssignRole,
+  useRevokableRoleAssignments,
+  useRevokeRole,
+} from '../hooks/useRoles';
+import { buildAssignPayload, chooseInitialRole, isModeratorRole } from '../utils';
 
-const ROLE_OPTIONS: Array<{ value: RoleName; label: string; target: UserType | 'ANY' }> = [
-  { value: 'hod', label: 'HOD', target: UserType.TEACHER },
-  { value: 'program_director', label: 'Program Director', target: UserType.TEACHER },
-  { value: 'cr', label: 'Class Representative', target: UserType.STUDENT },
-  { value: 'society_president', label: 'Society President', target: UserType.STUDENT },
-  { value: 'society_convenor', label: 'Society Convenor', target: UserType.TEACHER },
-  { value: 'server_moderator', label: 'Server Moderator', target: 'ANY' },
-  { value: 'channel_moderator', label: 'Channel Moderator', target: 'ANY' },
-];
-
-function canRevoke(role: UserRole): role is UserRole & { role: Exclude<RoleName, 'society_president' | 'society_convenor'> } {
-  return role.role !== 'society_president' && role.role !== 'society_convenor';
+function parseId(value: string) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-function roleToRevokePayload(role: UserRole, userId: number): RevokeRoleRequest | null {
-  if (!canRevoke(role)) return null;
-  if (role.role === 'server_moderator' && role.serverId) {
-    return { userId, role: 'server_moderator', serverId: role.serverId };
-  }
-  if (role.role === 'channel_moderator' && role.serverId && role.channelId) {
-    return { userId, role: 'channel_moderator', serverId: role.serverId, channelId: role.channelId };
-  }
-  if (role.role !== 'hod' && role.role !== 'program_director' && role.role !== 'cr') {
+function getScopeServerId(scope: RoleScopeOption | undefined, role: AssignableRoleName | null) {
+  if (!scope || !role || !isModeratorRole(role)) {
     return null;
   }
-  const scopeId = role.departmentId ?? role.programId ?? role.classId;
-  return scopeId ? { userId, role: role.role, scopeId } : null;
+
+  return scope.serverId ?? scope.id;
 }
 
 export function RoleManagementPage() {
-  const [search, setSearch] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [role, setRole] = useState<RoleName>('server_moderator');
+  const permissionsQuery = useMyPermissions();
+  const canOpenRoleManagement =
+    permissionsQuery.data?.roleWorkspace.canOpenRoleManagement ?? false;
+  const assignableRolesQuery = useAssignableRoles(canOpenRoleManagement);
+  const [role, setRole] = useState<AssignableRoleName | null>(null);
   const [scopeId, setScopeId] = useState('');
-  const [serverId, setServerId] = useState('');
   const [channelId, setChannelId] = useState('');
-  const selectedRole = ROLE_OPTIONS.find((option) => option.value === role) ?? ROLE_OPTIONS[0]!;
-  const isModeratorRole = role === 'server_moderator' || role === 'channel_moderator';
-  const selectedServerId = Number(serverId) || undefined;
-
-  const departmentsQuery = useQuery({
-    queryKey: queryKeys.departments.list(),
-    queryFn: catalogApi.listDepartments,
-  });
-  const programsQuery = useQuery({
-    queryKey: queryKeys.programs.list({ page: 1, limit: 50 }),
-    queryFn: () => catalogApi.listPrograms({ page: 1, limit: 50 }),
-  });
-  const classesQuery = useQuery({
-    queryKey: queryKeys.classes.list({ page: 1, limit: 50 }),
-    queryFn: () => catalogApi.listClasses({ page: 1, limit: 50 }),
-  });
-  const societiesQuery = useQuery({
-    queryKey: queryKeys.societies.list({ page: 1, limit: 50 }),
-    queryFn: () => societiesApi.list({ page: 1, limit: 50 }),
-  });
-  const serversQuery = useQuery({
-    queryKey: queryKeys.servers.list({ page: 1, limit: 50 }),
-    queryFn: () => serversApi.list({ page: 1, limit: 50 }),
-  });
-  const channelsQuery = useQuery({
-    queryKey: selectedServerId
-      ? queryKeys.servers.channels(selectedServerId, { includeArchived: false })
-      : ['servers', 'channels', 'idle'],
-    queryFn: () => serversApi.listChannels(selectedServerId!, { includeArchived: false }),
-    enabled: selectedServerId !== undefined && role === 'channel_moderator',
-  });
-  const serverMembersQuery = useQuery({
-    queryKey: selectedServerId
-      ? queryKeys.servers.members(selectedServerId, { page: 1, limit: 50 })
-      : ['servers', 'members', 'idle'],
-    queryFn: () => serversApi.listMembers(selectedServerId!, { page: 1, limit: 50 }),
-    enabled: selectedServerId !== undefined && isModeratorRole,
-  });
-  const usersQuery = useQuery({
-    queryKey: queryKeys.users.list({
-      search,
-      userType: selectedRole.target === 'ANY' ? undefined : selectedRole.target,
-      page: 1,
-      limit: DEFAULT_PAGE_SIZE,
-    }),
-    queryFn: () =>
-      usersApi.list({
-        page: 1,
-        limit: DEFAULT_PAGE_SIZE,
-        search: search.trim() || undefined,
-        userType: selectedRole.target === 'ANY' ? undefined : selectedRole.target,
-        isActive: true,
-      }),
-    enabled: !isModeratorRole,
-  });
-  const rolesQuery = useUserRoles(selectedUserId);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [scopeSearch, setScopeSearch] = useState('');
+  const [channelSearch, setChannelSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
+  const [revokableSearch, setRevokableSearch] = useState('');
+  const debouncedScopeSearch = useDebouncedValue(scopeSearch.trim(), 300);
+  const debouncedChannelSearch = useDebouncedValue(channelSearch.trim(), 300);
+  const debouncedUserSearch = useDebouncedValue(userSearch.trim(), 300);
+  const debouncedRevokableSearch = useDebouncedValue(revokableSearch.trim(), 300);
   const assignRole = useAssignRole();
   const revokeRole = useRevokeRole();
 
-  const scopeOptions = useMemo(() => {
-    if (role === 'hod') {
-      return (departmentsQuery.data ?? []).map((department) => ({
-        value: department.id,
-        label: `${department.code} · ${department.name}`,
-      }));
-    }
-    if (role === 'program_director') {
-      return (programsQuery.data?.data ?? []).map((program) => ({
-        value: program.id,
-        label: `${program.code} · ${program.department.name}`,
-      }));
-    }
-    if (role === 'cr') {
-      return (classesQuery.data?.data ?? []).map((klass) => ({
-        value: klass.id,
-        label: `${klass.program.code}-${klass.currentSemester}${klass.section}`,
-      }));
-    }
-    return (societiesQuery.data?.data ?? []).map((society) => ({
-      value: society.id,
-      label: society.name,
-    }));
-  }, [classesQuery.data?.data, departmentsQuery.data, programsQuery.data?.data, role, societiesQuery.data?.data]);
+  const roleOptions = assignableRolesQuery.data ?? [];
+  const effectiveRole =
+    role && roleOptions.some((option) => option.role === role) ? role : chooseInitialRole(roleOptions);
+  const selectedRole = roleOptions.find((option) => option.role === effectiveRole) ?? null;
+  const roleIsModerator = effectiveRole ? isModeratorRole(effectiveRole) : false;
 
-  const userOptions = isModeratorRole
-    ? (serverMembersQuery.data?.data ?? []).map((member) => member.user)
-    : (usersQuery.data?.data ?? []);
+  const scopesQuery = useAssignableRoleScopes(
+    effectiveRole
+      ? {
+          role: effectiveRole,
+          page: 1,
+          limit: DEFAULT_PAGE_SIZE,
+          search: debouncedScopeSearch || undefined,
+        }
+      : null,
+  );
+  const scopes = scopesQuery.data?.data ?? [];
+  const selectedScope = scopes.find((scope) => String(scope.id) === scopeId);
+  const selectedServerId = getScopeServerId(selectedScope, effectiveRole);
+  const selectedChannelId = parseId(channelId);
+  const usersEnabled = Boolean(
+    effectiveRole &&
+      selectedRole &&
+      selectedUserQueryReady(effectiveRole, parseId(scopeId), selectedServerId, selectedChannelId),
+  );
 
-  function buildAssignPayload(): AssignRoleRequest | null {
-    if (!selectedUserId) return null;
-    if (role === 'server_moderator') {
-      return selectedServerId ? { userId: selectedUserId, role, serverId: selectedServerId } : null;
-    }
-    if (role === 'channel_moderator') {
-      return selectedServerId && Number(channelId)
-        ? { userId: selectedUserId, role, serverId: selectedServerId, channelId: Number(channelId) }
-        : null;
-    }
-    return Number(scopeId) ? { userId: selectedUserId, role, scopeId: Number(scopeId) } : null;
+  const channelsQuery = useAssignableChannels(
+    effectiveRole === 'channel_moderator' && selectedServerId
+      ? {
+          serverId: selectedServerId,
+          page: 1,
+          limit: DEFAULT_PAGE_SIZE,
+          search: debouncedChannelSearch || undefined,
+        }
+      : null,
+  );
+
+  const usersQuery = useAssignableRoleUsers(
+    effectiveRole && selectedRole && usersEnabled
+      ? {
+          role: effectiveRole,
+          scopeId: roleIsModerator ? undefined : parseId(scopeId) ?? undefined,
+          serverId: roleIsModerator ? selectedServerId ?? undefined : undefined,
+          channelId: effectiveRole === 'channel_moderator' ? selectedChannelId ?? undefined : undefined,
+          page: 1,
+          limit: DEFAULT_PAGE_SIZE,
+          search: debouncedUserSearch || undefined,
+        }
+      : null,
+  );
+
+  const revokableQuery = useRevokableRoleAssignments(
+    effectiveRole
+      ? {
+          role: effectiveRole,
+          scopeId: !roleIsModerator ? parseId(scopeId) ?? undefined : undefined,
+          serverId: roleIsModerator ? selectedServerId ?? undefined : undefined,
+          channelId: effectiveRole === 'channel_moderator' ? selectedChannelId ?? undefined : undefined,
+          page: 1,
+          limit: DEFAULT_PAGE_SIZE,
+          search: debouncedRevokableSearch || undefined,
+        }
+      : null,
+  );
+
+  const assignPayload = effectiveRole
+    ? buildAssignPayload({
+        role: effectiveRole,
+        userId: selectedUserId,
+        scopeId: parseId(scopeId),
+        serverId: selectedServerId,
+        channelId: selectedChannelId,
+      })
+    : null;
+
+  function resetDependents() {
+    setScopeId('');
+    setChannelId('');
+    setSelectedUserId(null);
+    setScopeSearch('');
+    setChannelSearch('');
+    setUserSearch('');
+    setRevokableSearch('');
   }
 
-  async function handleAssign() {
-    const payload = buildAssignPayload();
-    if (!payload) return;
-    await assignRole.mutateAsync(payload);
+  if (permissionsQuery.isLoading) {
+    return (
+      <section className="space-y-5">
+        <AdminPageHeader eyebrow="Roles" title="Role Management" />
+        <EmptyState title="Loading role permissions" description="Checking your available role actions." />
+      </section>
+    );
+  }
+
+  if (!canOpenRoleManagement) {
+    return (
+      <section className="space-y-5">
+        <AdminPageHeader
+          eyebrow="Roles"
+          title="Role Management"
+          description="Assign scoped academic, server, and channel roles."
+        />
+        <EmptyState
+          title="Role management unavailable"
+          description="Your account does not currently have role-management actions."
+        />
+      </section>
+    );
   }
 
   return (
@@ -163,143 +168,196 @@ export function RoleManagementPage() {
       <AdminPageHeader
         eyebrow="Roles"
         title="Role Management"
-        description="Assign scoped academic, society, server, and channel roles."
+        description="Assign scoped academic, server, and channel roles."
       />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
         <aside className="space-y-4 rounded-lg border bg-background p-4">
           <h2 className="text-sm font-semibold">Assignment</h2>
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Role</span>
-            <select
-              className={inputClassName}
-              value={role}
-              onChange={(event) => {
-                setRole(event.target.value as RoleName);
-                setScopeId('');
-                setServerId('');
-                setChannelId('');
-                setSelectedUserId(null);
-              }}
-            >
-              {ROLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {isModeratorRole ? (
+          <DataState
+            isLoading={assignableRolesQuery.isLoading}
+            isError={assignableRolesQuery.isError}
+            onRetry={() => void assignableRolesQuery.refetch()}
+            empty={roleOptions.length === 0}
+          >
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Server</span>
-              <select className={inputClassName} value={serverId} onChange={(event) => setServerId(event.target.value)}>
-                <option value="">Select server</option>
-                {(serversQuery.data?.data ?? []).map((server) => (
-                  <option key={server.id} value={server.id}>
-                    {server.name} · {server.type}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Scope</span>
-              <select className={inputClassName} value={scopeId} onChange={(event) => setScopeId(event.target.value)}>
-                <option value="">Select scope</option>
-                {scopeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+              <span className="text-sm font-medium">Role</span>
+              <select
+                className={inputClassName}
+                value={effectiveRole ?? ''}
+                onChange={(event) => {
+                  setRole(event.target.value as AssignableRoleName);
+                  resetDependents();
+                }}
+              >
+                {roleOptions.map((option) => (
+                  <option key={option.role} value={option.role}>
                     {option.label}
                   </option>
                 ))}
               </select>
             </label>
-          )}
-          {role === 'channel_moderator' ? (
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Channel</span>
-              <select className={inputClassName} value={channelId} onChange={(event) => setChannelId(event.target.value)}>
-                <option value="">Select channel</option>
-                {(channelsQuery.data ?? []).map((channel) => (
-                  <option key={channel.id} value={channel.id}>
-                    #{channel.name}
+              <span className="text-sm font-medium">
+                {roleIsModerator ? 'Server' : 'Scope'}
+              </span>
+              <input
+                className={inputClassName}
+                placeholder={roleIsModerator ? 'Search servers' : 'Search scopes'}
+                value={scopeSearch}
+                onChange={(event) => setScopeSearch(event.target.value)}
+              />
+              <select
+                className={inputClassName}
+                value={scopeId}
+                onChange={(event) => {
+                  setScopeId(event.target.value);
+                  setChannelId('');
+                  setSelectedUserId(null);
+                }}
+              >
+                <option value="">{scopesQuery.isLoading ? 'Loading...' : 'Select scope'}</option>
+                {scopes.map((scope) => (
+                  <option key={scope.id} value={scope.id} disabled={scope.disabled}>
+                    {scope.label}
+                    {scope.disabled && scope.disabledReason ? ` (${scope.disabledReason})` : ''}
                   </option>
                 ))}
               </select>
             </label>
-          ) : null}
-          {!isModeratorRole ? (
+            {effectiveRole === 'channel_moderator' ? (
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Channel</span>
+                <input
+                  className={inputClassName}
+                  placeholder="Search channels"
+                  value={channelSearch}
+                  onChange={(event) => setChannelSearch(event.target.value)}
+                  disabled={!selectedServerId}
+                />
+                <select
+                  className={inputClassName}
+                  value={channelId}
+                  onChange={(event) => {
+                    setChannelId(event.target.value);
+                    setSelectedUserId(null);
+                  }}
+                  disabled={!selectedServerId}
+                >
+                  <option value="">{channelsQuery.isLoading ? 'Loading...' : 'Select channel'}</option>
+                  {(channelsQuery.data?.data ?? []).map((channel) => (
+                    <option key={channel.id} value={channel.id}>
+                      {channel.label}
+                      {channel.isLocked ? ' · locked' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Search users</span>
-              <input className={inputClassName} value={search} onChange={(event) => setSearch(event.target.value)} />
+              <span className="text-sm font-medium">User</span>
+              <input
+                className={inputClassName}
+                placeholder="Search users"
+                value={userSearch}
+                onChange={(event) => setUserSearch(event.target.value)}
+                disabled={!usersEnabled}
+              />
+              <select
+                className={inputClassName}
+                value={selectedUserId ?? ''}
+                onChange={(event) =>
+                  setSelectedUserId(event.target.value ? Number(event.target.value) : null)
+                }
+                disabled={!usersEnabled}
+              >
+                <option value="">{usersQuery.isLoading ? 'Loading...' : 'Select user'}</option>
+                {(usersQuery.data?.data ?? []).map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.fullName} · {option.email}
+                  </option>
+                ))}
+              </select>
             </label>
-          ) : null}
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">User</span>
-            <select
-              className={inputClassName}
-              value={selectedUserId ?? ''}
-              onChange={(event) => setSelectedUserId(event.target.value ? Number(event.target.value) : null)}
+            <Button
+              type="button"
+              className="w-full"
+              disabled={!assignPayload || assignRole.isPending}
+              onClick={() => {
+                if (assignPayload) void assignRole.mutateAsync(assignPayload);
+              }}
             >
-              <option value="">Select user</option>
-              {userOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.fullName} · {option.email}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Button type="button" className="w-full" disabled={!buildAssignPayload() || assignRole.isPending} onClick={() => void handleAssign()}>
-            <ShieldPlus className="size-4" />
-            Assign role
-          </Button>
+              <ShieldPlus className="size-4" />
+              Assign role
+            </Button>
+          </DataState>
         </aside>
 
         <section className="rounded-lg border bg-background p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold">Current roles</h2>
-            {selectedUserId ? <Badge variant="secondary">User #{selectedUserId}</Badge> : null}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold">Revokable assignments</h2>
+            {selectedRole ? <Badge variant="secondary">{selectedRole.label}</Badge> : null}
           </div>
-          {!selectedUserId ? (
-            <EmptyState title="Select a user" description="Choose a user to inspect and revoke current roles." />
-          ) : (
-            <DataState
-              isLoading={rolesQuery.isLoading}
-              isError={rolesQuery.isError}
-              onRetry={() => void rolesQuery.refetch()}
-              empty={(rolesQuery.data ?? []).length === 0}
-            >
-              <div className="divide-y">
-                {(rolesQuery.data ?? []).map((assignment, index) => {
-                  const revokePayload = roleToRevokePayload(assignment, selectedUserId);
-                  return (
-                    <div key={`${assignment.role}-${index}`} className="flex items-center justify-between gap-3 py-3">
-                      <div className="min-w-0">
-                        <RoleBadge role={assignment.role} />
-                        <p className="mt-1 truncate text-sm text-muted-foreground">
-                          {assignment.scopeContext ?? assignment.serverName ?? assignment.societyName ?? assignment.programCode ?? assignment.departmentName ?? 'Scoped role'}
-                        </p>
-                      </div>
-                      {revokePayload ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={revokeRole.isPending}
-                          onClick={() => revokeRole.mutate(revokePayload)}
-                        >
-                          <Trash2 className="size-4" />
-                          Revoke
-                        </Button>
-                      ) : (
-                        <Badge variant="secondary">Change via society</Badge>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </DataState>
-          )}
+          <label className="mb-3 block space-y-1.5">
+            <span className="text-sm font-medium">Search assignments</span>
+            <input
+              className={inputClassName}
+              value={revokableSearch}
+              onChange={(event) => setRevokableSearch(event.target.value)}
+            />
+          </label>
+          <DataState
+            isLoading={revokableQuery.isLoading}
+            isError={revokableQuery.isError}
+            onRetry={() => void revokableQuery.refetch()}
+            empty={(revokableQuery.data?.data ?? []).length === 0}
+          >
+            <div className="divide-y">
+              {(revokableQuery.data?.data ?? []).map((assignment) => (
+                <div
+                  key={assignment.assignmentKey}
+                  className="flex items-center justify-between gap-3 py-3"
+                >
+                  <div className="min-w-0">
+                    <RoleBadge role={assignment.role} />
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {assignment.user.fullName} ·{' '}
+                      {assignment.scope?.label ??
+                        assignment.channel?.label ??
+                        assignment.server?.label ??
+                        'Scoped role'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={revokeRole.isPending}
+                    onClick={() => revokeRole.mutate(assignment.revokePayload)}
+                  >
+                    <Trash2 className="size-4" />
+                    Revoke
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </DataState>
         </section>
       </div>
     </section>
   );
+}
+
+function selectedUserQueryReady(
+  role: AssignableRoleName,
+  scopeId: number | null,
+  serverId: number | null,
+  channelId: number | null,
+) {
+  if (role === 'server_moderator') {
+    return serverId !== null;
+  }
+  if (role === 'channel_moderator') {
+    return serverId !== null && channelId !== null;
+  }
+  return scopeId !== null;
 }

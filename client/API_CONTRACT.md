@@ -2107,6 +2107,54 @@ GET /api/societies/leadership-candidates
 
 ### Roles Endpoints
 
+#### Get Assignable Roles
+```
+GET /api/roles/assignable
+```
+
+**Auth:** Required
+
+**Response:** `RoleOption[]` scoped to the caller. Society president/convenor are not returned here; society leadership changes use society create/edit endpoints.
+
+```typescript
+type RoleOption = {
+  role: 'hod' | 'program_director' | 'cr' | 'server_moderator' | 'channel_moderator';
+  label: string;
+  targetUserTypes: Array<'ADMIN' | 'TEACHER' | 'STUDENT'>;
+  scopeKind: 'department' | 'program' | 'class' | 'server';
+  requiresServer: boolean;
+  requiresChannel: boolean;
+};
+```
+
+#### Get Assignable Scopes
+```
+GET /api/roles/assignable-scopes?role=&page=&limit=&search=
+```
+
+Returns paginated caller-authorized department/program/class/server scope options. Filled unique scopes such as HOD, PD, and CR are returned disabled with `currentAssignee`.
+
+#### Get Assignable Channels
+```
+GET /api/roles/assignable-channels?serverId=&page=&limit=&search=
+```
+
+Returns non-deleted, non-archived channels for a caller-assignable server. Locked channels remain selectable.
+
+#### Get Assignable Users
+```
+GET /api/roles/assignable-users?role=&scopeId=&serverId=&channelId=&page=&limit=&search=
+```
+
+Returns paginated active users valid for the selected role/scope. Moderator candidates are active members of the selected server and exclude users already assigned for the same moderator scope.
+
+#### Get Revokable Assignments
+```
+GET /api/roles/revokable?role=&scopeId=&serverId=&channelId=&page=&limit=&search=
+```
+
+Returns only assignments the caller may revoke. The frontend must use the returned `revokePayload` instead of constructing revocation from arbitrary user-role inspection.
+
 #### Assign Role
 ```
 POST /api/roles/assign
@@ -2118,8 +2166,8 @@ POST /api/roles/assign
 ```typescript
 {
   userId: number;
-  role: 'hod' | 'program_director' | 'cr' | 'society_president' | 'society_convenor';
-  scopeId: number;  // departmentId, programId, classId, or societyId
+  role: 'hod' | 'program_director' | 'cr';
+  scopeId: number;  // departmentId, programId, or classId
 }
 ```
 
@@ -2165,12 +2213,6 @@ POST /api/roles/assign
         classId: number;
       }
     | {
-        role: 'society_president' | 'society_convenor';
-        userId: number;
-        societyId: number;
-        societyName: string;
-      }
-    | {
         role: 'server_moderator' | 'channel_moderator';
         userId: number;
         serverId: number;
@@ -2181,6 +2223,8 @@ POST /api/roles/assign
   message: 'Role assigned successfully';
 }
 ```
+
+**Note:** `society_president` and `society_convenor` are rejected by this endpoint. Use `PATCH /api/societies/:id` for society leadership changes.
 
 #### Revoke Role
 ```

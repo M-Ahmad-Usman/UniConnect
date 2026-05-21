@@ -141,6 +141,14 @@ export const queryKeys = {
     all: () => ['roles'] as const,
     byUser: (userId: number) => ['roles', userId] as const,
     currentUser: () => ['roles', 'current-user'] as const,
+    assignable: () => ['roles', 'assignable'] as const,
+    assignableScopes: (params?: object) =>
+      ['roles', 'assignable-scopes', params] as const,
+    assignableChannels: (params?: object) =>
+      ['roles', 'assignable-channels', params] as const,
+    assignableUsers: (params?: object) =>
+      ['roles', 'assignable-users', params] as const,
+    revokable: (params?: object) => ['roles', 'revokable', params] as const,
   },
   societies: {
     all: () => ['societies'] as const,

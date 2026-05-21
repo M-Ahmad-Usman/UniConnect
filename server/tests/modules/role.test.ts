@@ -37,6 +37,180 @@ afterAll(async () => {
 });
 
 describe("Module 7 - Role Management", () => {
+  describe("Module 4 hardening scoped option endpoints", () => {
+    it("should return admin assignable roles without society leadership roles", async () => {
+      const admin = await createUser({
+        email: `admin-options-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app).get("/api/roles/assignable").set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const roles = res.body.data.map((option: { role: string }) => option.role);
+      expect(roles).toEqual(
+        expect.arrayContaining([
+          "hod",
+          "program_director",
+          "cr",
+          "server_moderator",
+          "channel_moderator",
+        ])
+      );
+      expect(roles).not.toContain("society_president");
+      expect(roles).not.toContain("society_convenor");
+    });
+
+    it("should return only HOD department program scopes and mark filled scopes disabled", async () => {
+      const ownDept = await createDepartment({ code: `OPTHOD-${uid()}` });
+      const otherDept = await createDepartment({ code: `OPTOUT-${uid()}` });
+      const hod = await createTeacherWithInfo(ownDept.id, {
+        email: `hod-options-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(ownDept.id, hod.id);
+      const vacantProgram = await createProgram(ownDept.id, { code: `VP-${uid()}` });
+      const filledProgram = await createProgram(ownDept.id, { code: `FP-${uid()}` });
+      const otherProgram = await createProgram(otherDept.id, { code: `OP-${uid()}` });
+      const pd = await createTeacherWithInfo(ownDept.id, {
+        email: `pd-options-${uid()}@test.com`,
+      });
+      await assignPD(filledProgram.id, pd.id);
+      const cookies = await loginAs(hod.email, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/roles/assignable-scopes")
+        .query({ role: "program_director", limit: 50 })
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const scopeIds = res.body.data.map((scope: { id: number }) => scope.id);
+      expect(scopeIds).toContain(vacantProgram.id);
+      expect(scopeIds).toContain(filledProgram.id);
+      expect(scopeIds).not.toContain(otherProgram.id);
+      expect(
+        res.body.data.find((scope: { id: number; disabled: boolean }) => scope.id === filledProgram.id)
+          .disabled
+      ).toBe(true);
+    });
+
+    it("should scope PD CR options to own active program classes", async () => {
+      const dept = await createDepartment({ code: `OPTPD-${uid()}` });
+      const pd = await createTeacherWithInfo(dept.id, {
+        email: `pd-scope-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      const ownProgram = await createProgram(dept.id, { code: `OWN-${uid()}` });
+      const otherProgram = await createProgram(dept.id, { code: `OTH-${uid()}` });
+      await assignPD(ownProgram.id, pd.id);
+      const ownClass = await createClass(ownProgram.id);
+      const otherClass = await createClass(otherProgram.id);
+      const cookies = await loginAs(pd.email, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/roles/assignable-scopes")
+        .query({ role: "cr", limit: 50 })
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const scopeIds = res.body.data.map((scope: { id: number }) => scope.id);
+      expect(scopeIds).toContain(ownClass.id);
+      expect(scopeIds).not.toContain(otherClass.id);
+    });
+
+    it("should limit CR moderator scopes and candidates to own class server members", async () => {
+      const dept = await createDepartment({ code: `OPTCR-${uid()}` });
+      const program = await createProgram(dept.id);
+      const ownClass = await createClass(program.id, { section: "A" });
+      const otherClass = await createClass(program.id, { section: "B" });
+      const cr = await createStudentWithInfo(ownClass.id, dept.id, {
+        email: `cr-options-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      const member = await createStudentWithInfo(ownClass.id, dept.id, {
+        email: `member-options-${uid()}@test.com`,
+      });
+      const outsider = await createStudentWithInfo(otherClass.id, dept.id, {
+        email: `outsider-options-${uid()}@test.com`,
+      });
+      await assignCR(ownClass.id, cr.id);
+      const [ownRecord, otherRecord] = await Promise.all([
+        prisma.class.findUnique({ where: { id: ownClass.id }, select: { serverId: true } }),
+        prisma.class.findUnique({ where: { id: otherClass.id }, select: { serverId: true } }),
+      ]);
+      const cookies = await loginAs(cr.email, "Pass@1234");
+
+      const scopesRes = await request(app)
+        .get("/api/roles/assignable-scopes")
+        .query({ role: "server_moderator", limit: 50 })
+        .set("Cookie", cookies);
+      expect(scopesRes.status).toBe(200);
+      const serverIds = scopesRes.body.data.map((scope: { serverId: number }) => scope.serverId);
+      expect(serverIds).toContain(ownRecord!.serverId);
+      expect(serverIds).not.toContain(otherRecord!.serverId);
+
+      const usersRes = await request(app)
+        .get("/api/roles/assignable-users")
+        .query({ role: "server_moderator", serverId: ownRecord!.serverId, limit: 50 })
+        .set("Cookie", cookies);
+      expect(usersRes.status).toBe(200);
+      const userIds = usersRes.body.data.map((user: { id: number }) => user.id);
+      expect(userIds).toContain(member.id);
+      expect(userIds).not.toContain(outsider.id);
+    });
+
+    it("should return only caller-revokable moderator assignments", async () => {
+      const dept = await createDepartment({ code: `OPTREV-${uid()}` });
+      const program = await createProgram(dept.id);
+      const ownClass = await createClass(program.id, { section: "A" });
+      const otherClass = await createClass(program.id, { section: "B" });
+      const cr = await createStudentWithInfo(ownClass.id, dept.id, {
+        email: `cr-revoke-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignCR(ownClass.id, cr.id);
+      const ownMember = await createStudentWithInfo(ownClass.id, dept.id, {
+        email: `own-revoke-${uid()}@test.com`,
+      });
+      const otherMember = await createStudentWithInfo(otherClass.id, dept.id, {
+        email: `other-revoke-${uid()}@test.com`,
+      });
+      const [ownRecord, otherRecord] = await Promise.all([
+        prisma.class.findUnique({ where: { id: ownClass.id }, select: { serverId: true } }),
+        prisma.class.findUnique({ where: { id: otherClass.id }, select: { serverId: true } }),
+      ]);
+      await prisma.moderatorAssignment.createMany({
+        data: [
+          {
+            userId: ownMember.id,
+            serverId: ownRecord!.serverId,
+            scopeType: "SERVER",
+            assignedBy: cr.id,
+          },
+          {
+            userId: otherMember.id,
+            serverId: otherRecord!.serverId,
+            scopeType: "SERVER",
+            assignedBy: cr.id,
+          },
+        ],
+      });
+      const cookies = await loginAs(cr.email, "Pass@1234");
+
+      const res = await request(app)
+        .get("/api/roles/revokable")
+        .query({ role: "server_moderator", limit: 50 })
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      const userIds = res.body.data.map((assignment: { user: { id: number } }) => assignment.user.id);
+      expect(userIds).toContain(ownMember.id);
+      expect(userIds).not.toContain(otherMember.id);
+    });
+  });
+
   // ═══════════════════════════════════════════════════════════════════════
   // POST /api/roles/assign
   // ═══════════════════════════════════════════════════════════════════════
@@ -642,7 +816,7 @@ describe("Module 7 - Role Management", () => {
 
     // ─── Society President / Convenor Assignment ─────────────────────
 
-    it("should allow admin to assign society president", async () => {
+    it("should reject society president assignment through generic role API", async () => {
       const admin = await createUser({
         email: `admin-sp-${uid()}@test.com`,
         password: "Pass@1234",
@@ -674,16 +848,16 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({ userId: newPresident.id, role: "society_president", scopeId: society.id });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("society_president");
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(JSON.stringify(res.body.error.details)).toContain("PATCH /api/societies/:id");
 
       // Verify DB
       const updated = await prisma.society.findUnique({ where: { id: society.id } });
-      expect(updated!.presidentId).toBe(newPresident.id);
+      expect(updated!.presidentId).toBe(president.id);
     });
 
-    it("should allow admin to assign society convenor", async () => {
+    it("should reject society convenor assignment through generic role API", async () => {
       const admin = await createUser({
         email: `admin-sc-${uid()}@test.com`,
         password: "Pass@1234",
@@ -713,16 +887,16 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({ userId: newConvenor.id, role: "society_convenor", scopeId: society.id });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.role).toBe("society_convenor");
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(JSON.stringify(res.body.error.details)).toContain("PATCH /api/societies/:id");
 
       // Verify DB
       const updated = await prisma.society.findUnique({ where: { id: society.id } });
-      expect(updated!.convenorId).toBe(newConvenor.id);
+      expect(updated!.convenorId).toBe(convenor.id);
     });
 
-    it("should allow convenor to assign president in their own society", async () => {
+    it("should reject convenor society president assignment through generic role API", async () => {
       const dept = await createDepartment({ code: `D-CSP-${uid()}` });
       const program = await createProgram(dept.id);
       const cls = await createClass(program.id);
@@ -751,14 +925,15 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({ userId: newPresident.id, role: "society_president", scopeId: society.id });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(JSON.stringify(res.body.error.details)).toContain("PATCH /api/societies/:id");
 
       const updated = await prisma.society.findUnique({ where: { id: society.id } });
-      expect(updated!.presidentId).toBe(newPresident.id);
+      expect(updated!.presidentId).toBe(currentPresident.id);
     });
 
-    it("should return 403 when convenor assigns president in another society", async () => {
+    it("should reject out-of-scope society president assignment before authorization", async () => {
       const dept = await createDepartment({ code: `D-CSP2-${uid()}` });
       const program = await createProgram(dept.id);
       const cls = await createClass(program.id);
@@ -796,8 +971,9 @@ describe("Module 7 - Role Management", () => {
         .set("Cookie", cookies)
         .send({ userId: replacementPresident.id, role: "society_president", scopeId: societyB.id });
 
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+      expect(JSON.stringify(res.body.error.details)).toContain("PATCH /api/societies/:id");
     });
 
     it("should accept numeric IDs sent as strings", async () => {

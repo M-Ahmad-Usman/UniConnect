@@ -19,7 +19,7 @@
 | 1 | Permission Policy Foundation | Complete | Codex | 2026-05-18 | 2026-05-18 | Focused permission tests, regression slices, build, and type-check pass |
 | 2 | Academic and Class Management Hardening | Complete | Codex | 2026-05-18 | 2026-05-19 | Backend/frontend implementation, focused unit tests, DB-backed backend tests, Playwright academic flows, and docs complete |
 | 3 | Society Management UX and Access Hardening | Complete | Codex | 2026-05-20 | 2026-05-20 | Backend/frontend implementation, focused Jest/Vitest coverage, Playwright society flows, lint, build, type-check, and docs complete |
-| 4 | Role Management Hardening | Not started | TBD |  |  |  |
+| 4 | Role Management Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | Scoped backend option APIs, lazy frontend role workspace, focused Jest/Vitest coverage, Playwright role flows, lint, build, type-check, and docs complete |
 | 5 | Security Hardening | Not started | TBD |  |  |  |
 | 6 | UI and Accessibility Hardening | Not started | TBD |  |  |  |
 | 7 | Cross-Cutting Release Readiness | Not started | TBD |  |  |  |
@@ -188,42 +188,53 @@
 ## Module 4 Checklist: Role Management Hardening
 
 ### Implementation
-- [ ] Add assignable-role backend response for caller.
-- [ ] Add assignable-scope backend response for selected role.
-- [ ] Add assignable-user backend response for selected role/scope.
-- [ ] Add revokable-role backend response or filtered current-role response.
-- [ ] Replace broad role-management frontend loading.
-- [ ] Hide invalid role options and scopes.
-- [ ] Add role-workspace guard or unavailable state.
-- [ ] Keep society leadership changes out of generic revoke.
-- [ ] Verify manipulated payloads still fail backend authorization.
+- [x] Add assignable-role backend response for caller.
+- [x] Add assignable-scope backend response for selected role.
+- [x] Add assignable-user backend response for selected role/scope.
+- [x] Add revokable-role backend response or filtered current-role response.
+- [x] Replace broad role-management frontend loading.
+- [x] Hide invalid role options and scopes.
+- [x] Add role-workspace guard or unavailable state.
+- [x] Keep society leadership changes out of generic revoke.
+- [x] Verify manipulated payloads still fail backend authorization.
 
 ### Tests
-- [ ] Backend tests for assignable roles by admin.
-- [ ] Backend tests for assignable roles/scopes by HOD.
-- [ ] Backend tests for assignable roles/scopes by PD.
-- [ ] Backend tests for CR moderator delegation scope.
-- [ ] Backend tests for society leader moderator delegation scope.
-- [ ] Backend tests for manipulated out-of-scope payload rejection.
-- [ ] Frontend tests for backend-driven role options.
-- [ ] Frontend tests for dependent field resets.
-- [ ] Frontend tests for no-actions unavailable state.
-- [ ] Playwright HOD assigns CR.
-- [ ] Playwright CR assigns class server moderator.
-- [ ] Playwright society leader assigns society moderator.
+- [x] Backend tests for assignable roles by admin.
+- [x] Backend tests for assignable roles/scopes by HOD.
+- [x] Backend tests for assignable roles/scopes by PD.
+- [x] Backend tests for CR moderator delegation scope.
+- [x] Backend tests for society leader moderator delegation scope.
+- [x] Backend tests for manipulated out-of-scope payload rejection.
+- [x] Frontend tests for backend-driven role options.
+- [x] Frontend tests for dependent field resets.
+- [x] Frontend tests for no-actions unavailable state.
+- [x] Playwright HOD assigns CR.
+- [x] Playwright PD assigns CR.
+- [x] Playwright CR assigns class server moderator.
+- [x] Playwright society leader assigns society moderator.
 
 ### Documentation
-- [ ] Update `client/API_CONTRACT.md`.
-- [ ] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
-- [ ] Update `docs/functional_requirements.md`.
-- [ ] Update `client/PROGRESS.md`.
-- [ ] Update `server/PROGRESS.md`.
+- [x] Update `client/API_CONTRACT.md`.
+- [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
+- [x] Update `docs/functional_requirements.md`.
+- [x] Update `client/PROGRESS.md`.
+- [x] Update `server/PROGRESS.md`.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd server && timeout 120 npm run build`
+  - `cd server && timeout 120 npm test -- tests/modules/role.test.ts`
+  - `cd client && timeout 120 npm run test -- src/features/roles/__tests__/utils.test.ts src/lib/__tests__/socket.test.ts`
+  - `cd client && timeout 120 npm run type-check`
+  - `cd client && timeout 120 npm run lint`
+  - `cd client && timeout 120 npm run build`
+  - `cd client && timeout 300 npx playwright test e2e/module4-role-management.spec.ts`
 - Result:
-  - Not verified.
+  - Backend build passes.
+  - Focused role Jest suite passes, 47/47.
+  - Frontend role/socket Vitest coverage passes, 6/6.
+  - Frontend type-check, lint, and production build pass. Vite still reports the existing large `react-vendor` chunk warning.
+  - Module 4 Playwright role-management flows pass for HOD CR assignment, PD CR assignment, CR class-server moderator assignment, and society leader moderator assignment.
 
 ## Module 5 Checklist: Security Hardening
 

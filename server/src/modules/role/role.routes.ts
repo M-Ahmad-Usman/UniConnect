@@ -4,11 +4,20 @@ import { authorize } from "../../middleware/authorize.js";
 import { validate } from "../../middleware/validate.js";
 import {
   assignRoleSchema,
+  assignableChannelsSchema,
+  assignableScopesSchema,
+  assignableUsersSchema,
   revokeRoleSchema,
   getUserRolesSchema,
+  revokableRolesSchema,
 } from "./role.schema.js";
 import {
   handleAssignRole,
+  handleGetAssignableRoles,
+  handleListAssignableChannels,
+  handleListAssignableScopes,
+  handleListAssignableUsers,
+  handleListRevokableRoles,
   handleRevokeRole,
   handleGetUserRoles,
 } from "./role.controller.js";
@@ -16,6 +25,45 @@ import {
 const router = Router();
 
 // ─── Role Management ───────────────────────────────────────────────────────
+
+router.get(
+  "/assignable",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
+  handleGetAssignableRoles
+);
+
+router.get(
+  "/assignable-scopes",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
+  validate(assignableScopesSchema),
+  handleListAssignableScopes
+);
+
+router.get(
+  "/assignable-channels",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
+  validate(assignableChannelsSchema),
+  handleListAssignableChannels
+);
+
+router.get(
+  "/assignable-users",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
+  validate(assignableUsersSchema),
+  handleListAssignableUsers
+);
+
+router.get(
+  "/revokable",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
+  validate(revokableRolesSchema),
+  handleListRevokableRoles
+);
 
 router.post(
   "/assign",
