@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from '@/types/api.types';
 import { useAuthStore } from '@/stores/auth.store';
 import { queryClient } from '@/lib/query-client';
@@ -12,6 +12,18 @@ const AUTH_REFRESH_EXCLUDED_PATHS = new Set([
   '/auth/refresh',
 ]);
 
+const CSRF_COOKIE_NAME = 'XSRF-TOKEN';
+const CSRF_HEADER_NAME = 'X-XSRF-TOKEN';
+const CSRF_EXCLUDED_PATHS = new Set(['/auth/csrf']);
+const UNSAFE_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  _csrfRetry?: boolean;
+};
+
+let csrfRequest: Promise<string> | null = null;
+
 function shouldAttemptRefresh(status: number | undefined, requestUrl: string | undefined) {
   if (status !== 401 || !requestUrl) {
     return false;
@@ -20,12 +32,71 @@ function shouldAttemptRefresh(status: number | undefined, requestUrl: string | u
   return !AUTH_REFRESH_EXCLUDED_PATHS.has(requestUrl);
 }
 
+function isUnsafeMethod(method: string | undefined) {
+  return method ? UNSAFE_METHODS.has(method.toLowerCase()) : false;
+}
+
+function readCookie(name: string) {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  const prefix = `${name}=`;
+  return (
+    document.cookie
+      .split(';')
+      .map((cookie) => cookie.trim())
+      .find((cookie) => cookie.startsWith(prefix))
+      ?.slice(prefix.length) ?? null
+  );
+}
+
+async function fetchCsrfToken() {
+  const response = await axios.get('/api/auth/csrf', { withCredentials: true });
+  const token = response.data?.success === true ? response.data.data?.token : undefined;
+
+  if (typeof token !== 'string' || token.length === 0) {
+    throw new ApiError('CSRF_INVALID', 'Unable to initialize request protection.', [], 403);
+  }
+
+  return token;
+}
+
+async function ensureCsrfToken(forceRefresh = false) {
+  const existing = forceRefresh ? null : readCookie(CSRF_COOKIE_NAME);
+  if (existing) {
+    return existing;
+  }
+
+  csrfRequest ??= fetchCsrfToken().finally(() => {
+    csrfRequest = null;
+  });
+
+  return csrfRequest;
+}
+
 export const apiClient = axios.create({
   baseURL: '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// ─── Request Interceptor: Attach CSRF Token For Unsafe Methods ─────────────
+
+apiClient.interceptors.request.use(async (config) => {
+  if (
+    isUnsafeMethod(config.method) &&
+    config.url &&
+    !CSRF_EXCLUDED_PATHS.has(config.url) &&
+    !config.headers.has(CSRF_HEADER_NAME)
+  ) {
+    const token = await ensureCsrfToken();
+    config.headers.set(CSRF_HEADER_NAME, token);
+  }
+
+  return config;
 });
 
 // ─── Response Interceptor: Unwrap success data ──────────────────────────────
@@ -49,7 +120,18 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetriableRequestConfig | undefined;
+
+    if (
+      originalRequest &&
+      error.response?.data?.error?.code === 'CSRF_INVALID' &&
+      !originalRequest._csrfRetry
+    ) {
+      originalRequest._csrfRetry = true;
+      const token = await ensureCsrfToken(true);
+      originalRequest.headers.set(CSRF_HEADER_NAME, token);
+      return apiClient(originalRequest);
+    }
 
     // ─── 401 Unauthorized: Attempt token refresh ──────────────────────────
     if (
@@ -60,7 +142,11 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await axios.post('/api/auth/refresh', null, { withCredentials: true });
+        const token = await ensureCsrfToken();
+        await axios.post('/api/auth/refresh', null, {
+          withCredentials: true,
+          headers: { [CSRF_HEADER_NAME]: token },
+        });
         return apiClient(originalRequest);
       } catch {
         // Refresh failed — logout

@@ -5,6 +5,7 @@ export const E2E_DATABASE_URL =
   'postgresql://uniconnect:uniconnect@localhost:5433/uniconnect_test';
 
 const TABLE_NAMES = [
+  'audit_logs',
   'refresh_tokens',
   'notification_preferences',
   'notifications',

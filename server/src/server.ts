@@ -11,16 +11,17 @@ const server = http.createServer(app);
 initializeSocket(server);
 
 server.listen(env.PORT, () => {
-  console.log(
-    `🚀 UniConnect server running on port ${env.PORT} [${env.NODE_ENV}]`
-  );
+  console.warn("[SERVER] UniConnect server started", {
+    port: env.PORT,
+    environment: env.NODE_ENV,
+  });
 });
 
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 const gracefulShutdown = async (signal: string) => {
-  console.log(`\n${signal} received. Shutting down gracefully...`);
+  console.warn("[SERVER] Shutdown signal received", { signal });
 
   // Force exit if graceful shutdown takes too long
   const forceExit = setTimeout(() => {
@@ -35,7 +36,7 @@ const gracefulShutdown = async (signal: string) => {
   }
   server.close(async () => {
     await prisma.$disconnect();
-    console.log("Server closed.");
+    console.warn("[SERVER] Server closed");
     process.exit(0);
   });
 };

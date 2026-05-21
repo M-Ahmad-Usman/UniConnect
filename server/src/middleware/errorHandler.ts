@@ -71,7 +71,7 @@ export function errorHandler(
   }
 
   // Log unexpected errors
-  console.error("Unhandled error:", err);
+  console.error("[ERROR] Unhandled error", { error: err });
 
   // Generic fallback
   res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

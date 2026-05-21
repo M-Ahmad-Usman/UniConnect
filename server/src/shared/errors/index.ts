@@ -38,6 +38,12 @@ export class ForbiddenError extends AppError {
   }
 }
 
+export class CsrfError extends AppError {
+  constructor(message: string = "Invalid CSRF token") {
+    super(message, StatusCodes.FORBIDDEN, "CSRF_INVALID");
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message: string = "Resource already exists") {
     super(message, StatusCodes.CONFLICT, "CONFLICT");

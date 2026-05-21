@@ -30,7 +30,8 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npm run dev:e2e',
+      command:
+        'CSRF_ENABLED=true CSRF_SECRET=test-csrf-secret-at-least-32-characters-long CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 npm run dev:e2e',
       cwd: backendDir,
       url: 'http://127.0.0.1:4100/api/health',
       reuseExistingServer: false,

@@ -13,12 +13,18 @@ This document is the frontend integration contract for the UniConnect backend. I
 - Cookies set by backend:
   - `access_token` (path `/api`)
   - `refresh_token` (path `/api/auth/refresh`)
-- Public endpoints: `/api/health`, `/api/auth/login`, `/api/auth/forgot-password`, `/api/auth/reset-password`.
+- CSRF token cookie:
+  - `XSRF-TOKEN` (path `/`, readable by frontend, not an auth token)
+- Public endpoints: `/api/health`, `/api/auth/csrf`, `/api/auth/login`, `/api/auth/forgot-password`, `/api/auth/reset-password`.
 - Refresh endpoint (`/api/auth/refresh`) is cookie-authenticated via `refresh_token`.
 - All other endpoints require a valid `access_token` cookie.
 - Frontend must send credentials on every request:
   - `fetch(..., { credentials: "include" })`
   - axios: `withCredentials: true`
+- Unsafe methods (`POST`, `PUT`, `PATCH`, `DELETE`) require:
+  - trusted `Origin` or `Referer`
+  - `X-XSRF-TOKEN` header equal to the `XSRF-TOKEN` cookie
+- Frontend should call `GET /api/auth/csrf` before the first unsafe request and retry once after `CSRF_INVALID`.
 - On password change or reset, backend clears cookies and client must re-login.
 
 ## Response Contract
@@ -69,7 +75,13 @@ This document is the frontend integration contract for the UniConnect backend. I
 - Max file size: `5MB`
 - Max post attachments: `3`
 - Accepted images: JPEG, PNG, WEBP
+- Accepted images must pass magic-byte validation and max `12MP` dimensions
 - CSV upload route validates non-binary content
+
+## Audit Logging
+- Privileged successful writes create persistent `AuditLog` records.
+- Covered areas include user activation, role changes, academic/class/catalog changes, society management, and channel management.
+- Audit summaries are field-level and redacted; passwords, tokens, cookies, secrets, and raw uploaded/post content are not logged.
 
 ## Rate Limits
 - General API: `100` requests/minute

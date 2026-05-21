@@ -22,6 +22,7 @@ Canonical error codes for frontend handling and UX mapping.
 | `VALIDATION_ERROR` | 400 | Zod/validation middleware | Request body/params/query invalid | Show field errors using `error.details` where present |
 | `UNAUTHORIZED` | 401 | Auth middleware/auth handlers | Missing/invalid auth or refresh token | Redirect to login or trigger refresh flow |
 | `FORBIDDEN` | 403 | Authorization/service rules | Authenticated but not allowed | Show permission message / disable action |
+| `CSRF_INVALID` | 403 | CSRF middleware | Missing/invalid CSRF token or untrusted Origin/Referer on unsafe request | Refetch CSRF token once, retry, then show request failure |
 | `NOT_FOUND` | 404 | Service/domain errors | Resource not found or inaccessible by scope | Show not-found state |
 | `CONFLICT` | 409 | Domain checks/Prisma unique mapping | Duplicate or conflicting state | Show conflict UX (duplicate, already exists) |
 | `RATE_LIMIT_EXCEEDED` | 429 | Rate limiter middleware | Too many requests in current window | Backoff and retry later |

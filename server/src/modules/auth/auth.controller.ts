@@ -4,43 +4,40 @@ import { env } from "../../config/env.js";
 import * as authService from "./auth.service.js";
 import type { ApiResponse } from "../../shared/types/index.js";
 import { parseExpiry } from "../../shared/utils/parseExpiry.js";
+import {
+  clearCsrfCookie,
+  getAuthCookieOptions,
+  issueCsrfCookie,
+} from "../../shared/security/csrf.js";
 
 // ─── Cookie Helpers ─────────────────────────────────────────────────────────
 
-const isProduction = env.NODE_ENV === "production";
-
 function setCookies(res: Response, accessToken: string, refreshToken: string): void {
   res.cookie("access_token", accessToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    ...getAuthCookieOptions(parseExpiry(env.JWT_ACCESS_EXPIRY)),
     path: "/api",
-    maxAge: parseExpiry(env.JWT_ACCESS_EXPIRY),
   });
 
   res.cookie("refresh_token", refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    ...getAuthCookieOptions(parseExpiry(env.JWT_REFRESH_EXPIRY)),
     path: "/api/auth/refresh",
-    maxAge: parseExpiry(env.JWT_REFRESH_EXPIRY),
   });
+
+  issueCsrfCookie(res);
 }
 
 function clearCookies(res: Response): void {
   res.clearCookie("access_token", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    ...getAuthCookieOptions(),
     path: "/api",
   });
 
   res.clearCookie("refresh_token", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    ...getAuthCookieOptions(),
     path: "/api/auth/refresh",
   });
+
+  clearCsrfCookie(res);
 }
 
 // ─── Handlers ───────────────────────────────────────────────────────────────
@@ -136,6 +133,17 @@ export async function handleChangePassword(req: Request, res: Response): Promise
     success: true,
     data: null,
     message: "Password changed successfully. Please log in again.",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export function handleGetCsrfToken(_req: Request, res: Response): void {
+  const token = issueCsrfCookie(res);
+
+  const response: ApiResponse<{ token: string }> = {
+    success: true,
+    data: { token },
   };
 
   res.status(StatusCodes.OK).json(response);

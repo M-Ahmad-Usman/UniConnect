@@ -6,6 +6,7 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
+import { csrfProtection } from "./middleware/csrf.js";
 import { NotFoundError } from "./shared/errors/index.js";
 import { prisma } from "./config/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
@@ -56,6 +57,7 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
+app.use("/api", csrfProtection);
 
 // ─── Request Timeout ────────────────────────────────────────────────────────
 const REQUEST_TIMEOUT_MS = 30_000;

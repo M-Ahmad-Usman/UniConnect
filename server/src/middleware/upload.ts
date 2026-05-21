@@ -1,11 +1,23 @@
 import multer from "multer";
 import type { NextFunction, Request, Response } from "express";
 import { fileTypeFromBuffer } from "file-type";
-import { MAX_ATTACHMENTS, MAX_FILE_SIZE } from "../shared/constants.js";
+import { imageSize } from "image-size";
+import { MAX_ATTACHMENTS, MAX_FILE_SIZE, MAX_IMAGE_PIXELS } from "../shared/constants.js";
 import { ValidationError } from "../shared/errors/index.js";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_CSV_TYPES = ["text/csv", "application/vnd.ms-excel", "text/plain"];
+
+function validateImageDimensions(buffer: Buffer): void {
+  const dimensions = imageSize(buffer);
+  if (!dimensions.width || !dimensions.height) {
+    throw new ValidationError("Unable to determine image dimensions");
+  }
+
+  if (dimensions.width * dimensions.height > MAX_IMAGE_PIXELS) {
+    throw new ValidationError("Image dimensions exceed the maximum allowed pixel count");
+  }
+}
 
 function handleUploadErrors(error: unknown): never {
   if (error instanceof multer.MulterError) {
@@ -105,6 +117,8 @@ export async function validateImageMagicBytes(
     if (!detected || !ALLOWED_IMAGE_TYPES.includes(detected.mime)) {
       throw new ValidationError("File content does not match an allowed image type");
     }
+
+    validateImageDimensions(f.buffer);
   }
 
   next();

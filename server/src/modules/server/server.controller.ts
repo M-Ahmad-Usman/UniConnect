@@ -2,6 +2,15 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as serverService from "./server.service.js";
+import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
+
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
 
 // ─── Server Handlers ───────────────────────────────────────────────────────
 
@@ -80,6 +89,19 @@ export async function handleCreateChannel(req: Request, res: Response): Promise<
     Number(req.params.id),
     req.body,
     { id: req.user!.id, userType: req.user!.userType }
+  );
+  await recordAuditLog(
+    {
+      action: "channel.create",
+      targetType: "channel",
+      targetId: channel.id,
+      summary: {
+        serverId: req.params.id,
+        name: channel.name,
+        type: channel.type,
+      },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<typeof channel> = {

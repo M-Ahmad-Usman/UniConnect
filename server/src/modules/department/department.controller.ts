@@ -2,9 +2,27 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse } from "../../shared/types/index.js";
 import * as departmentService from "./department.service.js";
+import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
+
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
 
 export async function handleCreateDepartment(req: Request, res: Response): Promise<void> {
   const department = await departmentService.createDepartment(req.body, req.user!.id);
+  await recordAuditLog(
+    {
+      action: "department.create",
+      targetType: "department",
+      targetId: department.id,
+      summary: { name: department.name, code: department.code },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof department> = {
     success: true,
@@ -39,6 +57,15 @@ export async function handleGetDepartmentById(req: Request, res: Response): Prom
 
 export async function handleUpdateDepartment(req: Request, res: Response): Promise<void> {
   const department = await departmentService.updateDepartment(Number(req.params.id), req.body);
+  await recordAuditLog(
+    {
+      action: "department.update",
+      targetType: "department",
+      targetId: req.params.id,
+      summary: { changedFields: Object.keys(req.body as Record<string, unknown>) },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof department> = {
     success: true,
@@ -53,6 +80,15 @@ export async function handleCreateProgram(req: Request, res: Response): Promise<
   const program = await departmentService.createProgram(
     { ...req.body, departmentId: Number(req.params.id) },
     req.user!.id
+  );
+  await recordAuditLog(
+    {
+      action: "program.create",
+      targetType: "program",
+      targetId: program.id,
+      summary: { departmentId: req.params.id, code: program.code },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<typeof program> = {

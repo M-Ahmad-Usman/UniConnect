@@ -15,10 +15,12 @@ import {
   handleForgotPassword,
   handleResetPassword,
   handleChangePassword,
+  handleGetCsrfToken,
 } from "./auth.controller.js";
 
 const router = Router();
 
+router.get("/csrf", handleGetCsrfToken);
 router.post("/login", authLimiter, validate(loginSchema), handleLogin);
 router.post("/logout", authenticate, handleLogout);
 router.post("/refresh", handleRefresh);

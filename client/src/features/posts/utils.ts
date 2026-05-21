@@ -5,6 +5,35 @@ import { ChannelType, PostPriority, UserType, type AuthUser, type ChannelListIte
 
 const ALLOWED_ATTACHMENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+
+function isSafeLink(value: string) {
+  try {
+    const url = new URL(value, window.location.origin);
+    return SAFE_LINK_PROTOCOLS.has(url.protocol) && value.trim().includes(':');
+  } catch {
+    return false;
+  }
+}
+
+function normalizeSanitizedLinks(html: string) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content.querySelectorAll('a[href]').forEach((link) => {
+    const href = link.getAttribute('href');
+    if (!href || !isSafeLink(href)) {
+      link.removeAttribute('href');
+      return;
+    }
+
+    if (link.getAttribute('target') === '_blank') {
+      link.setAttribute('rel', 'noopener noreferrer');
+    }
+  });
+
+  return template.innerHTML;
+}
 
 export function normalizeSearchValue(value: string) {
   return value.trim();
@@ -75,13 +104,19 @@ export function sanitizePostHtml(html: string) {
     return html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/\son\w+="[^"]*"/gi, '')
-      .replace(/\son\w+='[^']*'/gi, '');
+      .replace(/\son\w+='[^']*'/gi, '')
+      .replace(/\shref=(["'])(?!https?:|mailto:).*?\1/gi, '')
+      .replace(/(<a\b(?=[^>]*\starget=(["'])_blank\2)(?=[^>]*\srel=)[^>]*?)\srel=(["']).*?\3/gi, '$1 rel="noopener noreferrer"')
+      .replace(/<a\b(?=[^>]*\starget=(["'])_blank\1)(?![^>]*\srel=)/gi, '<a rel="noopener noreferrer"');
   }
 
-  return DOMPurify.sanitize(html, {
+  const sanitized = DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):)/i,
   });
+
+  return normalizeSanitizedLinks(sanitized);
 }
 
 export function getPlainTextPreview(html: string, maxLength = 220) {

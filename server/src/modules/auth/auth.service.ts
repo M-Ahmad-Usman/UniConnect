@@ -167,7 +167,7 @@ export async function logout(refreshTokenCookie: string | undefined): Promise<vo
     data: { revokedAt: new Date() },
   });
 
-  console.info("[AUTH] Session revoked", { reason: "logout", timestamp: new Date().toISOString() });
+  console.warn("[AUTH] Session revoked", { reason: "logout", timestamp: new Date().toISOString() });
 }
 
 // ─── Forgot Password ───────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
     data: { revokedAt: new Date() },
   });
 
-  console.info("[AUTH] Password reset completed", { userId: payload.id, timestamp: new Date().toISOString() });
+  console.warn("[AUTH] Password reset completed", { userId: payload.id, timestamp: new Date().toISOString() });
 }
 
 // ─── Change Password ───────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ export async function changePassword(
     data: { revokedAt: new Date() },
   });
 
-  console.info("[AUTH] Password changed", { userId, timestamp: new Date().toISOString() });
+  console.warn("[AUTH] Password changed", { userId, timestamp: new Date().toISOString() });
 }
 
 // ─── Stale Token Cleanup ────────────────────────────────────────────────────
@@ -291,7 +291,7 @@ export async function purgeStaleRefreshTokens(retentionDays = 7): Promise<number
   });
 
   if (count > 0) {
-    console.info("[AUTH] Purged stale refresh tokens", { count, timestamp: new Date().toISOString() });
+    console.warn("[AUTH] Purged stale refresh tokens", { count, timestamp: new Date().toISOString() });
   }
 
   return count;

@@ -59,11 +59,16 @@ Notes:
 
 ## Security and Auth Baseline
 - Cookie-based JWT auth (access + refresh) with strict cookie flags.
+- Configurable auth cookie flags support same-site deployment by default and future cross-site deployment when explicitly configured.
+- Unsafe API methods are protected by trusted Origin/Referer checks plus signed double-submit CSRF (`XSRF-TOKEN` cookie and `X-XSRF-TOKEN` header).
 - Refresh-token rotation with hash-before-store.
 - Password reset tokens are one-time-use via `passwordResetTokenHash`.
 - Rate limiting is active (`general`, `auth`, `upload` limiters).
-- Upload validation includes MIME gate plus magic-bytes verification.
+- Upload validation includes MIME gate, magic-bytes verification, and image pixel-count limits.
+- Cloudinary uploads are restricted to known image folders.
+- Privileged successful writes are persisted in `AuditLog` with redacted field summaries.
 - Error-handler response avoids leaking internal DB details.
+- Pre-production follow-up: add MFA for admin accounts before any real deployment with live institutional data.
 
 ## Test Standard
 - Integration tests live in `tests/modules/` and mirror module behavior.

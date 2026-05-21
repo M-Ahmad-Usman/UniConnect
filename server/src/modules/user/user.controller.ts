@@ -3,9 +3,18 @@ import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import { ValidationError } from "../../shared/errors/index.js";
 import * as userService from "./user.service.js";
+import { buildAuditContext } from "../audit/audit.service.js";
+
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
 
 export async function handleCreateUser(req: Request, res: Response): Promise<void> {
-  const user = await userService.createUser(req.body);
+  const user = await userService.createUser(req.body, auditContextFromRequest(req));
 
   const response: ApiResponse<typeof user> = {
     success: true,
@@ -21,7 +30,7 @@ export async function handleBulkImport(req: Request, res: Response): Promise<voi
     throw new ValidationError("CSV file is required");
   }
 
-  const result = await userService.bulkImportUsers(req.file.buffer);
+  const result = await userService.bulkImportUsers(req.file.buffer, auditContextFromRequest(req));
 
   const response: ApiResponse<typeof result> = {
     success: true,
@@ -95,7 +104,7 @@ export async function handleGetUserById(req: Request, res: Response): Promise<vo
 }
 
 export async function handleDeactivateUser(req: Request, res: Response): Promise<void> {
-  await userService.deactivateUser(Number(req.params.id), req.user!.id);
+  await userService.deactivateUser(Number(req.params.id), req.user!.id, auditContextFromRequest(req));
 
   const response: ApiResponse<null> = {
     success: true,
@@ -107,7 +116,7 @@ export async function handleDeactivateUser(req: Request, res: Response): Promise
 }
 
 export async function handleReactivateUser(req: Request, res: Response): Promise<void> {
-  await userService.reactivateUser(Number(req.params.id));
+  await userService.reactivateUser(Number(req.params.id), auditContextFromRequest(req));
 
   const response: ApiResponse<null> = {
     success: true,

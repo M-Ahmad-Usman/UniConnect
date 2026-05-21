@@ -191,6 +191,7 @@ model User {
   notificationPreferences NotificationPreference[]
   refreshTokens           RefreshToken[]
   graduatedClasses        Class[] @relation("ClassGraduator")
+  auditLogs               AuditLog[] @relation("AuditActor")
 
   societyMembershipRequests SocietyMembershipRequest[] @relation("MembershipRequester")
   reviewedMembershipRequests SocietyMembershipRequest[] @relation("MembershipReviewer")
@@ -556,6 +557,25 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actorUserId Int?     @map("actor_user_id")
+  action      String   @db.VarChar(100)
+  targetType  String   @map("target_type") @db.VarChar(100)
+  targetId    String?  @map("target_id") @db.VarChar(100)
+  summary     Json?
+  ipAddress   String?  @map("ip_address") @db.VarChar(64)
+  userAgent   String?  @map("user_agent") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id])
+
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
 }
 
 model ProgramCurriculum {

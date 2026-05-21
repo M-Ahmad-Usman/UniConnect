@@ -9,6 +9,11 @@ import type {
 } from '@/types';
 
 export const authApi = {
+  async getCsrf() {
+    const response = await apiClient.get<{ token: string }>('/auth/csrf');
+    return response.data;
+  },
+
   async login(credentials: LoginRequest) {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
     return response.data;

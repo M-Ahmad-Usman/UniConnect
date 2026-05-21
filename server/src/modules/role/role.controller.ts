@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse } from "../../shared/types/index.js";
 import * as roleService from "./role.service.js";
+import { buildAuditContext } from "../audit/audit.service.js";
 
 // ─── Role Handlers ─────────────────────────────────────────────────────────
 
@@ -10,7 +11,11 @@ export async function handleAssignRole(req: Request, res: Response): Promise<voi
     id: req.user!.id,
     userType: req.user!.userType,
     departmentId: req.user!.departmentId,
-  });
+  }, buildAuditContext({
+    actorUserId: req.user!.id,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  }));
 
   const response: ApiResponse<typeof result> = {
     success: true,
@@ -26,7 +31,11 @@ export async function handleRevokeRole(req: Request, res: Response): Promise<voi
     id: req.user!.id,
     userType: req.user!.userType,
     departmentId: req.user!.departmentId,
-  });
+  }, buildAuditContext({
+    actorUserId: req.user!.id,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  }));
 
   const response: ApiResponse<typeof result> = {
     success: true,

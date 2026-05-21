@@ -20,7 +20,7 @@
 | 2 | Academic and Class Management Hardening | Complete | Codex | 2026-05-18 | 2026-05-19 | Backend/frontend implementation, focused unit tests, DB-backed backend tests, Playwright academic flows, and docs complete |
 | 3 | Society Management UX and Access Hardening | Complete | Codex | 2026-05-20 | 2026-05-20 | Backend/frontend implementation, focused Jest/Vitest coverage, Playwright society flows, lint, build, type-check, and docs complete |
 | 4 | Role Management Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | Scoped backend option APIs, lazy frontend role workspace, focused Jest/Vitest coverage, Playwright role flows, lint, build, type-check, and docs complete |
-| 5 | Security Hardening | Not started | TBD |  |  |  |
+| 5 | Security Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | CSRF, audit logs, content/link safety, upload pixel limits, Cloudinary folder allowlist, focused unit/Jest/Playwright verification complete |
 | 6 | UI and Accessibility Hardening | Not started | TBD |  |  |  |
 | 7 | Cross-Cutting Release Readiness | Not started | TBD |  |  |  |
 
@@ -239,47 +239,63 @@
 ## Module 5 Checklist: Security Hardening
 
 ### Implementation
-- [ ] Add configurable cookie/CSRF environment settings.
-- [ ] Add Origin/Referer validation for unsafe methods.
-- [ ] Add CSRF token flow for unsafe methods.
-- [ ] Integrate frontend CSRF handling if required by token design.
-- [ ] Add audit log schema/model.
-- [ ] Log privileged user and role mutations.
-- [ ] Log privileged class, curriculum, course, and society mutations.
+- [x] Add configurable cookie/CSRF environment settings.
+- [x] Add Origin/Referer validation for unsafe methods.
+- [x] Add CSRF token flow for unsafe methods.
+- [x] Integrate frontend CSRF handling if required by token design.
+- [x] Add audit log schema/model.
+- [x] Log privileged user and role mutations.
+- [x] Log privileged class, curriculum, course, and society mutations.
 - [ ] Log auth-sensitive privileged events where appropriate.
-- [ ] Ensure audit logs exclude sensitive values.
-- [ ] Harden rich-content allowed protocols.
-- [ ] Review external-link `rel` behavior.
-- [ ] Review upload dimension/pixel-count limits.
-- [ ] Review Cloudinary resource/folder restrictions.
-- [ ] Replace remaining inappropriate app logging.
-- [ ] Document admin MFA follow-up.
+- [x] Ensure audit logs exclude sensitive values.
+- [x] Harden rich-content allowed protocols.
+- [x] Review external-link `rel` behavior.
+- [x] Review upload dimension/pixel-count limits.
+- [x] Review Cloudinary resource/folder restrictions.
+- [x] Replace remaining inappropriate app logging.
+- [x] Document admin MFA follow-up.
 
 ### Tests
-- [ ] Backend tests for CSRF rejection.
-- [ ] Backend tests for valid CSRF/origin success.
-- [ ] Backend tests for test environment behavior.
-- [ ] Backend tests for audit log creation.
-- [ ] Backend tests that audit logs exclude secrets/tokens/passwords.
-- [ ] Frontend tests for CSRF client behavior if needed.
-- [ ] Frontend tests for rich-content sanitization.
-- [ ] Playwright unsafe mutation with CSRF enabled.
-- [ ] Playwright missing/stale CSRF recovery path.
+- [x] Backend tests for CSRF rejection.
+- [x] Backend tests for valid CSRF/origin success.
+- [x] Backend tests for test environment behavior.
+- [x] Backend tests for audit log creation.
+- [x] Backend tests that audit logs exclude secrets/tokens/passwords.
+- [x] Frontend tests for CSRF client behavior if needed.
+- [x] Frontend tests for rich-content sanitization.
+- [x] Playwright unsafe mutation with CSRF enabled.
+- [x] Playwright missing/stale CSRF recovery path.
 
 ### Documentation
-- [ ] Update `server/API_DEVELOPMENT_PLAN.md`.
-- [ ] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
-- [ ] Update `server/docs/API_ERROR_CODES.md` if new codes are added.
-- [ ] Update `docs/schema.md`.
-- [ ] Update `.env.example` if new env vars are added.
-- [ ] Update `server/PROGRESS.md`.
-- [ ] Update `client/PROGRESS.md`.
+- [x] Update `server/API_DEVELOPMENT_PLAN.md`.
+- [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
+- [x] Update `server/docs/API_ERROR_CODES.md` if new codes are added.
+- [x] Update `docs/schema.md`.
+- [x] Update `.env.example` if new env vars are added.
+- [x] Update `server/PROGRESS.md`.
+- [x] Update `client/PROGRESS.md`.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd server && npx prisma generate`
+  - `cd server && timeout 120 npm run build`
+  - `cd server && timeout 120 npm test -- tests/modules/security.test.ts`
+  - `cd server && timeout 120 npm test -- tests/modules/user.test.ts tests/modules/role.test.ts`
+  - `cd client && timeout 120 npm run test -- src/features/posts/__tests__/utils.test.ts`
+  - `cd client && timeout 120 npm run test -- src/api/__tests__/client.test.ts src/features/posts/__tests__/utils.test.ts`
+  - `cd client && timeout 120 npm run type-check`
+  - `cd client && timeout 120 npm run lint`
+  - `cd client && timeout 300 npx playwright test e2e/module5-security.spec.ts`
+  - `cd client && timeout 300 npx playwright test e2e/auth-flows.spec.ts`
 - Result:
-  - Not verified.
+  - Backend build passes.
+  - Focused security Jest suite passes, 4/4, with CSRF enabled inside tests.
+  - Focused user/role regression suites pass, 73/73.
+  - Frontend API CSRF client and post sanitizer Vitest coverage passes, 20/20.
+  - Frontend type-check and lint pass.
+  - Module 5 Playwright security flows pass, 2/2, covering normal unsafe mutation and stale CSRF recovery.
+  - Auth Playwright regression passes, 4/4, after enabling CSRF in the E2E backend.
+  - Local `npm run db:migrate:test` reported Prisma `P3005` because the existing test DB was non-empty and unbaselined; `prisma db push` was used only to sync the isolated local test DB for verification.
 
 ## Module 6 Checklist: UI and Accessibility Hardening
 

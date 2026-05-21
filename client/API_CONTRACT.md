@@ -97,6 +97,7 @@ The backend uses **httpOnly cookies** for authentication. Frontend **never handl
 |-------------|------|---------|----------|
 | `access_token` | `/api` | API authentication | 15 minutes (default) |
 | `refresh_token` | `/api/auth/refresh` | Token refresh | 7 days (default) |
+| `XSRF-TOKEN` | `/` | CSRF header source | Browser session |
 
 #### Frontend Requirements
 - **Every request must include credentials:**
@@ -112,8 +113,14 @@ The backend uses **httpOnly cookies** for authentication. Frontend **never handl
   - Dev: `http://localhost:5173` (Vite default)
   - Prod: not needed for same-origin deployment; otherwise configure via `CORS_ORIGIN` and review cookie policy
 
+- **Unsafe requests must send CSRF protection:**
+  - Fetch `GET /api/auth/csrf` before the first unsafe request.
+  - Echo the `XSRF-TOKEN` cookie as `X-XSRF-TOKEN`.
+  - On `CSRF_INVALID`, refetch once and retry the original request.
+
 #### Public Endpoints (No Auth Required)
 - `GET /api/health`
+- `GET /api/auth/csrf`
 - `POST /api/auth/login`
 - `POST /api/auth/forgot-password`
 - `POST /api/auth/reset-password`

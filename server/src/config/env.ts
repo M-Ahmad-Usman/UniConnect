@@ -1,5 +1,32 @@
 import { z } from "zod";
 
+function parseBooleanLike(value: unknown): boolean | unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  if (value.toLowerCase() === "true") {
+    return true;
+  }
+
+  if (value.toLowerCase() === "false") {
+    return false;
+  }
+
+  return value;
+}
+
+function parseStringList(value: string | string[]): string[] {
+  return Array.isArray(value)
+    ? value
+    : value
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+}
+
+const defaultCsrfEnabled = process.env.NODE_ENV === "test" ? "false" : "true";
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -33,6 +60,27 @@ const envSchema = z.object({
     .transform((val) =>
       val.includes(",") ? val.split(",").map((s) => s.trim()) : val
     ),
+
+  CSRF_ENABLED: z.preprocess(
+    parseBooleanLike,
+    z.boolean().default(defaultCsrfEnabled === "true")
+  ),
+  CSRF_SECRET: z.string().min(32, { error: "CSRF_SECRET must be at least 32 characters" }).default("development-csrf-secret-at-least-32-chars"),
+  CSRF_TRUSTED_ORIGINS: z.string().optional(),
+
+  AUTH_COOKIE_SAME_SITE: z
+    .enum(["strict", "lax", "none"])
+    .default("strict"),
+  AUTH_COOKIE_SECURE: z
+    .enum(["auto", "true", "false"])
+    .default("auto")
+    .transform((value) => {
+      if (value === "auto") {
+        return process.env.NODE_ENV === "production";
+      }
+
+      return value === "true";
+    }),
 });
 
 function validateEnv() {
@@ -47,9 +95,27 @@ function validateEnv() {
     process.exit(1);
   }
 
+  if (
+    result.data.NODE_ENV === "production" &&
+    result.data.CSRF_ENABLED &&
+    !process.env.CSRF_SECRET
+  ) {
+    console.error("❌ Environment validation failed:\n  - CSRF_SECRET: CSRF_SECRET is required when CSRF is enabled in production");
+    process.exit(1);
+  }
+
+  if (result.data.AUTH_COOKIE_SAME_SITE === "none" && !result.data.AUTH_COOKIE_SECURE) {
+    console.error("❌ Environment validation failed:\n  - AUTH_COOKIE_SECURE: SameSite=None cookies require AUTH_COOKIE_SECURE=true or production auto mode");
+    process.exit(1);
+  }
+
   return result.data;
 }
 
 export const env = validateEnv();
+
+export const csrfTrustedOrigins = env.CSRF_TRUSTED_ORIGINS
+  ? parseStringList(env.CSRF_TRUSTED_ORIGINS)
+  : parseStringList(env.CORS_ORIGIN);
 
 export type Env = z.infer<typeof envSchema>;

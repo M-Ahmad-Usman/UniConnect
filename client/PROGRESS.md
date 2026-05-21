@@ -9,6 +9,13 @@
 
 ## Overview
 
+### 2026-05-21 - Hardening Module 5 Security Implemented
+- ✅ Added frontend CSRF bootstrap, `X-XSRF-TOKEN` attachment, and one-time stale-token retry in the shared API client.
+- ✅ Hardened post HTML sanitization to allow only `http`, `https`, and `mailto` links and normalize blank-target links to `noopener noreferrer`.
+- ✅ Updated attachment external-link rel behavior.
+- ✅ Added focused API client CSRF unit coverage and Module 5 Playwright CSRF browser coverage.
+- ✅ Verified focused API/post tests, type-check, lint, Module 5 Playwright, and auth-flow Playwright regression.
+
 ### 2026-05-21 - Hardening Module 4 Role Management Completed
 - ✅ Replaced broad role-management frontend loading with backend-scoped assignable role, scope, channel, user, and revokable-assignment queries.
 - ✅ Added clean unavailable state for users without role-management actions.

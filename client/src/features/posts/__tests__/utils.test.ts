@@ -13,6 +13,7 @@ import {
   parseSearchParam,
   removePostFromInfiniteData,
   replacePostInInfiniteData,
+  sanitizePostHtml,
   toQueryParamsRecord,
   upsertPostInInfiniteData,
   validatePostAttachments,
@@ -81,6 +82,25 @@ describe('getPlainTextPreview', () => {
   it('strips markup and truncates long previews', () => {
     expect(getPlainTextPreview('<p>Hello <strong>class</strong></p>', 20)).toBe('Hello class');
     expect(getPlainTextPreview(`<p>${'a'.repeat(30)}</p>`, 10)).toBe('aaaaaaaaaa...');
+  });
+});
+
+describe('sanitizePostHtml', () => {
+  it('removes unsafe link protocols and event handlers', () => {
+    const html = sanitizePostHtml(
+      '<p><a href="javascript:alert(1)" onclick="alert(1)">Bad</a><a href="https://ntu.edu.pk">Good</a></p>',
+    );
+
+    expect(html).not.toContain('javascript:');
+    expect(html).not.toContain('onclick');
+    expect(html).toContain('href="https://ntu.edu.pk"');
+  });
+
+  it('normalizes blank-target links to noopener noreferrer', () => {
+    const html = sanitizePostHtml('<a href="mailto:test@example.com" target="_blank" rel="opener">Email</a>');
+
+    expect(html).toContain('href="mailto:test@example.com"');
+    expect(html).toContain('rel="noopener noreferrer"');
   });
 });
 

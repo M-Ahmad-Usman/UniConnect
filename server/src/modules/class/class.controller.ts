@@ -2,6 +2,15 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as classService from "./class.service.js";
+import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
+
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
 
 // ─── Class Handlers ────────────────────────────────────────────────────────
 
@@ -10,6 +19,20 @@ export async function handleCreateClass(req: Request, res: Response): Promise<vo
     req.body,
     req.user!.id,
     req.user!.userType
+  );
+  await recordAuditLog(
+    {
+      action: "class.create",
+      targetType: "class",
+      targetId: classRecord.id,
+      summary: {
+        programId: classRecord.program.id,
+        currentSemester: classRecord.currentSemester,
+        section: classRecord.section,
+        admissionYear: classRecord.admissionYear,
+      },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<typeof classRecord> = {
@@ -65,6 +88,15 @@ export async function handleAssignCourse(req: Request, res: Response): Promise<v
     req.user!.id,
     req.user!.userType
   );
+  await recordAuditLog(
+    {
+      action: "class.course.assign",
+      targetType: "class",
+      targetId: req.params.id,
+      summary: { courseId: req.body.courseId, teacherId: req.body.teacherId },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof assignment> = {
     success: true,
@@ -94,6 +126,15 @@ export async function handleReplaceCourseTeacher(req: Request, res: Response): P
     req.user!.id,
     req.user!.userType
   );
+  await recordAuditLog(
+    {
+      action: "class.course.teacher.replace",
+      targetType: "class",
+      targetId: req.params.id,
+      summary: { courseId: req.params.courseId, teacherId: req.body.teacherId },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof assignment> = {
     success: true,
@@ -110,6 +151,15 @@ export async function handleRemoveCourse(req: Request, res: Response): Promise<v
     Number(req.params.courseId),
     req.user!.id,
     req.user!.userType
+  );
+  await recordAuditLog(
+    {
+      action: "class.course.remove",
+      targetType: "class",
+      targetId: req.params.id,
+      summary: { courseId: req.params.courseId },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<null> = {
@@ -129,6 +179,15 @@ export async function handleAdvanceSemester(req: Request, res: Response): Promis
     req.body,
     req.user!.id,
     req.user!.userType
+  );
+  await recordAuditLog(
+    {
+      action: "class.semester.advance",
+      targetType: "class",
+      targetId: req.params.id,
+      summary: { nextSemester: result.currentSemester },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<typeof result> = {
@@ -191,6 +250,15 @@ export async function handleTransferStudent(req: Request, res: Response): Promis
     req.user!.id,
     req.user!.userType
   );
+  await recordAuditLog(
+    {
+      action: "class.student.transfer",
+      targetType: "class",
+      targetId: req.params.id,
+      summary: { studentId: req.body.studentId },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof student> = {
     success: true,
@@ -228,6 +296,15 @@ export async function handleGraduateClass(req: Request, res: Response): Promise<
     Number(req.params.id),
     req.user!.id,
     req.user!.userType
+  );
+  await recordAuditLog(
+    {
+      action: "class.graduate",
+      targetType: "class",
+      targetId: req.params.id,
+      summary: { status: result.status, graduatedAt: result.graduatedAt ?? null },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<typeof result> = {

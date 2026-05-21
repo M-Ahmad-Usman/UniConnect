@@ -30,9 +30,16 @@ test.describe('authentication flows', () => {
     await expect(page).toHaveURL(/\/servers$/);
 
     const response = await page.evaluate(async () => {
+      const csrfResponse = await fetch('/api/auth/csrf', {
+        credentials: 'include',
+      });
+      const csrfPayload = await csrfResponse.json();
       const result = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'X-XSRF-TOKEN': csrfPayload.data.token,
+        },
       });
 
       return {

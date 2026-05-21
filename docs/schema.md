@@ -420,6 +420,24 @@ REFRESH_TOKEN {
 
 REFRESH_TOKEN.user_id > USER.id
 
+AUDIT_LOG {
+  id SERIAL PK
+  actor_user_id INTEGER FK
+  action VARCHAR(100) // NOT NULL
+  target_type VARCHAR(100) // NOT NULL
+  target_id VARCHAR(100)
+  summary JSONB // redacted safe field summary only
+  ip_address VARCHAR(64)
+  user_agent VARCHAR(500)
+  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+
+  // INDEX(actor_user_id, created_at)
+  // INDEX(target_type, target_id, created_at)
+  // INDEX(action, created_at)
+}
+
+AUDIT_LOG.actor_user_id > USER.id
+
 PROGRAM_CURRICULUM {
   id SERIAL PK
   program_id INTEGER FK  // NOT NULL

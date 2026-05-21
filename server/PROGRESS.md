@@ -25,6 +25,13 @@
 - Removed society president/convenor changes from generic role assignment; society leadership remains managed through society endpoints.
 - Verified backend build and focused role integration tests, now 47/47 passing.
 
+## Hardening Update (2026-05-21, Module 5)
+- Implemented configurable signed double-submit CSRF protection with trusted Origin/Referer checks and `/api/auth/csrf`.
+- Added persistent `AuditLog` schema/model and privileged-write audit coverage for users, roles, classes/curriculum/courses/catalog, societies, and channels.
+- Hardened uploads with 12MP image limits and Cloudinary folder allowlisting.
+- Tightened app logging to prefixed warn/error calls for runtime paths.
+- Verified backend build, focused Module 5 security tests, and focused user/role regression tests.
+
 ## Verification Snapshot (2026-05-18)
 - Verified `timeout 120 npm test -- tests/modules/permission.test.ts`.
 - Verified `timeout 120 npm test -- tests/modules/class.test.ts tests/modules/society.test.ts tests/modules/role.test.ts tests/modules/user.test.ts`.
@@ -73,6 +80,8 @@ Details: `HARDENING_PLAN.md`, `HARDENING_LOG.md`
 - Society join request approval/rejection notifications with `SOCIETY_REQUEST_REVIEWED`
 - Society membership status, university-wide member-candidate, and department-scoped leadership-candidate endpoints for role-based frontend workflows
 - Scoped role-management option endpoints: `/api/roles/assignable`, `/assignable-scopes`, `/assignable-channels`, `/assignable-users`, and `/revokable`
+- CSRF bootstrap endpoint: `/api/auth/csrf`
+- Persistent `AuditLog` records for successful privileged writes
 - `auth:roles-updated` socket event for affected users after role changes
 - Notification payload priority metadata for urgent frontend toasts
 - `passwordResetTokenHash` one-time token enforcement

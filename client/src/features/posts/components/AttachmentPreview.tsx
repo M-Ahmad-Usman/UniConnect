@@ -72,7 +72,7 @@ export function AttachmentPreview({ attachments }: AttachmentPreviewProps) {
               <a
                 href={selectedAttachment.fileUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className={cn(buttonVariants({ variant: 'outline' }))}
               >
                 <ExternalLink className="size-4" />

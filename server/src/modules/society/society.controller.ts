@@ -2,6 +2,15 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as societyService from "./society.service.js";
+import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
+
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
 
 // ─── Society Handlers ──────────────────────────────────────────────────────
 
@@ -10,6 +19,20 @@ export async function handleCreateSociety(req: Request, res: Response): Promise<
     id: req.user!.id,
     userType: req.user!.userType,
   });
+  await recordAuditLog(
+    {
+      action: "society.create",
+      targetType: "society",
+      targetId: society.id,
+      summary: {
+        name: society.name,
+        departmentId: society.department.id,
+        presidentId: req.body.presidentId,
+        convenorId: req.body.convenorId,
+      },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof society> = {
     success: true,
@@ -53,6 +76,17 @@ export async function handleUpdateSociety(req: Request, res: Response): Promise<
     id: req.user!.id,
     userType: req.user!.userType,
   });
+  await recordAuditLog(
+    {
+      action: "society.update",
+      targetType: "society",
+      targetId: req.params.id,
+      summary: {
+        changedFields: Object.keys(req.body as Record<string, unknown>),
+      },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof society> = {
     success: true,
@@ -106,6 +140,15 @@ export async function handleReviewJoinRequest(req: Request, res: Response): Prom
     req.body.status,
     { id: req.user!.id, userType: req.user!.userType }
   );
+  await recordAuditLog(
+    {
+      action: "society.join_request.review",
+      targetType: "society",
+      targetId: req.params.id,
+      summary: { requestId: req.params.requestId, status: req.body.status },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof result> = {
     success: true,
@@ -122,6 +165,15 @@ export async function handleAddMember(req: Request, res: Response): Promise<void
     req.body.userId,
     { id: req.user!.id, userType: req.user!.userType }
   );
+  await recordAuditLog(
+    {
+      action: "society.member.add",
+      targetType: "society",
+      targetId: req.params.id,
+      summary: { userId: req.body.userId },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof member> = {
     success: true,
@@ -137,6 +189,15 @@ export async function handleRemoveMember(req: Request, res: Response): Promise<v
     Number(req.params.id),
     Number(req.params.userId),
     { id: req.user!.id, userType: req.user!.userType }
+  );
+  await recordAuditLog(
+    {
+      action: "society.member.remove",
+      targetType: "society",
+      targetId: req.params.id,
+      summary: { userId: req.params.userId },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<null> = {

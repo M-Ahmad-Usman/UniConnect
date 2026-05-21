@@ -16,6 +16,8 @@ import { buildPaginationResponse, parsePagination } from "../../shared/utils/pag
 import type { AuthUser, PaginatedResponse } from "../../shared/types/index.js";
 import { getUserRoles } from "../../middleware/authorize.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
+import type { AuditContext } from "../audit/audit.service.js";
+import { recordAuditLog } from "../audit/audit.service.js";
 import { createUserBodySchema } from "./user.schema.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -153,7 +155,7 @@ async function parseCsvBuffer(fileBuffer: Buffer): Promise<Record<string, string
 
 // ─── Create User ───────────────────────────────────────────────────────────
 
-export async function createUser(input: CreateUserInput) {
+export async function createUser(input: CreateUserInput, auditContext?: AuditContext) {
   const existingUser = await prisma.user.findUnique({
     where: { email: input.email },
     select: { id: true },
@@ -263,6 +265,25 @@ export async function createUser(input: CreateUserInput) {
       });
     }
 
+    if (auditContext) {
+      await recordAuditLog(
+        {
+          action: "user.create",
+          targetType: "user",
+          targetId: user.id,
+          summary: {
+            fullName: user.fullName,
+            email: user.email,
+            userType: user.userType,
+            departmentId: user.departmentId,
+            classId: input.classId ?? null,
+          },
+        },
+        auditContext,
+        tx
+      );
+    }
+
     return user;
   });
 
@@ -280,7 +301,10 @@ export async function createUser(input: CreateUserInput) {
 
 // ─── Bulk Import ───────────────────────────────────────────────────────────
 
-export async function bulkImportUsers(fileBuffer: Buffer): Promise<BulkImportResult> {
+export async function bulkImportUsers(
+  fileBuffer: Buffer,
+  auditContext?: AuditContext
+): Promise<BulkImportResult> {
   const rows = await parseCsvBuffer(fileBuffer);
 
   const errors: BulkImportError[] = [];
@@ -309,7 +333,7 @@ export async function bulkImportUsers(fileBuffer: Buffer): Promise<BulkImportRes
     const batch = validRows.slice(i, i + BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map((row) =>
-        createUser(row.data).then(
+        createUser(row.data, auditContext).then(
           () => ({ rowNumber: row.rowNumber, ok: true as const }),
           (error: unknown) => ({ rowNumber: row.rowNumber, ok: false as const, error }),
         ),
@@ -580,7 +604,11 @@ export async function getUserById(userId: number, requestingUser: AuthUser) {
 
 // ─── Account Activation State ──────────────────────────────────────────────
 
-export async function deactivateUser(targetUserId: number, requestingUserId: number) {
+export async function deactivateUser(
+  targetUserId: number,
+  requestingUserId: number,
+  auditContext?: AuditContext
+) {
   if (targetUserId === requestingUserId) {
     throw new ForbiddenError("You cannot deactivate your own account");
   }
@@ -598,21 +626,34 @@ export async function deactivateUser(targetUserId: number, requestingUserId: num
     throw new ConflictError("User is already deactivated");
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
       where: { id: targetUserId },
       data: { isActive: false },
-    }),
-    prisma.refreshToken.updateMany({
+    });
+    await tx.refreshToken.updateMany({
       where: { userId: targetUserId, revokedAt: null },
       data: { revokedAt: new Date() },
-    }),
-  ]);
+    });
+
+    if (auditContext) {
+      await recordAuditLog(
+        {
+          action: "user.deactivate",
+          targetType: "user",
+          targetId: targetUserId,
+          summary: { isActive: { before: true, after: false } },
+        },
+        auditContext,
+        tx
+      );
+    }
+  });
 
   invalidateSystemStatsCache();
 }
 
-export async function reactivateUser(targetUserId: number) {
+export async function reactivateUser(targetUserId: number, auditContext?: AuditContext) {
   const user = await prisma.user.findUnique({
     where: { id: targetUserId },
     select: { id: true, isActive: true },
@@ -626,9 +667,24 @@ export async function reactivateUser(targetUserId: number) {
     throw new ConflictError("User is already active");
   }
 
-  await prisma.user.update({
-    where: { id: targetUserId },
-    data: { isActive: true },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: targetUserId },
+      data: { isActive: true },
+    });
+
+    if (auditContext) {
+      await recordAuditLog(
+        {
+          action: "user.reactivate",
+          targetType: "user",
+          targetId: targetUserId,
+          summary: { isActive: { before: false, after: true } },
+        },
+        auditContext,
+        tx
+      );
+    }
   });
 
   invalidateSystemStatsCache();

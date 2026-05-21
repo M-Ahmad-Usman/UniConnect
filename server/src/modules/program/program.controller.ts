@@ -2,6 +2,15 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as programService from "./program.service.js";
+import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
+
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
 
 export async function handleListPrograms(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
@@ -36,6 +45,15 @@ export async function handleGetProgramById(req: Request, res: Response): Promise
 
 export async function handleUpdateProgram(req: Request, res: Response): Promise<void> {
   const program = await programService.updateProgram(Number(req.params.id), req.body);
+  await recordAuditLog(
+    {
+      action: "program.update",
+      targetType: "program",
+      targetId: req.params.id,
+      summary: { changedFields: Object.keys(req.body as Record<string, unknown>) },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof program> = {
     success: true,
@@ -70,6 +88,20 @@ export async function handleAddCurriculum(req: Request, res: Response): Promise<
     Number(req.params.id),
     req.body
   );
+  await recordAuditLog(
+    {
+      action: "curriculum.add",
+      targetType: "program",
+      targetId: req.params.id,
+      summary: {
+        curriculumId: entry.id,
+        courseId: req.body.courseId,
+        semesterNumber: req.body.semesterNumber,
+        batchYear: req.body.batchYear,
+      },
+    },
+    auditContextFromRequest(req)
+  );
 
   const response: ApiResponse<typeof entry> = {
     success: true,
@@ -86,6 +118,15 @@ export async function handleRemoveCurriculum(req: Request, res: Response): Promi
     req.user!.userType,
     Number(req.params.id),
     Number(req.params.curriculumId)
+  );
+  await recordAuditLog(
+    {
+      action: "curriculum.remove",
+      targetType: "program",
+      targetId: req.params.id,
+      summary: { curriculumId: req.params.curriculumId },
+    },
+    auditContextFromRequest(req)
   );
 
   const response: ApiResponse<null> = {

@@ -9,6 +9,8 @@ import {
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import * as notificationService from "../notification/notification.service.js";
 import { emitToUser } from "../../socket/index.js";
+import type { AuditContext } from "../audit/audit.service.js";
+import { recordAuditLog } from "../audit/audit.service.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -1306,27 +1308,37 @@ async function assertCallerCanAssignModerator(
 
 // ─── Assign Role ───────────────────────────────────────────────────────────
 
-export async function assignRole(input: AssignRoleInput, caller: CallerInfo) {
+export async function assignRole(
+  input: AssignRoleInput,
+  caller: CallerInfo,
+  auditContext?: AuditContext
+) {
   const targetUser = await findActiveUserOrThrow(input.userId);
+
+  let result:
+    | Awaited<ReturnType<typeof assignHOD>>
+    | Awaited<ReturnType<typeof assignProgramDirector>>
+    | Awaited<ReturnType<typeof assignCR>>
+    | Awaited<ReturnType<typeof assignModerator>>;
 
   switch (input.role) {
     case "hod": {
-      const result = await assignHOD(input.scopeId!, targetUser, caller);
+      result = await assignHOD(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
       emitRolesUpdated(result.userId);
-      return result;
+      break;
     }
     case "program_director": {
-      const result = await assignProgramDirector(input.scopeId!, targetUser, caller);
+      result = await assignProgramDirector(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
       emitRolesUpdated(result.userId);
-      return result;
+      break;
     }
     case "cr": {
-      const result = await assignCR(input.scopeId!, targetUser, caller);
+      result = await assignCR(input.scopeId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
       emitRolesUpdated(result.userId);
-      return result;
+      break;
     }
     case "society_president": {
       throw new ValidationError(
@@ -1339,20 +1351,39 @@ export async function assignRole(input: AssignRoleInput, caller: CallerInfo) {
       );
     }
     case "server_moderator": {
-      const result = await assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
+      result = await assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId);
       emitRolesUpdated(result.userId);
-      return result;
+      break;
     }
     case "channel_moderator": {
-      const result = await assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
+      result = await assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
       await notifyRoleAssigned(result.userId, result.role, result.serverId, result.channelId);
       emitRolesUpdated(result.userId);
-      return result;
+      break;
     }
     default:
       throw new ValidationError("Unknown role");
   }
+
+  if (auditContext) {
+    await recordAuditLog(
+      {
+        action: "role.assign",
+        targetType: "role",
+        targetId: result.userId,
+        summary: {
+          role: result.role,
+          scopeId: input.scopeId ?? null,
+          serverId: "serverId" in result ? result.serverId : null,
+          channelId: "channelId" in result ? result.channelId : null,
+        },
+      },
+      auditContext
+    );
+  }
+
+  return result;
 }
 
 async function assignHOD(
@@ -1560,7 +1591,11 @@ async function assignModerator(
 
 // ─── Revoke Role ───────────────────────────────────────────────────────────
 
-export async function revokeRole(input: RevokeRoleInput, caller: CallerInfo) {
+export async function revokeRole(
+  input: RevokeRoleInput,
+  caller: CallerInfo,
+  auditContext?: AuditContext
+) {
   const result = await (async () => {
     switch (input.role) {
     case "hod":
@@ -1579,6 +1614,22 @@ export async function revokeRole(input: RevokeRoleInput, caller: CallerInfo) {
   })();
 
   emitRolesUpdated(input.userId);
+  if (auditContext) {
+    await recordAuditLog(
+      {
+        action: "role.revoke",
+        targetType: "role",
+        targetId: input.userId,
+        summary: {
+          role: result.role,
+          scopeId: input.scopeId ?? null,
+          serverId: "serverId" in result ? result.serverId : null,
+          channelId: "channelId" in result ? result.channelId : null,
+        },
+      },
+      auditContext
+    );
+  }
   return result;
 }
 

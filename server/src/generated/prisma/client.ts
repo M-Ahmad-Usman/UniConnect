@@ -162,6 +162,11 @@ export type NotificationPreference = Prisma.NotificationPreferenceModel
  */
 export type RefreshToken = Prisma.RefreshTokenModel
 /**
+ * Model AuditLog
+ * 
+ */
+export type AuditLog = Prisma.AuditLogModel
+/**
  * Model ProgramCurriculum
  * 
  */
