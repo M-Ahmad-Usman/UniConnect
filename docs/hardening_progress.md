@@ -18,7 +18,7 @@
 |---|---|---|---|---|---|---|
 | 1 | Permission Policy Foundation | Complete | Codex | 2026-05-18 | 2026-05-18 | Focused permission tests, regression slices, build, and type-check pass |
 | 2 | Academic and Class Management Hardening | Complete | Codex | 2026-05-18 | 2026-05-19 | Backend/frontend implementation, focused unit tests, DB-backed backend tests, Playwright academic flows, and docs complete |
-| 3 | Society Management UX and Access Hardening | Not started | TBD |  |  |  |
+| 3 | Society Management UX and Access Hardening | Complete | Codex | 2026-05-20 | 2026-05-20 | Backend/frontend implementation, focused Jest/Vitest coverage, Playwright society flows, lint, build, type-check, and docs complete |
 | 4 | Role Management Hardening | Not started | TBD |  |  |  |
 | 5 | Security Hardening | Not started | TBD |  |  |  |
 | 6 | UI and Accessibility Hardening | Not started | TBD |  |  |  |
@@ -140,40 +140,50 @@
 ## Module 3 Checklist: Society Management UX and Access Hardening
 
 ### Implementation
-- [ ] Gate society member query by membership/admin status.
-- [ ] Gate society join-request query by management permission.
-- [ ] Gate society member-candidate query by management permission.
-- [ ] Hide unavailable society tabs before unauthorized queries run.
-- [ ] Add clean unavailable states for non-members.
-- [ ] Keep member privacy restricted to members/leaders/admins.
-- [ ] Scope HOD society creation choices to own department where applicable.
-- [ ] Review society create/edit candidate lookup strategy.
+- [x] Gate society member query by membership/admin status.
+- [x] Gate society join-request query by management permission.
+- [x] Gate society member-candidate query by management permission.
+- [x] Hide unavailable society tabs before unauthorized queries run.
+- [x] Add clean unavailable states for non-members.
+- [x] Keep member privacy restricted to members/leaders/admins.
+- [x] Scope HOD society creation choices to own department where applicable.
+- [x] Review society create/edit candidate lookup strategy.
 
 ### Tests
-- [ ] Backend tests for non-member member-list denial.
-- [ ] Backend tests for member member-list access.
-- [ ] Backend tests for president/convenor request and member management.
-- [ ] Backend tests for HOD leadership change.
-- [ ] Frontend tests that non-members do not call members/requests/candidates hooks.
-- [ ] Frontend tests that members call members only.
-- [ ] Frontend tests that leaders/admins can load management data.
-- [ ] Frontend tests for unavailable tab fallback.
-- [ ] Playwright non-member society overview without 403 UI.
-- [ ] Playwright student join request flow.
-- [ ] Playwright president/convenor request approval flow.
+- [x] Backend tests for non-member member-list denial.
+- [x] Backend tests for member member-list access.
+- [x] Backend tests for president/convenor request and member management.
+- [x] Backend tests for HOD leadership change.
+- [x] Frontend tests that non-members do not call members/requests/candidates hooks.
+- [x] Frontend tests that members call members only.
+- [x] Frontend tests that leaders/admins can load management data.
+- [x] Frontend tests for unavailable tab fallback.
+- [x] Playwright non-member society overview without 403 UI.
+- [x] Playwright student join request flow.
+- [x] Playwright president/convenor request approval flow.
 
 ### Documentation
-- [ ] Update `client/API_CONTRACT.md`.
-- [ ] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
-- [ ] Update `client/ARCHITECTURE.md`.
-- [ ] Update `client/PROGRESS.md`.
-- [ ] Update `server/PROGRESS.md`.
+- [x] Update `client/API_CONTRACT.md`.
+- [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
+- [x] Update `client/ARCHITECTURE.md`.
+- [x] Update `client/PROGRESS.md`.
+- [x] Update `server/PROGRESS.md`.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd server && timeout 120 npm run build`
+  - `cd server && timeout 120 npm test -- tests/modules/society.test.ts`
+  - `cd client && timeout 120 npm run test -- src/features/societies/__tests__/utils.test.ts src/lib/__tests__/socket.test.ts`
+  - `cd client && timeout 120 npm run type-check`
+  - `cd client && timeout 120 npm run lint`
+  - `cd client && timeout 300 npx playwright test e2e/module3-societies.spec.ts`
 - Result:
-  - Not verified.
+  - Backend build passes.
+  - Focused society Jest suite passes, 57/57.
+  - Frontend society/socket Vitest coverage passes, 5/5.
+  - Frontend type-check and lint pass.
+  - Module 3 Playwright society hardening flows pass for unrelated teacher overview, student join request, and president approval/member-list update.
+  - DB-backed Jest and Playwright commands require local PostgreSQL/server access outside the filesystem sandbox.
 
 ## Module 4 Checklist: Role Management Hardening
 

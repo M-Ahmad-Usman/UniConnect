@@ -4,6 +4,7 @@ import type {
   PaginatedResponse,
   SocietyCandidateParams,
   SocietyDetail,
+  SocietyLeadershipCandidateParams,
   SocietyListItem,
   SocietyListParams,
   SocietyMember,
@@ -82,6 +83,14 @@ export const societiesApi = {
   async listMemberCandidates(societyId: number, params: SocietyCandidateParams = {}) {
     const response = await apiClient.get<PaginatedResponse<UserSummary>>(
       `/societies/${societyId}/member-candidates`,
+      { params },
+    );
+    return response.data;
+  },
+
+  async listLeadershipCandidates(params: SocietyLeadershipCandidateParams) {
+    const response = await apiClient.get<PaginatedResponse<UserSummary>>(
+      '/societies/leadership-candidates',
       { params },
     );
     return response.data;

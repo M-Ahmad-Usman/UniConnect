@@ -251,6 +251,224 @@ async function seedModule3Data(pool: Pool) {
   );
 }
 
+async function seedSocietyHardeningData(pool: Pool) {
+  const presidentId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyPresident.email);
+  const convenorId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyConvenor.email);
+  const memberId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyMember.email);
+  const applicantId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyApplicant.email);
+  const outsiderTeacherId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleSocietyOutsiderTeacher.email,
+  );
+
+  if (!presidentId || !convenorId || !memberId || !applicantId || !outsiderTeacherId) {
+    throw new Error('Society hardening E2E users were not created before seeding data.');
+  }
+
+  const departmentServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Department'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['E2E Society Department', 'Department fixture for society hardening.', convenorId],
+  );
+  const departmentServerId = departmentServer.rows[0]?.id;
+
+  const societyServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Society'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['E2E Robotics Society', 'Society fixture for access hardening.', convenorId],
+  );
+  const societyServerId = societyServer.rows[0]?.id;
+
+  const outsiderServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Department'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['E2E Other Society Department', 'Other department fixture.', outsiderTeacherId],
+  );
+  const outsiderServerId = outsiderServer.rows[0]?.id;
+
+  if (!departmentServerId || !societyServerId || !outsiderServerId) {
+    throw new Error('Society hardening E2E servers could not be created.');
+  }
+
+  const department = await pool.query<{ id: number }>(
+    `
+      INSERT INTO departments (name, code, server_id)
+      VALUES ($1, $2, $3)
+      RETURNING id
+    `,
+    ['E2E Society Department', 'E2E-SOC', departmentServerId],
+  );
+  const departmentId = department.rows[0]?.id;
+  const outsiderDepartment = await pool.query<{ id: number }>(
+    `
+      INSERT INTO departments (name, code, server_id)
+      VALUES ($1, $2, $3)
+      RETURNING id
+    `,
+    ['E2E Other Society Department', 'E2E-OSOC', outsiderServerId],
+  );
+  const outsiderDepartmentId = outsiderDepartment.rows[0]?.id;
+
+  if (!departmentId || !outsiderDepartmentId) {
+    throw new Error('Society hardening E2E departments could not be created.');
+  }
+
+  const degree = await pool.query<{ id: number }>(
+    'INSERT INTO degree_levels (level) VALUES ($1) RETURNING id',
+    ['BS-SOC-E2E'],
+  );
+  const discipline = await pool.query<{ id: number }>(
+    'INSERT INTO disciplines (name) VALUES ($1) RETURNING id',
+    ['Society E2E Discipline'],
+  );
+  const degreeId = degree.rows[0]?.id;
+  const disciplineId = discipline.rows[0]?.id;
+
+  if (!degreeId || !disciplineId) {
+    throw new Error('Society hardening E2E catalog records could not be created.');
+  }
+
+  const program = await pool.query<{ id: number }>(
+    `
+      INSERT INTO programs (department_id, discipline_id, degree_level_id, semesters, code)
+      VALUES ($1, $2, $3, 8, $4)
+      RETURNING id
+    `,
+    [departmentId, disciplineId, degreeId, 'SOC-E2E'],
+  );
+  const programId = program.rows[0]?.id;
+  const classServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Class'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['E2E Society Class', 'Class fixture for society students.', convenorId],
+  );
+  const classServerId = classServer.rows[0]?.id;
+
+  if (!programId || !classServerId) {
+    throw new Error('Society hardening E2E class prerequisites could not be created.');
+  }
+
+  const classRecord = await pool.query<{ id: number }>(
+    `
+      INSERT INTO classes (
+        program_id,
+        current_semester,
+        academic_year,
+        admission_year,
+        section,
+        server_id
+      )
+      VALUES ($1, 3, 2026, 2026, 'A'::section, $2)
+      RETURNING id
+    `,
+    [programId, classServerId],
+  );
+  const classId = classRecord.rows[0]?.id;
+
+  if (!classId) {
+    throw new Error('Society hardening E2E class could not be created.');
+  }
+
+  await pool.query(
+    `
+      UPDATE users
+      SET department_id = CASE
+        WHEN id = $2 THEN $3::int
+        ELSE $4::int
+      END
+      WHERE id = ANY($1::int[])
+    `,
+    [
+      [presidentId, convenorId, memberId, applicantId, outsiderTeacherId],
+      outsiderTeacherId,
+      outsiderDepartmentId,
+      departmentId,
+    ],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO teacher_info (teacher_id, designation)
+      VALUES
+        ($1, 'Society Convenor'),
+        ($2, 'Other Department Teacher')
+    `,
+    [convenorId, outsiderTeacherId],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO student_info (student_id, class_id, roll_number)
+      VALUES
+        ($1, $4, 5001),
+        ($2, $4, 5002),
+        ($3, $4, 5003)
+    `,
+    [presidentId, memberId, applicantId, classId],
+  );
+
+  const society = await pool.query<{ id: number }>(
+    `
+      INSERT INTO societies (
+        name,
+        description,
+        department_id,
+        president_id,
+        convenor_id,
+        server_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `,
+    [
+      'E2E Robotics Society',
+      'Deterministic society fixture for hardening tests.',
+      departmentId,
+      presidentId,
+      convenorId,
+      societyServerId,
+    ],
+  );
+  const societyId = society.rows[0]?.id;
+
+  if (!societyId) {
+    throw new Error('Society hardening E2E society could not be created.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
+      VALUES
+        ($1, $4, true),
+        ($2, $4, true),
+        ($3, $4, false)
+    `,
+    [presidentId, convenorId, memberId, societyServerId],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO channels (server_id, name, description, type, is_auto_created, created_by, created_at)
+      VALUES
+        ($1, 'announcements', 'Society announcements.', 'announcement'::channel_type, true, $2, NOW()),
+        ($1, 'general', 'Society coordination.', 'general'::channel_type, true, $3, NOW())
+    `,
+    [societyServerId, convenorId, presidentId],
+  );
+}
+
 async function findChannelIdByServerAndName(pool: Pool, serverId: number, name: string) {
   const result = await pool.query<{ id: number }>(
     'SELECT id FROM channels WHERE server_id = $1 AND name = $2 AND is_deleted = false LIMIT 1',
@@ -860,6 +1078,7 @@ export default async function globalSetup() {
     await seedModule2Data(pool);
     await seedModule2AcademicHardeningData(pool);
     await seedModule3Data(pool);
+    await seedSocietyHardeningData(pool);
     await seedModule4Data(pool);
   } finally {
     await pool.end();

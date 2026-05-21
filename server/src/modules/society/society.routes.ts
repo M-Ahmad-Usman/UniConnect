@@ -14,6 +14,7 @@ import {
   removeMemberSchema,
   listMembersSchema,
   listMemberCandidatesSchema,
+  listLeadershipCandidatesSchema,
 } from "./society.schema.js";
 import {
   handleCreateSociety,
@@ -28,6 +29,7 @@ import {
   handleListMembers,
   handleGetMyMembershipStatus,
   handleListMemberCandidates,
+  handleListLeadershipCandidates,
 } from "./society.controller.js";
 
 const router = Router();
@@ -47,6 +49,14 @@ router.get(
   authenticate,
   validate(listSocietiesSchema),
   handleListSocieties
+);
+
+router.get(
+  "/leadership-candidates",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(listLeadershipCandidatesSchema),
+  handleListLeadershipCandidates
 );
 
 router.get(

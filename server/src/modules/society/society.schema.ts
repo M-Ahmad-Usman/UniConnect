@@ -168,3 +168,16 @@ export const listMemberCandidatesSchema = {
     search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
   }),
 };
+
+export const listLeadershipCandidatesSchema = {
+  query: paginationQuerySchema.extend({
+    departmentId: z.coerce
+      .number()
+      .int()
+      .positive({ error: "Department ID must be a positive integer" }),
+    role: z.enum(["president", "convenor"], {
+      error: "Role must be either president or convenor",
+    }),
+    search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
+  }),
+};

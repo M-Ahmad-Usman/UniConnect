@@ -4,6 +4,7 @@ import { queryKeys } from '@/lib/constants';
 import type {
   CreateSocietyRequest,
   SocietyCandidateParams,
+  SocietyLeadershipCandidateParams,
   SocietyListParams,
   SocietyRequestListParams,
   UpdateSocietyRequest,
@@ -39,24 +40,29 @@ export function useSocietyMembershipStatus(societyId: number | null) {
   });
 }
 
-export function useSocietyMembers(societyId: number | null, params: SocietyListParams) {
+export function useSocietyMembers(
+  societyId: number | null,
+  params: SocietyListParams,
+  enabled = true,
+) {
   const normalized = cleanParams(params);
   return useQuery({
     queryKey: societyId ? queryKeys.societies.members(societyId, normalized) : ['societies', 'members', 'idle'],
     queryFn: () => societiesApi.listMembers(societyId!, params),
-    enabled: societyId !== null,
+    enabled: societyId !== null && enabled,
   });
 }
 
 export function useSocietyJoinRequests(
   societyId: number | null,
   params: SocietyRequestListParams,
+  enabled = true,
 ) {
   const normalized = cleanParams(params);
   return useQuery({
     queryKey: societyId ? queryKeys.societies.requests(societyId, normalized) : ['societies', 'requests', 'idle'],
     queryFn: () => societiesApi.listJoinRequests(societyId!, params),
-    enabled: societyId !== null,
+    enabled: societyId !== null && enabled,
   });
 }
 
@@ -70,6 +76,20 @@ export function useSocietyMemberCandidates(
     queryKey: societyId ? queryKeys.societies.candidates(societyId, normalized) : ['societies', 'candidates', 'idle'],
     queryFn: () => societiesApi.listMemberCandidates(societyId!, params),
     enabled: societyId !== null && enabled,
+  });
+}
+
+export function useSocietyLeadershipCandidates(
+  params: SocietyLeadershipCandidateParams | null,
+  enabled = true,
+) {
+  const normalized = cleanParams(params ?? {});
+  return useQuery({
+    queryKey: params
+      ? queryKeys.societies.leadershipCandidates(normalized)
+      : ['societies', 'leadership-candidates', 'idle'],
+    queryFn: () => societiesApi.listLeadershipCandidates(params!),
+    enabled: params !== null && enabled,
   });
 }
 
@@ -92,8 +112,12 @@ export function useUpdateSociety(societyId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.leadershipCandidates() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.permissions.me() });
     },
   });
 }
@@ -104,6 +128,7 @@ export function useSubmitSocietyJoinRequest(societyId: number) {
     mutationFn: () => societiesApi.submitJoinRequest(societyId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.myMembership(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.requests(societyId) });
     },
   });
@@ -130,6 +155,7 @@ export function useAddSocietyMember(societyId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
     },
   });
 }
@@ -141,6 +167,8 @@ export function useRemoveSocietyMember(societyId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
     },
   });
 }

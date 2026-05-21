@@ -27,6 +27,8 @@ This plan is divided into implementation modules so each module can be built, te
 - Society management:
   - Members are visible only to society members, society leadership, and admins.
   - Both society president and convenor manage join requests and ordinary members.
+  - Ordinary society membership is university-wide.
+  - Society president and convenor eligibility remains same-department.
   - Society leadership changes remain admin/HOD-only for the society department.
 - Course teacher assignments:
   - Each class-course has one active teacher.
@@ -187,7 +189,7 @@ Keep the society workspace useful for all authenticated users while preventing u
   - expected lack of access is shown as unavailable UI, not a broken error.
   - real request failures still show retry/error affordances.
 - Improve society creation/edit dialogs:
-  - avoid broad user queries when scoped candidate endpoints are more appropriate.
+  - use typed candidate endpoints instead of broad user queries.
   - ensure HODs see only own-department choices when creating societies.
 
 ### Tests for This Module

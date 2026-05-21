@@ -124,6 +124,41 @@ export const e2eUsers = {
     mustChangePassword: false,
     userType: 'Student',
   },
+  moduleSocietyPresident: {
+    email: 'e2e.society.president@uniconnect.test',
+    password: 'SocietyPresident@1234',
+    fullName: 'E2E Society President',
+    mustChangePassword: false,
+    userType: 'Student',
+  },
+  moduleSocietyConvenor: {
+    email: 'e2e.society.convenor@uniconnect.test',
+    password: 'SocietyConvenor@1234',
+    fullName: 'E2E Society Convenor',
+    mustChangePassword: false,
+    userType: 'Teacher',
+  },
+  moduleSocietyMember: {
+    email: 'e2e.society.member@uniconnect.test',
+    password: 'SocietyMember@1234',
+    fullName: 'E2E Society Member',
+    mustChangePassword: false,
+    userType: 'Student',
+  },
+  moduleSocietyApplicant: {
+    email: 'e2e.society.applicant@uniconnect.test',
+    password: 'SocietyApplicant@1234',
+    fullName: 'E2E Society Applicant',
+    mustChangePassword: false,
+    userType: 'Student',
+  },
+  moduleSocietyOutsiderTeacher: {
+    email: 'e2e.society.outsider.teacher@uniconnect.test',
+    password: 'SocietyOutsider@1234',
+    fullName: 'E2E Society Outsider Teacher',
+    mustChangePassword: false,
+    userType: 'Teacher',
+  },
 } as const;
 
 export function generateResetToken(userId: number, email: string) {

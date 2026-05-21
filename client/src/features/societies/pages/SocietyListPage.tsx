@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '@/lib/constants';
 import { useAuthStore } from '@/stores/auth.store';
 import { UserType } from '@/types';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { parsePositiveInt } from '@/features/admin/utils';
 import { useDepartments } from '@/features/admin/hooks/useDepartments';
 import {
@@ -26,9 +27,18 @@ export function SocietyListPage() {
   const departmentId = parsePositiveInt(searchParams.get('departmentId'));
   const societiesQuery = useSocieties({ page, limit: DEFAULT_PAGE_SIZE, departmentId });
   const departmentsQuery = useDepartments();
+  const permissionsQuery = useMyPermissions();
   const createSociety = useCreateSociety();
-  const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
-  const canCreate = user?.userType === UserType.ADMIN || user?.roles?.some((role) => role.role === 'hod');
+  const departments = useMemo(() => {
+    const allDepartments = departmentsQuery.data ?? [];
+    if (user?.userType === UserType.ADMIN) {
+      return allDepartments;
+    }
+
+    const hodDepartmentIds = new Set(permissionsQuery.data?.scopes.hodDepartmentIds ?? []);
+    return allDepartments.filter((department) => hodDepartmentIds.has(department.id));
+  }, [departmentsQuery.data, permissionsQuery.data, user?.userType]);
+  const canCreate = permissionsQuery.data?.global.canCreateSociety ?? false;
 
   function updateFilter(nextDepartmentId: string, nextPage = 1) {
     const next = new URLSearchParams(searchParams);

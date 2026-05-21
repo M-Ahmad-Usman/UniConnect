@@ -49,6 +49,11 @@ type MemberCandidatesQuery = {
   limit?: number;
 };
 
+type LeadershipCandidatesQuery = MemberCandidatesQuery & {
+  departmentId: number;
+  role: "president" | "convenor";
+};
+
 type CallerInfo = {
   id: number;
   userType: string;
@@ -857,10 +862,62 @@ export async function listMemberCandidates(
   const where = {
     userType: "STUDENT" as const,
     isActive: true,
-    departmentId: society.departmentId,
     serverMemberships: {
       none: { serverId: society.serverId },
     },
+    ...(search
+      ? {
+          OR: [
+            { fullName: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: memberCandidateSelect,
+      orderBy: [{ fullName: "asc" }, { id: "asc" }],
+      skip,
+      take,
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: users,
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function listLeadershipCandidates(
+  query: LeadershipCandidatesQuery,
+  caller: CallerInfo
+) {
+  const department = await prisma.department.findUnique({
+    where: { id: query.departmentId },
+    select: { id: true, hodId: true },
+  });
+
+  if (!department) {
+    throw new NotFoundError("Department not found");
+  }
+
+  if (caller.userType !== "ADMIN" && department.hodId !== caller.id) {
+    throw new ForbiddenError("Only an admin or the department HOD can view leadership candidates");
+  }
+
+  const { page, limit, skip, take } = parsePagination(query);
+  const search = query.search?.trim();
+  const where = {
+    userType: query.role === "president" ? ("STUDENT" as const) : ("TEACHER" as const),
+    isActive: true,
+    departmentId: query.departmentId,
+    ...(query.role === "president"
+      ? { studentInfo: { isNot: null } }
+      : { teacherInfo: { isNot: null } }),
     ...(search
       ? {
           OR: [

@@ -710,16 +710,20 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | JoinRequestButton | ✅ Complete | 2026-05-18 | Membership-aware request flow |
 | JoinRequestList | ✅ Complete | 2026-05-18 | Approve/reject actions with requester notifications |
 | SocietyMemberList | ✅ Complete | 2026-05-18 | Paginated members with role badges and remove actions |
-| AddMemberDialog | ✅ Complete | 2026-05-18 | Search-backed member candidate picker |
-| Permission checks | ✅ Complete | 2026-05-18 | Admin, HOD, convenor, and president aware actions |
+| AddMemberDialog | ✅ Complete | 2026-05-20 | Search-backed university-wide member candidate picker |
+| Permission checks | ✅ Complete | 2026-05-20 | Backend-permission-driven tabs, queries, and actions |
+| EditSocietyDialog | ✅ Complete | 2026-05-20 | Info edits and HOD/admin leadership changes with typed candidate lookup |
 
 ### Key Decisions
 - Societies live outside the admin dashboard because the workspace is used by admins, HODs, convenors, presidents, and students.
 - All authenticated users can browse societies; management actions remain permission-gated.
 - Join request approval/rejection creates a persisted notification for the requester.
+- Society detail uses backend `viewer` and `permissions` as the canonical source for tab/query gating, preventing expected 403 states.
+- Ordinary society membership is university-wide; president/convenor candidate lookup remains same-department and scoped to admin/HOD callers.
 
 ### Challenges & Solutions
 - Added backend membership and member-candidate endpoints so the frontend can avoid broad user queries.
+- Replaced society create/edit leadership loading with typed candidate endpoints and HOD-scoped department choices.
 - Preserved `/admin/societies` deep links with redirects while moving the primary entry point to the profile menu.
 
 ---

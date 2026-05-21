@@ -148,11 +148,21 @@ export const queryKeys = {
     detail: (societyId: number) => ['societies', societyId] as const,
     myMembership: (societyId: number) => ['societies', societyId, 'my-membership'] as const,
     requests: (societyId: number, params?: Record<string, unknown>) =>
-      ['societies', societyId, 'requests', params] as const,
+      params
+        ? (['societies', societyId, 'requests', params] as const)
+        : (['societies', societyId, 'requests'] as const),
     members: (societyId: number, params?: Record<string, unknown>) =>
-      ['societies', societyId, 'members', params] as const,
+      params
+        ? (['societies', societyId, 'members', params] as const)
+        : (['societies', societyId, 'members'] as const),
     candidates: (societyId: number, params?: Record<string, unknown>) =>
-      ['societies', societyId, 'candidates', params] as const,
+      params
+        ? (['societies', societyId, 'candidates', params] as const)
+        : (['societies', societyId, 'candidates'] as const),
+    leadershipCandidates: (params?: Record<string, unknown>) =>
+      params
+        ? (['societies', 'leadership-candidates', params] as const)
+        : (['societies', 'leadership-candidates'] as const),
   },
   admin: {
     stats: () => ['admin', 'stats'] as const,

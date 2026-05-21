@@ -1820,6 +1820,10 @@ GET /api/societies/:id
 }
 ```
 
+**Frontend note:** Society detail is the canonical source for `viewer` and `permissions`.
+Protected member, request, and candidate queries should be enabled only from these
+permissions so expected lack of access does not produce 403-driven UI states.
+
 #### Get My Membership Status
 ```
 GET /api/societies/:id/my-membership
@@ -1873,8 +1877,8 @@ Leadership changes require admin or HOD for the department.
 {
   name?: string;
   description?: string;
-  presidentId?: number;    // Only convenor/admin can change
-  convenorId?: number;     // Only admin can change
+  presidentId?: number;    // Admin or department HOD only
+  convenorId?: number;     // Admin or department HOD only
 }
 ```
 
@@ -2008,44 +2012,14 @@ DELETE /api/societies/:id/members/:userId
 GET /api/societies/:id/members
 ```
 
-**Auth:** Admin, convenor, or president
+**Auth:** Admin, society president/convenor, or existing society member.
+Department HODs cannot view members unless they also satisfy one of those states.
 
 **Query Parameters:**
 ```typescript
 {
   page?: number;
   limit?: number;
-}
-```
-
-#### List Member Candidates
-```
-GET /api/societies/:id/member-candidates
-```
-
-**Auth:** Admin, convenor, or president
-
-**Query Parameters:**
-```typescript
-{
-  page?: number;
-  limit?: number;
-  search?: string;
-}
-```
-
-**Response:**
-```typescript
-{
-  success: true;
-  data: Array<{
-    id: number;
-    fullName: string;
-    email: string;
-    userType: 'STUDENT';
-    profilePictureUrl: string | null;
-  }>;
-  pagination: { ... };
 }
 ```
 
@@ -2069,6 +2043,65 @@ GET /api/societies/:id/member-candidates
   pagination: { ... };
 }
 ```
+
+#### List Member Candidates
+```
+GET /api/societies/:id/member-candidates
+```
+
+**Auth:** Admin, convenor, or president
+
+**Query Parameters:**
+```typescript
+{
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+```
+
+Returns active university-wide students who are not already members of the society
+server. Ordinary society membership is not department-limited.
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: Array<{
+    id: number;
+    fullName: string;
+    email: string;
+    userType: 'STUDENT';
+    profilePictureUrl: string | null;
+  }>;
+  pagination: { ... };
+}
+```
+
+#### List Leadership Candidates
+```
+GET /api/societies/leadership-candidates
+```
+
+**Auth:** Admin or HOD for the requested department
+
+**Query Parameters:**
+```typescript
+{
+  departmentId: number;
+  role: 'president' | 'convenor';
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+```
+
+**Response:** Same paginated `UserSummary[]` shape as member candidates.
+
+**Rules:**
+- `role=president` returns active same-department students with `StudentInfo`.
+- `role=convenor` returns active same-department teachers with `TeacherInfo`.
+- Admins may query any department; HODs may query only their own department.
 
 ---
 

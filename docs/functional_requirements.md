@@ -200,6 +200,11 @@
 | FR-68 | Society Convenor/President can remove members from the society |
 | FR-69 | When a join request is approved, the student is auto-added to the society server |
 
+**Society access hardening notes:**
+- Ordinary society membership is university-wide: any active student can request to join and can be manually added by authorized society leadership/admins.
+- Society president and convenor eligibility remains department-scoped: presidents must be active students in the society department, and convenors must be active teachers in the society department.
+- Society member lists are visible only to existing society members, society president/convenor, and admins. Department HODs can create societies and change leadership in their department, but HOD status alone does not grant member-list or join-request visibility.
+
 ---
 
 #### 4.10 Semester Transition

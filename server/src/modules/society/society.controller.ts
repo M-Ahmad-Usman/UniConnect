@@ -201,3 +201,28 @@ export async function handleListMemberCandidates(req: Request, res: Response): P
 
   res.status(StatusCodes.OK).json(response);
 }
+
+export async function handleListLeadershipCandidates(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const result = await societyService.listLeadershipCandidates(
+    {
+      departmentId: Number(query.departmentId),
+      role: query.role as "president" | "convenor",
+      search: query.search,
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+    },
+    {
+      id: req.user!.id,
+      userType: req.user!.userType,
+    }
+  );
+
+  const response: PaginatedResponse<(typeof result.data)[number]> = {
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}

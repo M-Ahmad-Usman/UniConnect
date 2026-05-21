@@ -884,6 +884,14 @@ Permission-sensitive UI now prefers backend-provided grouped capability payloads
 - Local role helpers remain only for lightweight optimistic rendering and legacy channel affordances.
 - Mutations never trust frontend booleans; backend services recompute authorization.
 
+Society detail screens derive tab availability through `getSocietyDetailActionState()`.
+Members, join requests, and member-candidate queries stay disabled until the society
+detail permission payload allows the matching action. Deep links to unavailable
+tabs are normalized back to overview before protected requests run. Ordinary
+member candidates are university-wide active students, while president/convenor
+candidate lookups use the typed `/api/societies/leadership-candidates` endpoint
+and remain department-scoped for admin/HOD society creation and leadership edits.
+
 When `auth:roles-updated` arrives, the socket client refreshes `/api/users/me` and invalidates permissions, class, society, server, and role query keys before permission-sensitive UI is reused.
 
 Academic class screens derive UI state through `getClassDetailActionState()`, which

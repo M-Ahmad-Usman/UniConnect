@@ -1,14 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Check, Plus, RotateCcw, UserMinus, X } from 'lucide-react';
+import { Check, Pencil, Plus, UserMinus, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
 import { parseRouteParamId } from '@/lib/route-params';
-import { useAuthStore } from '@/stores/auth.store';
-import { UserType } from '@/types';
 import { parsePositiveInt } from '@/features/admin/utils';
 import {
   AdminPageHeader,
@@ -24,11 +22,16 @@ import {
   useSocietyJoinRequests,
   useSocietyMemberCandidates,
   useSocietyMembers,
-  useSocietyMembershipStatus,
   useSubmitSocietyJoinRequest,
+  useUpdateSociety,
 } from '../hooks/useSocieties';
-
-type Tab = 'overview' | 'members' | 'requests';
+import { SocietyEditDialog } from '../components/SocietyDialogs';
+import {
+  getSocietyDetailActionState,
+  isSocietyTabAvailable,
+  parseSocietyTab,
+  type SocietyDetailTab,
+} from '../utils';
 
 function initials(name: string) {
   return name
@@ -39,49 +42,64 @@ function initials(name: string) {
     .join('');
 }
 
-function parseTab(value: string | null): Tab {
-  return value === 'members' || value === 'requests' ? value : 'overview';
-}
-
 export function SocietyDetailPage() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const societyId = parseRouteParamId(params.societyId ?? params.id);
-  const user = useAuthStore((state) => state.user);
-  const tab = parseTab(searchParams.get('tab'));
+  const requestedTab = parseSocietyTab(searchParams.get('tab'));
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const [candidateSearch, setCandidateSearch] = useState('');
   const [selectedCandidateId, setSelectedCandidateId] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+
   const societyQuery = useSociety(societyId);
-  const statusQuery = useSocietyMembershipStatus(societyId);
-  const membersQuery = useSocietyMembers(societyId, { page, limit: DEFAULT_PAGE_SIZE });
-  const requestsQuery = useSocietyJoinRequests(societyId, {
-    page,
-    limit: DEFAULT_PAGE_SIZE,
-    status: 'PENDING',
-  });
+  const society = societyQuery.data;
+  const actions = getSocietyDetailActionState(society);
+  const tab = isSocietyTabAvailable(requestedTab, actions.tabs) ? requestedTab : 'overview';
+
+  const membersQuery = useSocietyMembers(
+    societyId,
+    { page, limit: DEFAULT_PAGE_SIZE },
+    tab === 'members' && actions.canViewMembers,
+  );
+  const requestsQuery = useSocietyJoinRequests(
+    societyId,
+    { page, limit: DEFAULT_PAGE_SIZE, status: 'PENDING' },
+    tab === 'requests' && actions.canViewJoinRequests,
+  );
   const candidatesQuery = useSocietyMemberCandidates(
     societyId,
     { page: 1, limit: 20, search: candidateSearch.trim() || undefined },
-    tab === 'members',
+    tab === 'members' && actions.canManageMembers,
   );
   const submitJoinRequest = useSubmitSocietyJoinRequest(societyId ?? 0);
   const reviewRequest = useReviewSocietyJoinRequest(societyId ?? 0);
   const addMember = useAddSocietyMember(societyId ?? 0);
   const removeMember = useRemoveSocietyMember(societyId ?? 0);
+  const updateSociety = useUpdateSociety(societyId ?? 0);
 
-  const society = societyQuery.data;
-  const canManage = useMemo(() => {
-    if (!user || !society) return false;
-    return (
-      user.userType === UserType.ADMIN ||
-      user.id === society.president.user.id ||
-      user.id === society.convenor.user.id ||
-      user.roles?.some((role) => role.role === 'hod' && role.serverId === society.department.serverId)
-    );
-  }, [society, user]);
+  useEffect(() => {
+    if (!society || requestedTab === tab) return;
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tab);
+    next.set('page', '1');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, society, requestedTab, tab]);
 
-  function setTab(nextTab: Tab) {
+  const editInitialValues = useMemo(() => {
+    if (!society) return null;
+
+    return {
+      name: society.name,
+      description: society.description ?? '',
+      presidentId: society.president.user.id,
+      presidentName: society.president.user.fullName,
+      convenorId: society.convenor.user.id,
+      convenorName: society.convenor.user.fullName,
+    };
+  }, [society]);
+
+  function setTab(nextTab: SocietyDetailTab) {
     const next = new URLSearchParams(searchParams);
     next.set('tab', nextTab);
     next.set('page', '1');
@@ -101,7 +119,6 @@ export function SocietyDetailPage() {
   const members = membersQuery.data?.data ?? [];
   const requests = requestsQuery.data?.data ?? [];
   const candidates = candidatesQuery.data?.data ?? [];
-  const status = statusQuery.data;
 
   return (
     <section className="space-y-5">
@@ -110,15 +127,24 @@ export function SocietyDetailPage() {
         title={society?.name ?? 'Society'}
         description={society?.department.name}
         actions={
-          user?.userType === UserType.STUDENT && status && !status.isMember ? (
-            <Button
-              type="button"
-              disabled={submitJoinRequest.isPending || status.requestStatus === 'PENDING'}
-              onClick={() => submitJoinRequest.mutate()}
-            >
-              {status.requestStatus === 'PENDING' ? 'Request sent' : 'Request to join'}
-            </Button>
-          ) : null
+          <>
+            {society &&
+            (actions.canSubmitJoinRequest || society.viewer.requestStatus === 'PENDING') ? (
+              <Button
+                type="button"
+                disabled={submitJoinRequest.isPending || society.viewer.requestStatus === 'PENDING'}
+                onClick={() => submitJoinRequest.mutate()}
+              >
+                {society.viewer.requestStatus === 'PENDING' ? 'Request sent' : 'Request to join'}
+              </Button>
+            ) : null}
+            {society && (actions.canEditInfo || actions.canChangeLeadership) ? (
+              <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="size-4" />
+                Edit society
+              </Button>
+            ) : null}
+          </>
         }
       />
       <DataState
@@ -128,7 +154,7 @@ export function SocietyDetailPage() {
         empty={!society}
       >
         <div className="flex flex-wrap gap-2 border-b">
-          {(['overview', 'members', 'requests'] as const).map((item) => (
+          {actions.tabs.map((item) => (
             <button
               key={item}
               type="button"
@@ -168,9 +194,9 @@ export function SocietyDetailPage() {
           </div>
         ) : null}
 
-        {tab === 'members' ? (
+        {tab === 'members' && actions.canViewMembers ? (
           <div className="space-y-4">
-            {canManage ? (
+            {actions.canManageMembers ? (
               <div className="rounded-lg border bg-background p-3">
                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                   <input
@@ -184,7 +210,9 @@ export function SocietyDetailPage() {
                     value={selectedCandidateId}
                     onChange={(event) => setSelectedCandidateId(event.target.value)}
                   >
-                    <option value="">Select student</option>
+                    <option value="">
+                      {candidatesQuery.isLoading ? 'Loading students...' : 'Select student'}
+                    </option>
                     {candidates.map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>
                         {candidate.fullName} · {candidate.email}
@@ -214,7 +242,10 @@ export function SocietyDetailPage() {
               <div className="overflow-hidden rounded-lg border bg-background">
                 <div className="divide-y">
                   {members.map((member) => (
-                    <div key={member.userId} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div
+                      key={member.userId}
+                      className="flex items-center justify-between gap-3 px-4 py-3"
+                    >
                       <div className="flex min-w-0 items-center gap-3">
                         <Avatar>
                           <AvatarImage src={member.user.profilePictureUrl ?? undefined} />
@@ -222,7 +253,9 @@ export function SocietyDetailPage() {
                         </Avatar>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{member.user.fullName}</p>
-                          <p className="truncate text-xs text-muted-foreground">{member.user.email}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {member.user.email}
+                          </p>
                           <div className="mt-1 flex flex-wrap gap-1">
                             {member.badges.map((badge) => (
                               <RoleBadge key={badge} role={badge} />
@@ -230,7 +263,9 @@ export function SocietyDetailPage() {
                           </div>
                         </div>
                       </div>
-                      {canManage && !member.badges.includes('president') && !member.badges.includes('convenor') ? (
+                      {actions.canManageMembers &&
+                      !member.badges.includes('president') &&
+                      !member.badges.includes('convenor') ? (
                         <Button
                           type="button"
                           variant="outline"
@@ -251,29 +286,39 @@ export function SocietyDetailPage() {
           </div>
         ) : null}
 
-        {tab === 'requests' ? (
-          canManage ? (
-            <div className="space-y-4">
-              <DataState
-                isLoading={requestsQuery.isLoading}
-                isError={requestsQuery.isError}
-                onRetry={() => void requestsQuery.refetch()}
-                empty={requests.length === 0}
-              >
-                <div className="overflow-hidden rounded-lg border bg-background">
-                  <div className="divide-y">
-                    {requests.map((request) => (
-                      <div key={request.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{request.user.fullName}</p>
-                          <p className="truncate text-xs text-muted-foreground">{request.user.email}</p>
-                        </div>
+        {tab === 'requests' && actions.canViewJoinRequests ? (
+          <div className="space-y-4">
+            <DataState
+              isLoading={requestsQuery.isLoading}
+              isError={requestsQuery.isError}
+              onRetry={() => void requestsQuery.refetch()}
+              empty={requests.length === 0}
+            >
+              <div className="overflow-hidden rounded-lg border bg-background">
+                <div className="divide-y">
+                  {requests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between gap-3 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{request.user.fullName}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {request.user.email}
+                        </p>
+                      </div>
+                      {actions.canReviewJoinRequests ? (
                         <div className="flex gap-2">
                           <Button
                             type="button"
                             size="sm"
                             disabled={reviewRequest.isPending}
-                            onClick={() => reviewRequest.mutate({ requestId: request.id, status: 'APPROVED' })}
+                            onClick={() =>
+                              reviewRequest.mutate({
+                                requestId: request.id,
+                                status: 'APPROVED',
+                              })
+                            }
                           >
                             <Check className="size-4" />
                             Approve
@@ -283,28 +328,43 @@ export function SocietyDetailPage() {
                             variant="outline"
                             size="sm"
                             disabled={reviewRequest.isPending}
-                            onClick={() => reviewRequest.mutate({ requestId: request.id, status: 'REJECTED' })}
+                            onClick={() =>
+                              reviewRequest.mutate({
+                                requestId: request.id,
+                                status: 'REJECTED',
+                              })
+                            }
                           >
                             <X className="size-4" />
                             Reject
                           </Button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ) : null}
+                    </div>
+                  ))}
                 </div>
-              </DataState>
-              <PaginationControls pagination={requestsQuery.data?.pagination} onPageChange={setPage} />
-            </div>
-          ) : (
-            <EmptyState
-              icon={RotateCcw}
-              title="Requests unavailable"
-              description="Only society leadership can review join requests."
+              </div>
+            </DataState>
+            <PaginationControls
+              pagination={requestsQuery.data?.pagination}
+              onPageChange={setPage}
             />
-          )
+          </div>
         ) : null}
       </DataState>
+      {society && editInitialValues ? (
+        <SocietyEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          departmentId={society.departmentId}
+          initialValues={editInitialValues}
+          canChangeLeadership={actions.canChangeLeadership}
+          loading={updateSociety.isPending}
+          onSubmit={async (values) => {
+            await updateSociety.mutateAsync(values);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

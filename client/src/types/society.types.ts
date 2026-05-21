@@ -80,6 +80,12 @@ export interface SocietyCandidateParams extends PaginationParams {
   search?: string;
 }
 
+export interface SocietyLeadershipCandidateParams extends PaginationParams {
+  departmentId: number;
+  role: 'president' | 'convenor';
+  search?: string;
+}
+
 // ─── Create / Update Society ────────────────────────────────────────────────
 
 export interface CreateSocietyRequest {

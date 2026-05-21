@@ -134,6 +134,7 @@ export type {
   SocietyListParams,
   SocietyRequestListParams,
   SocietyCandidateParams,
+  SocietyLeadershipCandidateParams,
   CreateSocietyRequest,
   UpdateSocietyRequest,
 } from './society.types';

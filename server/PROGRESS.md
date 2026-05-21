@@ -15,6 +15,11 @@
 - Hardened membership synchronization for student transfer, course removal/replacement, semester progression, and graduated read-only class channels.
 - Verified Prisma generation, test migration application, and backend build. DB-backed Jest class suite exceeded the 120s command timeout and needs follow-up split verification.
 
+## Hardening Update (2026-05-20)
+- Implemented Module 3 society access hardening: university-wide ordinary member candidates, department-scoped leadership candidate lookup, and explicit HOD privacy boundaries.
+- Added `/api/societies/leadership-candidates` for admin/HOD president/convenor selection without broad user-list queries.
+- Verified backend build and focused society integration tests.
+
 ## Verification Snapshot (2026-05-18)
 - Verified `timeout 120 npm test -- tests/modules/permission.test.ts`.
 - Verified `timeout 120 npm test -- tests/modules/class.test.ts tests/modules/society.test.ts tests/modules/role.test.ts tests/modules/user.test.ts`.
@@ -61,7 +66,7 @@ Details: `HARDENING_PLAN.md`, `HARDENING_LOG.md`
 - Type-aware notification preferences with `NEW_POST` and `ROLE_ASSIGNED` controls
 - Role-assignment notification creation with server-level mute support
 - Society join request approval/rejection notifications with `SOCIETY_REQUEST_REVIEWED`
-- Society membership status and member-candidate endpoints for role-based frontend workflows
+- Society membership status, university-wide member-candidate, and department-scoped leadership-candidate endpoints for role-based frontend workflows
 - `auth:roles-updated` socket event for affected users after role changes
 - Notification payload priority metadata for urgent frontend toasts
 - `passwordResetTokenHash` one-time token enforcement

@@ -1797,5 +1797,196 @@ describe("Module 6 - Society Management", () => {
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
     });
+
+    it("should allow ordinary members to list members", async () => {
+      const admin = await createUser({
+        email: `admin-soc-lmmember-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-LMMEMBER-${uid()}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-lmmember-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-lmmember-${uid()}@test.com`,
+      });
+      const { society } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `Member Visible Society ${uid()}`,
+        creatorId: admin.id,
+      });
+      const member = await createStudentWithInfo(cls.id, dept.id, {
+        email: `member-lm-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await prisma.serverMembership.create({
+        data: { userId: member.id, serverId: society.serverId, isAutoJoined: false },
+      });
+
+      const cookies = await loginAs(member.email, "Pass@1234");
+      const res = await request(app)
+        .get(`/api/societies/${society.id}/members`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.some((item: { userId: number }) => item.userId === member.id)).toBe(true);
+    });
+
+    it("should keep HOD member-list access private unless they are a member or leader", async () => {
+      const admin = await createUser({
+        email: `admin-soc-lmhod-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-LMHOD-${uid()}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-lm-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await prisma.department.update({ where: { id: dept.id }, data: { hodId: hod.id } });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-lmhod-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-lmhod-${uid()}@test.com`,
+      });
+      const { society } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `HOD Private Society ${uid()}`,
+        creatorId: admin.id,
+      });
+
+      const cookies = await loginAs(hod.email, "Pass@1234");
+      const res = await request(app)
+        .get(`/api/societies/${society.id}/members`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.message).toBe("You do not have permission to view society members");
+    });
+  });
+
+  describe("GET /api/societies/:id/member-candidates", () => {
+    it("should return university-wide active students who are not already members", async () => {
+      const admin = await createUser({
+        email: `admin-soc-cand-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-CAND-${uid()}` });
+      const otherDept = await createDepartment({ code: `SE-CAND-${uid()}` });
+      const program = await createProgram(dept.id);
+      const otherProgram = await createProgram(otherDept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const otherClass = await createClass(otherProgram.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-cand-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-cand-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      const { society } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `Candidate Society ${uid()}`,
+        creatorId: admin.id,
+      });
+      const crossDepartmentStudent = await createStudentWithInfo(otherClass.id, otherDept.id, {
+        email: `cross-cand-${uid()}@test.com`,
+      });
+      const existingMember = await createStudentWithInfo(cls.id, dept.id, {
+        email: `existing-cand-${uid()}@test.com`,
+      });
+      await prisma.serverMembership.create({
+        data: { userId: existingMember.id, serverId: society.serverId, isAutoJoined: false },
+      });
+
+      const cookies = await loginAs(convenor.email, "Pass@1234");
+      const res = await request(app)
+        .get(`/api/societies/${society.id}/member-candidates`)
+        .query({ search: "cand", limit: 50 })
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      const ids = res.body.data.map((candidate: { id: number }) => candidate.id);
+      expect(ids).toContain(crossDepartmentStudent.id);
+      expect(ids).not.toContain(existingMember.id);
+    });
+  });
+
+  describe("GET /api/societies/leadership-candidates", () => {
+    it("should return same-department president and convenor candidates for an authorized HOD", async () => {
+      const admin = await createUser({
+        email: `admin-soc-leadcand-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-LEADCAND-${uid()}` });
+      const otherDept = await createDepartment({ code: `SE-LEADCAND-${uid()}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-leadcand-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await prisma.department.update({ where: { id: dept.id }, data: { hodId: hod.id } });
+      const program = await createProgram(dept.id);
+      const otherProgram = await createProgram(otherDept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const otherClass = await createClass(otherProgram.id, { creatorId: admin.id });
+      const departmentStudent = await createStudentWithInfo(cls.id, dept.id, {
+        email: `dept-leadcand-${uid()}@test.com`,
+      });
+      const crossDepartmentStudent = await createStudentWithInfo(otherClass.id, otherDept.id, {
+        email: `cross-leadcand-${uid()}@test.com`,
+      });
+      const departmentTeacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-leadcand-${uid()}@test.com`,
+      });
+
+      const cookies = await loginAs(hod.email, "Pass@1234");
+      const presidentRes = await request(app)
+        .get("/api/societies/leadership-candidates")
+        .query({ departmentId: dept.id, role: "president", limit: 50 })
+        .set("Cookie", cookies);
+      const convenorRes = await request(app)
+        .get("/api/societies/leadership-candidates")
+        .query({ departmentId: dept.id, role: "convenor", limit: 50 })
+        .set("Cookie", cookies);
+
+      expect(presidentRes.status).toBe(200);
+      expect(presidentRes.body.data.map((candidate: { id: number }) => candidate.id)).toContain(
+        departmentStudent.id
+      );
+      expect(presidentRes.body.data.map((candidate: { id: number }) => candidate.id)).not.toContain(
+        crossDepartmentStudent.id
+      );
+      expect(convenorRes.status).toBe(200);
+      expect(convenorRes.body.data.map((candidate: { id: number }) => candidate.id)).toContain(
+        departmentTeacher.id
+      );
+    });
+
+    it("should reject HOD candidate lookups outside their department", async () => {
+      const dept = await createDepartment({ code: `CS-LEADFORBID-${uid()}` });
+      const otherDept = await createDepartment({ code: `SE-LEADFORBID-${uid()}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-leadforbid-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await prisma.department.update({ where: { id: dept.id }, data: { hodId: hod.id } });
+
+      const cookies = await loginAs(hod.email, "Pass@1234");
+      const res = await request(app)
+        .get("/api/societies/leadership-candidates")
+        .query({ departmentId: otherDept.id, role: "president" })
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+    });
   });
 });

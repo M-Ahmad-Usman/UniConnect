@@ -204,6 +204,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `GET /:id`
   - Returns society detail plus `viewer: { isMember, requestStatus }` and caller-specific `permissions`.
   - Member visibility remains restricted to members, society leadership, and admins.
+  - Frontend should gate society tabs and protected queries from this response instead of local role inference.
 - `GET /:id/my-membership`
   - Returns `{ isMember, requestStatus, requestedAt, reviewedAt }` for the authenticated user
 - `PATCH /:id`
@@ -221,9 +222,14 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `DELETE /:id/members/:userId`
 - `GET /:id/members`
   - Query: `page, limit`
+  - Auth: admin, society president/convenor, or an existing society member. HOD does not get member visibility by department alone.
 - `GET /:id/member-candidates`
   - Query: `page, limit, search?`
-  - Returns active same-department students who are not already society server members
+  - Returns active university-wide students who are not already society server members
+- `GET /leadership-candidates`
+  - Query: `departmentId, role=president|convenor, page, limit, search?`
+  - Auth: admin or HOD for the requested department
+  - Returns same-department students with `StudentInfo` for president or same-department teachers with `TeacherInfo` for convenor
 
 ### Roles (`/api/roles`)
 - `POST /assign`
