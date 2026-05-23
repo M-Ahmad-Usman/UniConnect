@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useUpdateChannel } from '@/features/channels/hooks/useUpdateChannel';
-import {
-  updateChannelSchema,
-  type UpdateChannelFormValues,
-} from '@/features/channels/schemas';
+import { updateChannelSchema, type UpdateChannelFormValues } from '@/features/channels/schemas';
 import { applyApiValidationErrors, getApiErrorMessage } from '@/features/auth/utils';
 import type { ChannelListItem } from '@/types';
 
@@ -92,7 +96,7 @@ export function EditChannelDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg border border-border/70 bg-gradient-to-br from-background via-background to-accent/10">
+      <DialogContent className="max-w-lg border border-border/70 bg-card">
         <DialogHeader>
           <DialogTitle>Edit channel</DialogTitle>
           <DialogDescription>

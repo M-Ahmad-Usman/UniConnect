@@ -80,7 +80,10 @@ describe("Module 10 - Notifications", () => {
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", cookies)
-        .send({ title: "Test Notification", content: "Content for notification test" });
+        .send({
+          title: "Test Notification",
+          content: "Content for notification test",
+        });
 
       expect(res.status).toBe(201);
 
@@ -92,6 +95,11 @@ describe("Module 10 - Notifications", () => {
         where: { postId: res.body.data.id },
         orderBy: { userId: "asc" },
       });
+      const server = await prisma.server.findUnique({
+        where: { id: dept.serverId },
+        select: { name: true },
+      });
+      expect(server).not.toBeNull();
 
       // Both students are members of the dept server, so they should get notifications
       const recipientIds = notifications.map((n) => n.userId);
@@ -101,6 +109,8 @@ describe("Module 10 - Notifications", () => {
       expect(recipientIds).not.toContain(hod.id);
       // All notifications should be type NEW_POST
       expect(notifications.every((n) => n.type === "NEW_POST")).toBe(true);
+      expect(notifications[0]?.message).toContain(server!.name);
+      expect(notifications[0]?.message).toContain(`#${channel.name}`);
     });
 
     it("should mark urgent post notifications with urgent indicator", async () => {
@@ -142,6 +152,11 @@ describe("Module 10 - Notifications", () => {
       const notifications = await prisma.notification.findMany({
         where: { postId: res.body.data.id },
       });
+      const server = await prisma.server.findUnique({
+        where: { id: dept.serverId },
+        select: { name: true },
+      });
+      expect(server).not.toBeNull();
 
       expect(notifications.length).toBeGreaterThanOrEqual(1);
       // Urgent notifications should have the 🚨 prefix in title
@@ -149,7 +164,60 @@ describe("Module 10 - Notifications", () => {
         expect(n.title).toContain("🚨");
         expect(n.title).toContain("[URGENT]");
         expect(n.message).toContain("Urgent");
+        expect(n.message).toContain(server!.name);
+        expect(n.message).toContain(`#${channel.name}`);
       }
+    });
+
+    it("should delete linked notifications when a post is deleted", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `DEL-NTF-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-del-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-del-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+
+      const channel = await createChannel(dept.serverId, {
+        name: `ann-del-ntf-${u}`,
+        type: "ANNOUNCEMENT",
+      });
+
+      const cookies = await loginAs(`hod-del-ntf-${u}@test.com`, "Pass@1234");
+      const postRes = await request(app)
+        .post(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", cookies)
+        .send({
+          title: "Delete Notification",
+          content: "This post will be deleted.",
+        });
+
+      expect(postRes.status).toBe(201);
+      await new Promise((r) => setTimeout(r, 500));
+
+      const notificationBeforeDelete = await prisma.notification.findFirst({
+        where: { postId: postRes.body.data.id, userId: student.id },
+      });
+      expect(notificationBeforeDelete).not.toBeNull();
+
+      const deleteRes = await request(app)
+        .delete(`/api/posts/${postRes.body.data.id}`)
+        .set("Cookie", cookies);
+
+      expect(deleteRes.status).toBe(200);
+
+      const notificationCount = await prisma.notification.count({
+        where: { postId: postRes.body.data.id },
+      });
+      expect(notificationCount).toBe(0);
     });
 
     it("should NOT generate notification for unsubscribed user (channel-level)", async () => {
@@ -179,18 +247,25 @@ describe("Module 10 - Notifications", () => {
       });
 
       // Unsubscribe the student from this specific channel
-      await createNotificationPreference(unsubscribedStudent.id, dept.serverId, {
-        scopeType: "CHANNEL",
-        channelId: channel.id,
-        isSubscribed: false,
-      });
+      await createNotificationPreference(
+        unsubscribedStudent.id,
+        dept.serverId,
+        {
+          scopeType: "CHANNEL",
+          channelId: channel.id,
+          isSubscribed: false,
+        },
+      );
 
       const cookies = await loginAs(`hod-unsch-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", cookies)
-        .send({ title: "Test Unsub Channel", content: "Should skip unsubscribed" });
+        .send({
+          title: "Test Unsub Channel",
+          content: "Should skip unsubscribed",
+        });
 
       expect(res.status).toBe(201);
       await new Promise((r) => setTimeout(r, 500));
@@ -231,17 +306,24 @@ describe("Module 10 - Notifications", () => {
       });
 
       // Unsubscribe from the entire server
-      await createNotificationPreference(unsubscribedStudent.id, dept.serverId, {
-        scopeType: "SERVER",
-        isSubscribed: false,
-      });
+      await createNotificationPreference(
+        unsubscribedStudent.id,
+        dept.serverId,
+        {
+          scopeType: "SERVER",
+          isSubscribed: false,
+        },
+      );
 
       const cookies = await loginAs(`hod-unssv-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", cookies)
-        .send({ title: "Test Unsub Server", content: "Should skip server-unsubbed" });
+        .send({
+          title: "Test Unsub Server",
+          content: "Should skip server-unsubbed",
+        });
 
       expect(res.status).toBe(201);
       await new Promise((r) => setTimeout(r, 500));
@@ -378,7 +460,9 @@ describe("Module 10 - Notifications", () => {
       expect(res.body.pagination.page).toBe(1);
 
       // Verify newest first
-      const dates = res.body.data.map((n: { createdAt: string }) => new Date(n.createdAt).getTime());
+      const dates = res.body.data.map((n: { createdAt: string }) =>
+        new Date(n.createdAt).getTime(),
+      );
       for (let i = 1; i < dates.length; i++) {
         expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
       }
@@ -394,8 +478,14 @@ describe("Module 10 - Notifications", () => {
         password: "Pass@1234",
       });
 
-      await createNotification(student.id, { type: "NEW_POST", title: "Post notif" });
-      await createNotification(student.id, { type: "ROLE_ASSIGNED", title: "Role notif" });
+      await createNotification(student.id, {
+        type: "NEW_POST",
+        title: "Post notif",
+      });
+      await createNotification(student.id, {
+        type: "ROLE_ASSIGNED",
+        title: "Role notif",
+      });
 
       const cookies = await loginAs(`stu-filt-${u}@test.com`, "Pass@1234");
 
@@ -404,7 +494,9 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.every((n: { type: string }) => n.type === "NEW_POST")).toBe(true);
+      expect(
+        res.body.data.every((n: { type: string }) => n.type === "NEW_POST"),
+      ).toBe(true);
     });
 
     it("should filter unread only → 200", async () => {
@@ -418,7 +510,10 @@ describe("Module 10 - Notifications", () => {
       });
 
       await createNotification(student.id, { title: "Unread", readAt: null });
-      await createNotification(student.id, { title: "Read", readAt: new Date() });
+      await createNotification(student.id, {
+        title: "Read",
+        readAt: new Date(),
+      });
 
       const cookies = await loginAs(`stu-unrd-${u}@test.com`, "Pass@1234");
 
@@ -427,7 +522,11 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.every((n: { readAt: string | null }) => n.readAt === null)).toBe(true);
+      expect(
+        res.body.data.every(
+          (n: { readAt: string | null }) => n.readAt === null,
+        ),
+      ).toBe(true);
     });
 
     it("should return 401 for unauthenticated request", async () => {
@@ -453,7 +552,10 @@ describe("Module 10 - Notifications", () => {
 
       await createNotification(student.id, { title: "Unread 1" });
       await createNotification(student.id, { title: "Unread 2" });
-      await createNotification(student.id, { title: "Read", readAt: new Date() });
+      await createNotification(student.id, {
+        title: "Read",
+        readAt: new Date(),
+      });
 
       const cookies = await loginAs(`stu-cnt-${u}@test.com`, "Pass@1234");
 
@@ -482,7 +584,9 @@ describe("Module 10 - Notifications", () => {
         password: "Pass@1234",
       });
 
-      const notification = await createNotification(student.id, { title: "To Read" });
+      const notification = await createNotification(student.id, {
+        title: "To Read",
+      });
       const cookies = await loginAs(`stu-mk-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
@@ -514,7 +618,9 @@ describe("Module 10 - Notifications", () => {
         password: "Pass@1234",
       });
 
-      const notification = await createNotification(student1.id, { title: "Private" });
+      const notification = await createNotification(student1.id, {
+        title: "Private",
+      });
       const cookies = await loginAs(`stu2-own-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
@@ -613,7 +719,10 @@ describe("Module 10 - Notifications", () => {
         password: "Pass@1234",
       });
 
-      await createNotification(student.id, { title: "Read", readAt: new Date() });
+      await createNotification(student.id, {
+        title: "Read",
+        readAt: new Date(),
+      });
 
       const cookies = await loginAs(`stu-nounr-${u}@test.com`, "Pass@1234");
 
@@ -688,7 +797,7 @@ describe("Module 10 - Notifications", () => {
 
       const res = await request(app)
         .get(
-          `/api/notification-preferences?serverId=${dept.serverId}&notificationType=ROLE_ASSIGNED`
+          `/api/notification-preferences?serverId=${dept.serverId}&notificationType=ROLE_ASSIGNED`,
         )
         .set("Cookie", cookies);
 
@@ -820,7 +929,9 @@ describe("Module 10 - Notifications", () => {
         email: `stu-rolec-${u}@test.com`,
         password: "Pass@1234",
       });
-      const channel = await createChannel(dept.serverId, { name: `rolec-${u}` });
+      const channel = await createChannel(dept.serverId, {
+        name: `rolec-${u}`,
+      });
 
       const cookies = await loginAs(`stu-rolec-${u}@test.com`, "Pass@1234");
 
@@ -848,7 +959,9 @@ describe("Module 10 - Notifications", () => {
         password: "Pass@1234",
       });
 
-      const channel = await createChannel(dept.serverId, { name: `ch-resub-${u}` });
+      const channel = await createChannel(dept.serverId, {
+        name: `ch-resub-${u}`,
+      });
 
       // First unsubscribe
       await createNotificationPreference(student.id, dept.serverId, {
@@ -936,7 +1049,9 @@ describe("Module 10 - Notifications", () => {
       });
 
       // Create channel in dept2's server
-      const channel = await createChannel(dept2.serverId, { name: `ch-other-${u}` });
+      const channel = await createChannel(dept2.serverId, {
+        name: `ch-other-${u}`,
+      });
 
       const cookies = await loginAs(`stu-chsv-${u}@test.com`, "Pass@1234");
 
@@ -1017,7 +1132,10 @@ describe("Module 10 - Notifications", () => {
 
       // Connect Socket.IO client with JWT cookie
       const notificationPromise = new Promise<unknown>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error("Timeout waiting for notification")), 5000);
+        const timeout = setTimeout(
+          () => reject(new Error("Timeout waiting for notification")),
+          5000,
+        );
 
         clientSocket = ioClient(`http://127.0.0.1:${serverPort}`, {
           path: "/api/socket.io",
@@ -1047,11 +1165,16 @@ describe("Module 10 - Notifications", () => {
       await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", hodCookies)
-        .send({ title: "Socket Test Post", content: "Socket.IO notification test" });
+        .send({
+          title: "Socket Test Post",
+          content: "Socket.IO notification test",
+        });
 
       const notification = await notificationPromise;
       expect(notification).toBeDefined();
-      expect((notification as { title: string }).title).toBe("Socket Test Post");
+      expect((notification as { title: string }).title).toBe(
+        "Socket Test Post",
+      );
     });
 
     it("should reject connection without valid token", (done) => {

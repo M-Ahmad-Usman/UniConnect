@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,7 +44,7 @@ export function LoginForm() {
   });
 
   return (
-    <form className="space-y-5" onSubmit={onSubmit} noValidate>
+    <form className="space-y-4" onSubmit={onSubmit} noValidate>
       <div className="space-y-2">
         <Label htmlFor="login-email">Email</Label>
         <Input
@@ -52,10 +53,15 @@ export function LoginForm() {
           placeholder="name@ntu.edu.pk"
           autoComplete="email"
           aria-invalid={errors.email ? true : undefined}
+          aria-describedby={errors.email ? 'login-email-error' : undefined}
           disabled={login.isPending}
           {...register('email')}
         />
-        {errors.email ? <p className="text-sm text-destructive">{errors.email.message}</p> : null}
+        {errors.email ? (
+          <p id="login-email-error" className="text-sm text-destructive">
+            {errors.email.message}
+          </p>
+        ) : null}
       </div>
 
       <PasswordField
@@ -77,9 +83,9 @@ export function LoginForm() {
         </div>
       ) : null}
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end pt-1">
         <Link
-          className="text-sm text-sky-300 transition hover:text-sky-200"
+          className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
           to={ROUTES.FORGOT_PASSWORD}
         >
           Forgot password?
@@ -87,6 +93,7 @@ export function LoginForm() {
       </div>
 
       <Button className="h-10 w-full" disabled={login.isPending} type="submit">
+        {login.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
         {login.isPending ? 'Signing in...' : 'Sign in'}
       </Button>
     </form>

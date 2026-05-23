@@ -29,25 +29,25 @@ export function AppShell() {
   }, [drawerView, serverId]);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       {!isWorkspaceRoute ? (
-        <aside className="hidden h-screen w-16 shrink-0 lg:block">
+        <aside className="hidden h-full w-20 shrink-0 lg:block">
           <ServerSidebar activeServerId={serverId} />
         </aside>
       ) : null}
       {!isWorkspaceRoute ? (
-        <aside className="hidden h-screen w-72 shrink-0 lg:block">
+        <aside className="hidden h-full w-72 shrink-0 lg:block">
           <ChannelSidebar serverId={serverId} activeChannelId={channelId} />
         </aside>
       ) : null}
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TopBar
           onOpenNavigation={() => {
             setDrawerView(serverId !== null ? 'channels' : 'servers');
             setDrawerOpen(true);
           }}
         />
-        <main className="min-h-0 flex-1 overflow-auto bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-accent)_60%,transparent),transparent_18rem)] px-4 py-4 lg:px-6 lg:py-6">
+        <main className="min-h-0 flex-1 overflow-auto bg-background px-4 py-4 lg:px-6 lg:py-6">
           <Outlet />
         </main>
       </div>
@@ -62,6 +62,7 @@ export function AppShell() {
           {drawerView === 'servers' ? (
             <ServerSidebar
               activeServerId={serverId}
+              variant="drawer"
               onSelectServer={() => {
                 setDrawerView('channels');
               }}

@@ -26,6 +26,7 @@ import {
   curriculumSchema,
   departmentSchema,
   disciplineSchema,
+  globalProgramSchema,
   programSchema,
   teacherAssignmentSchema,
   updateCourseSchema,
@@ -35,6 +36,7 @@ import {
   type CurriculumFormValues,
   type DepartmentFormValues,
   type DisciplineFormValues,
+  type GlobalProgramFormValues,
   type ProgramFormValues,
   type TeacherAssignmentFormValues,
   type UpdateCourseFormValues,
@@ -171,10 +173,12 @@ export function ProgramDialog({
     resolver: zodResolver(programSchema),
     defaultValues: { disciplineId: 0, degreeLevelId: 0, semesters: 8, code: '' },
   });
-  const updateForm = useForm<z.input<typeof updateProgramSchema>, unknown, UpdateProgramFormValues>({
-    resolver: zodResolver(updateProgramSchema),
-    defaultValues: { semesters: 8, code: '' },
-  });
+  const updateForm = useForm<z.input<typeof updateProgramSchema>, unknown, UpdateProgramFormValues>(
+    {
+      resolver: zodResolver(updateProgramSchema),
+      defaultValues: { semesters: 8, code: '' },
+    },
+  );
 
   useEffect(() => {
     if (initial) {
@@ -205,7 +209,13 @@ export function ProgramDialog({
               <input className={inputClassName} {...updateForm.register('code')} />
             </FormField>
             <FormField label="Semesters" error={updateForm.formState.errors.semesters?.message}>
-              <input type="number" min={1} max={10} className={inputClassName} {...updateForm.register('semesters')} />
+              <input
+                type="number"
+                min={1}
+                max={10}
+                className={inputClassName}
+                {...updateForm.register('semesters')}
+              />
             </FormField>
             <DialogFooter>
               <SubmitButton loading={loading} label="Save changes" />
@@ -220,7 +230,10 @@ export function ProgramDialog({
             })}
           >
             <>
-              <FormField label="Discipline" error={createForm.formState.errors.disciplineId?.message}>
+              <FormField
+                label="Discipline"
+                error={createForm.formState.errors.disciplineId?.message}
+              >
                 <select className={inputClassName} {...createForm.register('disciplineId')}>
                   <option value="">Select discipline</option>
                   {disciplines.map((discipline) => (
@@ -248,13 +261,129 @@ export function ProgramDialog({
               <input className={inputClassName} {...createForm.register('code')} />
             </FormField>
             <FormField label="Semesters" error={createForm.formState.errors.semesters?.message}>
-              <input type="number" min={1} max={10} className={inputClassName} {...createForm.register('semesters')} />
+              <input
+                type="number"
+                min={1}
+                max={10}
+                className={inputClassName}
+                {...createForm.register('semesters')}
+              />
             </FormField>
             <DialogFooter>
               <SubmitButton loading={loading} label="Create" />
             </DialogFooter>
           </form>
         )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function GlobalProgramDialog({
+  open,
+  onOpenChange,
+  departments,
+  disciplines,
+  degreeLevels,
+  loading,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  departments: DepartmentListItem[];
+  disciplines: Discipline[];
+  degreeLevels: DegreeLevel[];
+  loading: boolean;
+  onSubmit: (values: GlobalProgramFormValues) => Promise<void>;
+}) {
+  const form = useForm<z.input<typeof globalProgramSchema>, unknown, GlobalProgramFormValues>({
+    resolver: zodResolver(globalProgramSchema),
+    defaultValues: {
+      departmentId: 0,
+      disciplineId: 0,
+      degreeLevelId: 0,
+      semesters: 8,
+      code: '',
+    },
+  });
+
+  useEffect(() => {
+    form.reset({
+      departmentId: 0,
+      disciplineId: 0,
+      degreeLevelId: 0,
+      semesters: 8,
+      code: '',
+    });
+  }, [form, open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Create program</DialogTitle>
+          <DialogDescription>
+            Select the owning department first. Program creation also creates the linked department
+            program channel.
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="grid gap-4 sm:grid-cols-2"
+          onSubmit={form.handleSubmit(async (values) => {
+            await onSubmit(values);
+            onOpenChange(false);
+          })}
+        >
+          <FormField
+            label="Department"
+            error={form.formState.errors.departmentId?.message}
+            className="sm:col-span-2"
+          >
+            <select className={inputClassName} {...form.register('departmentId')}>
+              <option value="">Select department</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.code} · {department.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Discipline" error={form.formState.errors.disciplineId?.message}>
+            <select className={inputClassName} {...form.register('disciplineId')}>
+              <option value="">Select discipline</option>
+              {disciplines.map((discipline) => (
+                <option key={discipline.id} value={discipline.id}>
+                  {discipline.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Degree level" error={form.formState.errors.degreeLevelId?.message}>
+            <select className={inputClassName} {...form.register('degreeLevelId')}>
+              <option value="">Select degree level</option>
+              {degreeLevels.map((degreeLevel) => (
+                <option key={degreeLevel.id} value={degreeLevel.id}>
+                  {degreeLevel.level}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Code" error={form.formState.errors.code?.message}>
+            <input className={inputClassName} placeholder="BSCS" {...form.register('code')} />
+          </FormField>
+          <FormField label="Semesters" error={form.formState.errors.semesters?.message}>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              className={inputClassName}
+              {...form.register('semesters')}
+            />
+          </FormField>
+          <DialogFooter className="sm:col-span-2">
+            <SubmitButton loading={loading} label="Create program" />
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -300,7 +429,9 @@ export function ClassDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Create class</DialogTitle>
-          <DialogDescription>Class creation also creates the linked class server.</DialogDescription>
+          <DialogDescription>
+            Class creation also creates the linked class server.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="grid gap-4 sm:grid-cols-2"
@@ -309,7 +440,11 @@ export function ClassDialog({
             onOpenChange(false);
           })}
         >
-          <FormField label="Program" error={form.formState.errors.programId?.message} className="sm:col-span-2">
+          <FormField
+            label="Program"
+            error={form.formState.errors.programId?.message}
+            className="sm:col-span-2"
+          >
             <select className={inputClassName} {...form.register('programId')}>
               <option value="">Select program</option>
               {programs.map((program) => (
@@ -319,8 +454,17 @@ export function ClassDialog({
               ))}
             </select>
           </FormField>
-          <FormField label="Current semester" error={form.formState.errors.currentSemester?.message}>
-            <input type="number" min={1} max={10} className={inputClassName} {...form.register('currentSemester')} />
+          <FormField
+            label="Current semester"
+            error={form.formState.errors.currentSemester?.message}
+          >
+            <input
+              type="number"
+              min={1}
+              max={10}
+              className={inputClassName}
+              {...form.register('currentSemester')}
+            />
           </FormField>
           <FormField label="Section" error={form.formState.errors.section?.message}>
             <select className={inputClassName} {...form.register('section')}>
@@ -400,8 +544,17 @@ export function CourseDialog({
             <FormField label="Code" error={updateForm.formState.errors.code?.message}>
               <input className={inputClassName} {...updateForm.register('code')} />
             </FormField>
-            <FormField label="Credit hours" error={updateForm.formState.errors.creditHours?.message}>
-              <input type="number" min={1} max={6} className={inputClassName} {...updateForm.register('creditHours')} />
+            <FormField
+              label="Credit hours"
+              error={updateForm.formState.errors.creditHours?.message}
+            >
+              <input
+                type="number"
+                min={1}
+                max={6}
+                className={inputClassName}
+                {...updateForm.register('creditHours')}
+              />
             </FormField>
             <DialogFooter>
               <SubmitButton loading={loading} label="Save changes" />
@@ -421,8 +574,17 @@ export function CourseDialog({
             <FormField label="Code" error={createForm.formState.errors.code?.message}>
               <input className={inputClassName} {...createForm.register('code')} />
             </FormField>
-            <FormField label="Credit hours" error={createForm.formState.errors.creditHours?.message}>
-              <input type="number" min={1} max={6} className={inputClassName} {...createForm.register('creditHours')} />
+            <FormField
+              label="Credit hours"
+              error={createForm.formState.errors.creditHours?.message}
+            >
+              <input
+                type="number"
+                min={1}
+                max={6}
+                className={inputClassName}
+                {...createForm.register('creditHours')}
+              />
             </FormField>
             <FormField label="Department" error={createForm.formState.errors.departmentId?.message}>
               <select className={inputClassName} {...createForm.register('departmentId')}>
@@ -494,7 +656,13 @@ export function CurriculumDialog({
             </select>
           </FormField>
           <FormField label="Semester" error={form.formState.errors.semesterNumber?.message}>
-            <input type="number" min={1} max={maxSemester} className={inputClassName} {...form.register('semesterNumber')} />
+            <input
+              type="number"
+              min={1}
+              max={maxSemester}
+              className={inputClassName}
+              {...form.register('semesterNumber')}
+            />
           </FormField>
           <FormField label="Batch year" error={form.formState.errors.batchYear?.message}>
             <input type="number" className={inputClassName} {...form.register('batchYear')} />
@@ -541,6 +709,9 @@ export function AssignCourseDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Assign course</DialogTitle>
+          <DialogDescription>
+            Assign a curriculum course to this class with an eligible teacher.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"
@@ -550,7 +721,11 @@ export function AssignCourseDialog({
           })}
         >
           <FormField label="Course" error={form.formState.errors.courseId?.message}>
-            <select className={inputClassName} {...form.register('courseId')}>
+            <select
+              className={inputClassName}
+              aria-invalid={form.formState.errors.courseId ? 'true' : undefined}
+              {...form.register('courseId')}
+            >
               <option value="">Select course</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
@@ -560,7 +735,11 @@ export function AssignCourseDialog({
             </select>
           </FormField>
           <FormField label="Teacher" error={form.formState.errors.teacherId?.message}>
-            <select className={inputClassName} {...form.register('teacherId')}>
+            <select
+              className={inputClassName}
+              aria-invalid={form.formState.errors.teacherId ? 'true' : undefined}
+              {...form.register('teacherId')}
+            >
               <option value="">Select teacher</option>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>

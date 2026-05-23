@@ -1,7 +1,19 @@
 import DOMPurify from 'dompurify';
 import type { InfiniteData } from '@tanstack/react-query';
 import { MAX_ATTACHMENTS, MAX_FILE_SIZE } from '@/lib/constants';
-import { ChannelType, PostPriority, UserType, type AuthUser, type ChannelListItem, type PaginatedResponse, type PostDetail, type PostListItem, type PostListParams, type ScopedRoleAssignment, type ServerDetail } from '@/types';
+import {
+  ChannelType,
+  PostPriority,
+  UserType,
+  type AuthUser,
+  type ChannelListItem,
+  type PaginatedResponse,
+  type PostDetail,
+  type PostListItem,
+  type PostListParams,
+  type ScopedRoleAssignment,
+  type ServerDetail,
+} from '@/types';
 
 const ALLOWED_ATTACHMENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -27,9 +39,7 @@ function normalizeSanitizedLinks(html: string) {
       return;
     }
 
-    if (link.getAttribute('target') === '_blank') {
-      link.setAttribute('rel', 'noopener noreferrer');
-    }
+    link.setAttribute('rel', 'noopener noreferrer');
   });
 
   return template.innerHTML;
@@ -52,7 +62,8 @@ export function normalizePostListParams(params?: PostListParams): PostListParams
     return undefined;
   }
 
-  const normalizedSearch = typeof params.search === 'string' ? normalizeSearchValue(params.search) : undefined;
+  const normalizedSearch =
+    typeof params.search === 'string' ? normalizeSearchValue(params.search) : undefined;
   const normalizedStartDate = normalizeDateParam(params.startDate);
   const normalizedEndDate = normalizeDateParam(params.endDate);
 
@@ -106,8 +117,14 @@ export function sanitizePostHtml(html: string) {
       .replace(/\son\w+="[^"]*"/gi, '')
       .replace(/\son\w+='[^']*'/gi, '')
       .replace(/\shref=(["'])(?!https?:|mailto:).*?\1/gi, '')
-      .replace(/(<a\b(?=[^>]*\starget=(["'])_blank\2)(?=[^>]*\srel=)[^>]*?)\srel=(["']).*?\3/gi, '$1 rel="noopener noreferrer"')
-      .replace(/<a\b(?=[^>]*\starget=(["'])_blank\1)(?![^>]*\srel=)/gi, '<a rel="noopener noreferrer"');
+      .replace(
+        /(<a\b(?=[^>]*\starget=(["'])_blank\2)(?=[^>]*\srel=)[^>]*?)\srel=(["']).*?\3/gi,
+        '$1 rel="noopener noreferrer"',
+      )
+      .replace(
+        /<a\b(?=[^>]*\starget=(["'])_blank\1)(?![^>]*\srel=)/gi,
+        '<a rel="noopener noreferrer"',
+      );
   }
 
   const sanitized = DOMPurify.sanitize(html, {
@@ -208,7 +225,11 @@ function hasServerRole(roles: ScopedRoleAssignment[], serverId: number, accepted
   return roles.some((role) => role.serverId === serverId && accepted.includes(role.role));
 }
 
-function hasChannelModeratorRole(roles: ScopedRoleAssignment[], serverId: number, channelId: number) {
+function hasChannelModeratorRole(
+  roles: ScopedRoleAssignment[],
+  serverId: number,
+  channelId: number,
+) {
   return roles.some(
     (role) =>
       role.serverId === serverId &&
@@ -237,7 +258,10 @@ export function canPostInChannelClient({
   const roles = user.roles ?? [];
   const elevatedRoles = ['hod', 'cr', 'society_president', 'society_convenor', 'server_moderator'];
 
-  if (hasServerRole(roles, server.id, elevatedRoles) || hasChannelModeratorRole(roles, server.id, channel.id)) {
+  if (
+    hasServerRole(roles, server.id, elevatedRoles) ||
+    hasChannelModeratorRole(roles, server.id, channel.id)
+  ) {
     return true;
   }
 
@@ -245,7 +269,10 @@ export function canPostInChannelClient({
     return true;
   }
 
-  if (channel.type === ChannelType.PROGRAM && hasServerRole(roles, server.id, ['program_director'])) {
+  if (
+    channel.type === ChannelType.PROGRAM &&
+    hasServerRole(roles, server.id, ['program_director'])
+  ) {
     return true;
   }
 
@@ -256,11 +283,18 @@ export function canPostInChannelClient({
   return false;
 }
 
-export function canEditPostClient(post: Pick<PostListItem | PostDetail, 'author' | 'createdAt'>, user: AuthUser | null | undefined, now = new Date()) {
+export function canEditPostClient(
+  post: Pick<PostListItem | PostDetail, 'author' | 'createdAt'>,
+  user: AuthUser | null | undefined,
+  now = new Date(),
+) {
   return user?.id === post.author.id && getEditWindowState(post.createdAt, now).canEditNow;
 }
 
-export function canDeletePostClient(post: Pick<PostListItem | PostDetail, 'author'>, user: AuthUser | null | undefined) {
+export function canDeletePostClient(
+  post: Pick<PostListItem | PostDetail, 'author'>,
+  user: AuthUser | null | undefined,
+) {
   return user?.id === post.author.id || user?.userType === UserType.ADMIN;
 }
 
@@ -275,6 +309,7 @@ export function detailToListItem(post: PostDetail): PostListItem {
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
     author: post.author,
+    attachments: post.attachments,
     _count: {
       attachments: post.attachments.length,
     },

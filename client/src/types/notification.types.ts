@@ -18,6 +18,9 @@ export interface Notification {
     channel: {
       name: string;
       serverId: number;
+      server?: {
+        name: string;
+      };
     };
   } | null;
 }
@@ -83,10 +86,18 @@ export interface NewNotificationPayload {
     channel: {
       name: string;
       serverId: number;
+      server?: {
+        name: string;
+      };
     };
   } | null;
 }
 
 export interface UnreadCountPayload {
   count: number;
+}
+
+export interface DeletedNotificationPayload {
+  postId: number;
+  notificationIds: number[];
 }

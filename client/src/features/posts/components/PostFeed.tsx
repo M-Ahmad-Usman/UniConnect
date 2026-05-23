@@ -1,10 +1,15 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
-import { Inbox, Loader2, Megaphone, Plus, RefreshCw, Search } from 'lucide-react';
+import { Inbox, Loader2, Plus, RefreshCw, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { PostPriority, type ChannelListItem, type PostListParams, type ServerDetail } from '@/types';
+import {
+  PostPriority,
+  type ChannelListItem,
+  type PostListParams,
+  type ServerDetail,
+} from '@/types';
 import { useChannelPosts } from '../hooks/useChannelPosts';
 import { useCanManagePostPin, useCanPostInChannel } from '../hooks/usePostPermissions';
 import { normalizeDateParam, parseSearchParam } from '../utils';
@@ -89,27 +94,7 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
   }
 
   return (
-    <section ref={feedTopRef} className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-lg border bg-background px-4 py-3 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Megaphone className="size-4 text-muted-foreground" />
-            <h2 className="font-semibold">Posts and announcements</h2>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {channel.isLocked
-              ? 'This channel is locked. Existing posts remain available.'
-              : 'Read updates, inspect attachments, and publish with the right permissions.'}
-          </p>
-        </div>
-        {canPost ? (
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            New post
-          </Button>
-        ) : null}
-      </div>
-
+    <section ref={feedTopRef} className="space-y-4 pb-20">
       <PostFilters
         priority={priority}
         startDate={startDate}
@@ -146,11 +131,6 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
                 ? 'Publish the first update when you are ready.'
                 : 'Posts will appear here once announcements are published.'
           }
-          action={
-            canPost && !hasFilters
-              ? { label: 'New post', onClick: () => setCreateOpen(true) }
-              : undefined
-          }
         />
       ) : (
         <div className="space-y-3">
@@ -178,6 +158,18 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
             Load more
           </Button>
         </div>
+      ) : null}
+
+      {canPost ? (
+        <Button
+          type="button"
+          aria-label="Create new post"
+          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 h-12 rounded-full px-4 shadow-lg lg:right-6"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="size-5" />
+          <span className="hidden sm:inline">New post</span>
+        </Button>
       ) : null}
 
       <CreatePostDialog

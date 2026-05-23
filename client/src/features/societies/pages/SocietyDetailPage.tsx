@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Check, Pencil, Plus, UserMinus, X } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { RoleBadge } from '@/components/shared/RoleBadge';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
 import { parseRouteParamId } from '@/lib/route-params';
 import { parsePositiveInt } from '@/features/admin/utils';
@@ -33,15 +35,6 @@ import {
   type SocietyDetailTab,
 } from '../utils';
 
-function initials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
-}
-
 export function SocietyDetailPage() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,6 +44,7 @@ export function SocietyDetailPage() {
   const [candidateSearch, setCandidateSearch] = useState('');
   const [selectedCandidateId, setSelectedCandidateId] = useState('');
   const [editOpen, setEditOpen] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
 
   const societyQuery = useSociety(societyId);
   const society = societyQuery.data;
@@ -119,6 +113,7 @@ export function SocietyDetailPage() {
   const members = membersQuery.data?.data ?? [];
   const requests = requestsQuery.data?.data ?? [];
   const candidates = candidatesQuery.data?.data ?? [];
+  const removingMember = members.find((member) => member.userId === removingMemberId) ?? null;
 
   return (
     <section className="space-y-5">
@@ -153,204 +148,226 @@ export function SocietyDetailPage() {
         onRetry={() => void societyQuery.refetch()}
         empty={!society}
       >
-        <div className="flex flex-wrap gap-2 border-b">
-          {actions.tabs.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setTab(item)}
-              className={`px-3 py-2 text-sm capitalize ${tab === item ? 'border-b-2 border-primary font-medium' : 'text-muted-foreground'}`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={tab}
+          onValueChange={(value) => {
+            if (isSocietyTabAvailable(value as SocietyDetailTab, actions.tabs)) {
+              setTab(value as SocietyDetailTab);
+            }
+          }}
+        >
+          <TabsList aria-label="Society detail sections">
+            {actions.tabs.map((item) => (
+              <TabsTrigger key={item} value={item} className="capitalize">
+                {item}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {tab === 'overview' ? (
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="rounded-lg border bg-background p-4 lg:col-span-2">
-              <h2 className="font-semibold">Overview</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {society?.description || 'No description provided.'}
-              </p>
-            </div>
-            <div className="rounded-lg border bg-background p-4">
-              <h2 className="font-semibold">Leadership</h2>
-              <dl className="mt-3 space-y-3 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">President</dt>
-                  <dd className="font-medium">{society?.president.user.fullName}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Convenor</dt>
-                  <dd className="font-medium">{society?.convenor.user.fullName}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Members</dt>
-                  <dd className="font-medium">{society?.server._count.memberships ?? 0}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-        ) : null}
-
-        {tab === 'members' && actions.canViewMembers ? (
-          <div className="space-y-4">
-            {actions.canManageMembers ? (
-              <div className="rounded-lg border bg-background p-3">
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-                  <input
-                    className={inputClassName}
-                    placeholder="Search students"
-                    value={candidateSearch}
-                    onChange={(event) => setCandidateSearch(event.target.value)}
-                  />
-                  <select
-                    className={inputClassName}
-                    value={selectedCandidateId}
-                    onChange={(event) => setSelectedCandidateId(event.target.value)}
-                  >
-                    <option value="">
-                      {candidatesQuery.isLoading ? 'Loading students...' : 'Select student'}
-                    </option>
-                    {candidates.map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        {candidate.fullName} · {candidate.email}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    disabled={!selectedCandidateId || addMember.isPending}
-                    onClick={() => {
-                      void addMember.mutateAsync(Number(selectedCandidateId));
-                      setSelectedCandidateId('');
-                    }}
-                  >
-                    <Plus className="size-4" />
-                    Add member
-                  </Button>
-                </div>
+          <TabsContent value="overview">
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="rounded-lg border bg-background p-4 lg:col-span-2">
+                <h2 className="font-semibold">Overview</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {society?.description || 'No description provided.'}
+                </p>
               </div>
-            ) : null}
-            <DataState
-              isLoading={membersQuery.isLoading}
-              isError={membersQuery.isError}
-              onRetry={() => void membersQuery.refetch()}
-              empty={members.length === 0}
-            >
-              <div className="overflow-hidden rounded-lg border bg-background">
-                <div className="divide-y">
-                  {members.map((member) => (
-                    <div
-                      key={member.userId}
-                      className="flex items-center justify-between gap-3 px-4 py-3"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={member.user.profilePictureUrl ?? undefined} />
-                          <AvatarFallback>{initials(member.user.fullName)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{member.user.fullName}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {member.user.email}
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {member.badges.map((badge) => (
-                              <RoleBadge key={badge} role={badge} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      {actions.canManageMembers &&
-                      !member.badges.includes('president') &&
-                      !member.badges.includes('convenor') ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={removeMember.isPending}
-                          onClick={() => removeMember.mutate(member.userId)}
+              <div className="rounded-lg border bg-background p-4">
+                <h2 className="font-semibold">Leadership</h2>
+                <dl className="mt-3 space-y-3 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">President</dt>
+                    <dd className="font-medium">{society?.president.user.fullName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Convenor</dt>
+                    <dd className="font-medium">{society?.convenor.user.fullName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Members</dt>
+                    <dd className="font-medium">{society?.server._count.memberships ?? 0}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </TabsContent>
+
+          {actions.canViewMembers ? (
+            <TabsContent value="members">
+              <div className="space-y-4">
+                {actions.canManageMembers ? (
+                  <div className="rounded-lg border bg-background p-3">
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium">Search students</span>
+                        <input
+                          className={inputClassName}
+                          placeholder="Name or email"
+                          value={candidateSearch}
+                          onChange={(event) => setCandidateSearch(event.target.value)}
+                        />
+                      </label>
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium">Eligible student</span>
+                        <select
+                          className={inputClassName}
+                          value={selectedCandidateId}
+                          onChange={(event) => setSelectedCandidateId(event.target.value)}
                         >
-                          <UserMinus className="size-4" />
-                          Remove
-                        </Button>
-                      ) : null}
+                          <option value="">
+                            {candidatesQuery.isLoading ? 'Loading students...' : 'Select student'}
+                          </option>
+                          {candidates.map((candidate) => (
+                            <option key={candidate.id} value={candidate.id}>
+                              {candidate.fullName} · {candidate.email}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <Button
+                        type="button"
+                        className="self-end"
+                        disabled={!selectedCandidateId || addMember.isPending}
+                        onClick={() => {
+                          void addMember.mutateAsync(Number(selectedCandidateId));
+                          setSelectedCandidateId('');
+                        }}
+                      >
+                        <Plus className="size-4" />
+                        Add member
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </DataState>
-            <PaginationControls pagination={membersQuery.data?.pagination} onPageChange={setPage} />
-          </div>
-        ) : null}
-
-        {tab === 'requests' && actions.canViewJoinRequests ? (
-          <div className="space-y-4">
-            <DataState
-              isLoading={requestsQuery.isLoading}
-              isError={requestsQuery.isError}
-              onRetry={() => void requestsQuery.refetch()}
-              empty={requests.length === 0}
-            >
-              <div className="overflow-hidden rounded-lg border bg-background">
-                <div className="divide-y">
-                  {requests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex items-center justify-between gap-3 px-4 py-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{request.user.fullName}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {request.user.email}
-                        </p>
-                      </div>
-                      {actions.canReviewJoinRequests ? (
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            disabled={reviewRequest.isPending}
-                            onClick={() =>
-                              reviewRequest.mutate({
-                                requestId: request.id,
-                                status: 'APPROVED',
-                              })
-                            }
-                          >
-                            <Check className="size-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={reviewRequest.isPending}
-                            onClick={() =>
-                              reviewRequest.mutate({
-                                requestId: request.id,
-                                status: 'REJECTED',
-                              })
-                            }
-                          >
-                            <X className="size-4" />
-                            Reject
-                          </Button>
+                  </div>
+                ) : null}
+                <DataState
+                  isLoading={membersQuery.isLoading}
+                  isError={membersQuery.isError}
+                  onRetry={() => void membersQuery.refetch()}
+                  empty={members.length === 0}
+                  emptyTitle="No members found"
+                  emptyDescription="This society has no visible ordinary members yet."
+                >
+                  <div className="overflow-hidden rounded-lg border bg-background">
+                    <div className="divide-y">
+                      {members.map((member) => (
+                        <div
+                          key={member.userId}
+                          className="flex items-center justify-between gap-3 px-4 py-3"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <UserAvatar
+                              fullName={member.user.fullName}
+                              profilePictureUrl={member.user.profilePictureUrl}
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{member.user.fullName}</p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {member.user.email}
+                              </p>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {member.badges.map((badge) => (
+                                  <RoleBadge key={badge} role={badge} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          {actions.canManageMembers &&
+                          !member.badges.includes('president') &&
+                          !member.badges.includes('convenor') ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={removeMember.isPending}
+                              onClick={() => setRemovingMemberId(member.userId)}
+                            >
+                              <UserMinus className="size-4" />
+                              Remove
+                            </Button>
+                          ) : null}
                         </div>
-                      ) : null}
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </DataState>
+                <PaginationControls
+                  pagination={membersQuery.data?.pagination}
+                  onPageChange={setPage}
+                />
               </div>
-            </DataState>
-            <PaginationControls
-              pagination={requestsQuery.data?.pagination}
-              onPageChange={setPage}
-            />
-          </div>
-        ) : null}
+            </TabsContent>
+          ) : null}
+
+          {actions.canViewJoinRequests ? (
+            <TabsContent value="requests">
+              <div className="space-y-4">
+                <DataState
+                  isLoading={requestsQuery.isLoading}
+                  isError={requestsQuery.isError}
+                  onRetry={() => void requestsQuery.refetch()}
+                  empty={requests.length === 0}
+                  emptyTitle="No pending requests"
+                  emptyDescription="New join requests will appear here."
+                >
+                  <div className="overflow-hidden rounded-lg border bg-background">
+                    <div className="divide-y">
+                      {requests.map((request) => (
+                        <div
+                          key={request.id}
+                          className="flex items-center justify-between gap-3 px-4 py-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{request.user.fullName}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {request.user.email}
+                            </p>
+                          </div>
+                          {actions.canReviewJoinRequests ? (
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={reviewRequest.isPending}
+                                onClick={() =>
+                                  reviewRequest.mutate({
+                                    requestId: request.id,
+                                    status: 'APPROVED',
+                                  })
+                                }
+                              >
+                                <Check className="size-4" />
+                                Approve
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={reviewRequest.isPending}
+                                onClick={() =>
+                                  reviewRequest.mutate({
+                                    requestId: request.id,
+                                    status: 'REJECTED',
+                                  })
+                                }
+                              >
+                                <X className="size-4" />
+                                Reject
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </DataState>
+                <PaginationControls
+                  pagination={requestsQuery.data?.pagination}
+                  onPageChange={setPage}
+                />
+              </div>
+            </TabsContent>
+          ) : null}
+        </Tabs>
       </DataState>
       {society && editInitialValues ? (
         <SocietyEditDialog
@@ -365,6 +382,22 @@ export function SocietyDetailPage() {
           }}
         />
       ) : null}
+      <ConfirmDialog
+        open={removingMemberId !== null}
+        onOpenChange={(open) => !open && setRemovingMemberId(null)}
+        title="Remove society member"
+        description={
+          removingMember
+            ? `Remove ${removingMember.user.fullName} from this society? They will lose society member access.`
+            : 'Remove this member from the society? They will lose society member access.'
+        }
+        confirmLabel="Remove member"
+        variant="destructive"
+        onConfirm={async () => {
+          if (removingMemberId === null) return;
+          await removeMember.mutateAsync(removingMemberId);
+        }}
+      />
     </section>
   );
 }

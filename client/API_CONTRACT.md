@@ -40,21 +40,24 @@ This document provides a complete reference for all API endpoints available to t
 ## Base Configuration
 
 ### Backend URLs
+
 - **Development:** `http://localhost:4000`
 - **Production:** same-origin deployment is recommended
 
 ### API Base Path
+
 All API endpoints are prefixed with `/api`
 
 Example: `http://localhost:4000/api/users/me`
 
 ### Axios Configuration
+
 ```typescript
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: '/api',  // Relative path for Vite proxy in dev and same-origin in production
-  withCredentials: true,  // REQUIRED: sends httpOnly cookies
+  baseURL: '/api', // Relative path for Vite proxy in dev and same-origin in production
+  withCredentials: true, // REQUIRED: sends httpOnly cookies
   headers: {
     'Content-Type': 'application/json',
   },
@@ -62,11 +65,13 @@ const apiClient = axios.create({
 ```
 
 ### Deployment Recommendation
+
 - Prefer same-origin production deployment for frontend and backend.
 - The backend currently issues auth cookies with `SameSite=Strict`, which fits same-origin deployment best.
 - If you later choose a separate frontend and backend origin, review cookie policy, CORS, and Socket.IO configuration before implementation.
 
 ### Vite Proxy Configuration
+
 ```typescript
 // vite.config.ts
 export default defineConfig({
@@ -90,17 +95,21 @@ export default defineConfig({
 ## Authentication Model
 
 ### Cookie-Based Authentication
+
 The backend uses **httpOnly cookies** for authentication. Frontend **never handles tokens directly**.
 
 #### Cookies Set by Backend
-| Cookie Name | Path | Purpose | Lifespan |
-|-------------|------|---------|----------|
-| `access_token` | `/api` | API authentication | 15 minutes (default) |
-| `refresh_token` | `/api/auth/refresh` | Token refresh | 7 days (default) |
-| `XSRF-TOKEN` | `/` | CSRF header source | Browser session |
+
+| Cookie Name     | Path                | Purpose            | Lifespan             |
+| --------------- | ------------------- | ------------------ | -------------------- |
+| `access_token`  | `/api`              | API authentication | 15 minutes (default) |
+| `refresh_token` | `/api/auth/refresh` | Token refresh      | 7 days (default)     |
+| `XSRF-TOKEN`    | `/`                 | CSRF header source | Browser session      |
 
 #### Frontend Requirements
+
 - **Every request must include credentials:**
+
   ```typescript
   // axios
   axios.get('/users/me', { withCredentials: true });
@@ -119,6 +128,7 @@ The backend uses **httpOnly cookies** for authentication. Frontend **never handl
   - On `CSRF_INVALID`, refetch once and retry the original request.
 
 #### Public Endpoints (No Auth Required)
+
 - `GET /api/health`
 - `GET /api/auth/csrf`
 - `POST /api/auth/login`
@@ -127,9 +137,11 @@ The backend uses **httpOnly cookies** for authentication. Frontend **never handl
 - `POST /api/auth/refresh` (requires `refresh_token` cookie)
 
 #### Protected Endpoints
+
 ALL other endpoints require a valid `access_token` cookie.
 
 #### Token Refresh Flow
+
 1. API request returns `401 Unauthorized`
 2. Frontend axios interceptor catches 401
 3. Interceptor calls `POST /api/auth/refresh`
@@ -139,6 +151,7 @@ ALL other endpoints require a valid `access_token` cookie.
 7. If refresh fails (401): redirect to `/login`
 
 **Axios Interceptor Example:**
+
 ```typescript
 apiClient.interceptors.response.use(
   (response) => response,
@@ -160,12 +173,14 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 ```
 
 #### mustChangePassword Flow
+
 After login, if `mustChangePassword === true`:
+
 1. Backend **blocks** all routes except `/api/auth/change-password` with `403 Forbidden`
 2. Frontend must redirect to `/change-password` page
 3. Frontend should **not** establish a Socket.IO session until the password is changed and the user logs in again
@@ -173,6 +188,7 @@ After login, if `mustChangePassword === true`:
 5. User must log in again with new password
 
 #### Password Reset URL Exception
+
 - The reset-password flow is the controlled exception to the “avoid sensitive data in URLs” rule.
 - The reset token arrives from the email link, is read once by the reset page, and is then submitted in the request body to `POST /api/auth/reset-password`.
 
@@ -181,6 +197,7 @@ After login, if `mustChangePassword === true`:
 ## Response Patterns
 
 ### Standard Success Response
+
 ```typescript
 interface ApiResponse<T> {
   success: true;
@@ -190,6 +207,7 @@ interface ApiResponse<T> {
 ```
 
 **Example:**
+
 ```json
 {
   "success": true,
@@ -203,6 +221,7 @@ interface ApiResponse<T> {
 ```
 
 ### Paginated Response
+
 ```typescript
 interface PaginatedResponse<T> {
   success: true;
@@ -217,6 +236,7 @@ interface PaginatedResponse<T> {
 ```
 
 **Example:**
+
 ```json
 {
   "success": true,
@@ -238,6 +258,7 @@ interface PaginatedResponse<T> {
 ## Error Handling
 
 ### Error Response Shape
+
 ```typescript
 interface ApiErrorResponse {
   success: false;
@@ -254,17 +275,19 @@ interface ApiErrorResponse {
 ```
 
 ### Error Codes
-| Code | HTTP Status | Description | Frontend Action |
-|------|-------------|-------------|-----------------|
-| `VALIDATION_ERROR` | 400 | Request validation failed | Show field-level errors |
-| `UNAUTHORIZED` | 401 | Missing or invalid token | Attempt refresh, redirect to login |
-| `FORBIDDEN` | 403 | Insufficient permissions | Show "Access denied" message |
-| `NOT_FOUND` | 404 | Resource not found | Show empty state or 404 page |
-| `CONFLICT` | 409 | Resource already exists | Show conflict message (e.g., "Email already registered") |
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests | Show cooldown message, retry after delay |
-| `INTERNAL_ERROR` | 500 | Server error | Show generic error, log to error tracking |
+
+| Code                  | HTTP Status | Description               | Frontend Action                                          |
+| --------------------- | ----------- | ------------------------- | -------------------------------------------------------- |
+| `VALIDATION_ERROR`    | 400         | Request validation failed | Show field-level errors                                  |
+| `UNAUTHORIZED`        | 401         | Missing or invalid token  | Attempt refresh, redirect to login                       |
+| `FORBIDDEN`           | 403         | Insufficient permissions  | Show "Access denied" message                             |
+| `NOT_FOUND`           | 404         | Resource not found        | Show empty state or 404 page                             |
+| `CONFLICT`            | 409         | Resource already exists   | Show conflict message (e.g., "Email already registered") |
+| `RATE_LIMIT_EXCEEDED` | 429         | Too many requests         | Show cooldown message, retry after delay                 |
+| `INTERNAL_ERROR`      | 500         | Server error              | Show generic error, log to error tracking                |
 
 ### Validation Error Example
+
 ```json
 {
   "success": false,
@@ -288,6 +311,7 @@ interface ApiErrorResponse {
 ```
 
 ### Frontend Error Handling Pattern
+
 ```typescript
 try {
   const response = await apiClient.post('/auth/login', credentials);
@@ -299,7 +323,7 @@ try {
     switch (apiError.error.code) {
       case 'VALIDATION_ERROR':
         // Map validation errors to form fields
-        apiError.error.details?.forEach(detail => {
+        apiError.error.details?.forEach((detail) => {
           setError(detail.field, { message: detail.message });
         });
         break;
@@ -326,15 +350,17 @@ try {
 ## Pagination
 
 ### Query Parameters
-| Parameter | Type | Default | Max | Description |
-|-----------|------|---------|-----|-------------|
-| `page` | number | 1 | - | Page number (1-indexed) |
-| `limit` | number | 20 | 50 | Items per page |
+
+| Parameter | Type   | Default | Max | Description             |
+| --------- | ------ | ------- | --- | ----------------------- |
+| `page`    | number | 1       | -   | Page number (1-indexed) |
+| `limit`   | number | 20      | 50  | Items per page          |
 
 ### Example Request
+
 ```typescript
 const response = await apiClient.get('/servers/1/members', {
-  params: { page: 2, limit: 30 }
+  params: { page: 2, limit: 30 },
 });
 
 // response.data.pagination:
@@ -342,13 +368,15 @@ const response = await apiClient.get('/servers/1/members', {
 ```
 
 ### TanStack Query Pattern
+
 ```typescript
 function useServerMembers(serverId: number, page: number = 1) {
   return useQuery({
     queryKey: ['servers', serverId, 'members', { page }],
-    queryFn: () => apiClient.get(`/servers/${serverId}/members`, {
-      params: { page, limit: 20 }
-    }),
+    queryFn: () =>
+      apiClient.get(`/servers/${serverId}/members`, {
+        params: { page, limit: 20 },
+      }),
   });
 }
 ```
@@ -358,12 +386,14 @@ function useServerMembers(serverId: number, page: number = 1) {
 ## File Uploads
 
 ### Constraints
+
 - **Max file size:** 5MB per file
 - **Max attachments per post:** 3 files
 - **Accepted image types:** JPEG, PNG, WEBP
 - **Magic byte validation:** Backend validates actual file type (cannot be spoofed)
 
 ### Multipart Form Data Example
+
 ```typescript
 // Post creation with attachments
 const formData = new FormData();
@@ -371,7 +401,7 @@ formData.append('title', 'Announcement Title');
 formData.append('content', '<p>Content HTML</p>');
 formData.append('priority', 'URGENT');
 
-files.forEach(file => {
+files.forEach((file) => {
   formData.append('attachments', file);
 });
 
@@ -383,6 +413,7 @@ const response = await apiClient.post(`/channels/${channelId}/posts`, formData, 
 ```
 
 ### Profile Picture Upload
+
 ```typescript
 const formData = new FormData();
 formData.append('profilePicture', file);
@@ -392,15 +423,14 @@ const response = await apiClient.patch('/users/me/profile-picture', formData, {
     'Content-Type': 'multipart/form-data',
   },
   onUploadProgress: (progressEvent) => {
-    const percentCompleted = Math.round(
-      (progressEvent.loaded * 100) / (progressEvent.total || 1)
-    );
+    const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
     setUploadProgress(percentCompleted);
   },
 });
 ```
 
 ### CSV Bulk Import
+
 ```typescript
 const formData = new FormData();
 formData.append('file', csvFile);
@@ -420,14 +450,16 @@ const response = await apiClient.post('/users/bulk-import', formData, {
 ## Rate Limiting
 
 ### Rate Limit Tiers
-| Endpoint Category | Limit | Window |
-|-------------------|-------|--------|
-| General API | 100 requests | 1 minute |
-| Auth endpoints (login, forgot password) | 5 requests | 15 minutes |
-| File upload endpoints | 10 requests | 1 minute |
-| Socket.IO connections | 10 connections | 1 minute |
+
+| Endpoint Category                       | Limit          | Window     |
+| --------------------------------------- | -------------- | ---------- |
+| General API                             | 100 requests   | 1 minute   |
+| Auth endpoints (login, forgot password) | 5 requests     | 15 minutes |
+| File upload endpoints                   | 10 requests    | 1 minute   |
+| Socket.IO connections                   | 10 connections | 1 minute   |
 
 ### Rate Limit Response
+
 ```json
 {
   "success": false,
@@ -439,6 +471,7 @@ const response = await apiClient.post('/users/bulk-import', formData, {
 ```
 
 ### Frontend Handling
+
 ```typescript
 if (error.error.code === 'RATE_LIMIT_EXCEEDED') {
   // Disable submit button, show countdown timer
@@ -451,17 +484,19 @@ if (error.error.code === 'RATE_LIMIT_EXCEEDED') {
 ## Socket.IO Real-time
 
 ### Connection Setup
+
 ```typescript
 import { io } from 'socket.io-client';
 
 const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
   path: '/api/socket.io',
-  withCredentials: true,  // Sends access_token cookie
+  withCredentials: true, // Sends access_token cookie
   transports: ['websocket', 'polling'],
 });
 ```
 
 ### Authentication
+
 - Socket.IO reads `access_token` httpOnly cookie from handshake headers
 - If `mustChangePassword === true`, connection is **rejected**
 - On successful connection, the **server** joins the socket to room `user:{userId}`
@@ -469,7 +504,9 @@ const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
 ### Server-to-Client Events
 
 #### `notification:new`
+
 **Payload:**
+
 ```typescript
 {
   id: number;
@@ -484,12 +521,16 @@ const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
     channel: {
       name: string;
       serverId: number;
+      server?: {
+        name: string;
+      };
     };
   } | null;
 }
 ```
 
 **Frontend Action:**
+
 ```typescript
 socket.on('notification:new', (notification) => {
   // 1. Prepend to notification cache
@@ -508,8 +549,32 @@ socket.on('notification:new', (notification) => {
 });
 ```
 
-#### `notification:unread-count`
+#### `notification:deleted`
+
+Emitted when notifications are removed because their source post was deleted.
+
 **Payload:**
+
+```typescript
+{
+  postId: number;
+  notificationIds: number[];
+}
+```
+
+**Frontend Action:**
+
+```typescript
+socket.on('notification:deleted', ({ notificationIds }) => {
+  // Remove matching items from notification preview/list caches.
+  removeNotificationsFromCache(notificationIds);
+});
+```
+
+#### `notification:unread-count`
+
+**Payload:**
+
 ```typescript
 {
   count: number;
@@ -517,6 +582,7 @@ socket.on('notification:new', (notification) => {
 ```
 
 **Frontend Action:**
+
 ```typescript
 socket.on('notification:unread-count', ({ count }) => {
   notificationStore.setUnreadCount(count);
@@ -524,9 +590,11 @@ socket.on('notification:unread-count', ({ count }) => {
 ```
 
 #### `auth:expired`
+
 **Payload:** (none)
 
 **Frontend Action:**
+
 ```typescript
 socket.on('auth:expired', () => {
   // Access token expired, trigger logout
@@ -538,12 +606,15 @@ socket.on('auth:expired', () => {
 ```
 
 ### Auto-Disconnect on Token Expiry
+
 Backend sets a timer based on JWT expiry. When token expires:
+
 1. Server emits `auth:expired` event
 2. Server disconnects socket
 3. Frontend should handle reconnection after refresh
 
 #### `auth:roles-updated`
+
 **Payload:** (none)
 
 Emitted to the affected user after role assignment, role revocation, or society leadership changes.
@@ -557,11 +628,13 @@ queries, and role-dependent queries before rendering permission-gated actions.
 ### System Endpoints
 
 #### Health Check
+
 ```
 GET /api/health
 ```
 
 #### Current User Permissions
+
 ```
 GET /api/permissions/me
 ```
@@ -569,6 +642,7 @@ GET /api/permissions/me
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -606,6 +680,7 @@ GET /api/permissions/me
 ```
 
 **Notes:**
+
 - Used for navigation and permission-aware UI gating only.
 - Mutations still recompute authorization on the backend.
 - Does not return assignable users or broad role-management option lists.
@@ -613,6 +688,7 @@ GET /api/permissions/me
 **Auth:** None
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -625,6 +701,7 @@ GET /api/permissions/me
 ### Authentication Endpoints
 
 #### Login
+
 ```
 POST /api/auth/login
 ```
@@ -633,14 +710,16 @@ POST /api/auth/login
 **Rate Limit:** 5 req / 15 min
 
 **Request Body:**
+
 ```typescript
 {
-  email: string;      // Valid email
-  password: string;   // Min 1 char
+  email: string; // Valid email
+  password: string; // Min 1 char
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -650,16 +729,18 @@ POST /api/auth/login
     email: string;
     userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
     mustChangePassword: boolean;
-  };
+  }
   message: 'Login successful' | 'Login successful. Password change required.';
 }
 ```
 
 **Cookies Set:**
+
 - `access_token` (15 min)
 - `refresh_token` (7 days)
 
 **Frontend Action:**
+
 ```typescript
 const user = await authApi.login({ email, password });
 
@@ -675,6 +756,7 @@ if (user.mustChangePassword) {
 ```
 
 #### Logout
+
 ```
 POST /api/auth/logout
 ```
@@ -682,6 +764,7 @@ POST /api/auth/logout
 **Auth:** Required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -691,10 +774,12 @@ POST /api/auth/logout
 ```
 
 **Cookies Cleared:**
+
 - `access_token`
 - `refresh_token`
 
 **Frontend Action:**
+
 ```typescript
 await apiClient.post('/auth/logout');
 authStore.clearUser();
@@ -704,6 +789,7 @@ navigate('/login');
 ```
 
 #### Refresh Token
+
 ```
 POST /api/auth/refresh
 ```
@@ -712,6 +798,7 @@ POST /api/auth/refresh
 **Rate Limit:** None (used by interceptor)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -721,10 +808,12 @@ POST /api/auth/refresh
 ```
 
 **Cookies Set:**
+
 - New `access_token`
 - New `refresh_token`
 
 #### Forgot Password
+
 ```
 POST /api/auth/forgot-password
 ```
@@ -733,13 +822,15 @@ POST /api/auth/forgot-password
 **Rate Limit:** 5 req / 15 min
 
 **Request Body:**
+
 ```typescript
 {
-  email: string;  // Valid email
+  email: string; // Valid email
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -751,6 +842,7 @@ POST /api/auth/forgot-password
 **Note:** Response is always success (no email enumeration). Backend sends email with reset token to valid addresses only.
 
 #### Reset Password
+
 ```
 POST /api/auth/reset-password
 ```
@@ -759,14 +851,16 @@ POST /api/auth/reset-password
 **Rate Limit:** 5 req / 15 min
 
 **Request Body:**
+
 ```typescript
 {
-  token: string;       // From email link query param
+  token: string; // From email link query param
   newPassword: string; // Min 8, lowercase, uppercase, digit, special char
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -778,6 +872,7 @@ POST /api/auth/reset-password
 **Cookies Cleared:** All (user must log in again)
 
 #### Change Password
+
 ```
 PATCH /api/auth/change-password
 ```
@@ -785,14 +880,16 @@ PATCH /api/auth/change-password
 **Auth:** Required
 
 **Request Body:**
+
 ```typescript
 {
   currentPassword: string;
-  newPassword: string;  // Must differ from current, meet strength requirements
+  newPassword: string; // Must differ from current, meet strength requirements
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -808,6 +905,7 @@ PATCH /api/auth/change-password
 ### Users Endpoints
 
 #### Get Own Profile
+
 ```
 GET /api/users/me
 ```
@@ -815,6 +913,7 @@ GET /api/users/me
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -859,6 +958,7 @@ GET /api/users/me
 ```
 
 #### Update Own Profile
+
 ```
 PATCH /api/users/me
 ```
@@ -866,6 +966,7 @@ PATCH /api/users/me
 **Auth:** Required
 
 **Request Body:**
+
 ```typescript
 {
   bio?: string;  // Max 500 chars
@@ -873,6 +974,7 @@ PATCH /api/users/me
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -882,6 +984,7 @@ PATCH /api/users/me
 ```
 
 #### Update Profile Picture
+
 ```
 PATCH /api/users/me/profile-picture
 ```
@@ -890,22 +993,25 @@ PATCH /api/users/me/profile-picture
 **Rate Limit:** 10 req / min (upload tier)
 
 **Request Body:** Multipart form data
+
 - Field name: `profilePicture`
 - Max size: 5MB
 - Accepted: JPEG, PNG, WEBP
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
-    profilePictureUrl: string;  // New Cloudinary URL
-  };
+    profilePictureUrl: string; // New Cloudinary URL
+  }
   message: 'Profile picture updated successfully';
 }
 ```
 
 #### Create User (Admin)
+
 ```
 POST /api/users
 ```
@@ -913,6 +1019,7 @@ POST /api/users
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
   fullName: string;   // 1-100 chars
@@ -934,6 +1041,7 @@ POST /api/users
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -943,7 +1051,7 @@ POST /api/users
     fullName: string;
     userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
     mustChangePassword: true;
-  };
+  }
   message: 'User created successfully';
 }
 ```
@@ -951,6 +1059,7 @@ POST /api/users
 **Note:** Backend emails the generated temporary password to the user. The frontend should not display the password to admins. User must change password on first login.
 
 #### Bulk Import Users (CSV)
+
 ```
 POST /api/users/bulk-import
 ```
@@ -959,11 +1068,13 @@ POST /api/users/bulk-import
 **Rate Limit:** 10 req / min (upload tier)
 
 **Request Body:** Multipart form data
+
 - Field name: `file`
 - File type: CSV
 - Max size: 5MB
 
 **CSV Format:**
+
 ```
 fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation
 John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,22-NTU-CS-1184,
@@ -971,6 +1082,7 @@ Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -981,12 +1093,13 @@ Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
       row: number;
       message: string;
     }>;
-  };
+  }
   message: 'Import completed';
 }
 ```
 
 #### List Users (Admin/Teacher)
+
 ```
 GET /api/users
 ```
@@ -994,6 +1107,7 @@ GET /api/users
 **Auth:** Admin or Teacher
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;        // Default: 1
@@ -1007,6 +1121,7 @@ GET /api/users
 **Response:** Paginated list of users (same shape as GET /me)
 
 #### Get User by ID (Admin/Teacher)
+
 ```
 GET /api/users/:id
 ```
@@ -1016,6 +1131,7 @@ GET /api/users/:id
 **Response:** Same as GET /me
 
 #### Deactivate User (Admin)
+
 ```
 PATCH /api/users/:id/deactivate
 ```
@@ -1023,6 +1139,7 @@ PATCH /api/users/:id/deactivate
 **Auth:** Admin only
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1032,6 +1149,7 @@ PATCH /api/users/:id/deactivate
 ```
 
 #### Reactivate User (Admin)
+
 ```
 PATCH /api/users/:id/reactivate
 ```
@@ -1039,6 +1157,7 @@ PATCH /api/users/:id/reactivate
 **Auth:** Admin only
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1052,6 +1171,7 @@ PATCH /api/users/:id/reactivate
 ### Departments Endpoints
 
 #### List Departments
+
 ```
 GET /api/departments
 ```
@@ -1059,6 +1179,7 @@ GET /api/departments
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1074,6 +1195,7 @@ GET /api/departments
 ```
 
 #### Get Department
+
 ```
 GET /api/departments/:id
 ```
@@ -1081,6 +1203,7 @@ GET /api/departments/:id
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1104,6 +1227,7 @@ GET /api/departments/:id
 ```
 
 #### Create Department (Admin)
+
 ```
 POST /api/departments
 ```
@@ -1111,14 +1235,16 @@ POST /api/departments
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
-  name: string;  // 1-100 chars
-  code: string;  // 2-10 chars, uppercase (e.g., "CS")
+  name: string; // 1-100 chars
+  code: string; // 2-10 chars, uppercase (e.g., "CS")
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1126,13 +1252,14 @@ POST /api/departments
     id: number;
     name: string;
     code: string;
-    serverId: number;  // Auto-created server
-  };
+    serverId: number; // Auto-created server
+  }
   message: 'Department created successfully';
 }
 ```
 
 #### Update Department (Admin)
+
 ```
 PATCH /api/departments/:id
 ```
@@ -1140,6 +1267,7 @@ PATCH /api/departments/:id
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
   name?: string;
@@ -1148,6 +1276,7 @@ PATCH /api/departments/:id
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1157,6 +1286,7 @@ PATCH /api/departments/:id
 ```
 
 #### Get Department Stats (Admin/Teacher)
+
 ```
 GET /api/departments/:id/stats
 ```
@@ -1164,6 +1294,7 @@ GET /api/departments/:id/stats
 **Auth:** Admin or Teacher
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1172,11 +1303,12 @@ GET /api/departments/:id/stats
     totalClasses: number;
     totalStudents: number;
     totalTeachers: number;
-  };
+  }
 }
 ```
 
 #### List Programs in Department
+
 ```
 GET /api/departments/:id/programs
 ```
@@ -1184,6 +1316,7 @@ GET /api/departments/:id/programs
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1196,12 +1329,13 @@ GET /api/departments/:id/programs
     code: string;
     programDirectorId: number | null;
     discipline: { name: string };
-    degreeLevel: { level: string };  // "Bachelor", "Master", "PhD"
+    degreeLevel: { level: string }; // "Bachelor", "Master", "PhD"
   }>;
 }
 ```
 
 #### Create Program in Department (Admin)
+
 ```
 POST /api/departments/:id/programs
 ```
@@ -1209,23 +1343,25 @@ POST /api/departments/:id/programs
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
   disciplineId: number;
   degreeLevelId: number;
-  semesters: number;     // 1-10
-  code: string;          // e.g., "BSCS", "MSSE"
+  semesters: number; // 1-10
+  code: string; // e.g., "BSCS", "MSSE"
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
     id: number;
     code: string;
-  };
+  }
   message: 'Program created successfully';
 }
 ```
@@ -1235,6 +1371,7 @@ POST /api/departments/:id/programs
 ### Programs Endpoints
 
 #### Update Program (Admin)
+
 ```
 PATCH /api/programs/:id
 ```
@@ -1242,6 +1379,7 @@ PATCH /api/programs/:id
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
   semesters?: number;  // 1-10
@@ -1250,6 +1388,7 @@ PATCH /api/programs/:id
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1259,6 +1398,7 @@ PATCH /api/programs/:id
 ```
 
 #### Get Program Curriculum
+
 ```
 GET /api/programs/:id/curriculum
 ```
@@ -1266,6 +1406,7 @@ GET /api/programs/:id/curriculum
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   semesterNumber?: number;  // Filter by semester
@@ -1274,6 +1415,7 @@ GET /api/programs/:id/curriculum
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1294,6 +1436,7 @@ GET /api/programs/:id/curriculum
 ```
 
 #### Add Course to Curriculum (Admin/Teacher)
+
 ```
 POST /api/programs/:id/curriculum
 ```
@@ -1301,15 +1444,17 @@ POST /api/programs/:id/curriculum
 **Auth:** Admin or Teacher
 
 **Request Body:**
+
 ```typescript
 {
   courseId: number;
-  semesterNumber: number;  // 1-10
-  batchYear: number;       // e.g., 2024
+  semesterNumber: number; // 1-10
+  batchYear: number; // e.g., 2024
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1319,6 +1464,7 @@ POST /api/programs/:id/curriculum
 ```
 
 #### Remove Course from Curriculum (Admin/Teacher)
+
 ```
 DELETE /api/programs/:id/curriculum/:curriculumId
 ```
@@ -1326,6 +1472,7 @@ DELETE /api/programs/:id/curriculum/:curriculumId
 **Auth:** Admin or Teacher
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1339,6 +1486,7 @@ DELETE /api/programs/:id/curriculum/:curriculumId
 ### Disciplines Endpoints
 
 #### List Disciplines
+
 ```
 GET /api/disciplines
 ```
@@ -1346,17 +1494,19 @@ GET /api/disciplines
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: Array<{
     id: number;
-    name: string;  // e.g., "Computer Science", "Software Engineering"
+    name: string; // e.g., "Computer Science", "Software Engineering"
   }>;
 }
 ```
 
 #### Create Discipline (Admin)
+
 ```
 POST /api/disciplines
 ```
@@ -1364,20 +1514,22 @@ POST /api/disciplines
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
-  name: string;  // 1-100 chars
+  name: string; // 1-100 chars
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
     id: number;
     name: string;
-  };
+  }
   message: 'Discipline created successfully';
 }
 ```
@@ -1387,6 +1539,7 @@ POST /api/disciplines
 ### Classes Endpoints
 
 #### List Classes
+
 ```
 GET /api/classes
 ```
@@ -1394,6 +1547,7 @@ GET /api/classes
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -1409,6 +1563,7 @@ GET /api/classes
 **Visibility:** scoped to admins, own-department HODs, and own-program Program Directors.
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1438,6 +1593,7 @@ GET /api/classes
 ```
 
 #### Get Class
+
 ```
 GET /api/classes/:id
 ```
@@ -1445,6 +1601,7 @@ GET /api/classes/:id
 **Auth:** Required
 
 **Response:** Same shape as list item, plus counts, graduation metadata, and caller-specific permissions:
+
 ```typescript
 {
   success: true;
@@ -1466,6 +1623,7 @@ GET /api/classes/:id
 ```
 
 #### Create Class (Admin/Teacher)
+
 ```
 POST /api/classes
 ```
@@ -1475,29 +1633,32 @@ POST /api/classes
 **Rules:** Course must be in the class current-semester curriculum. Teacher must be active.
 
 **Request Body:**
+
 ```typescript
 {
   programId: number;
-  currentSemester: number;    // 1-10
-  academicYear: number;       // e.g., 2024
-  admissionYear: number;      // e.g., 2021
+  currentSemester: number; // 1-10
+  academicYear: number; // e.g., 2024
+  admissionYear: number; // e.g., 2021
   section: 'A' | 'B';
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
     id: number;
-    serverId: number;  // Auto-created server
-  };
+    serverId: number; // Auto-created server
+  }
   message: 'Class created successfully';
 }
 ```
 
 #### Assign Course to Class (Admin/Teacher)
+
 ```
 POST /api/classes/:id/courses
 ```
@@ -1505,6 +1666,7 @@ POST /api/classes/:id/courses
 **Auth:** Admin or Teacher
 
 **Request Body:**
+
 ```typescript
 {
   courseId: number;
@@ -1513,6 +1675,7 @@ POST /api/classes/:id/courses
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1524,6 +1687,7 @@ POST /api/classes/:id/courses
 **Note:** Also creates auto-channel for this course in class server
 
 #### Class Students (Admin/HOD)
+
 ```
 GET /api/classes/:id/students
 GET /api/classes/:id/student-candidates?page&limit&search
@@ -1531,26 +1695,34 @@ POST /api/classes/:id/students
 ```
 
 `POST` body:
+
 ```typescript
-{ studentId: number }
+{
+  studentId: number;
+}
 ```
 
 Transfers an existing active same-department student into the class and synchronizes class server membership.
 
 #### Teacher Candidates and Replacement
+
 ```
 GET /api/classes/:id/teacher-candidates?page&limit&search
 PATCH /api/classes/:id/courses/:courseId/teacher
 ```
 
 `PATCH` body:
+
 ```typescript
-{ teacherId: number }
+{
+  teacherId: number;
+}
 ```
 
 Replacement keeps the course channel active and synchronizes auto teacher membership.
 
 #### List Courses for Class
+
 ```
 GET /api/classes/:id/courses
 ```
@@ -1558,6 +1730,7 @@ GET /api/classes/:id/courses
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1580,6 +1753,7 @@ GET /api/classes/:id/courses
 ```
 
 #### Remove Course Assignment (Admin/Teacher)
+
 ```
 DELETE /api/classes/:id/courses/:courseId
 ```
@@ -1587,6 +1761,7 @@ DELETE /api/classes/:id/courses/:courseId
 **Auth:** Admin or Teacher
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1598,6 +1773,7 @@ DELETE /api/classes/:id/courses/:courseId
 **Note:** Also archives the course channel
 
 #### Graduate Class (Admin/HOD)
+
 ```
 POST /api/classes/:id/graduation
 ```
@@ -1605,6 +1781,7 @@ POST /api/classes/:id/graduation
 Final-semester active classes only. Graduation marks the class as `GRADUATED`, locks class channels, and keeps history visible.
 
 #### Semester Progression (Admin/Teacher)
+
 ```
 POST /api/classes/:id/semester-progression
 ```
@@ -1612,6 +1789,7 @@ POST /api/classes/:id/semester-progression
 **Auth:** Admin or Teacher
 
 **Request Body:**
+
 ```typescript
 {
   teacherAssignments: Array<{
@@ -1622,6 +1800,7 @@ POST /api/classes/:id/semester-progression
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1631,6 +1810,7 @@ POST /api/classes/:id/semester-progression
 ```
 
 **Side Effects:**
+
 - Increments `currentSemester` by 1
 - Archives all course channels
 - Clears all TEACHES records (course-teacher assignments)
@@ -1641,6 +1821,7 @@ POST /api/classes/:id/semester-progression
 ### Courses Endpoints
 
 #### List Courses
+
 ```
 GET /api/courses
 ```
@@ -1648,6 +1829,7 @@ GET /api/courses
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -1657,6 +1839,7 @@ GET /api/courses
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1672,6 +1855,7 @@ GET /api/courses
 ```
 
 #### Get Course
+
 ```
 GET /api/courses/:id
 ```
@@ -1681,6 +1865,7 @@ GET /api/courses/:id
 **Response:** Same shape as list item
 
 #### Create Course (Admin)
+
 ```
 POST /api/courses
 ```
@@ -1688,28 +1873,31 @@ POST /api/courses
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
-  title: string;         // 1-200 chars
-  code: string;          // 2-20 chars (e.g., "CS101")
-  creditHours: number;   // 1-6
+  title: string; // 1-200 chars
+  code: string; // 2-20 chars (e.g., "CS101")
+  creditHours: number; // 1-6
   departmentId: number;
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
     id: number;
     code: string;
-  };
+  }
   message: 'Course created successfully';
 }
 ```
 
 #### Update Course (Admin)
+
 ```
 PATCH /api/courses/:id
 ```
@@ -1717,6 +1905,7 @@ PATCH /api/courses/:id
 **Auth:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
   title?: string;
@@ -1726,6 +1915,7 @@ PATCH /api/courses/:id
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1739,6 +1929,7 @@ PATCH /api/courses/:id
 ### Societies Endpoints
 
 #### List Societies
+
 ```
 GET /api/societies
 ```
@@ -1746,6 +1937,7 @@ GET /api/societies
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -1755,6 +1947,7 @@ GET /api/societies
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1795,6 +1988,7 @@ GET /api/societies
 ```
 
 #### Get Society
+
 ```
 GET /api/societies/:id
 ```
@@ -1802,6 +1996,7 @@ GET /api/societies/:id
 **Auth:** Required
 
 **Response:** Same shape as list item, plus `serverId`, `server.id`, viewer status, and caller-specific permissions:
+
 ```typescript
 {
   success: true;
@@ -1832,6 +2027,7 @@ Protected member, request, and candidate queries should be enabled only from the
 permissions so expected lack of access does not produce 403-driven UI states.
 
 #### Get My Membership Status
+
 ```
 GET /api/societies/:id/my-membership
 ```
@@ -1839,6 +2035,7 @@ GET /api/societies/:id/my-membership
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1847,11 +2044,12 @@ GET /api/societies/:id/my-membership
     requestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
     requestedAt: string | null;
     reviewedAt: string | null;
-  };
+  }
 }
 ```
 
 #### Create Society
+
 ```
 POST /api/societies
 ```
@@ -1859,6 +2057,7 @@ POST /api/societies
 **Auth:** Admin or HOD for the target department
 
 **Request Body:**
+
 ```typescript
 {
   name: string;            // 1-100 chars
@@ -1872,6 +2071,7 @@ POST /api/societies
 **Response:** Created `SocietyListItem`; server is auto-created.
 
 #### Update Society
+
 ```
 PATCH /api/societies/:id
 ```
@@ -1880,6 +2080,7 @@ PATCH /api/societies/:id
 Leadership changes require admin or HOD for the department.
 
 **Request Body:**
+
 ```typescript
 {
   name?: string;
@@ -1893,6 +2094,7 @@ Leadership changes require admin or HOD for the department.
 Updated `SocietyListItem`
 
 #### Submit Join Request (Student)
+
 ```
 POST /api/societies/:id/join-request
 ```
@@ -1900,6 +2102,7 @@ POST /api/societies/:id/join-request
 **Auth:** Student only
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1911,6 +2114,7 @@ POST /api/societies/:id/join-request
 **Note:** Duplicate requests return 409 CONFLICT
 
 #### List Join Requests
+
 ```
 GET /api/societies/:id/join-requests
 ```
@@ -1918,6 +2122,7 @@ GET /api/societies/:id/join-requests
 **Auth:** Admin, convenor, or president
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -1927,6 +2132,7 @@ GET /api/societies/:id/join-requests
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -1950,6 +2156,7 @@ GET /api/societies/:id/join-requests
 ```
 
 #### Review Join Request
+
 ```
 PATCH /api/societies/:id/join-requests/:requestId
 ```
@@ -1957,6 +2164,7 @@ PATCH /api/societies/:id/join-requests/:requestId
 **Auth:** Admin, convenor, or president
 
 **Request Body:**
+
 ```typescript
 {
   status: 'APPROVED' | 'REJECTED';
@@ -1964,6 +2172,7 @@ PATCH /api/societies/:id/join-requests/:requestId
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1976,6 +2185,7 @@ PATCH /api/societies/:id/join-requests/:requestId
 rejection create a `SOCIETY_REQUEST_REVIEWED` notification for the requester.
 
 #### Add Member Directly
+
 ```
 POST /api/societies/:id/members
 ```
@@ -1983,13 +2193,15 @@ POST /api/societies/:id/members
 **Auth:** Admin, convenor, or president
 
 **Request Body:**
+
 ```typescript
 {
-  userId: number;  // Student ID
+  userId: number; // Student ID
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1999,6 +2211,7 @@ POST /api/societies/:id/members
 ```
 
 #### Remove Member
+
 ```
 DELETE /api/societies/:id/members/:userId
 ```
@@ -2006,6 +2219,7 @@ DELETE /api/societies/:id/members/:userId
 **Auth:** Admin, convenor, or president
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2015,6 +2229,7 @@ DELETE /api/societies/:id/members/:userId
 ```
 
 #### List Members
+
 ```
 GET /api/societies/:id/members
 ```
@@ -2023,6 +2238,7 @@ GET /api/societies/:id/members
 Department HODs cannot view members unless they also satisfy one of those states.
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -2031,6 +2247,7 @@ Department HODs cannot view members unless they also satisfy one of those states
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2052,6 +2269,7 @@ Department HODs cannot view members unless they also satisfy one of those states
 ```
 
 #### List Member Candidates
+
 ```
 GET /api/societies/:id/member-candidates
 ```
@@ -2059,6 +2277,7 @@ GET /api/societies/:id/member-candidates
 **Auth:** Admin, convenor, or president
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -2071,6 +2290,7 @@ Returns active university-wide students who are not already members of the socie
 server. Ordinary society membership is not department-limited.
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2086,6 +2306,7 @@ server. Ordinary society membership is not department-limited.
 ```
 
 #### List Leadership Candidates
+
 ```
 GET /api/societies/leadership-candidates
 ```
@@ -2093,6 +2314,7 @@ GET /api/societies/leadership-candidates
 **Auth:** Admin or HOD for the requested department
 
 **Query Parameters:**
+
 ```typescript
 {
   departmentId: number;
@@ -2106,6 +2328,7 @@ GET /api/societies/leadership-candidates
 **Response:** Same paginated `UserSummary[]` shape as member candidates.
 
 **Rules:**
+
 - `role=president` returns active same-department students with `StudentInfo`.
 - `role=convenor` returns active same-department teachers with `TeacherInfo`.
 - Admins may query any department; HODs may query only their own department.
@@ -2115,6 +2338,7 @@ GET /api/societies/leadership-candidates
 ### Roles Endpoints
 
 #### Get Assignable Roles
+
 ```
 GET /api/roles/assignable
 ```
@@ -2135,6 +2359,7 @@ type RoleOption = {
 ```
 
 #### Get Assignable Scopes
+
 ```
 GET /api/roles/assignable-scopes?role=&page=&limit=&search=
 ```
@@ -2142,6 +2367,7 @@ GET /api/roles/assignable-scopes?role=&page=&limit=&search=
 Returns paginated caller-authorized department/program/class/server scope options. Filled unique scopes such as HOD, PD, and CR are returned disabled with `currentAssignee`.
 
 #### Get Assignable Channels
+
 ```
 GET /api/roles/assignable-channels?serverId=&page=&limit=&search=
 ```
@@ -2149,6 +2375,7 @@ GET /api/roles/assignable-channels?serverId=&page=&limit=&search=
 Returns non-deleted, non-archived channels for a caller-assignable server. Locked channels remain selectable.
 
 #### Get Assignable Users
+
 ```
 GET /api/roles/assignable-users?role=&scopeId=&serverId=&channelId=&page=&limit=&search=
 ```
@@ -2156,6 +2383,7 @@ GET /api/roles/assignable-users?role=&scopeId=&serverId=&channelId=&page=&limit=
 Returns paginated active users valid for the selected role/scope. Moderator candidates are active members of the selected server and exclude users already assigned for the same moderator scope.
 
 #### Get Revokable Assignments
+
 ```
 GET /api/roles/revokable?role=&scopeId=&serverId=&channelId=&page=&limit=&search=
 ```
@@ -2163,6 +2391,7 @@ GET /api/roles/revokable?role=&scopeId=&serverId=&channelId=&page=&limit=&search
 Returns only assignments the caller may revoke. The frontend must use the returned `revokePayload` instead of constructing revocation from arbitrary user-role inspection.
 
 #### Assign Role
+
 ```
 POST /api/roles/assign
 ```
@@ -2170,15 +2399,17 @@ POST /api/roles/assign
 **Auth:** Required (permission logic varies by role)
 
 **Request Body (for non-moderator roles):**
+
 ```typescript
 {
   userId: number;
   role: 'hod' | 'program_director' | 'cr';
-  scopeId: number;  // departmentId, programId, or classId
+  scopeId: number; // departmentId, programId, or classId
 }
 ```
 
 **Request Body (for server-level moderator):**
+
 ```typescript
 {
   userId: number;
@@ -2188,6 +2419,7 @@ POST /api/roles/assign
 ```
 
 **Request Body (for channel-level moderator):**
+
 ```typescript
 {
   userId: number;
@@ -2198,6 +2430,7 @@ POST /api/roles/assign
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2234,6 +2467,7 @@ POST /api/roles/assign
 **Note:** `society_president` and `society_convenor` are rejected by this endpoint. Use `PATCH /api/societies/:id` for society leadership changes.
 
 #### Revoke Role
+
 ```
 POST /api/roles/revoke
 ```
@@ -2241,6 +2475,7 @@ POST /api/roles/revoke
 **Auth:** Required (permission logic varies by role)
 
 **Request Body:** Same shape as assign, except only these roles are revokable here:
+
 - `hod`
 - `program_director`
 - `cr`
@@ -2248,6 +2483,7 @@ POST /api/roles/revoke
 - `channel_moderator`
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2271,6 +2507,7 @@ POST /api/roles/revoke
 **Realtime:** Successful assignment/revocation emits `auth:roles-updated` to the affected user.
 
 #### Get User Roles
+
 ```
 GET /api/roles/users/:id
 ```
@@ -2278,6 +2515,7 @@ GET /api/roles/users/:id
 **Auth:** Admin or Teacher
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2303,7 +2541,7 @@ GET /api/roles/users/:id
     channelId?: number;
     channelName?: string | null;
     scopeType?: 'server' | 'channel';
-    scopeContext?: string;  // e.g., "HOD of Computer Science Department"
+    scopeContext?: string; // e.g., "HOD of Computer Science Department"
   }>;
 }
 ```
@@ -2313,6 +2551,7 @@ GET /api/roles/users/:id
 ### Servers Endpoints
 
 #### List Servers
+
 ```
 GET /api/servers
 ```
@@ -2320,6 +2559,7 @@ GET /api/servers
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -2329,6 +2569,7 @@ GET /api/servers
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2348,6 +2589,7 @@ GET /api/servers
 **Note:** Users only see servers they're members of (admins see all)
 
 #### Get Server
+
 ```
 GET /api/servers/:id
 ```
@@ -2355,6 +2597,7 @@ GET /api/servers/:id
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2395,6 +2638,7 @@ GET /api/servers/:id
 ```
 
 #### List Server Channels
+
 ```
 GET /api/servers/:id/channels
 ```
@@ -2402,6 +2646,7 @@ GET /api/servers/:id/channels
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   includeArchived?: boolean;  // Default: false
@@ -2409,6 +2654,7 @@ GET /api/servers/:id/channels
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2428,6 +2674,7 @@ GET /api/servers/:id/channels
 ```
 
 #### List Server Members
+
 ```
 GET /api/servers/:id/members
 ```
@@ -2435,6 +2682,7 @@ GET /api/servers/:id/members
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -2443,6 +2691,7 @@ GET /api/servers/:id/members
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2464,6 +2713,7 @@ GET /api/servers/:id/members
 ```
 
 #### Create Channel
+
 ```
 POST /api/servers/:id/channels
 ```
@@ -2471,6 +2721,7 @@ POST /api/servers/:id/channels
 **Auth:** Requires `create:channel` permission on this server
 
 **Request Body:**
+
 ```typescript
 {
   name: string;           // 1-100 chars
@@ -2479,14 +2730,44 @@ POST /api/servers/:id/channels
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
     id: number;
     name: string;
-  };
+  }
   message: 'Channel created successfully';
+}
+```
+
+#### Update Server Icon
+
+```
+PATCH /api/servers/:id/icon
+```
+
+**Auth:** Requires `create:channel` permission on this server
+
+**Request:** `multipart/form-data`
+
+```typescript
+{
+  serverIcon: File; // JPEG, PNG, or WEBP, max 5 MB
+}
+```
+
+**Response:**
+
+```typescript
+{
+  success: true;
+  data: {
+    id: number;
+    iconUrl: string;
+  }
+  message: 'Server icon updated successfully';
 }
 ```
 
@@ -2495,6 +2776,7 @@ POST /api/servers/:id/channels
 ### Channels Endpoints
 
 #### Update Channel
+
 ```
 PATCH /api/channels/:id
 ```
@@ -2502,6 +2784,7 @@ PATCH /api/channels/:id
 **Auth:** Requires `create:channel` permission on this channel's server
 
 **Request Body:**
+
 ```typescript
 {
   name?: string;
@@ -2510,6 +2793,7 @@ PATCH /api/channels/:id
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2519,6 +2803,7 @@ PATCH /api/channels/:id
 ```
 
 #### Lock Channel
+
 ```
 PATCH /api/channels/:id/lock
 ```
@@ -2526,6 +2811,7 @@ PATCH /api/channels/:id/lock
 **Auth:** Requires `lock:channel` permission
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2537,6 +2823,7 @@ PATCH /api/channels/:id/lock
 **Note:** Locked channels: no new posts allowed (edit/delete existing posts still works)
 
 #### Unlock Channel
+
 ```
 PATCH /api/channels/:id/unlock
 ```
@@ -2544,6 +2831,7 @@ PATCH /api/channels/:id/unlock
 **Auth:** Requires `lock:channel` permission
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2553,6 +2841,7 @@ PATCH /api/channels/:id/unlock
 ```
 
 #### Delete Channel
+
 ```
 DELETE /api/channels/:id
 ```
@@ -2560,6 +2849,7 @@ DELETE /api/channels/:id
 **Auth:** Requires `delete:channel` permission
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2575,6 +2865,7 @@ DELETE /api/channels/:id
 ### Posts Endpoints
 
 #### Create Post
+
 ```
 POST /api/channels/:id/posts
 ```
@@ -2583,26 +2874,29 @@ POST /api/channels/:id/posts
 **Rate Limit:** 10 req / min (upload tier)
 
 **Request Body:** Multipart form data
+
 - `title` (string, required, 1-100 chars)
 - `content` (string, required, 1-5000 chars, HTML)
 - `priority` (string, optional, default: NORMAL) - "NORMAL" | "IMPORTANT" | "URGENT"
 - `attachments` (file[], optional, max 3 files, 5MB each, JPEG/PNG/WEBP)
 
 **Response:**
+
 ```typescript
 {
   success: true;
   data: {
     id: number;
     title: string;
-  };
+  }
   message: 'Post created successfully';
 }
 ```
 
-**Side Effect:** Creates notifications for all subscribed server members
+**Side Effect:** Creates notifications for all subscribed server members. Notification messages include the server and channel, e.g. `New post in BSCS 6-A Hub / #announcements`.
 
 #### List Posts in Channel
+
 ```
 GET /api/channels/:id/posts
 ```
@@ -2610,6 +2904,7 @@ GET /api/channels/:id/posts
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -2622,6 +2917,7 @@ GET /api/channels/:id/posts
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2642,6 +2938,13 @@ GET /api/channels/:id/posts
       profilePictureUrl: string | null;
       badges: string[];  // e.g., ['hod'], ['cr', 'server_moderator']
     };
+    attachments: Array<{
+      id: number;
+      fileUrl: string;
+      fileType: string;
+      fileSize: number;
+      uploadedAt: string;
+    }>; // Bounded to the max post attachment count for feed previews
     _count: {
       attachments: number;
     };
@@ -2653,6 +2956,7 @@ GET /api/channels/:id/posts
 **Note:** Pinned posts appear first, then sorted by creation date desc
 
 #### Get Single Post
+
 ```
 GET /api/posts/:id
 ```
@@ -2660,6 +2964,7 @@ GET /api/posts/:id
 **Auth:** Required
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2696,6 +3001,7 @@ GET /api/posts/:id
 ```
 
 #### Update Post
+
 ```
 PATCH /api/posts/:id
 ```
@@ -2704,6 +3010,7 @@ PATCH /api/posts/:id
 **Constraint:** Within 24 hours of creation
 
 **Request Body:**
+
 ```typescript
 {
   title?: string;     // 1-100 chars
@@ -2713,6 +3020,7 @@ PATCH /api/posts/:id
 ```
 
 **Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+
 ```typescript
 {
   success: true;
@@ -2724,6 +3032,7 @@ PATCH /api/posts/:id
 **Note:** Cannot edit attachments (must delete and re-upload)
 
 #### Delete Post
+
 ```
 DELETE /api/posts/:id
 ```
@@ -2731,6 +3040,7 @@ DELETE /api/posts/:id
 **Auth:** Author or Admin
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2739,9 +3049,10 @@ DELETE /api/posts/:id
 }
 ```
 
-**Note:** Soft delete (sets `isDeleted = true`)
+**Note:** Soft delete (sets `isDeleted = true`) and removes linked post notifications.
 
 #### Pin/Unpin Post
+
 ```
 PATCH /api/posts/:id/pin
 ```
@@ -2749,6 +3060,7 @@ PATCH /api/posts/:id/pin
 **Auth:** Requires `lock:channel` permission
 
 **Request Body:**
+
 ```typescript
 {
   isPinned: boolean;
@@ -2756,6 +3068,7 @@ PATCH /api/posts/:id/pin
 ```
 
 **Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+
 ```typescript
 {
   success: true;
@@ -2765,6 +3078,7 @@ PATCH /api/posts/:id/pin
 ```
 
 #### Add Attachments to Existing Post
+
 ```
 POST /api/posts/:id/attachments
 ```
@@ -2773,9 +3087,11 @@ POST /api/posts/:id/attachments
 **Rate Limit:** 10 req / min (upload tier)
 
 **Request Body:** Multipart form data
+
 - `attachments` (file[], max 3 additional files)
 
 **Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+
 ```typescript
 {
   success: true;
@@ -2791,6 +3107,7 @@ POST /api/posts/:id/attachments
 ### Notifications Endpoints
 
 #### List Notifications
+
 ```
 GET /api/notifications
 ```
@@ -2798,6 +3115,7 @@ GET /api/notifications
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -2808,6 +3126,7 @@ GET /api/notifications
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2833,6 +3152,7 @@ GET /api/notifications
 ```
 
 #### Get Unread Count
+
 ```
 GET /api/notifications/unread-count
 ```
@@ -2840,6 +3160,7 @@ GET /api/notifications/unread-count
 **Auth:** Required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2850,6 +3171,7 @@ GET /api/notifications/unread-count
 ```
 
 #### Mark All as Read
+
 ```
 PATCH /api/notifications/read-all
 ```
@@ -2857,6 +3179,7 @@ PATCH /api/notifications/read-all
 **Auth:** Required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2866,6 +3189,7 @@ PATCH /api/notifications/read-all
 ```
 
 #### Mark Single as Read
+
 ```
 PATCH /api/notifications/:id/read
 ```
@@ -2873,6 +3197,7 @@ PATCH /api/notifications/:id/read
 **Auth:** Required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2886,6 +3211,7 @@ PATCH /api/notifications/:id/read
 ### Notification Preferences Endpoints
 
 #### List Preferences
+
 ```
 GET /api/notification-preferences
 ```
@@ -2893,6 +3219,7 @@ GET /api/notification-preferences
 **Auth:** Required
 
 **Query Parameters:**
+
 ```typescript
 {
   serverId?: number;
@@ -2901,6 +3228,7 @@ GET /api/notification-preferences
 ```
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2929,6 +3257,7 @@ preferences support `SERVER` and `CHANNEL` scope. `ROLE_ASSIGNED` preferences su
 does not use notification preferences.
 
 #### Update Preference
+
 ```
 PATCH /api/notification-preferences
 ```
@@ -2936,6 +3265,7 @@ PATCH /api/notification-preferences
 **Auth:** Required
 
 **Request Body:**
+
 ```typescript
 {
   notificationType: 'NEW_POST' | 'ROLE_ASSIGNED'; // Defaults to NEW_POST for backward compatibility
@@ -2947,6 +3277,7 @@ PATCH /api/notification-preferences
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2965,6 +3296,7 @@ notifications for that server.
 ### Admin Endpoints
 
 #### Get System Stats
+
 ```
 GET /api/admin/stats
 ```
@@ -2972,6 +3304,7 @@ GET /api/admin/stats
 **Auth:** Admin only
 
 **Response:**
+
 ```typescript
 {
   success: true;
@@ -2986,13 +3319,14 @@ GET /api/admin/stats
     totalClassServers: number;
     totalSocietyServers: number;
     totalPosts: number;
-  };
+  }
 }
 ```
 
 **Note:** Cached for 60 seconds (backend caches this query)
 
 #### List All Users (Admin)
+
 ```
 GET /api/admin/users
 ```
@@ -3000,6 +3334,7 @@ GET /api/admin/users
 **Auth:** Admin only
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;
@@ -3018,22 +3353,28 @@ GET /api/admin/users
 ## Best Practices
 
 ### 1. Always Use TanStack Query for Server State
+
 ```typescript
 // BAD: Using useState for server data
 const [users, setUsers] = useState([]);
 
 useEffect(() => {
-  apiClient.get('/users').then(res => setUsers(res.data));
+  apiClient.get('/users').then((res) => setUsers(res.data));
 }, []);
 
 // GOOD: Using TanStack Query
-const { data: users, isLoading, error } = useQuery({
+const {
+  data: users,
+  isLoading,
+  error,
+} = useQuery({
   queryKey: ['users'],
   queryFn: () => apiClient.get('/users'),
 });
 ```
 
 ### 2. Invalidate Queries After Mutations
+
 ```typescript
 const createPostMutation = useMutation({
   mutationFn: (data) => apiClient.post(`/channels/${channelId}/posts`, data),
@@ -3046,6 +3387,7 @@ const createPostMutation = useMutation({
 ```
 
 ### 3. Optimize Query Keys
+
 ```typescript
 // BAD: Non-specific query key
 useQuery({ queryKey: ['posts'], ... });
@@ -3058,10 +3400,10 @@ useQuery({
 ```
 
 ### 4. Use Optimistic Updates for Better UX
+
 ```typescript
 const markAsReadMutation = useMutation({
-  mutationFn: (notificationId) =>
-    apiClient.patch(`/notifications/${notificationId}/read`),
+  mutationFn: (notificationId) => apiClient.patch(`/notifications/${notificationId}/read`),
   onMutate: async (notificationId) => {
     // Cancel outgoing refetches
     await queryClient.cancelQueries({ queryKey: ['notifications'] });
@@ -3073,7 +3415,7 @@ const markAsReadMutation = useMutation({
     queryClient.setQueryData(['notifications'], (old: any) => ({
       ...old,
       data: old.data.map((n: Notification) =>
-        n.id === notificationId ? { ...n, readAt: new Date().toISOString() } : n
+        n.id === notificationId ? { ...n, readAt: new Date().toISOString() } : n,
       ),
     }));
 
@@ -3090,6 +3432,7 @@ const markAsReadMutation = useMutation({
 ```
 
 ### 5. Handle Loading and Error States
+
 ```typescript
 const { data, isLoading, error } = useQuery({ ... });
 
@@ -3105,9 +3448,11 @@ return <DataDisplay data={data} />;
 ## Appendix
 
 ### Complete Type Definitions Template
+
 See [`client/src/types/`](./src/types/) for full TypeScript definitions mirroring backend response shapes.
 
 ### Backend Reference Documents
+
 - [Backend API Development Plan](../server/API_DEVELOPMENT_PLAN.md)
 - [Backend Error Codes](../server/docs/API_ERROR_CODES.md)
 - [Backend Frontend Contract](../server/docs/FRONTEND_BACKEND_CONTRACT.md)

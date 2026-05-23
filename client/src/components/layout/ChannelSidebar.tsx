@@ -11,6 +11,7 @@ import { ROUTES } from '@/lib/constants';
 import { CreateChannelDialog } from '@/features/channels/components/CreateChannelDialog';
 import { groupChannels } from '@/features/channels/utils';
 import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
+import { ServerIconUpload } from '@/features/servers/components/ServerIconUpload';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import { usePermissions } from '@/hooks/usePermissions';
 
@@ -20,7 +21,11 @@ interface ChannelSidebarProps {
   onSelectChannel?: () => void;
 }
 
-export function ChannelSidebar({ serverId, activeChannelId, onSelectChannel }: ChannelSidebarProps) {
+export function ChannelSidebar({
+  serverId,
+  activeChannelId,
+  onSelectChannel,
+}: ChannelSidebarProps) {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const permissions = usePermissions(serverId);
@@ -74,12 +79,38 @@ export function ChannelSidebar({ serverId, activeChannelId, onSelectChannel }: C
   return (
     <>
       <div className="flex h-full flex-col border-r border-border bg-background/85">
-        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-4">
-          <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold">{server?.name ?? 'Server'}</h2>
-            <p className="text-muted-foreground truncate text-xs">
-              {server?._count.memberships ?? 0} members · {channels.length} channels
-            </p>
+        <div className="border-b border-border px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              {server ? (
+                <ServerIconUpload
+                  serverId={serverId}
+                  serverName={server.name}
+                  iconUrl={server.iconUrl}
+                  canUpdate={permissions.canCreateChannels}
+                />
+              ) : null}
+              <div className="min-w-0">
+                <h2 className="truncate text-sm font-semibold">{server?.name ?? 'Server'}</h2>
+                <p className="truncate text-xs text-muted-foreground">
+                  {server?._count.memberships ?? 0} members · {channels.length} channels
+                </p>
+              </div>
+            </div>
+            {permissions.canCreateChannels ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Create channel"
+                title="Create channel"
+                onClick={() => setCreateOpen(true)}
+              >
+                <Plus className="size-4" />
+              </Button>
+            ) : null}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-1">
             <NavLink
               to={ROUTES.MEMBERS(serverId)}
               onClick={onSelectChannel}
@@ -111,18 +142,6 @@ export function ChannelSidebar({ serverId, activeChannelId, onSelectChannel }: C
               Notifications
             </NavLink>
           </div>
-          {permissions.canCreateChannels ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Create channel"
-              title="Create channel"
-              onClick={() => setCreateOpen(true)}
-            >
-              <Plus className="size-4" />
-            </Button>
-          ) : null}
         </div>
         <ScrollArea className="flex-1">
           <div className="space-y-6 px-3 py-4">
@@ -153,7 +172,9 @@ export function ChannelSidebar({ serverId, activeChannelId, onSelectChannel }: C
               </section>
             ))}
             {groupedChannels.length === 0 ? (
-              <p className="px-2 text-sm text-muted-foreground">No visible channels in this server.</p>
+              <p className="px-2 text-sm text-muted-foreground">
+                No visible channels in this server.
+              </p>
             ) : null}
           </div>
         </ScrollArea>

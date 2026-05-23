@@ -31,7 +31,9 @@ export function useDepartment(departmentId: number | null) {
 
 export function useDepartmentStats(departmentId: number | null) {
   return useQuery({
-    queryKey: departmentId ? queryKeys.departments.stats(departmentId) : ['departments', null, 'stats'],
+    queryKey: departmentId
+      ? queryKeys.departments.stats(departmentId)
+      : ['departments', null, 'stats'],
     queryFn: () => catalogApi.getDepartmentStats(departmentId!),
     enabled: departmentId !== null,
   });
@@ -200,8 +202,32 @@ export function useCreateProgram(departmentId: number) {
   return useMutation({
     mutationFn: (payload: CreateProgramRequest) => catalogApi.createProgram(departmentId, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.departments.programs(departmentId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.departments.programs(departmentId),
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.programs.all() });
+      toast.success('Program created');
+    },
+  });
+}
+
+export function useCreateGlobalProgram() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      departmentId,
+      payload,
+    }: {
+      departmentId: number;
+      payload: CreateProgramRequest;
+    }) => catalogApi.createProgram(departmentId, payload),
+    onSuccess: (_createdProgram, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.departments.programs(variables.departmentId),
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.programs.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.departments.list() });
       toast.success('Program created');
     },
   });
@@ -282,7 +308,9 @@ export function useTransferClassStudent(classId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.students(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.studentCandidates(classId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.classes.studentCandidates(classId),
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Student transferred');
     },
@@ -381,7 +409,9 @@ export function useAddCurriculum(programId: number) {
   return useMutation({
     mutationFn: (payload: AddCurriculumRequest) => catalogApi.addCurriculum(programId, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.programs.curriculumRoot(programId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.programs.curriculumRoot(programId),
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(programId) });
       toast.success('Curriculum entry added');
     },
@@ -394,7 +424,9 @@ export function useRemoveCurriculum(programId: number) {
   return useMutation({
     mutationFn: (curriculumId: number) => catalogApi.removeCurriculum(programId, curriculumId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.programs.curriculumRoot(programId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.programs.curriculumRoot(programId),
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(programId) });
       toast.success('Curriculum entry removed');
     },

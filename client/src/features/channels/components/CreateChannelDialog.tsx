@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateChannel } from '@/features/channels/hooks/useCreateChannel';
-import {
-  createChannelSchema,
-  type CreateChannelFormValues,
-} from '@/features/channels/schemas';
+import { createChannelSchema, type CreateChannelFormValues } from '@/features/channels/schemas';
 import { applyApiValidationErrors, getApiErrorMessage } from '@/features/auth/utils';
 
 interface CreateChannelDialogProps {
@@ -59,17 +63,17 @@ export function CreateChannelDialog({
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
 
-      try {
-        const channel = await createChannel.mutateAsync({
-          name: values.name.trim(),
-          description: values.description?.trim() ? values.description.trim() : undefined,
-        });
+    try {
+      const channel = await createChannel.mutateAsync({
+        name: values.name.trim(),
+        description: values.description?.trim() ? values.description.trim() : undefined,
+      });
 
-        toast.success('Channel created successfully.');
-        handleOpenChange(false);
-        onCreated?.(channel.id);
-        reset({ name: '', description: '' });
-      } catch (error) {
+      toast.success('Channel created successfully.');
+      handleOpenChange(false);
+      onCreated?.(channel.id);
+      reset({ name: '', description: '' });
+    } catch (error) {
       if (applyApiValidationErrors(error, setError)) {
         return;
       }
@@ -80,7 +84,7 @@ export function CreateChannelDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg border border-border/70 bg-gradient-to-br from-background via-background to-accent/10">
+      <DialogContent className="max-w-lg border border-border/70 bg-card">
         <DialogHeader>
           <DialogTitle>Create a new channel</DialogTitle>
           <DialogDescription>

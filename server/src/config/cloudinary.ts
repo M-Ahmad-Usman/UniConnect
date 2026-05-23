@@ -8,12 +8,22 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-const ALLOWED_UPLOAD_FOLDERS = new Set(["profile-pictures", "post-attachments"]);
+const ALLOWED_UPLOAD_FOLDERS = new Set([
+  "profile-pictures",
+  "post-attachments",
+  "server-icons",
+]);
 
-export type CloudinaryUploadFolder = "profile-pictures" | "post-attachments";
+export type CloudinaryUploadFolder =
+  | "profile-pictures"
+  | "post-attachments"
+  | "server-icons";
 
 export const cloudinaryService = {
-  async uploadImage(buffer: Buffer, folder: CloudinaryUploadFolder): Promise<{ url: string }> {
+  async uploadImage(
+    buffer: Buffer,
+    folder: CloudinaryUploadFolder,
+  ): Promise<{ url: string }> {
     if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
       throw new ValidationError("Upload folder is not allowed");
     }
@@ -28,7 +38,7 @@ export const cloudinaryService = {
           }
 
           resolve({ url: result.secure_url });
-        }
+        },
       );
 
       uploadStream.end(buffer);

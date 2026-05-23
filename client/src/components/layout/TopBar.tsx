@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ROUTES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
 import { parseSearchParam } from '@/features/posts/utils';
 import { parseRouteParamId } from '@/lib/route-params';
 import { NotificationBell } from './NotificationBell';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { UserDropdown } from './UserDropdown';
 
 interface TopBarProps {
@@ -84,7 +86,21 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
               <Menu className="size-4" />
             </Button>
           ) : null}
-          <div className="min-w-0">
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.SERVERS)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold tracking-tight transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              !isWorkspaceRoute && 'lg:hidden',
+            )}
+            aria-label="Go to UniConnect home"
+          >
+            <span className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-border bg-white p-0.5">
+              <img src="/logo.svg" alt="" className="size-full object-contain" />
+            </span>
+            <span className="hidden sm:inline">UniConnect</span>
+          </button>
+          <div className="hidden min-w-0 md:block">
             <div className="flex min-w-0 items-center gap-2 text-sm font-medium">
               {isAdminRoute || isAcademicRoute ? (
                 <>
@@ -101,7 +117,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
                     Servers
                   </button>
                   {serverQuery.data ? <span className="text-muted-foreground">/</span> : null}
-                  {serverQuery.data ? <span className="truncate">{serverQuery.data.name}</span> : null}
+                  {serverQuery.data ? (
+                    <span className="truncate">{serverQuery.data.name}</span>
+                  ) : null}
                   {activeChannel ? <span className="text-muted-foreground">/</span> : null}
                   {activeChannel ? <span className="truncate">{activeChannel.name}</span> : null}
                 </>
@@ -114,9 +132,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
                   : 'Delegated academic class operations.'
                 : hasNavigationError
                   ? 'Some workspace details failed to load. You can still navigate and retry by refreshing.'
-                  : activeChannel?.description ??
+                  : (activeChannel?.description ??
                     serverQuery.data?.description ??
-                    'Navigate across servers and channels.'}
+                    'Navigate across servers and channels.')}
             </p>
           </div>
         </div>
@@ -139,6 +157,7 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
               className="w-72 pl-9"
             />
           </div>
+          <ThemeToggle />
           <NotificationBell />
           <UserDropdown />
         </div>

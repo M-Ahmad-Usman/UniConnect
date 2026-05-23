@@ -26,7 +26,10 @@ export function updateNotificationCollections(
   });
 }
 
-export function markNotificationReadInCache(notificationId: number, readAt = new Date().toISOString()) {
+export function markNotificationReadInCache(
+  notificationId: number,
+  readAt = new Date().toISOString(),
+) {
   updateNotificationCollections((current) => ({
     ...current,
     data: current.data.map((notification) =>
@@ -44,4 +47,25 @@ export function markAllNotificationsReadInCache(readAt = new Date().toISOString(
       notification.readAt === null ? { ...notification, readAt } : notification,
     ),
   }));
+}
+
+export function removeNotificationsFromCache(notificationIds: number[]) {
+  const ids = new Set(notificationIds);
+  if (ids.size === 0) {
+    return;
+  }
+
+  updateNotificationCollections((current) => {
+    const nextData = current.data.filter((notification) => !ids.has(notification.id));
+    const removedCount = current.data.length - nextData.length;
+
+    return {
+      ...current,
+      data: nextData,
+      pagination: {
+        ...current.pagination,
+        total: Math.max(0, current.pagination.total - removedCount),
+      },
+    };
+  });
 }

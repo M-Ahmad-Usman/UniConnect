@@ -53,7 +53,24 @@ export const serversApi = {
   },
 
   async createChannel(serverId: number, payload: CreateChannelRequest) {
-    const response = await apiClient.post<CreateChannelResponse>(`/servers/${serverId}/channels`, payload);
+    const response = await apiClient.post<CreateChannelResponse>(
+      `/servers/${serverId}/channels`,
+      payload,
+    );
+    return response.data;
+  },
+
+  async updateIcon(serverId: number, file: File) {
+    const formData = new FormData();
+    formData.append('serverIcon', file);
+
+    const response = await apiClient.patch<{ id: number; iconUrl: string }>(
+      `/servers/${serverId}/icon`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    );
     return response.data;
   },
 };

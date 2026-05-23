@@ -22,6 +22,7 @@
 ## Project Context
 
 UniConnect is a Discord-like platform for official university announcements organized into servers (departments, classes, societies) and channels. The backend is fully complete with:
+
 - **13 modules** fully implemented and tested
 - **447 passing tests** with comprehensive coverage
 - **35 hardening steps** completed (performance, security, reliability)
@@ -30,6 +31,7 @@ UniConnect is a Discord-like platform for official university announcements orga
 ### Functional Requirements Coverage
 
 This frontend implementation will satisfy **all 76 functional requirements** across:
+
 - Authentication (FR-1 to FR-8)
 - Server Management (FR-9 to FR-18)
 - Channel Management (FR-19 to FR-34)
@@ -47,36 +49,43 @@ This frontend implementation will satisfy **all 76 functional requirements** acr
 ## Technology Stack
 
 ### Core Framework
+
 - **React 19** - Latest with improved hooks and concurrent features
 - **Vite 7** - Fast dev server, optimized builds
 - **TypeScript 5.9** - Type safety matching backend patterns
 - **ESLint + Prettier** - Code quality and consistency
 
 ### UI & Styling
+
 - **Tailwind CSS v4** - Utility-first CSS with official Vite plugin integration
 - **shadcn/ui** - Accessible, composable component primitives (current v4 stack uses Base UI)
 - **Lucide React** - Icon library
 - **Framer Motion** - Animations for modals, transitions, toasts
 
 ### State Management
+
 - **TanStack Query v5** (React Query) - Server state management, caching, background refetching
 - **Zustand** - Lightweight client state (auth, notifications)
 - **React Router v7** - Type-safe routing with loaders and actions
 
 ### Forms & Validation
+
 - **React Hook Form** - Performant form handling with minimal re-renders
 - **Zod** - Schema validation (shared with backend)
 
 ### Rich Text & Media
+
 - **Tiptap** - Headless rich text editor (ProseMirror-based)
 - **DOMPurify** - XSS protection for rendered HTML
 - **react-dropzone** - File upload drag-and-drop
 
 ### Real-time & HTTP
+
 - **axios** - HTTP client with interceptors for auth and error handling
 - **socket.io-client** - WebSocket client for real-time notifications and active channel feed updates
 
 ### Developer Experience
+
 - **TypeScript strict mode** - Maximum type safety
 - **Path aliases** (`@/components`, `@/lib`, etc.)
 - **Hot module replacement** - Instant feedback during development
@@ -86,6 +95,7 @@ This frontend implementation will satisfy **all 76 functional requirements** acr
 ## Architecture Principles
 
 ### 1. Feature-Based Organization
+
 ```
 src/
   features/
@@ -93,32 +103,39 @@ src/
     servers/       # Server views and components
     posts/         # Post feed and creation
 ```
+
 Benefits: Easy to find related code, clear module boundaries, scalable as the app grows.
 
 ### 2. API Layer Separation
+
 All backend communication goes through a dedicated API layer:
+
 - `api/client.ts` - Configured axios instance with interceptors
 - `api/endpoints/` - One file per resource (auth.api.ts, servers.api.ts, etc.)
 - Automatic 401 handling with token refresh retry
 - Error normalization into consistent `ApiError` shape
 
 ### 3. Type Safety from Backend to Frontend
+
 - Mirror all backend response types in `src/types/`
 - No `any` types - use `unknown` and narrow with type guards
 - Zod schemas shared between form validation and runtime checks
 
 ### 4. Permission-Aware UI
+
 - `usePermissions()` hook checks user roles and type
 - `<Can action="...">` wrapper component for conditional rendering
 - Admin bypass: admins see all management actions
 - Scoped roles: HOD/CR/Society leadership plus explicit `server_moderator` and `channel_moderator` assignments see actions only in their scope
 
 ### 5. Optimistic Updates with Rollback
+
 - TanStack Query mutations update cache optimistically
 - Automatic rollback on error
 - Background refetch on window focus for stale data
 
 ### 6. Accessible by Default
+
 - shadcn/ui components built on Base UI primitives in the current v4 stack (WAI-ARIA aligned)
 - Keyboard navigation for all interactive elements
 - Focus management in modals and dropdowns
@@ -134,16 +151,19 @@ All backend communication goes through a dedicated API layer:
 **Dependencies:** None
 
 #### Deliverables
+
 1. **Vite Project Setup**
    - React 19 + TypeScript 5.9
-  - Tailwind CSS v4 with official Vite plugin setup (`@tailwindcss/vite`) and core import in `src/index.css`
-  - Vite proxy: `/api` → `http://localhost:4000`, `/api/socket.io` → WebSocket proxy
-   - Path aliases: `@/*` → `src/*`
+
+- Tailwind CSS v4 with official Vite plugin setup (`@tailwindcss/vite`) and core import in `src/index.css`
+- Vite proxy: `/api` → `http://localhost:4000`, `/api/socket.io` → WebSocket proxy
+- Path aliases: `@/*` → `src/*`
 
 2. **shadcn/ui Installation**
-  - Initialize shadcn/ui with Tailwind v4-compatible setup
-  - Layer `shadcn/tailwind.css` after Tailwind core import
-   - Install primitive components: Button, Card, Dialog, Input, Label, Select, Textarea, Toast
+
+- Initialize shadcn/ui with Tailwind v4-compatible setup
+- Layer `shadcn/tailwind.css` after Tailwind core import
+- Install primitive components: Button, Card, Dialog, Input, Label, Select, Textarea, Toast
 
 3. **Axios Instance** (`src/api/client.ts`)
    - Base URL: `/api` (proxied to backend in dev)
@@ -157,12 +177,13 @@ All backend communication goes through a dedicated API layer:
      - If refresh fails: clear auth state, redirect to `/login`
 
 4. **TanStack Query Setup** (`src/lib/query-client.ts`)
+
    ```typescript
    const queryClient = new QueryClient({
      defaultOptions: {
        queries: {
-         staleTime: 5 * 60 * 1000,      // 5 minutes
-         gcTime: 10 * 60 * 1000,         // 10 minutes garbage collection
+         staleTime: 5 * 60 * 1000, // 5 minutes
+         gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
          retry: 1,
          refetchOnWindowFocus: false,
        },
@@ -174,7 +195,7 @@ All backend communication goes through a dedicated API layer:
    - `src/stores/auth.store.ts`:
      ```typescript
      interface AuthState {
-       user: AuthUser | null;      // { id, fullName, email, userType, mustChangePassword }
+       user: AuthUser | null; // { id, fullName, email, userType, mustChangePassword }
        isAuthenticated: boolean;
        isLoading: boolean;
        setUser: (user: AuthUser) => void;
@@ -192,10 +213,11 @@ All backend communication goes through a dedicated API layer:
      ```
 
 6. **Socket.IO Client** (`src/lib/socket.ts`)
-  - Connect with `withCredentials: true` using same-origin `/api/socket.io` by default
-  - Server joins the socket to room `user:{userId}` after successful authentication
-   - Event listeners: `notification:new`, `notification:unread-count`, `auth:expired`
-   - Graceful disconnect on logout
+
+- Connect with `withCredentials: true` using same-origin `/api/socket.io` by default
+- Server joins the socket to room `user:{userId}` after successful authentication
+- Event listeners: `notification:new`, `notification:unread-count`, `auth:expired`
+- Graceful disconnect on logout
 
 7. **Type Definitions** (`src/types/`)
    - Mirror all backend response shapes from `server/src/shared/types/index.ts`
@@ -243,6 +265,7 @@ All backend communication goes through a dedicated API layer:
     - `RoleBadge.tsx` - Colored badge for roles (HOD, CR, Society President, Server Moderator, Channel Moderator, etc.)
 
 #### Verification Targets
+
 - `npm run dev` starts without errors
 - Vite proxy connects to backend `http://localhost:4000`
 - Test API call `GET /api/health` returns `{ success: true }`
@@ -259,15 +282,17 @@ All backend communication goes through a dedicated API layer:
 **Implementation Status:** Completed, hardened, and runtime-verified on 2026-03-10 with focused Playwright coverage for the highest-value auth journeys.
 
 #### Routes
-| Route | Component | Auth Required |
-|-------|-----------|---------------|
-| `/login` | `LoginPage` | No |
-| `/forgot-password` | `ForgotPasswordPage` | No |
-| `/reset-password?token=xxx` | `ResetPasswordPage` | No |
-| `/change-password` | `ForceChangePasswordPage` | Special (mustChangePassword gate) |
-| `/settings/password` | `ChangePasswordPage` | Yes |
+
+| Route                       | Component                 | Auth Required                     |
+| --------------------------- | ------------------------- | --------------------------------- |
+| `/login`                    | `LoginPage`               | No                                |
+| `/forgot-password`          | `ForgotPasswordPage`      | No                                |
+| `/reset-password?token=xxx` | `ResetPasswordPage`       | No                                |
+| `/change-password`          | `ForceChangePasswordPage` | Special (mustChangePassword gate) |
+| `/settings/password`        | `ChangePasswordPage`      | Yes                               |
 
 #### Components
+
 - **`LoginForm`** (`src/features/auth/components/LoginForm.tsx`)
   - Email + password fields
   - React Hook Form + Zod validation (mirrors `loginSchema` from backend)
@@ -304,20 +329,17 @@ All backend communication goes through a dedicated API layer:
   - Background gradient or pattern
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/auth.api.ts
 export const authApi = {
-  login: (credentials: LoginRequest) =>
-    axios.post<LoginResponse>('/auth/login', credentials),
+  login: (credentials: LoginRequest) => axios.post<LoginResponse>('/auth/login', credentials),
 
-  logout: () =>
-    axios.post('/auth/logout'),
+  logout: () => axios.post('/auth/logout'),
 
-  refresh: () =>
-    axios.post('/auth/refresh'),
+  refresh: () => axios.post('/auth/refresh'),
 
-  forgotPassword: (email: string) =>
-    axios.post('/auth/forgot-password', { email }),
+  forgotPassword: (email: string) => axios.post('/auth/forgot-password', { email }),
 
   resetPassword: (token: string, newPassword: string) =>
     axios.post('/auth/reset-password', { token, newPassword }),
@@ -328,6 +350,7 @@ export const authApi = {
 ```
 
 #### State Management
+
 - **Zustand Auth Store** (`src/stores/auth.store.ts`)
   - Set user on successful login
   - Clear user on logout
@@ -339,11 +362,13 @@ export const authApi = {
   - `useChangePassword()` - Clears store after success (forces re-login)
 
 #### Key Behaviors
+
 1. **Login Flow**
    - Submit credentials → backend returns user data + sets httpOnly cookies
    - Store user in Zustand
-  - If `mustChangePassword === true`: redirect to `/change-password` and do not connect Socket.IO
-  - Else: connect Socket.IO and redirect to `/` (default server list)
+
+- If `mustChangePassword === true`: redirect to `/change-password` and do not connect Socket.IO
+- Else: connect Socket.IO and redirect to `/` (default server list)
 
 2. **mustChangePassword Gate**
    - After login, if flag is true, backend blocks all routes except `/change-password` with 403
@@ -364,39 +389,44 @@ export const authApi = {
    - Redirect to `/login`
 
 #### Zod Schemas
+
 ```typescript
 // src/features/auth/schemas.ts
 export const loginSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
 });
 
-export const passwordSchema = z.string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(/[a-z]/, "Must contain a lowercase letter")
-  .regex(/[A-Z]/, "Must contain an uppercase letter")
-  .regex(/[0-9]/, "Must contain a number")
-  .regex(/[^a-zA-Z0-9]/, "Must contain a special character");
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[a-z]/, 'Must contain a lowercase letter')
+  .regex(/[A-Z]/, 'Must contain an uppercase letter')
+  .regex(/[0-9]/, 'Must contain a number')
+  .regex(/[^a-zA-Z0-9]/, 'Must contain a special character');
 
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: passwordSchema,
-}).refine(d => d.currentPassword !== d.newPassword, {
-  message: "New password must differ from current",
-  path: ["newPassword"],
-});
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: passwordSchema,
+  })
+  .refine((d) => d.currentPassword !== d.newPassword, {
+    message: 'New password must differ from current',
+    path: ['newPassword'],
+  });
 
 export const forgotPasswordSchema = z.object({
-  email: z.email("Invalid email address"),
+  email: z.email('Invalid email address'),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1, "Reset token is required"),
+  token: z.string().min(1, 'Reset token is required'),
   newPassword: passwordSchema,
 });
 ```
 
 #### Verification
+
 - ✅ Login with valid credentials → redirects to server list
 - ✅ Login with invalid credentials → shows error message
 - ✅ Login with temp password → forced to `/change-password`
@@ -417,7 +447,9 @@ export const resetPasswordSchema = z.object({
 #### Components
 
 ##### `AppShell` (`src/components/layout/AppShell.tsx`)
+
 Discord-like three-column layout:
+
 ```
 ┌──────────┬────────────────┬─────────────────────────────────┐
 │          │                │                                 │
@@ -427,10 +459,12 @@ Discord-like three-column layout:
 │          │                │                                 │
 └──────────┴────────────────┴─────────────────────────────────┘
 ```
+
 - Responsive: collapses sidebars into drawers on mobile (<768px)
 - Sticky positioning for sidebars (scroll independently)
 
 ##### `ServerSidebar` (`src/components/layout/ServerSidebar.tsx`)
+
 - Vertical list of server icons/avatars (64px wide)
 - Each server: round avatar with first letter or `iconUrl`
 - Active server: highlighted with accent border
@@ -441,6 +475,7 @@ Discord-like three-column layout:
 **API Integration:** `useServers()` query → `GET /api/servers`
 
 ##### `ChannelSidebar` (`src/components/layout/ChannelSidebar.tsx`)
+
 - Shows when a server is selected (URL matches `/servers/:serverId/*`)
 - Header: server name + member count
 - Channels grouped by type:
@@ -456,7 +491,9 @@ Discord-like three-column layout:
 **API Integration:** `useServerChannels(serverId)` → `GET /api/servers/:id/channels`
 
 ##### `TopBar` (`src/components/layout/TopBar.tsx`)
+
 Horizontal bar above main content:
+
 - Left: Breadcrumbs (Server Name > Channel Name with icons)
 - Center: Channel description (if viewing a channel)
 - Right:
@@ -465,16 +502,20 @@ Horizontal bar above main content:
   - User avatar dropdown
 
 ##### `NotificationBell` (`src/components/layout/NotificationBell.tsx`)
+
 - Bell icon with red badge showing `unreadCount` from Zustand store
 - Click → opens `NotificationPanel` dropdown
 - Badge pulses on new urgent notification
 
 **State:** Zustand `notification.store` updates via:
+
 - Initial fetch: `GET /api/notifications/unread-count`
 - Socket.IO: `notification:unread-count` event
 
 ##### `UserDropdown` (`src/components/layout/UserDropdown.tsx`)
+
 Dropdown menu:
+
 - User avatar + name + userType badge
 - Menu items:
   - 👤 **Profile** → `/profile`
@@ -483,18 +524,22 @@ Dropdown menu:
   - 🚪 **Logout** → calls `authApi.logout()`, clears store, redirects
 
 ##### `MobileDrawer` (`src/components/layout/MobileDrawer.tsx`)
+
 - Hamburger menu button (visible only on `<768px`)
 - Opens drawer from left with server sidebar contents
 - Tap server → shows channel sidebar in same drawer
 - Swipe right to close
 
 ##### `AdminLayout` (`src/components/layout/AdminLayout.tsx`)
+
 Alternative layout for `/admin/*` routes:
+
 - No ServerSidebar
 - Replace ChannelSidebar with AdminNav (links to admin sections)
 - Main content area shows admin pages
 
 **AdminNav Items:**
+
 - 📊 Dashboard
 - 👥 Users
 - 🏛️ Departments
@@ -506,9 +551,11 @@ Alternative layout for `/admin/*` routes:
 - 🔐 Roles
 
 #### Socket.IO Setup (in AppShell)
+
 Connected after successful login, disconnected on logout.
 
 **Event Listeners:**
+
 ```typescript
 // In AppShell.tsx
 useEffect(() => {
@@ -551,11 +598,13 @@ useEffect(() => {
 ```
 
 #### Responsive Behavior
+
 - **Desktop (≥1024px)**: All three columns visible
 - **Tablet (768px - 1023px)**: ServerSidebar + ChannelSidebar collapsible, MainContent full width when collapsed
 - **Mobile (<768px)**: Hamburger menu, sidebars in drawer
 
 #### Verification
+
 - ✅ Three-column layout renders correctly
 - ✅ Server sidebar populates with user's servers
 - ✅ Clicking server navigates and shows channel sidebar
@@ -574,58 +623,70 @@ useEffect(() => {
 **Dependencies:** Module 0, Module 1, Module 2
 
 #### Routes
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/servers/:serverId` | `ServerPage` | Auto-redirects to first announcement channel |
-| `/servers/:serverId/channels/:channelId` | `ChannelPage` | Post feed (Module 4) |
-| `/servers/:serverId/members` | `MemberListPage` | Paginated member list with badges |
+
+| Route                                    | Component        | Description                                  |
+| ---------------------------------------- | ---------------- | -------------------------------------------- |
+| `/servers/:serverId`                     | `ServerPage`     | Auto-redirects to first announcement channel |
+| `/servers/:serverId/channels/:channelId` | `ChannelPage`    | Post feed (Module 4)                         |
+| `/servers/:serverId/members`             | `MemberListPage` | Paginated member list with badges            |
 
 #### Components
 
 ##### `ServerPage` (`src/features/servers/pages/ServerPage.tsx`)
+
 - Fetches server channels via `useServerChannels(serverId)`
 - If no `channelId` in URL: navigate to first announcement channel
 - Displays `ChannelSidebar` (handled by `AppShell`)
 
 ##### `ChannelPage` (`src/features/channels/pages/ChannelPage.tsx`)
+
 - Displays `ChannelHeader` + `PostFeed` (Module 4)
 - `channelId` from URL params
 
 ##### `ChannelHeader` (`src/features/channels/components/ChannelHeader.tsx`)
+
 - Channel name + type badge (Announcement/Course/General/Program)
 - Lock status indicator (🔒 Locked | 🔓 Unlocked)
 - Description below name
 - Right side: `ChannelActions` dropdown (for authorized users)
 
 ##### `ChannelActions` (`src/features/channels/components/ChannelActions.tsx`)
+
 Dropdown menu (visible only to authorized users):
+
 - **Edit** → opens `EditChannelDialog`
 - **Lock** / **Unlock** → mutation to `PATCH /api/channels/:id/lock` or `/unlock`
 - **Delete** → confirmation dialog, then `DELETE /api/channels/:id`
 
 **Authorization Logic:**
+
 - Show actions if:
   - User is `ADMIN`, OR
   - User has `create:channel` permission on this server (indicates management rights)
 - Handle 403 gracefully: hide buttons, show toast if user somehow triggers action
 
 ##### `CreateChannelDialog` (`src/features/channels/components/CreateChannelDialog.tsx`)
+
 Form fields:
+
 - Name (required, max 100 chars)
 - Description (optional, max 500 chars)
-Submit → `POST /api/servers/:id/channels`
-On success: invalidate `serverChannels` query, navigate to new channel
+  Submit → `POST /api/servers/:id/channels`
+  On success: invalidate `serverChannels` query, navigate to new channel
 
 ##### `EditChannelDialog` (`src/features/channels/components/EditChannelDialog.tsx`)
+
 Same as create but pre-filled with existing channel data.
 Submit → `PATCH /api/channels/:id`
 
 ##### `MemberListPage` (`src/features/servers/pages/MemberListPage.tsx`)
+
 - Paginated list of server members
 - Fetches via `useServerMembers(serverId, page)`
 - Each member shows: `MemberCard`
 
 ##### `MemberCard` (`src/features/servers/components/MemberCard.tsx`)
+
 - Avatar (64px, with `profilePictureUrl` or initials fallback)
 - Full name (bold)
 - Email (muted)
@@ -633,6 +694,7 @@ Submit → `PATCH /api/channels/:id`
 - Role badges (HOD, CR, Society President, Server Moderator, Channel Moderator, etc.) - horizontally stacked
 
 ##### `RoleBadge` (`src/components/shared/RoleBadge.tsx`)
+
 Colored pill with role name:
 | Role | Color | Icon |
 |------|-------|------|
@@ -645,20 +707,20 @@ Colored pill with role name:
 | Moderator (Channel) | Amber | 🔧 |
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/servers.api.ts
 export const serversApi = {
-  getServer: (id: number) =>
-    axios.get<ServerDetail>(`/servers/${id}`),
+  getServer: (id: number) => axios.get<ServerDetail>(`/servers/${id}`),
 
   listChannels: (serverId: number, includeArchived = false) =>
     axios.get<Channel[]>(`/servers/${serverId}/channels`, {
-      params: { includeArchived }
+      params: { includeArchived },
     }),
 
   listMembers: (serverId: number, page = 1, limit = 20) =>
     axios.get<PaginatedResponse<ServerMember>>(`/servers/${serverId}/members`, {
-      params: { page, limit }
+      params: { page, limit },
     }),
 
   createChannel: (serverId: number, data: CreateChannelDto) =>
@@ -670,18 +732,16 @@ export const channelsApi = {
   updateChannel: (channelId: number, data: UpdateChannelDto) =>
     axios.patch(`/channels/${channelId}`, data),
 
-  lockChannel: (channelId: number) =>
-    axios.patch(`/channels/${channelId}/lock`),
+  lockChannel: (channelId: number) => axios.patch(`/channels/${channelId}/lock`),
 
-  unlockChannel: (channelId: number) =>
-    axios.patch(`/channels/${channelId}/unlock`),
+  unlockChannel: (channelId: number) => axios.patch(`/channels/${channelId}/unlock`),
 
-  deleteChannel: (channelId: number) =>
-    axios.delete(`/channels/${channelId}`),
+  deleteChannel: (channelId: number) => axios.delete(`/channels/${channelId}`),
 };
 ```
 
 #### State Management
+
 - **TanStack Query:**
   - `useServer(serverId)` - Server detail (cached 5min)
   - `useServerChannels(serverId)` - Channel list (cached 5min)
@@ -690,6 +750,7 @@ export const channelsApi = {
     - On success: invalidate `serverChannels` query
 
 #### Permission Checks
+
 ```typescript
 // src/hooks/usePermissions.ts
 export function usePermissions() {
@@ -702,7 +763,7 @@ export function usePermissions() {
     return user?.roles?.some(
       (role) =>
         role.serverId === serverId &&
-        ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role)
+        ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role),
     );
   };
 
@@ -711,6 +772,7 @@ export function usePermissions() {
 ```
 
 #### Verification
+
 - ✅ Navigate to server → auto-redirects to first announcement channel
 - ✅ Channel sidebar shows channels grouped by type
 - ✅ Locked channels show lock icon
@@ -729,13 +791,15 @@ export function usePermissions() {
 **Dependencies:** Module 0, Module 1, Module 2, Module 3
 
 #### Routes
-| Route | Component |
-|-------|-----------|
+
+| Route                                    | Component                           |
+| ---------------------------------------- | ----------------------------------- |
 | `/servers/:serverId/channels/:channelId` | `ChannelPage` (contains `PostFeed`) |
 
 #### Components
 
 ##### `PostFeed` (`src/features/posts/components/PostFeed.tsx`)
+
 - Hybrid paginated feed: paginated API with a load-more or infinite-style UI, while preserving deterministic pagination state
 - Fetches via `usePosts(channelId, filters)`
 - Displays pinned posts first (highlighted with pin icon), then chronological
@@ -743,19 +807,23 @@ export function usePermissions() {
 - Loading skeleton while fetching
 
 ##### `PostCard` (`src/features/posts/components/PostCard.tsx`)
+
 Compact card for list view:
+
 - **Top row:** Author avatar + name + role badges + relative timestamp (e.g., "2 hours ago")
 - **Title** (max 100 chars, bold, truncated with ellipsis if longer)
 - **Content preview** (first 200 chars of HTML rendered as plain text, followed by "...")
 - **Priority badge** (Normal=default, Important=amber, Urgent=red with pulse animation)
 - **Pinned indicator** (📌 icon in top-right if `isPinned`)
 - **Edited badge** (if `updatedAt !== null`, show "Edited" chip)
-- **Attachment count** (📎 icon + count if `_count.attachments > 0`)
+- **Attachment previews** rendered inline from bounded `attachments[]` metadata when present
 - **Bottom row:** `PostActions` dropdown (·· · icon)
 - Click anywhere on card (except actions) → navigate to post detail or expand inline
 
 ##### `PostDetail` (`src/features/posts/components/PostDetail.tsx`)
+
 Full post view (modal or inline):
+
 - Full title
 - Full content (rendered HTML, sanitized with DOMPurify)
 - All attachments displayed as thumbnails (click to open lightbox)
@@ -765,7 +833,9 @@ Full post view (modal or inline):
 - `PostActions` dropdown
 
 ##### `CreatePostForm` (`src/features/posts/components/CreatePostForm.tsx`)
+
 Form with:
+
 - **Title** (Input, max 100 chars, character counter)
 - **Content** (Tiptap editor, max 5000 chars, character counter)
 - **Priority** (Select: Normal, Important, Urgent)
@@ -773,24 +843,28 @@ Form with:
 - **Submit button** (disabled if validation fails)
 
 **Validation:**
+
 - Title: required, 1-100 chars
 - Content: required, 1-5000 chars
 - Attachments: max 3, each max 5MB, valid image types
 
 **Submission:**
+
 - Build `FormData`:
   ```javascript
   const formData = new FormData();
   formData.append('title', data.title);
   formData.append('content', contentHTML);
   formData.append('priority', data.priority);
-  files.forEach(file => formData.append('attachments', file));
+  files.forEach((file) => formData.append('attachments', file));
   ```
 - `POST /api/channels/:id/posts` with `Content-Type: multipart/form-data`
 - On success: invalidate `posts` query, scroll to top, show success toast
 
 ##### `EditPostForm` (`src/features/posts/components/EditPostForm.tsx`)
+
 Same as `CreatePostForm` but:
+
 - Pre-filled with existing post data
 - **24-hour edit window:** Show countdown "Edit window expires in X hours"
 - Only shown to post author within 24h of `createdAt`
@@ -798,38 +872,45 @@ Same as `CreatePostForm` but:
 - Submit → `PATCH /api/posts/:id`
 
 ##### `PostSearchBar` (`src/features/posts/components/PostSearchBar.tsx`)
+
 - Search input with 🔍 icon
 - 500ms debounce before triggering API call
 - Updates URL search params `?search=...`
 - Clears search → removes param
 
 ##### `PostFilters` (`src/features/posts/components/PostFilters.tsx`)
+
 - **Priority filter** (Multi-select: Normal, Important, Urgent)
 - **Date range** (DatePicker: startDate, endDate)
 - **"Clear Filters" button**
 - Updates URL search params `?priority=URGENT&startDate=...&endDate=...`
 
 ##### `PriorityBadge` (`src/features/posts/components/PriorityBadge.tsx`)
-| Priority | Style |
-|----------|-------|
-| NORMAL | Gray background, no special styling |
-| IMPORTANT | Amber background, ⚠️ icon |
-| URGENT | Red background, 🚨 icon, pulse animation |
+
+| Priority  | Style                                    |
+| --------- | ---------------------------------------- |
+| NORMAL    | Gray background, no special styling      |
+| IMPORTANT | Amber background, ⚠️ icon                |
+| URGENT    | Red background, 🚨 icon, pulse animation |
 
 ##### `AttachmentPreview` (`src/features/posts/components/AttachmentPreview.tsx`)
+
 - Thumbnail grid (3 columns)
 - Each image: small thumbnail (150x150 object-cover)
 - Click → opens lightbox modal with full-size image
 - Navigation arrows if multiple attachments
 
 ##### `PostActions` (`src/features/posts/components/PostActions.tsx`)
+
 Dropdown menu (·· · icon):
+
 - **Edit** (shown if: author + within 24h of creation)
 - **Delete** (shown if: author OR admin)
 - **Pin** / **Unpin** (shown if: user has `lock:channel` permission)
 - Each action: confirmation dialog before mutation
 
 #### Tiptap Configuration
+
 ```typescript
 // src/features/posts/lib/tiptap-config.ts
 import { useEditor } from '@tiptap/react';
@@ -864,6 +945,7 @@ export function useTiptapEditor(initialContent = '', maxChars = 5000) {
 ```
 
 **Toolbar:**
+
 - Bold, Italic, Strike
 - H1, H2, H3
 - Bullet List, Ordered List
@@ -872,32 +954,30 @@ export function useTiptapEditor(initialContent = '', maxChars = 5000) {
 - Character count: `{editor.storage.characterCount.characters()} / 5000`
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/posts.api.ts
 export const postsApi = {
   listPosts: (channelId: number, params: PostListParams) =>
     axios.get<PaginatedResponse<PostListItem>>(`/channels/${channelId}/posts`, { params }),
 
-  getPost: (postId: number) =>
-    axios.get<PostDetail>(`/posts/${postId}`),
+  getPost: (postId: number) => axios.get<PostDetail>(`/posts/${postId}`),
 
   createPost: (channelId: number, formData: FormData) =>
     axios.post(`/channels/${channelId}/posts`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
-  updatePost: (postId: number, data: UpdatePostDto) =>
-    axios.patch(`/posts/${postId}`, data),
+  updatePost: (postId: number, data: UpdatePostDto) => axios.patch(`/posts/${postId}`, data),
 
-  deletePost: (postId: number) =>
-    axios.delete(`/posts/${postId}`),
+  deletePost: (postId: number) => axios.delete(`/posts/${postId}`),
 
-  pinPost: (postId: number, isPinned: boolean) =>
-    axios.patch(`/posts/${postId}/pin`, { isPinned }),
+  pinPost: (postId: number, isPinned: boolean) => axios.patch(`/posts/${postId}/pin`, { isPinned }),
 };
 ```
 
 #### State Management
+
 - **TanStack Query:**
   - `usePosts(channelId, filters)` - Paginated posts with search/filter
     - Query key: `['posts', channelId, filters]` (filters trigger re-fetch)
@@ -915,6 +995,7 @@ export const postsApi = {
   - Preserves filters on navigation
 
 #### Edit Window Logic
+
 ```typescript
 // src/features/posts/hooks/useCanEditPost.ts
 export function useCanEditPost(post: PostListItem | PostDetail) {
@@ -931,6 +1012,7 @@ export function useCanEditPost(post: PostListItem | PostDetail) {
 ```
 
 #### Verification
+
 - ✅ Post feed loads with pinned posts first
 - ✅ Post card shows all info (author, badges, priority, edited indicator)
 - ✅ Click post → opens detail view
@@ -953,23 +1035,27 @@ export function useCanEditPost(post: PostListItem | PostDetail) {
 **Dependencies:** Module 0, Module 1, Module 2, Module 3
 
 #### Routes
-| Route | Component |
-|-------|-----------|
-| (dropdown from bell) | `NotificationPanel` |
-| `/notifications` | `NotificationInboxPage` |
-| `/servers/:serverId/settings/notifications` | `NotificationPreferencesPage` |
-| `/settings/notifications` | `NotificationSettingsServerPickerPage` |
+
+| Route                                       | Component                              |
+| ------------------------------------------- | -------------------------------------- |
+| (dropdown from bell)                        | `NotificationPanel`                    |
+| `/notifications`                            | `NotificationInboxPage`                |
+| `/servers/:serverId/settings/notifications` | `NotificationPreferencesPage`          |
+| `/settings/notifications`                   | `NotificationSettingsServerPickerPage` |
 
 #### Components
 
 ##### `NotificationBell` (already in Module 2, enhanced here)
+
 - Bell icon (`<Bell />` from lucide-react)
 - Red badge with `unreadCount` (positioned top-right)
 - Badge pulse animation on new notification
 - Click → toggles `NotificationPanel` dropdown
 
 ##### `NotificationPanel` (`src/features/notifications/components/NotificationPanel.tsx`)
+
 Dropdown panel (positioned below bell):
+
 - Header: "Notifications" title + "Mark all as read" button
 - Scrollable list (max-height: 400px)
 - Each notification: `NotificationItem`
@@ -978,6 +1064,7 @@ Dropdown panel (positioned below bell):
 - Footer: "View all" link to `/notifications`, "Settings" link to the active server's notification settings or the server picker
 
 ##### `NotificationItem` (`src/features/notifications/components/NotificationItem.tsx`)
+
 - **Unread:** Bold title, blue dot indicator on left
 - **Read:** Normal weight, no dot
 - **Layout:**
@@ -992,6 +1079,7 @@ Dropdown panel (positioned below bell):
     - `ROLE_ASSIGNED`: navigate to the related server notification settings when known, otherwise `/profile`
 
 ##### `NotificationInboxPage` (`src/features/notifications/pages/NotificationInboxPage.tsx`)
+
 - Global notification inbox at `/notifications`
 - URL-backed filters:
   - `tab=all|unread`
@@ -1000,6 +1088,7 @@ Dropdown panel (positioned below bell):
 - Shows paginated notifications, type/unread filters, total count, page controls, and mark-all-read
 
 ##### `NotificationPreferencesPage` (`src/features/notifications/pages/NotificationPreferencesPage.tsx`)
+
 - Per-server preferences at `/servers/:serverId/settings/notifications`
 - Post notifications section:
   - Server-level `NEW_POST` toggle
@@ -1015,16 +1104,19 @@ Dropdown panel (positioned below bell):
 - Submission: `PATCH /api/notification-preferences` on toggle (optimistic update)
 
 ##### `NotificationSettingsServerPickerPage` (`src/features/notifications/pages/NotificationSettingsServerPickerPage.tsx`)
+
 - Fallback from user menu when no active server context exists
 - Lists active servers and routes to each server's notification preferences page
 
 ##### `SubscriptionToggle` (`src/features/notifications/components/SubscriptionToggle.tsx`)
+
 - Accessible button with `role="switch"`
 - `checked={isSubscribed}`
 - `onChange` → mutation to update preference
 - Optimistic update: toggle immediately, rollback on error
 
 #### Socket.IO Integration (`src/lib/socket.ts`)
+
 ```typescript
 socket.on('notification:new', (notification: Notification) => {
   // Patch preview, invalidate inbox queries, and update active post feeds.
@@ -1042,30 +1134,28 @@ socket.on('notification:unread-count', ({ count }: { count: number }) => {
 ```
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/notifications.api.ts
 export const notificationsApi = {
   listNotifications: (params: NotificationListParams) =>
     axios.get<PaginatedResponse<Notification>>('/notifications', { params }),
 
-  getUnreadCount: () =>
-    axios.get<{ count: number }>('/notifications/unread-count'),
+  getUnreadCount: () => axios.get<{ count: number }>('/notifications/unread-count'),
 
-  markAsRead: (notificationId: number) =>
-    axios.patch(`/notifications/${notificationId}/read`),
+  markAsRead: (notificationId: number) => axios.patch(`/notifications/${notificationId}/read`),
 
-  markAllAsRead: () =>
-    axios.patch('/notifications/read-all'),
+  markAllAsRead: () => axios.patch('/notifications/read-all'),
 
   listPreferences: (params: NotificationPreferenceListParams) =>
     axios.get<NotificationPreference[]>('/notification-preferences', { params }),
 
-  updatePreference: (data: UpdatePreferenceDto) =>
-    axios.patch('/notification-preferences', data),
+  updatePreference: (data: UpdatePreferenceDto) => axios.patch('/notification-preferences', data),
 };
 ```
 
 #### State Management
+
 - **Zustand Notification Store:**
   - `unreadCount` - Updated by:
     1. Initial fetch on mount: `GET /api/notifications/unread-count`
@@ -1081,10 +1171,12 @@ export const notificationsApi = {
     - `useUpdatePreference` - Optimistic toggle
 
 #### Feed Freshness Boundary
+
 - Notification preferences suppress notification records/socket notification events only.
 - Channel feeds remain independent and call `GET /api/channels/:id/posts` on mount via `refetchOnMount: 'always'`, so muted users still see the latest posts when they open a channel.
 
 #### Navigation Logic
+
 ```typescript
 // src/features/notifications/utils.ts
 export function getNotificationTarget(notification: Notification) {
@@ -1096,6 +1188,7 @@ export function getNotificationTarget(notification: Notification) {
 ```
 
 #### Verification
+
 - ✅ Notification bell shows correct unread count on mount
 - ✅ Socket.IO receives `notification:new` event, count increments, toast shown for urgent
 - ✅ Click bell → dropdown opens with notification list
@@ -1114,16 +1207,18 @@ export function getNotificationTarget(notification: Notification) {
 **Dependencies:** Module 0, Module 1, Module 2
 
 #### Routes
-| Route | Component |
-|-------|-----------|
-| `/profile` | `ProfilePage` |
-| `/admin/users` | `AdminUserListPage` |
-| `/admin/users/new` | `CreateUserPage` |
-| `/admin/users/import` | `BulkImportPage` |
+
+| Route                 | Component           |
+| --------------------- | ------------------- |
+| `/profile`            | `ProfilePage`       |
+| `/admin/users`        | `AdminUserListPage` |
+| `/admin/users/new`    | `CreateUserPage`    |
+| `/admin/users/import` | `BulkImportPage`    |
 
 #### Components
 
 ##### `ProfilePage` (`src/features/profile/pages/ProfilePage.tsx`)
+
 - Fetches via `useProfile()` → `GET /api/users/me`
 - Layout:
   - Top: large avatar (128px) with upload button overlay (camera icon on hover)
@@ -1138,6 +1233,7 @@ export function getNotificationTarget(notification: Notification) {
   - Teacher-specific: Designation
 
 ##### `ProfilePictureUpload` (`src/features/profile/components/ProfilePictureUpload.tsx`)
+
 - Click avatar → file picker
 - Preview in modal before upload
 - Validation: image only, max 5MB
@@ -1145,6 +1241,7 @@ export function getNotificationTarget(notification: Notification) {
 - On success: invalidate `profile` query, avatar updates
 
 ##### `BioEditor` (`src/features/profile/components/BioEditor.tsx`)
+
 - Initially displays bio as read-only text
 - Click "Edit" button → textarea appears (max 500 chars, character counter)
 - "Save" / "Cancel" buttons
@@ -1152,6 +1249,7 @@ export function getNotificationTarget(notification: Notification) {
 - On success: invalidate `profile` query
 
 ##### `AdminUserListPage` (`src/features/admin/pages/AdminUserListPage.tsx`)
+
 - Data table with filters:
   - **User Type** (dropdown: All, Admin, Teacher, Student)
   - **Department** (dropdown: All, CS, SE, AI, etc.)
@@ -1167,6 +1265,7 @@ export function getNotificationTarget(notification: Notification) {
 - Paginated (20 per page)
 
 ##### `CreateUserPage` (`src/features/admin/pages/CreateUserPage.tsx`)
+
 - Form with `React Hook Form + Zod`
 - **Base fields** (all users):
   - Full name, email, phone, gender (radio: Male/Female)
@@ -1182,6 +1281,7 @@ export function getNotificationTarget(notification: Notification) {
 - On success: show success toast confirming credentials were emailed, redirect to user list
 
 ##### `BulkImportPage` (`src/features/admin/pages/BulkImportPage.tsx`)
+
 - CSV file upload component
 - **CSV format:**
   - Headers: `fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation`
@@ -1196,19 +1296,19 @@ export function getNotificationTarget(notification: Notification) {
 - Download failed rows as CSV for correction
 
 ##### `UserDetailDialog` (`src/features/admin/components/UserDetailDialog.tsx`)
+
 - Modal showing full user info
 - Same layout as `ProfilePage` but read-only
 - Footer: "Deactivate" / "Reactivate" button (based on current status)
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/users.api.ts
 export const usersApi = {
-  getProfile: () =>
-    axios.get<UserProfile>('/users/me'),
+  getProfile: () => axios.get<UserProfile>('/users/me'),
 
-  updateProfile: (data: UpdateProfileDto) =>
-    axios.patch('/users/me', data),
+  updateProfile: (data: UpdateProfileDto) => axios.patch('/users/me', data),
 
   updateProfilePicture: (file: File) => {
     const formData = new FormData();
@@ -1218,8 +1318,7 @@ export const usersApi = {
     });
   },
 
-  createUser: (data: CreateUserDto) =>
-    axios.post('/users', data),
+  createUser: (data: CreateUserDto) => axios.post('/users', data),
 
   bulkImport: (file: File) => {
     const formData = new FormData();
@@ -1235,45 +1334,43 @@ export const usersApi = {
   listUsers: (params: UserListParams) =>
     axios.get<PaginatedResponse<UserListItem>>('/users', { params }),
 
-  getUser: (id: number) =>
-    axios.get<UserProfile>(`/users/${id}`),
+  getUser: (id: number) => axios.get<UserProfile>(`/users/${id}`),
 
-  deactivateUser: (id: number) =>
-    axios.patch(`/users/${id}/deactivate`),
+  deactivateUser: (id: number) => axios.patch(`/users/${id}/deactivate`),
 
-  reactivateUser: (id: number) =>
-    axios.patch(`/users/${id}/reactivate`),
+  reactivateUser: (id: number) => axios.patch(`/users/${id}/reactivate`),
 };
 ```
 
 #### Zod Schemas
+
 ```typescript
 // src/features/admin/schemas/user.schemas.ts
 const baseUserSchema = z.object({
-  fullName: z.string().min(1, "Full name is required").max(100),
-  email: z.string().email("Invalid email"),
-  phone: z.string().regex(/^03\d{9}$/, "Invalid phone number (03XXXXXXXXX)"),
-  gender: z.enum(["MALE", "FEMALE"]),
-  userType: z.enum(["ADMIN", "TEACHER", "STUDENT"]),
+  fullName: z.string().min(1, 'Full name is required').max(100),
+  email: z.string().email('Invalid email'),
+  phone: z.string().regex(/^03\d{9}$/, 'Invalid phone number (03XXXXXXXXX)'),
+  gender: z.enum(['MALE', 'FEMALE']),
+  userType: z.enum(['ADMIN', 'TEACHER', 'STUDENT']),
 });
 
 export const createUserSchema = baseUserSchema.and(
-  z.discriminatedUnion("userType", [
+  z.discriminatedUnion('userType', [
     z.object({
-      userType: z.literal("ADMIN"),
+      userType: z.literal('ADMIN'),
     }),
     z.object({
-      userType: z.literal("TEACHER"),
+      userType: z.literal('TEACHER'),
       departmentId: z.number().int().positive(),
       designation: z.string().min(1).max(100),
     }),
     z.object({
-      userType: z.literal("STUDENT"),
+      userType: z.literal('STUDENT'),
       departmentId: z.number().int().positive(),
       classId: z.number().int().positive(),
       rollNumber: z.string().regex(/^\d{2}-NTU-[A-Z]{2,5}-\d{3,5}$/),
     }),
-  ])
+  ]),
 );
 
 export const updateProfileSchema = z.object({
@@ -1282,6 +1379,7 @@ export const updateProfileSchema = z.object({
 ```
 
 #### Verification
+
 - ✅ Profile page loads with user data
 - ✅ Click avatar → file picker opens, upload succeeds, avatar updates
 - ✅ Edit bio → textarea appears, save succeeds, bio updates
@@ -1302,20 +1400,21 @@ export const updateProfileSchema = z.object({
 **Dependencies:** Module 0, Module 1, Module 2, Module 6
 
 #### Routes
-| Route | Component |
-|-------|-----------|
-| `/admin/dashboard` | `AdminDashboardPage` |
-| `/admin/departments` | `DepartmentListPage` |
-| `/admin/departments/:id` | `DepartmentDetailPage` |
-| `/admin/departments/:id/programs` | `ProgramListPage` (nested) |
-| `/admin/programs/:id/curriculum` | Redirect to `/academics/programs/:id/curriculum` |
-| `/admin/disciplines` | `DisciplineListPage` |
-| `/admin/classes` | Redirect to `/academics/classes` |
-| `/admin/classes/:id` | Redirect to `/academics/classes/:id` |
-| `/admin/courses` | `CourseListPage` |
-| `/academics/classes` | `ClassListPage` behind `AcademicGuard` |
-| `/academics/classes/:id` | `ClassDetailPage` behind `AcademicGuard` |
-| `/academics/programs/:id/curriculum` | `CurriculumPage` behind `AcademicGuard` |
+
+| Route                                | Component                                        |
+| ------------------------------------ | ------------------------------------------------ |
+| `/admin/dashboard`                   | `AdminDashboardPage`                             |
+| `/admin/departments`                 | `DepartmentListPage`                             |
+| `/admin/departments/:id`             | `DepartmentDetailPage`                           |
+| `/admin/departments/:id/programs`    | `ProgramListPage` (nested)                       |
+| `/admin/programs/:id/curriculum`     | Redirect to `/academics/programs/:id/curriculum` |
+| `/admin/disciplines`                 | `DisciplineListPage`                             |
+| `/admin/classes`                     | Redirect to `/academics/classes`                 |
+| `/admin/classes/:id`                 | Redirect to `/academics/classes/:id`             |
+| `/admin/courses`                     | `CourseListPage`                                 |
+| `/academics/classes`                 | `ClassListPage` behind `AcademicGuard`           |
+| `/academics/classes/:id`             | `ClassDetailPage` behind `AcademicGuard`         |
+| `/academics/programs/:id/curriculum` | `CurriculumPage` behind `AcademicGuard`          |
 
 The `/academics/*` workspace is delegated through backend capabilities, not `ADMIN`
 status alone. Admins, HODs, and Program Directors can enter when
@@ -1325,6 +1424,7 @@ routes remain compatibility redirects.
 #### Components
 
 ##### `AdminDashboardPage` (`src/features/admin/pages/AdminDashboardPage.tsx`)
+
 - Fetches via `useAdminStats()` → `GET /api/admin/stats`
 - Grid of stat cards (4 columns on desktop, 2 on tablet, 1 on mobile):
   1. **Total Users** - Count + breakdown: Admin / Teacher / Student
@@ -1338,16 +1438,19 @@ routes remain compatibility redirects.
   - Sub-stats (if applicable)
 
 ##### `DepartmentListPage` (`src/features/admin/pages/DepartmentListPage.tsx`)
+
 - Table with columns: Name, Code, HOD, Server, Actions
 - "Create Department" button → opens `CreateDepartmentDialog`
 - Click row → navigate to `/admin/departments/:id`
 
 ##### `CreateDepartmentDialog` (`src/features/admin/components/CreateDepartmentDialog.tsx`)
+
 - Form fields: Name, Code
 - Submit → `POST /api/departments`
 - On success: invalidate `departments` query, close dialog
 
 ##### `DepartmentDetailPage` (`src/features/admin/pages/DepartmentDetailPage.tsx`)
+
 - Tabs:
   1. **Overview** - Department info, edit form, stats (fetched from `GET /api/departments/:id/stats`)
   2. **Programs** - List of programs in this department (inline `ProgramListPage`)
@@ -1355,11 +1458,13 @@ routes remain compatibility redirects.
 - Submit → `PATCH /api/departments/:id`
 
 ##### `ProgramListPage` (`src/features/admin/components/ProgramListPage.tsx`)
+
 - Table with columns: Code, Discipline, Degree Level, Semesters, Program Director, Actions
 - "Create Program" button → opens `CreateProgramDialog`
 - Click row → navigate to `/academics/programs/:id/curriculum`
 
 ##### `CreateProgramDialog` (`src/features/admin/components/CreateProgramDialog.tsx`)
+
 - Form fields:
   - Discipline (dropdown from `GET /api/disciplines`)
   - Degree Level (dropdown: Bachelor, Master, PhD)
@@ -1369,6 +1474,7 @@ routes remain compatibility redirects.
 - Submit → `POST /api/departments/:id/programs`
 
 ##### `CurriculumPage` (`src/features/admin/pages/CurriculumPage.tsx`)
+
 - Fetches via `useCurriculum(programId)` → `GET /api/programs/:id/curriculum`
 - Grouped by semester (accordion or tabs)
 - Each semester: table of courses with columns: Course Code, Title, Credit Hours, Batch Year, Remove Button
@@ -1378,6 +1484,7 @@ routes remain compatibility redirects.
   class workflows but do not receive class progression/graduation controls.
 
 ##### `AddCurriculumDialog` (`src/features/admin/components/AddCurriculumDialog.tsx`)
+
 - Form fields:
   - Course (searchable dropdown from `GET /api/courses`)
   - Semester Number (dropdown 1-10)
@@ -1385,14 +1492,17 @@ routes remain compatibility redirects.
 - Submit → `POST /api/programs/:id/curriculum`
 
 ##### `DisciplineListPage` (`src/features/admin/pages/DisciplineListPage.tsx`)
+
 - Simple list of disciplines (Chip tags or cards)
 - "Create Discipline" button → opens `CreateDisciplineDialog`
 
 ##### `CreateDisciplineDialog` (`src/features/admin/components/CreateDisciplineDialog.tsx`)
+
 - Single field: Name
 - Submit → `POST /api/disciplines`
 
 ##### `ClassListPage` (`src/features/admin/pages/ClassListPage.tsx`)
+
 - Table with columns: Program, Section, Current Semester, Academic Year, Status, CR, Server, Actions
 - Filters: Program, Section, Status, and search where supported by the backend
 - Defaults to active classes; graduated classes are available through the status filter
@@ -1400,6 +1510,7 @@ routes remain compatibility redirects.
 - Click row → navigate to `/academics/classes/:id`
 
 ##### `CreateClassDialog` (`src/features/admin/components/CreateClassDialog.tsx`)
+
 - Form fields:
   - Program (dropdown)
   - Section (radio: A / B)
@@ -1410,6 +1521,7 @@ routes remain compatibility redirects.
 - Submit → `POST /api/classes`
 
 ##### `ClassDetailPage` (`src/features/admin/pages/ClassDetailPage.tsx`)
+
 - Tabs:
   1. **Overview** - Class info (read-only)
   2. **Students** - Student roster and transfer/enroll actions when allowed
@@ -1417,6 +1529,7 @@ routes remain compatibility redirects.
   4. **Semester Progression** - HOD/admin-only progression and final-semester graduation
 
 **Courses Tab:**
+
 - Table: Course Code, Title, Teacher, Actions (Remove, Replace Teacher)
 - "Assign Course" button → `AssignCourseDialog`
 - "Replace Teacher" is available to admins, HODs, and Program Directors with the
@@ -1425,24 +1538,28 @@ routes remain compatibility redirects.
   class department, because NTU can assign cross-department teachers to class courses.
 
 **Students Tab:**
+
 - Fetches `GET /api/classes/:id/students` only when `canViewStudents` is true.
 - HOD/admin class managers can enroll or transfer students where the backend allows it.
 - Transfers preserve class server membership by removing the source class membership and
   adding the target class membership in the same academic flow.
 
 ##### `AssignCourseDialog` (`src/features/admin/components/AssignCourseDialog.tsx`)
+
 - Form fields:
   - Course (dropdown from curriculum for this program's current semester)
   - Teacher (dropdown of active teachers; cross-department teachers are valid)
 - Submit → `POST /api/classes/:id/courses`
 
 ##### `SemesterProgressionButton` (`src/features/admin/components/SemesterProgressionButton.tsx`)
+
 - HOD/admin-only progression action for active, non-final-semester classes.
 - Click → opens assignment dialog for the next semester's curriculum and required teachers.
 - Confirm → `POST /api/classes/:id/semester-progression`
 - On success: invalidate class query, show success toast, refresh academic state
 
 ##### `GraduateClassButton` (`src/features/admin/components/GraduateClassButton.tsx`)
+
 - HOD/admin-only final-semester graduation action.
 - Click → opens confirmation dialog with explanation:
   - "This class will be marked as graduated."
@@ -1453,20 +1570,22 @@ routes remain compatibility redirects.
 - On success: invalidate class list/detail queries and show the graduated read-only state.
 
 ##### `CourseListPage` (`src/features/admin/pages/CourseListPage.tsx`)
+
 - Table: Code, Title, Credit Hours, Department, Actions
 - "Create Course" button → `CreateCourseDialog`
 - Click row → `EditCourseDialog`
 
 ##### `CreateCourseDialog` / `EditCourseDialog` (`src/features/admin/components/`)
+
 - Form fields: Title, Code, Credit Hours (number 1-6), Department (dropdown)
 - Submit → `POST /api/courses` or `PATCH /api/courses/:id`
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/admin.api.ts
 export const adminApi = {
-  getStats: () =>
-    axios.get<AdminStats>('/admin/stats'),
+  getStats: () => axios.get<AdminStats>('/admin/stats'),
 
   listAllUsers: (params: AdminUserListParams) =>
     axios.get<PaginatedResponse<UserListItem>>('/admin/users', { params }),
@@ -1480,13 +1599,15 @@ export const departmentsApi = {
   create: (data: CreateDepartmentDto) => axios.post('/departments', data),
   update: (id: number, data: UpdateDepartmentDto) => axios.patch(`/departments/${id}`, data),
   listPrograms: (id: number) => axios.get<Program[]>(`/departments/${id}/programs`),
-  createProgram: (id: number, data: CreateProgramDto) => axios.post(`/departments/${id}/programs`, data),
+  createProgram: (id: number, data: CreateProgramDto) =>
+    axios.post(`/departments/${id}/programs`, data),
 };
 
 // Similar patterns for programs.api.ts, disciplines.api.ts, classes.api.ts, courses.api.ts
 ```
 
 #### Verification
+
 - ✅ Admin dashboard shows correct stats
 - ✅ Department list loads, create dialog works, new department appears
 - ✅ Department detail shows info and stats
@@ -1516,9 +1637,10 @@ export const departmentsApi = {
 **Dependencies:** Module 0, Module 1, Module 2, Module 3
 
 #### Routes
-| Route | Component |
-|-------|-----------|
-| `/societies` | `SocietyListPage` |
+
+| Route                   | Component           |
+| ----------------------- | ------------------- |
+| `/societies`            | `SocietyListPage`   |
 | `/societies/:societyId` | `SocietyDetailPage` |
 
 `/admin/societies` and `/admin/societies/:id` are compatibility redirects only. Society
@@ -1528,6 +1650,7 @@ HODs, and admins can all use this workspace.
 #### Components
 
 ##### `SocietyListPage` (`src/features/societies/pages/SocietyListPage.tsx`)
+
 - Card grid or table layout
 - Each society card:
   - Society name
@@ -1540,6 +1663,7 @@ HODs, and admins can all use this workspace.
 - "Create Society" button (only for HOD/Admin)
 
 ##### `CreateSocietyDialog` (`src/features/societies/components/CreateSocietyDialog.tsx`)
+
 - Form fields:
   - Name, Description (textarea)
   - Department (dropdown)
@@ -1548,54 +1672,55 @@ HODs, and admins can all use this workspace.
 - Submit → `POST /api/societies`
 
 ##### `SocietyDetailPage` (`src/features/societies/pages/SocietyDetailPage.tsx`)
+
 - Tabs:
   1. **Overview** - Society info, edit button (for convenor/president/admin)
   2. **Members** - Member list with "Add Member" and remove buttons
   3. **Join Requests** - Pending requests with approve/reject buttons
 
 **Members Tab:**
+
 - `SocietyMemberList` component
 - Paginated list of members (avatar, name, email, join date)
 - "Remove" button for each member (convenor/president/admin only)
 - "Add Member" button → `AddMemberDialog`
 
 **Join Requests Tab:**
+
 - `JoinRequestList` component
 - List of pending requests (avatar, name, email, requested date)
 - Actions: Approve (green button), Reject (red button)
 - Empty state: "No pending requests"
 
 ##### `JoinRequestButton` (`src/features/societies/components/JoinRequestButton.tsx`)
+
 - Shown to students viewing a society they're not a member of
 - Button: "Request to Join"
 - Click → `POST /api/societies/:id/join-request`
 - On success: button changes to "Request Sent" (disabled)
 
 ##### `AddMemberDialog` (`src/features/societies/components/AddMemberDialog.tsx`)
+
 - Searchable dropdown to find students by name/email
 - Submit → `POST /api/societies/:id/members`
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/societies.api.ts
 export const societiesApi = {
-  list: (params?: SocietyListParams) =>
-    axios.get<Society[]>('/societies', { params }),
+  list: (params?: SocietyListParams) => axios.get<Society[]>('/societies', { params }),
 
-  get: (id: number) =>
-    axios.get<SocietyDetail>(`/societies/${id}`),
+  get: (id: number) => axios.get<SocietyDetail>(`/societies/${id}`),
 
   getMyMembership: (id: number) =>
     axios.get<SocietyMembershipSummary>(`/societies/${id}/my-membership`),
 
-  create: (data: CreateSocietyDto) =>
-    axios.post('/societies', data),
+  create: (data: CreateSocietyDto) => axios.post('/societies', data),
 
-  update: (id: number, data: UpdateSocietyDto) =>
-    axios.patch(`/societies/${id}`, data),
+  update: (id: number, data: UpdateSocietyDto) => axios.patch(`/societies/${id}`, data),
 
-  submitJoinRequest: (societyId: number) =>
-    axios.post(`/societies/${societyId}/join-request`),
+  submitJoinRequest: (societyId: number) => axios.post(`/societies/${societyId}/join-request`),
 
   listJoinRequests: (societyId: number) =>
     axios.get<JoinRequest[]>(`/societies/${societyId}/join-requests`),
@@ -1607,17 +1732,22 @@ export const societiesApi = {
     axios.post(`/societies/${societyId}/members`, { userId }),
 
   listMemberCandidates: (societyId: number, params?: MemberCandidateParams) =>
-    axios.get<PaginatedResponse<MemberCandidate>>(`/societies/${societyId}/member-candidates`, { params }),
+    axios.get<PaginatedResponse<MemberCandidate>>(`/societies/${societyId}/member-candidates`, {
+      params,
+    }),
 
   removeMember: (societyId: number, userId: number) =>
     axios.delete(`/societies/${societyId}/members/${userId}`),
 
   listMembers: (societyId: number, page?: number) =>
-    axios.get<PaginatedResponse<SocietyMember>>(`/societies/${societyId}/members`, { params: { page } }),
+    axios.get<PaginatedResponse<SocietyMember>>(`/societies/${societyId}/members`, {
+      params: { page },
+    }),
 };
 ```
 
 #### Permission Checks
+
 - **Create society:** Only HOD or Admin
 - **Edit society:** Info changes by convenor, president, HOD, or admin; leadership changes by HOD or admin
 - **Approve/reject join requests:** Convenor, president, or admin
@@ -1626,6 +1756,7 @@ export const societiesApi = {
 - **Join request review notification:** Approval/rejection emits `SOCIETY_REQUEST_REVIEWED` to the requester
 
 #### Verification
+
 - ✅ Society list loads with cards
 - ✅ Filter by department works
 - ✅ Create society (as HOD/admin) → dialog opens, submission succeeds
@@ -1644,8 +1775,9 @@ export const societiesApi = {
 **Dependencies:** Module 0, Module 1, Module 2, Module 7, Module 8
 
 #### Routes
-| Route | Component |
-|-------|-----------|
+
+| Route    | Component            |
+| -------- | -------------------- |
 | `/roles` | `RoleManagementPage` |
 
 `/admin/roles` is a compatibility redirect only. Role management is exposed from the authenticated
@@ -1654,15 +1786,18 @@ user profile menu for admins and delegated role managers instead of the admin da
 #### Components
 
 ##### `RoleManagementPage` (`src/features/roles/pages/RoleManagementPage.tsx`)
+
 - Two-column layout:
   - **Left:** User search/picker
   - **Right:** Role assignment/revocation interface (shown after selecting a user)
 
 **User Search:**
+
 - Searchable dropdown (name/email)
 - On select → fetch user's current roles via `GET /api/roles/users/:id`
 
 **Current Roles Display:**
+
 - `UserRolesView` component
 - List of roles with scope context:
   - "HOD of Computer Science Department"
@@ -1674,9 +1809,11 @@ user profile menu for admins and delegated role managers instead of the admin da
 - Each role: badge + "Revoke" button
 
 ##### `AssignRoleForm` (`src/features/roles/components/AssignRoleForm.tsx`)
+
 Dynamic form that adapts based on selected role type:
 
 **Step 1:** Select role type (dropdown)
+
 - HOD
 - Program Director
 - CR (Class Representative)
@@ -1686,6 +1823,7 @@ Dynamic form that adapts based on selected role type:
 - Channel Moderator
 
 **Step 2:** Select scope (dropdown based on role)
+
 - **HOD:** Select Department
 - **Program Director:** Select Program
 - **CR:** Select Class
@@ -1695,7 +1833,9 @@ Dynamic form that adapts based on selected role type:
 - **Channel Moderator:** Select Server, then Channel
 
 **Step 3:** Submit
+
 - `POST /api/roles/assign` with payload:
+
   ```typescript
   // Non-moderator roles
   { userId: number, role: string, scopeId: number }
@@ -1706,12 +1846,15 @@ Dynamic form that adapts based on selected role type:
   ```
 
 ##### `RevokeRoleButton` (`src/features/roles/components/RevokeRoleButton.tsx`)
+
 - Confirmation dialog: "Are you sure you want to revoke {roleName} from {userName}?"
 - Confirm → `POST /api/roles/revoke` with same payload shape as assign
 - **Note:** Society President and Convenor roles cannot be revoked directly (must change via `PATCH /api/societies/:id`)
 
 ##### `RoleScopePicker` (`src/features/roles/components/RoleScopePicker.tsx`)
+
 Dropdown that loads entities based on role type:
+
 - **Department:** `GET /api/departments`
 - **Program:** `GET /api/departments/:id/programs` (nested, department selected first)
 - **Class:** `GET /api/classes`
@@ -1720,24 +1863,24 @@ Dropdown that loads entities based on role type:
 - **Channel:** `GET /api/servers/:id/channels` (for channel moderator)
 
 #### API Integrations
+
 ```typescript
 // src/api/endpoints/roles.api.ts
 export const rolesApi = {
-  getUserRoles: (userId: number) =>
-    axios.get<UserRole[]>(`/roles/users/${userId}`),
+  getUserRoles: (userId: number) => axios.get<UserRole[]>(`/roles/users/${userId}`),
 
-  assignRole: (data: AssignRoleDto) =>
-    axios.post('/roles/assign', data),
+  assignRole: (data: AssignRoleDto) => axios.post('/roles/assign', data),
 
-  revokeRole: (data: RevokeRoleDto) =>
-    axios.post('/roles/revoke', data),
+  revokeRole: (data: RevokeRoleDto) => axios.post('/roles/revoke', data),
 };
 ```
 
 #### Permission-Aware UI (Cross-Cutting)
+
 Implemented across ALL modules to conditionally show/hide management actions.
 
 **Hook:** `usePermissions()` (`src/hooks/usePermissions.ts`)
+
 ```typescript
 export function usePermissions() {
   const { user } = useAuthStore();
@@ -1762,7 +1905,7 @@ export function usePermissions() {
       return roles.some(
         (role) =>
           role.serverId === serverId &&
-          ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role)
+          ['hod', 'cr', 'society_president', 'society_convenor'].includes(role.role),
       );
     },
 
@@ -1771,7 +1914,7 @@ export function usePermissions() {
       return roles.some(
         (role) =>
           role.role === 'server_moderator' ||
-          (role.role === 'channel_moderator' && role.channelId === channelId)
+          (role.role === 'channel_moderator' && role.channelId === channelId),
       );
     },
 
@@ -1781,6 +1924,7 @@ export function usePermissions() {
 ```
 
 **Component:** `<Can>` (`src/components/shared/Can.tsx`)
+
 ```typescript
 export function Can({ action, serverId, children }: CanProps) {
   const permissions = usePermissions();
@@ -1797,6 +1941,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ```
 
 #### Verification
+
 - ✅ Role management page loads
 - ✅ Search for user → user roles displayed with scope context
 - ✅ Assign role: select role type, select scope, submission succeeds, role appears in list
@@ -1812,29 +1957,37 @@ export function Can({ action, serverId, children }: CanProps) {
 ## Build Order & Timeline
 
 ### Phase 1: Foundation (Week 1)
+
 **Module 0: Project Foundation**
+
 - Day 1-2: Vite setup, official Tailwind v4 Vite plugin integration, shadcn/ui, folder structure
 - Day 3: Axios instance, TanStack Query, Zustand stores
 - Day 4: Socket.IO client, type definitions
 - Day 5: Route tree, guards, error boundary, toast system
 
 ### Phase 2: Core Shell (Week 2)
+
 **Module 1: Authentication**
+
 - Day 1: Login page and form
 - Day 2: Password reset flow
 - Day 3: Change password (forced and voluntary)
 
 **Module 2: Layout & Navigation**
+
 - Day 4-5: AppShell, ServerSidebar, ChannelSidebar, TopBar
 - Day 6: Responsive design, mobile drawer
 - Day 7: Socket.IO integration, notification bell
 
 ### Phase 3: Primary User Experience (Weeks 3-4)
+
 **Module 3: Server & Channel Views**
+
 - Day 1-2: Server page, channel list, member list
 - Day 3: Create/edit/lock/delete channel
 
 **Module 4: Posts & Announcements**
+
 - Day 4-5: Post feed, post card, post detail
 - Day 6-7: Tiptap editor, create post form
 - Day 8: Edit/delete/pin posts
@@ -1842,17 +1995,21 @@ export function Can({ action, serverId, children }: CanProps) {
 - Day 10: Attachment upload and preview
 
 **Module 5: Notifications**
+
 - Day 11-12: Notification panel, real-time updates
 - Day 13: Notification preferences page
 
 ### Phase 4: Profile & Admin (Weeks 5-6)
+
 **Module 6: User Profile & Management**
+
 - Day 1-2: Profile page, bio editor, profile picture upload
 - Day 3: Admin user list with filters
 - Day 4: Create user form
 - Day 5: Bulk CSV import
 
 **Module 7: Admin Dashboard & CRUD**
+
 - Day 6: Admin dashboard with stats
 - Day 7-8: Department CRUD
 - Day 9: Program CRUD, curriculum management
@@ -1861,11 +2018,14 @@ export function Can({ action, serverId, children }: CanProps) {
 - Day 13: Course CRUD
 
 ### Phase 5: Extended Features (Week 7)
+
 **Module 8: Society Management**
+
 - Day 1-2: Society list, society detail
 - Day 3: Join requests, member management
 
 **Module 9: Role Management**
+
 - Day 4-5: Role assignment/revocation UI
 - Day 6: Permission-aware UI across all modules
 - Day 7: Testing and refinement
@@ -1875,6 +2035,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ## Verification Criteria
 
 ### Module 0
+
 ✅ `npm run dev` starts without errors
 ✅ Vite proxy connects to backend
 ✅ Test API call `GET /api/health` returns `{ success: true }`
@@ -1882,6 +2043,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Tailwind CSS utilities and shadcn theme tokens render
 
 ### Module 1
+
 ✅ Login with valid credentials → redirects to server list
 ✅ Login with invalid credentials → shows inline error
 ✅ Login with temp password → forced to change password
@@ -1893,6 +2055,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ 401 → auto-refresh → retry → login if refresh fails
 
 ### Runtime Behavior Testing Gate
+
 ✅ Module 1 is statically verified with format, type-check, lint, and production build
 ✅ Critical auth flows are covered in Playwright, so the runtime test strategy is now operational
 ✅ First Playwright wave covers login, forced password change, forgot-password silent success, reset-password success/failure, and logout redirect
@@ -1900,6 +2063,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ⬜ Add explicit session-expiry/auth-expired redirect coverage in a later auth-hardening pass
 
 ### Module 2
+
 ✅ Three-column layout renders
 ✅ Server sidebar populates
 ✅ Channel sidebar shows grouped channels
@@ -1908,12 +2072,14 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Mobile: sidebars collapse into drawer
 
 ### Module 3
+
 ✅ Navigate server → auto-redirect to first channel
 ✅ Channel sidebar shows channels
 ✅ Member list shows badges
 ✅ Create/lock/delete channel (authorized users)
 
 ### Module 4
+
 ✅ Post feed loads with pinned first
 ✅ Create post with Tiptap + attachments
 ✅ Edit post within 24h
@@ -1923,6 +2089,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Filter by priority and date
 
 ### Module 5
+
 ✅ Notification bell shows count
 ✅ Real-time notification via Socket.IO
 ✅ Click notification → navigate to post
@@ -1930,6 +2097,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Notification preferences toggle
 
 ### Module 6
+
 ✅ Profile page shows user data
 ✅ Upload profile picture
 ✅ Edit bio
@@ -1939,6 +2107,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Deactivate/reactivate user
 
 ### Module 7
+
 ✅ Admin dashboard shows stats
 ✅ Department/Program/Discipline/Class/Course CRUD flows
 ✅ Curriculum management
@@ -1946,6 +2115,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Semester progression
 
 ### Module 8
+
 ✅ Society list
 ✅ Create society
 ✅ Join request flow
@@ -1953,6 +2123,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Add/remove members
 
 ### Module 9
+
 ✅ Assign role with scope
 ✅ Revoke role
 ✅ Permission-aware UI throughout app
@@ -1962,6 +2133,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ## Cross-Cutting Concerns
 
 ### Error Handling
+
 1. Axios interceptor normalizes all errors
 2. TanStack Query `onError` shows toasts
 3. Form submissions catch validation errors
@@ -1970,45 +2142,57 @@ export function Can({ action, serverId, children }: CanProps) {
 6. 429 → Cooldown toast with retry time
 
 ### Pagination
+
 - Default page size: 20, max: 50
 - Use paginated backend responses everywhere lists are required
 - Use URL query params for explicit page-based screens; allow load-more style interaction for channel feeds on top of paginated API data
 - TanStack Query keys include pagination params
 
 ### File Uploads
+
 - `FormData` API
 - Client-side validation: file type, size
 - Progress indicators
 - Error handling: file too large, invalid type, network failure
 
 ### mustChangePassword Gate
+
 - Enforced by `MustChangePasswordGuard`
 - Redirects to `/change-password`
 - Backend blocks all other routes with 403
 - Socket.IO connection is deferred until the user completes the forced password change flow and logs in again
 
 ### Responsive Design
+
 - Mobile-first approach
 
 ### Deployment Recommendation
+
 - Default to same-origin production deployment for frontend and backend
 - Keep `/api` and `/api/socket.io` relative in the app by default
 - Introduce `VITE_API_URL` and `VITE_SOCKET_URL` only if deployment later requires separate origins
 
 ### Security Note
+
 - Avoid putting tokens or secrets in URLs except for the password-reset link delivered by email; once the reset page reads the token, submit it in the request body and do not persist it elsewhere
 - Breakpoints: `sm:640px`, `md:768px`, `lg:1024px`, `xl:1280px`
 - Sidebars collapse into drawer on mobile
 - Touch-friendly tap targets (min 44x44px)
 
 ### Accessibility
+
 - Semantic HTML
 - ARIA labels on interactive elements
 - Focus management in modals
 - Keyboard navigation
 - Screen reader announcements
+- Shared semantic tabs for permission-gated tab groups
+- Cookie-backed light/dark/system theme control with no browser storage dependency
+- Captioned data tables and live-region friendly loading, empty, and retry states
+- High-impact destructive confirmations for removal, revocation, graduation, and course-archive actions
 
 ### Performance
+
 - Code splitting per route
 - Lazy loading images
 - TanStack Query caching (5min stale time by default)
@@ -2016,8 +2200,11 @@ export function Can({ action, serverId, children }: CanProps) {
 - Optimistic UI updates
 
 ### Runtime Testing Strategy
+
 - Use Testing Library plus MSW for deterministic component and integration coverage
+- Use component tests for accessibility primitives such as theme controls, tabs, labels, field errors, and dialog semantics
 - Use Playwright for real browser runtime behavior, especially auth cookies, route guards, redirects, token refresh, uploads, and responsive navigation
+- Use targeted axe scans in Playwright for hardened accessibility workflows, alongside keyboard and mobile smoke assertions
 - Use Playwright `webServer` to manage frontend and backend startup during local and CI runs
 - Keep the current Playwright setup in the frontend package, with `client/playwright.config.ts` orchestrating both frontend and backend startup
 - Launch the backend through `npm run dev:e2e`, which reads `server/.env.e2e` and targets the separate `uniconnect_test` database on an isolated backend port

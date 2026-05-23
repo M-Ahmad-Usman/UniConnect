@@ -2,7 +2,9 @@ import request from "supertest";
 import { jest } from "@jest/globals";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/prisma.js";
+import { cloudinaryService } from "../../src/config/cloudinary.js";
 import { resetDB } from "../helpers/db.helper.js";
+import { VALID_JPEG_BUFFER } from "../helpers/fixtures.js";
 import {
   createUser,
   createDepartment,
@@ -76,7 +78,10 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
         password: "Pass@1234",
         userType: "ADMIN",
       });
-      const cookies = await loginAs(`admin-srv-list-${u}@test.com`, "Pass@1234");
+      const cookies = await loginAs(
+        `admin-srv-list-${u}@test.com`,
+        "Pass@1234",
+      );
 
       const res = await request(app).get("/api/servers").set("Cookie", cookies);
 
@@ -193,8 +198,15 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const u = uid();
       const dept = await createDepartment({ code: `CH-${u}` });
       // Create some channels in the department server
-      await createChannel(dept.serverId, { name: `announcements-${u}`, type: "ANNOUNCEMENT", isAutoCreated: true });
-      await createChannel(dept.serverId, { name: `general-${u}`, type: "GENERAL" });
+      await createChannel(dept.serverId, {
+        name: `announcements-${u}`,
+        type: "ANNOUNCEMENT",
+        isAutoCreated: true,
+      });
+      await createChannel(dept.serverId, {
+        name: `general-${u}`,
+        type: "GENERAL",
+      });
 
       const teacher = await createTeacherWithInfo(dept.id, {
         email: `teacher-ch-${u}@test.com`,
@@ -213,7 +225,10 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
     it("should exclude deleted and archived channels", async () => {
       const u = uid();
       const dept = await createDepartment({ code: `DEL-${u}` });
-      await createChannel(dept.serverId, { name: `active-${u}`, type: "GENERAL" });
+      await createChannel(dept.serverId, {
+        name: `active-${u}`,
+        type: "GENERAL",
+      });
 
       // Create a deleted channel
       await prisma.channel.create({
@@ -272,7 +287,10 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
     it("should include archived channels when includeArchived=true", async () => {
       const u = uid();
       const dept = await createDepartment({ code: `ARCH-${u}` });
-      await createChannel(dept.serverId, { name: `active-arch-${u}`, type: "GENERAL" });
+      await createChannel(dept.serverId, {
+        name: `active-arch-${u}`,
+        type: "GENERAL",
+      });
 
       // Create an archived channel
       await prisma.channel.create({
@@ -313,7 +331,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       // Verify isArchived field is present in response
       const archivedChannel = res.body.data.find(
-        (c: { name: string }) => c.name === `archived-inc-${u}`
+        (c: { name: string }) => c.name === `archived-inc-${u}`,
       );
       expect(archivedChannel.isArchived).toBe(true);
     });
@@ -321,7 +339,10 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
     it("should exclude archived channels by default (includeArchived not set)", async () => {
       const u = uid();
       const dept = await createDepartment({ code: `ARCHD-${u}` });
-      await createChannel(dept.serverId, { name: `active-def-${u}`, type: "GENERAL" });
+      await createChannel(dept.serverId, {
+        name: `active-def-${u}`,
+        type: "GENERAL",
+      });
 
       await prisma.channel.create({
         data: {
@@ -378,14 +399,14 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       // Find the HOD member and check badges
       const hodMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === hodTeacher.id
+        (m: { user: { id: number } }) => m.user.id === hodTeacher.id,
       );
       expect(hodMember).toBeDefined();
       expect(hodMember.badges).toContain("hod");
 
       // Find the PD member and check badges
       const pdMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === pdTeacher.id
+        (m: { user: { id: number } }) => m.user.id === pdTeacher.id,
       );
       expect(pdMember).toBeDefined();
       expect(pdMember.badges).toContain("program_director");
@@ -410,7 +431,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       expect(res.status).toBe(200);
       const crMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === student1.id
+        (m: { user: { id: number } }) => m.user.id === student1.id,
       );
       expect(crMember).toBeDefined();
       expect(crMember.badges).toContain("cr");
@@ -429,9 +450,14 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
         email: `conv-smb-${u}@test.com`,
       });
 
-      const { server: socServer } = await createSociety(dept.id, president.id, convenor.id, {
-        name: `Society-${u}`,
-      });
+      const { server: socServer } = await createSociety(
+        dept.id,
+        president.id,
+        convenor.id,
+        {
+          name: `Society-${u}`,
+        },
+      );
 
       const cookies = await loginAs(`pres-smb-${u}@test.com`, "Pass@1234");
 
@@ -441,13 +467,13 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       expect(res.status).toBe(200);
       const presMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === president.id
+        (m: { user: { id: number } }) => m.user.id === president.id,
       );
       expect(presMember).toBeDefined();
       expect(presMember.badges).toContain("president");
 
       const convMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === convenor.id
+        (m: { user: { id: number } }) => m.user.id === convenor.id,
       );
       expect(convMember).toBeDefined();
       expect(convMember.badges).toContain("convenor");
@@ -560,9 +586,14 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const convenor = await createTeacherWithInfo(dept.id, {
         email: `conv-cr-${u}@test.com`,
       });
-      const { server: socServer } = await createSociety(dept.id, president.id, convenor.id, {
-        name: `SocCR-${u}`,
-      });
+      const { server: socServer } = await createSociety(
+        dept.id,
+        president.id,
+        convenor.id,
+        {
+          name: `SocCR-${u}`,
+        },
+      );
       const cookies = await loginAs(`pres-cr-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
@@ -585,9 +616,14 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const convenor = await createTeacherWithInfo(dept.id, {
         email: `conv-conv-${u}@test.com`,
       });
-      const { server: socServer } = await createSociety(dept.id, president.id, convenor.id, {
-        name: `SocConv-${u}`,
-      });
+      const { server: socServer } = await createSociety(
+        dept.id,
+        president.id,
+        convenor.id,
+        {
+          name: `SocConv-${u}`,
+        },
+      );
       const cookies = await loginAs(`conv-conv-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
@@ -688,6 +724,68 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
         .send({ name: `channel-${u}` });
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  // ─── PATCH /api/servers/:id/icon ─────────────────────────────────────
+
+  describe("PATCH /api/servers/:id/icon", () => {
+    it("should allow HOD to update the department server icon → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ICON-${u}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-icon-${u}@test.com`,
+      });
+      await assignHOD(dept.id, hod.id);
+      jest
+        .spyOn(cloudinaryService, "uploadImage")
+        .mockResolvedValue({
+          url: `https://res.cloudinary.com/test/server-icons/${u}.jpg`,
+        });
+
+      const cookies = await loginAs(`hod-icon-${u}@test.com`, "Pass@1234");
+      const res = await request(app)
+        .patch(`/api/servers/${dept.serverId}/icon`)
+        .set("Cookie", cookies)
+        .attach("serverIcon", VALID_JPEG_BUFFER, {
+          filename: "server.jpg",
+          contentType: "image/jpeg",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.iconUrl).toBe(
+        `https://res.cloudinary.com/test/server-icons/${u}.jpg`,
+      );
+
+      const server = await prisma.server.findUnique({
+        where: { id: dept.serverId },
+        select: { iconUrl: true },
+      });
+      expect(server?.iconUrl).toBe(
+        `https://res.cloudinary.com/test/server-icons/${u}.jpg`,
+      );
+    });
+
+    it("should reject a regular member updating server icon → 403", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ICON-DENY-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-icon-deny-${u}@test.com`,
+      });
+
+      const cookies = await loginAs(`stu-icon-deny-${u}@test.com`, "Pass@1234");
+      const res = await request(app)
+        .patch(`/api/servers/${dept.serverId}/icon`)
+        .set("Cookie", cookies)
+        .attach("serverIcon", VALID_JPEG_BUFFER, {
+          filename: "server.jpg",
+          contentType: "image/jpeg",
+        });
+
+      expect(res.status).toBe(403);
     });
   });
 });

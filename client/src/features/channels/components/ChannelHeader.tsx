@@ -22,7 +22,7 @@ function getChannelMeta(type: ChannelListItem['type']) {
     case ChannelType.COURSE:
       return { icon: BookMarked, label: 'Course', tone: 'bg-sky-100 text-sky-900' };
     case ChannelType.PROGRAM:
-      return { icon: Layers3, label: 'Program', tone: 'bg-emerald-100 text-emerald-900' };
+      return { icon: Layers3, label: 'Program', tone: 'bg-primary/10 text-primary' };
     case ChannelType.GENERAL:
     default:
       return { icon: Hash, label: 'General', tone: 'bg-slate-200 text-slate-900' };
@@ -38,12 +38,7 @@ export function ChannelHeader({ serverId, channel }: ChannelHeaderProps) {
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-background via-background to-accent/10 px-5 py-5 shadow-sm">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"
-          aria-hidden="true"
-        />
-
+      <section className="relative overflow-hidden rounded-2xl border border-border/80 bg-card px-5 py-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">

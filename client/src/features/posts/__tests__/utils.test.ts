@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { InfiniteData } from '@tanstack/react-query';
-import { ChannelType, PostPriority, ServerType, UserType, type PaginatedResponse, type PostListItem } from '@/types';
+import {
+  ChannelType,
+  PostPriority,
+  ServerType,
+  UserType,
+  type PaginatedResponse,
+  type PostListItem,
+} from '@/types';
 import {
   canDeletePostClient,
   canEditPostClient,
@@ -97,7 +104,9 @@ describe('sanitizePostHtml', () => {
   });
 
   it('normalizes blank-target links to noopener noreferrer', () => {
-    const html = sanitizePostHtml('<a href="mailto:test@example.com" target="_blank" rel="opener">Email</a>');
+    const html = sanitizePostHtml(
+      '<a href="mailto:test@example.com" target="_blank" rel="opener">Email</a>',
+    );
 
     expect(html).toContain('href="mailto:test@example.com"');
     expect(html).toContain('rel="noopener noreferrer"');
@@ -112,7 +121,9 @@ describe('validatePostAttachments', () => {
 
   it('rejects invalid attachment types', () => {
     const file = new File(['pdf'], 'notice.pdf', { type: 'application/pdf' });
-    expect(validatePostAttachments([file])).toEqual(['notice.pdf must be a JPEG, PNG, or WEBP image.']);
+    expect(validatePostAttachments([file])).toEqual([
+      'notice.pdf must be a JPEG, PNG, or WEBP image.',
+    ]);
   });
 });
 
@@ -135,12 +146,17 @@ describe('edit and permission helpers', () => {
     createdAt: '2026-04-24T10:00:00.000Z',
     updatedAt: null,
     author,
+    attachments: [],
     _count: { attachments: 0 },
   } satisfies PostListItem;
 
   it('calculates the 24-hour edit window', () => {
-    expect(getEditWindowState(post.createdAt, new Date('2026-04-25T09:59:00.000Z')).canEditNow).toBe(true);
-    expect(getEditWindowState(post.createdAt, new Date('2026-04-25T10:01:00.000Z')).canEditNow).toBe(false);
+    expect(
+      getEditWindowState(post.createdAt, new Date('2026-04-25T09:59:00.000Z')).canEditNow,
+    ).toBe(true);
+    expect(
+      getEditWindowState(post.createdAt, new Date('2026-04-25T10:01:00.000Z')).canEditNow,
+    ).toBe(false);
   });
 
   it('allows authors to edit only inside the edit window', () => {
@@ -247,6 +263,7 @@ describe('post cache helpers', () => {
       profilePictureUrl: null,
       badges: [],
     },
+    attachments: [],
     _count: { attachments: 0 },
   });
 
@@ -264,7 +281,11 @@ describe('post cache helpers', () => {
     const upserted = upsertPostInInfiniteData(infiniteData, post(3))!;
     expect(upserted.pages[0]!.data.map((item) => item.id)).toContain(3);
     expect(upserted.pages[0]!.pagination.total).toBe(3);
-    expect(replacePostInInfiniteData(infiniteData, post(1, 'Updated'))!.pages[0]!.data[1]!.title).toBe('Updated');
-    expect(removePostFromInfiniteData(infiniteData, 1)!.pages[0]!.data.map((item) => item.id)).toEqual([2]);
+    expect(
+      replacePostInInfiniteData(infiniteData, post(1, 'Updated'))!.pages[0]!.data[1]!.title,
+    ).toBe('Updated');
+    expect(
+      removePostFromInfiniteData(infiniteData, 1)!.pages[0]!.data.map((item) => item.id),
+    ).toEqual([2]);
   });
 });

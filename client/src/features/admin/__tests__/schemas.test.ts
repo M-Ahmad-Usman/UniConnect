@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Gender, UserType } from '@/types';
 import {
   createUserSchema,
+  globalProgramSchema,
   replaceTeacherSchema,
   teacherAssignmentSchema,
   toCreateUserPayload,
@@ -103,9 +104,39 @@ describe('teacherAssignmentSchema', () => {
   });
 
   it('rejects empty selections', () => {
-    expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherId: '' }).success).toBe(
-      false,
-    );
+    expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherId: '' }).success).toBe(false);
+  });
+});
+
+describe('globalProgramSchema', () => {
+  it('coerces catalog selections and normalizes the program code', () => {
+    expect(
+      globalProgramSchema.parse({
+        departmentId: '1',
+        disciplineId: '2',
+        degreeLevelId: '3',
+        semesters: '8',
+        code: 'bscs',
+      }),
+    ).toEqual({
+      departmentId: 1,
+      disciplineId: 2,
+      degreeLevelId: 3,
+      semesters: 8,
+      code: 'BSCS',
+    });
+  });
+
+  it('rejects missing department selection', () => {
+    expect(
+      globalProgramSchema.safeParse({
+        departmentId: '',
+        disciplineId: '2',
+        degreeLevelId: '3',
+        semesters: '8',
+        code: 'BSCS',
+      }).success,
+    ).toBe(false);
   });
 });
 

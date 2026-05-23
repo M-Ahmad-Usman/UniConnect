@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -123,7 +124,11 @@ function LeadershipSelects({
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <FormField label="President" error={presidentError}>
+      <FormField
+        label="President"
+        error={presidentError}
+        description="Search is scoped to eligible students in the selected department."
+      >
         <div className="space-y-2">
           <Input
             value={presidentSearch}
@@ -134,10 +139,12 @@ function LeadershipSelects({
           <select
             className={inputClassName}
             disabled={!departmentId || disabled}
+            aria-invalid={presidentError ? 'true' : undefined}
             {...presidentRegistration}
           >
             <option value={presidentId ?? 0}>
-              {presidentLabel ?? (presidentsQuery.isLoading ? 'Loading students...' : 'Select student')}
+              {presidentLabel ??
+                (presidentsQuery.isLoading ? 'Loading students...' : 'Select student')}
             </option>
             {presidents.map((student) => (
               <option key={student.id} value={student.id}>
@@ -147,7 +154,11 @@ function LeadershipSelects({
           </select>
         </div>
       </FormField>
-      <FormField label="Convenor" error={convenorError}>
+      <FormField
+        label="Convenor"
+        error={convenorError}
+        description="Search is scoped to eligible teachers in the selected department."
+      >
         <div className="space-y-2">
           <Input
             value={convenorSearch}
@@ -158,10 +169,12 @@ function LeadershipSelects({
           <select
             className={inputClassName}
             disabled={!departmentId || disabled}
+            aria-invalid={convenorError ? 'true' : undefined}
             {...convenorRegistration}
           >
             <option value={convenorId ?? 0}>
-              {convenorLabel ?? (convenorsQuery.isLoading ? 'Loading teachers...' : 'Select teacher')}
+              {convenorLabel ??
+                (convenorsQuery.isLoading ? 'Loading teachers...' : 'Select teacher')}
             </option>
             {convenors.map((teacher) => (
               <option key={teacher.id} value={teacher.id}>
@@ -223,17 +236,28 @@ export function SocietyDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Create society</DialogTitle>
+          <DialogDescription>
+            Create a society workspace with department-scoped leadership.
+          </DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
           <FormField label="Name" error={form.formState.errors.name?.message}>
-            <Input {...form.register('name')} />
+            <Input
+              aria-invalid={form.formState.errors.name ? 'true' : undefined}
+              {...form.register('name')}
+            />
           </FormField>
           <FormField label="Description" error={form.formState.errors.description?.message}>
-            <Textarea rows={3} {...form.register('description')} />
+            <Textarea
+              rows={3}
+              aria-invalid={form.formState.errors.description ? 'true' : undefined}
+              {...form.register('description')}
+            />
           </FormField>
           <FormField label="Department" error={form.formState.errors.departmentId?.message}>
             <select
               className={inputClassName}
+              aria-invalid={form.formState.errors.departmentId ? 'true' : undefined}
               {...departmentRegistration}
               onChange={(event) => {
                 void departmentRegistration.onChange(event);
@@ -339,13 +363,23 @@ export function SocietyEditDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit society</DialogTitle>
+          <DialogDescription>
+            Update society details and leadership options available to your role.
+          </DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
           <FormField label="Name" error={form.formState.errors.name?.message}>
-            <Input {...form.register('name')} />
+            <Input
+              aria-invalid={form.formState.errors.name ? 'true' : undefined}
+              {...form.register('name')}
+            />
           </FormField>
           <FormField label="Description" error={form.formState.errors.description?.message}>
-            <Textarea rows={3} {...form.register('description')} />
+            <Textarea
+              rows={3}
+              aria-invalid={form.formState.errors.description ? 'true' : undefined}
+              {...form.register('description')}
+            />
           </FormField>
           {canChangeLeadership ? (
             <LeadershipSelects

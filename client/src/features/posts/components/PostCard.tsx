@@ -1,12 +1,13 @@
 import { formatDistanceToNow } from 'date-fns';
-import { ImageIcon, Pin, Timer } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Pin, Timer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { RoleBadge } from '@/components/shared/RoleBadge';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import { cn } from '@/lib/utils';
 import type { PostListItem } from '@/types';
-import { getInitials, getPlainTextPreview } from '../utils';
+import { getPlainTextPreview } from '../utils';
 import { PostActions } from './PostActions';
+import { AttachmentPreview } from './AttachmentPreview';
 import { PriorityBadge } from './PriorityBadge';
 
 interface PostCardProps {
@@ -23,17 +24,19 @@ export function PostCard({ post, channelId, canPin, onOpen }: PostCardProps) {
   return (
     <article
       className={cn(
-        'group rounded-lg border bg-background shadow-sm transition-all hover:border-foreground/25 hover:shadow-md',
-        post.isPinned && 'border-amber-300 bg-amber-50/55 dark:border-amber-800 dark:bg-amber-950/25',
+        'group rounded-lg border bg-card shadow-sm transition-colors hover:border-foreground/25 hover:bg-accent/45',
+        post.isPinned &&
+          'border-amber-300 bg-amber-50/60 dark:border-amber-700 dark:bg-amber-950/20',
       )}
     >
-      <div className="flex items-start gap-3 p-4">
-        <Avatar className="mt-0.5">
-          <AvatarImage src={post.author.profilePictureUrl ?? undefined} alt={post.author.fullName} />
-          <AvatarFallback>{getInitials(post.author.fullName)}</AvatarFallback>
-        </Avatar>
+      <div className="flex items-start gap-3 px-4 py-3">
+        <UserAvatar
+          fullName={post.author.fullName}
+          profilePictureUrl={post.author.profilePictureUrl}
+          className="mt-0.5"
+        />
 
-        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onOpen(post.id)}>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{post.author.fullName}</span>
             {post.author.badges.map((badge) => (
@@ -44,9 +47,12 @@ export function PostCard({ post, channelId, canPin, onOpen }: PostCardProps) {
             </span>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {post.isPinned ? (
-              <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-100 text-amber-900">
+              <Badge
+                variant="outline"
+                className="gap-1 border-amber-200 bg-amber-100 text-amber-900"
+              >
                 <Pin className="size-3.5" />
                 Pinned
               </Badge>
@@ -58,19 +64,25 @@ export function PostCard({ post, channelId, canPin, onOpen }: PostCardProps) {
                 Edited
               </Badge>
             ) : null}
-            {post._count.attachments > 0 ? (
-              <Badge variant="outline" className="gap-1 text-muted-foreground">
-                <ImageIcon className="size-3.5" />
-                {post._count.attachments}
-              </Badge>
-            ) : null}
           </div>
 
-          <h2 className="mt-3 line-clamp-2 text-base font-semibold tracking-tight">{post.title}</h2>
-          {preview ? (
-            <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{preview}</p>
+          <button
+            type="button"
+            className="mt-2 block min-w-0 text-left"
+            onClick={() => onOpen(post.id)}
+          >
+            <h2 className="line-clamp-2 text-base font-semibold tracking-tight">{post.title}</h2>
+            {preview ? (
+              <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted-foreground">{preview}</p>
+            ) : null}
+          </button>
+
+          {post.attachments.length > 0 ? (
+            <div className="mt-3">
+              <AttachmentPreview attachments={post.attachments} compact />
+            </div>
           ) : null}
-        </button>
+        </div>
 
         <div className="-mr-1 -mt-1 shrink-0">
           <PostActions channelId={channelId} post={post} canPin={canPin} />

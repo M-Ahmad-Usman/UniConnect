@@ -5,7 +5,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { RoleBadge } from '@/components/shared/RoleBadge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { getApiErrorMessage } from '@/features/auth/utils';
-import { getInitials, formatDate } from '@/features/profile/utils';
+import { formatDate } from '@/features/profile/utils';
 import { useAuthStore } from '@/stores/auth.store';
 import type { DepartmentListItem } from '@/types';
 import { useDeactivateUser, useReactivateUser } from '../hooks/useUserActivation';
@@ -99,10 +99,12 @@ export function UserDetailDialog({
           ) : (
             <div className="space-y-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Avatar className="size-20 text-xl">
-                  <AvatarImage src={user.profilePictureUrl ?? undefined} alt={user.fullName} />
-                  <AvatarFallback className="text-xl">{getInitials(user.fullName)}</AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  fullName={user.fullName}
+                  profilePictureUrl={user.profilePictureUrl}
+                  className="size-20 text-xl"
+                  fallbackClassName="text-xl"
+                />
                 <div className="min-w-0 flex-1 space-y-2">
                   <div>
                     <h2 className="break-words text-xl font-semibold">{user.fullName}</h2>

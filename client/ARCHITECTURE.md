@@ -1171,11 +1171,22 @@ export const queryClient = new QueryClient({
 
 ## Accessibility
 
-1. **Semantic HTML**: Use `<header>`, `<nav>`, `<main>`, `<article>`, etc.
-2. **ARIA Labels**: All interactive elements have labels
-3. **Keyboard Navigation**: All actions accessible via keyboard
-4. **Focus Management**: Focus trapped in modals, focus moved on navigation
-5. **Screen Reader Support**: Dynamic content announced
+1. **Semantic HTML**: Use `<header>`, `<nav>`, `<main>`, `<article>`, native form controls, and real tables for tabular data.
+2. **Tabs**: Use the shared Base UI-backed tabs primitive for tabbed workflows. Keep URL-backed tabs controlled by the page and hide unavailable tabs before protected queries run.
+3. **Forms**: Use shared form-field helpers or explicit `label`/`htmlFor`, `aria-invalid`, and `aria-describedby` wiring. Do not wrap validation messages inside labels.
+4. **Dialogs**: Use Base UI/shadcn dialog primitives with visible titles, descriptions, trapped focus, keyboard dismissal, and focus restore. High-impact destructive actions use `ConfirmDialog`.
+5. **Tables and Lists**: Give tables captions or contextual headings, keep horizontal overflow inside the component, and preserve row actions on mobile.
+6. **Dynamic States**: Loading, empty, retry, forbidden, and success states must be readable without relying only on toast messages. Loading and empty states use live-region friendly shared primitives.
+7. **Keyboard Navigation**: All visible actions are reachable and operable from the keyboard. Icon-only buttons require accessible names and tooltips where meaning is not obvious.
+8. **Screen Reader Support**: Critical permission, validation, retry, and status messages must be present in the page, not only in transient notifications.
+
+### Theme and Motion
+
+- Theme state is managed by the app theme provider, not `localStorage` or `sessionStorage`.
+- The `uniconnect_theme` cookie stores `light`, `dark`, or `system`; a pre-paint script applies `.dark` before React mounts to avoid theme flash.
+- The top bar exposes a keyboard-accessible theme control. Sonner toasts consume the resolved app theme.
+- Theme tokens use a restrained slate and institutional teal palette with amber warning and red destructive states.
+- Motion should stay subtle: primitive open/close transitions, focus affordances, tab/content fades, and loading indicators only. `prefers-reduced-motion` disables non-essential motion.
 
 ---
 
@@ -1190,5 +1201,5 @@ export const queryClient = new QueryClient({
 
 ---
 
-**Last Updated:** 2026-03-10
+**Last Updated:** 2026-05-21
 **Maintained By:** Frontend Team

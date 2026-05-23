@@ -2,7 +2,7 @@ import { ArrowRight, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StableAvatar } from '@/components/shared/StableAvatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ROUTES } from '@/lib/constants';
@@ -49,7 +49,8 @@ export function ServersPage() {
         <p className="text-muted-foreground text-sm">Your workspace</p>
         <h1 className="text-2xl font-semibold tracking-tight">Choose a server</h1>
         <p className="text-muted-foreground max-w-2xl text-sm">
-          Each server groups official announcements, class communication, and channel-specific updates.
+          Each server groups official announcements, class communication, and channel-specific
+          updates.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -60,16 +61,24 @@ export function ServersPage() {
                 <CardTitle className="text-lg">{server.name}</CardTitle>
                 <CardDescription>{server.type.replace('_', ' ')}</CardDescription>
               </div>
-              <Avatar size="lg">
-                <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
-                <AvatarFallback>{getInitial(server.name)}</AvatarFallback>
-              </Avatar>
+              <StableAvatar
+                src={server.iconUrl}
+                alt={server.name}
+                fallback={getInitial(server.name)}
+                className="size-16 rounded-2xl"
+                imageClassName="rounded-2xl"
+                fallbackClassName="rounded-2xl text-lg"
+              />
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground min-h-10 text-sm">
-                {server.description ?? 'Open this server to browse its channels and recent activity.'}
+                {server.description ??
+                  'Open this server to browse its channels and recent activity.'}
               </p>
-              <Button onClick={() => navigate(ROUTES.SERVER(server.id))} className="w-full justify-between">
+              <Button
+                onClick={() => navigate(ROUTES.SERVER(server.id))}
+                className="w-full justify-between"
+              >
                 Open server
                 <ArrowRight className="size-4" />
               </Button>

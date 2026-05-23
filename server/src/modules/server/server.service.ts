@@ -1,7 +1,11 @@
 import type { ServerType } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
+import { cloudinaryService } from "../../config/cloudinary.js";
 import { ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
-import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
+import {
+  parsePagination,
+  buildPaginationResponse,
+} from "../../shared/utils/pagination.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -128,7 +132,10 @@ async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
   }
 }
 
-async function canManageServer(userId: number, serverId: number): Promise<boolean> {
+async function canManageServer(
+  userId: number,
+  serverId: number,
+): Promise<boolean> {
   const [department, classRecord, society] = await Promise.all([
     prisma.department.findFirst({
       where: { hodId: userId },
@@ -184,7 +191,7 @@ type MemberBadge = string;
 async function resolveMemberBadges(
   serverId: number,
   serverType: ServerType,
-  memberUserIds: number[]
+  memberUserIds: number[],
 ): Promise<Map<number, MemberBadge[]>> {
   const badgeMap = new Map<number, MemberBadge[]>();
 
@@ -218,13 +225,19 @@ async function resolveMemberBadges(
       addBadge(department.hodId, "hod");
     }
     for (const program of programs) {
-      if (program.programDirectorId && memberUserIds.includes(program.programDirectorId)) {
+      if (
+        program.programDirectorId &&
+        memberUserIds.includes(program.programDirectorId)
+      ) {
         addBadge(program.programDirectorId, "program_director");
       }
     }
     for (const mod of moderators) {
       if (memberUserIds.includes(mod.userId)) {
-        addBadge(mod.userId, mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator");
+        addBadge(
+          mod.userId,
+          mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+        );
       }
     }
   } else if (serverType === "CLASS") {
@@ -244,7 +257,10 @@ async function resolveMemberBadges(
     }
     for (const mod of moderators) {
       if (memberUserIds.includes(mod.userId)) {
-        addBadge(mod.userId, mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator");
+        addBadge(
+          mod.userId,
+          mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+        );
       }
     }
   } else if (serverType === "SOCIETY") {
@@ -277,7 +293,10 @@ async function resolveMemberBadges(
     }
     for (const mod of moderators) {
       if (memberUserIds.includes(mod.userId)) {
-        addBadge(mod.userId, mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator");
+        addBadge(
+          mod.userId,
+          mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+        );
       }
     }
   }
@@ -332,7 +351,7 @@ export async function getServer(serverId: number, caller: CallerInfo) {
 export async function listServerChannels(
   serverId: number,
   caller: CallerInfo,
-  options: { includeArchived?: boolean } = {}
+  options: { includeArchived?: boolean } = {},
 ) {
   await findServerOrThrow(serverId);
   await assertMembershipOrAdmin(serverId, caller);
@@ -358,7 +377,7 @@ export async function listServerChannels(
 export async function listServerMembers(
   serverId: number,
   query: ListMembersQuery,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   const server = await prisma.server.findUnique({
     where: { id: serverId },
@@ -388,7 +407,11 @@ export async function listServerMembers(
 
   // Resolve role badges for current page members
   const memberUserIds = memberships.map((m) => m.userId);
-  const badgeMap = await resolveMemberBadges(serverId, server.type, memberUserIds);
+  const badgeMap = await resolveMemberBadges(
+    serverId,
+    server.type,
+    memberUserIds,
+  );
 
   const data = memberships.map((m) => ({
     ...m,
@@ -404,7 +427,7 @@ export async function listServerMembers(
 export async function createChannel(
   serverId: number,
   data: CreateChannelInput,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   const server = await findServerOrThrow(serverId);
 
@@ -425,4 +448,26 @@ export async function createChannel(
   });
 
   return channel;
+}
+
+export async function updateServerIcon(serverId: number, fileBuffer: Buffer) {
+  const server = await findServerOrThrow(serverId);
+
+  if (!server.isActive) {
+    throw new ForbiddenError("Cannot update an inactive server");
+  }
+
+  const uploaded = await cloudinaryService.uploadImage(
+    fileBuffer,
+    "server-icons",
+  );
+
+  return prisma.server.update({
+    where: { id: serverId },
+    data: { iconUrl: uploaded.url },
+    select: {
+      id: true,
+      iconUrl: true,
+    },
+  });
 }

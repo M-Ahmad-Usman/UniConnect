@@ -31,7 +31,12 @@ interface CreatePostDialogProps {
 
 const priorities = [PostPriority.NORMAL, PostPriority.IMPORTANT, PostPriority.URGENT] as const;
 
-export function CreatePostDialog({ channelId, open, onOpenChange, onCreated }: CreatePostDialogProps) {
+export function CreatePostDialog({
+  channelId,
+  open,
+  onOpenChange,
+  onCreated,
+}: CreatePostDialogProps) {
   const createPost = useCreatePost(channelId);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -74,7 +79,9 @@ export function CreatePostDialog({ channelId, open, onOpenChange, onCreated }: C
   }
 
   function handleFiles(files: FileList | null) {
-    const nextFiles = files ? [...attachments, ...Array.from(files)].slice(0, MAX_ATTACHMENTS) : attachments;
+    const nextFiles = files
+      ? [...attachments, ...Array.from(files)].slice(0, MAX_ATTACHMENTS)
+      : attachments;
     setAttachments(nextFiles);
     setErrors(validatePostAttachments(nextFiles));
   }
@@ -89,7 +96,7 @@ export function CreatePostDialog({ channelId, open, onOpenChange, onCreated }: C
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto p-0">
+      <DialogContent className="!flex max-h-[92dvh] w-[min(94vw,56rem)] !max-w-none flex-col gap-0 overflow-hidden p-0 sm:!max-w-none">
         <DialogHeader className="border-b px-5 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Megaphone className="size-4" />
@@ -98,7 +105,7 @@ export function CreatePostDialog({ channelId, open, onOpenChange, onCreated }: C
           <DialogDescription>Publish an update to this channel.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 px-5 py-4">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-5 py-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="post-title">Title</Label>
@@ -175,13 +182,19 @@ export function CreatePostDialog({ channelId, open, onOpenChange, onCreated }: C
             {attachments.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((file) => (
-                  <Badge key={`${file.name}-${file.size}`} variant="outline" className="gap-1.5">
-                    {file.name}
+                  <Badge
+                    key={`${file.name}-${file.size}`}
+                    variant="outline"
+                    className="max-w-full gap-1.5"
+                  >
+                    <span className="min-w-0 truncate">{file.name}</span>
                     <span className="text-muted-foreground">{formatFileSize(file.size)}</span>
                     <button
                       type="button"
                       aria-label={`Remove ${file.name}`}
-                      onClick={() => setAttachments((current) => current.filter((item) => item !== file))}
+                      onClick={() =>
+                        setAttachments((current) => current.filter((item) => item !== file))
+                      }
                     >
                       <X className="size-3" />
                     </button>
@@ -198,8 +211,13 @@ export function CreatePostDialog({ channelId, open, onOpenChange, onCreated }: C
           ) : null}
         </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" disabled={createPost.isPending} onClick={() => onOpenChange(false)}>
+        <DialogFooter className="!mx-0 !mb-0 rounded-none border-t px-5 py-4">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={createPost.isPending}
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="button" disabled={createPost.isPending} onClick={handleSubmit}>

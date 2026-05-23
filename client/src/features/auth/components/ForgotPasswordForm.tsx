@@ -44,10 +44,10 @@ export function ForgotPasswordForm() {
   if (isSubmitted) {
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+        <div className="rounded-xl border border-primary/25 bg-primary/10 p-4 text-sm text-foreground">
           If an account exists with that email address, a reset link has been sent.
         </div>
-        <Link className="text-sm text-sky-300 transition hover:text-sky-200" to={ROUTES.LOGIN}>
+        <Link className="text-sm text-primary transition hover:text-primary/80" to={ROUTES.LOGIN}>
           Back to sign in
         </Link>
       </div>
@@ -80,7 +80,10 @@ export function ForgotPasswordForm() {
         {forgotPassword.isPending ? 'Sending link...' : 'Send reset link'}
       </Button>
 
-      <Link className="block text-sm text-sky-300 transition hover:text-sky-200" to={ROUTES.LOGIN}>
+      <Link
+        className="block text-sm text-primary transition hover:text-primary/80"
+        to={ROUTES.LOGIN}
+      >
         Back to sign in
       </Link>
     </form>

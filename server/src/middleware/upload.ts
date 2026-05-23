@@ -2,11 +2,19 @@ import multer from "multer";
 import type { NextFunction, Request, Response } from "express";
 import { fileTypeFromBuffer } from "file-type";
 import { imageSize } from "image-size";
-import { MAX_ATTACHMENTS, MAX_FILE_SIZE, MAX_IMAGE_PIXELS } from "../shared/constants.js";
+import {
+  MAX_ATTACHMENTS,
+  MAX_FILE_SIZE,
+  MAX_IMAGE_PIXELS,
+} from "../shared/constants.js";
 import { ValidationError } from "../shared/errors/index.js";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const ALLOWED_CSV_TYPES = ["text/csv", "application/vnd.ms-excel", "text/plain"];
+const ALLOWED_CSV_TYPES = [
+  "text/csv",
+  "application/vnd.ms-excel",
+  "text/plain",
+];
 
 function validateImageDimensions(buffer: Buffer): void {
   const dimensions = imageSize(buffer);
@@ -15,7 +23,9 @@ function validateImageDimensions(buffer: Buffer): void {
   }
 
   if (dimensions.width * dimensions.height > MAX_IMAGE_PIXELS) {
-    throw new ValidationError("Image dimensions exceed the maximum allowed pixel count");
+    throw new ValidationError(
+      "Image dimensions exceed the maximum allowed pixel count",
+    );
   }
 }
 
@@ -33,7 +43,7 @@ function handleUploadErrors(error: unknown): never {
 type UploadMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => void;
 
 function wrapUpload(uploadMiddleware: UploadMiddleware) {
@@ -69,13 +79,15 @@ const imageUpload = multer({
 });
 
 export const uploadProfilePicture = wrapUpload(
-  imageUpload.single("profilePicture")
+  imageUpload.single("profilePicture"),
 );
+
+export const uploadServerIcon = wrapUpload(imageUpload.single("serverIcon"));
 
 // ─── Post Attachments Upload ───────────────────────────────────────────────
 
 export const uploadPostAttachments = wrapUpload(
-  imageUpload.array("attachments", MAX_ATTACHMENTS)
+  imageUpload.array("attachments", MAX_ATTACHMENTS),
 );
 
 // ─── CSV Upload ────────────────────────────────────────────────────────────
@@ -106,7 +118,7 @@ export const uploadCSV = wrapUpload(csvUpload.single("file"));
 export async function validateImageMagicBytes(
   req: Request,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   const files = req.files as Express.Multer.File[] | undefined;
   const file = req.file;
@@ -115,7 +127,9 @@ export async function validateImageMagicBytes(
   for (const f of toValidate) {
     const detected = await fileTypeFromBuffer(f.buffer);
     if (!detected || !ALLOWED_IMAGE_TYPES.includes(detected.mime)) {
-      throw new ValidationError("File content does not match an allowed image type");
+      throw new ValidationError(
+        "File content does not match an allowed image type",
+      );
     }
 
     validateImageDimensions(f.buffer);
@@ -133,7 +147,7 @@ export async function validateImageMagicBytes(
 export async function validateCSVNotBinary(
   req: Request,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   const file = req.file;
   if (!file) {
@@ -144,7 +158,9 @@ export async function validateCSVNotBinary(
   const detected = await fileTypeFromBuffer(file.buffer);
   if (detected) {
     // A real CSV has no magic bytes — if we detect a binary format, reject it
-    throw new ValidationError("File appears to be a binary format, not a valid CSV");
+    throw new ValidationError(
+      "File appears to be a binary format, not a valid CSV",
+    );
   }
 
   next();

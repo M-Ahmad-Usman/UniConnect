@@ -7,7 +7,14 @@ import { queryKeys, ROUTES } from '@/lib/constants';
 import { usersApi } from '@/api/endpoints/users.api';
 import { mapProfileToAuthUser } from '@/lib/auth-user';
 import { PostPriority } from '@/types';
-import type { NewNotificationPayload, PaginatedResponse, Notification, UnreadCountPayload } from '@/types';
+import { removeNotificationsFromCache } from '@/features/notifications/cache';
+import type {
+  DeletedNotificationPayload,
+  NewNotificationPayload,
+  Notification,
+  PaginatedResponse,
+  UnreadCountPayload,
+} from '@/types';
 
 let socket: Socket | null = null;
 
@@ -38,7 +45,10 @@ export function connectSocket(): void {
       });
     }
 
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all(), refetchType: 'inactive' });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.notifications.all(),
+      refetchType: 'inactive',
+    });
 
     if (payload.post?.channelId) {
       void queryClient.invalidateQueries({
@@ -66,6 +76,14 @@ export function connectSocket(): void {
 
   socket.on('notification:unread-count', (payload: UnreadCountPayload) => {
     useNotificationStore.getState().setUnreadCount(payload.count);
+  });
+
+  socket.on('notification:deleted', (payload: DeletedNotificationPayload) => {
+    removeNotificationsFromCache(payload.notificationIds);
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.notifications.all(),
+      refetchType: 'inactive',
+    });
   });
 
   socket.on('auth:roles-updated', () => {

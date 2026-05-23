@@ -13,14 +13,14 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { RoleBadge } from '@/components/shared/RoleBadge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/lib/constants';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { getInitials, formatDate } from '@/features/profile/utils';
+import { formatDate } from '@/features/profile/utils';
 import { UserType } from '@/types';
 import type { UserListParams } from '@/types';
 import { UserDetailDialog } from '../components/UserDetailDialog';
@@ -244,13 +244,10 @@ export function AdminUserListPage() {
                   <tr key={user.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <div className="flex min-w-0 items-center gap-3">
-                        <Avatar>
-                          <AvatarImage
-                            src={user.profilePictureUrl ?? undefined}
-                            alt={user.fullName}
-                          />
-                          <AvatarFallback>{getInitials(user.fullName)}</AvatarFallback>
-                        </Avatar>
+                        <UserAvatar
+                          fullName={user.fullName}
+                          profilePictureUrl={user.profilePictureUrl}
+                        />
                         <div className="min-w-0">
                           <p className="truncate font-medium">{user.fullName}</p>
                           <p className="truncate text-xs text-muted-foreground">{user.email}</p>

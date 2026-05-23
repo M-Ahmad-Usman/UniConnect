@@ -66,7 +66,10 @@ describe("Module 9 - Posts & Announcements", () => {
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", cookies)
-        .send({ title: "Important Announcement", content: "Please read carefully." });
+        .send({
+          title: "Important Announcement",
+          content: "Please read carefully.",
+        });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -83,7 +86,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const student = await createStudentWithInfo(
         (await createClass(await (await createProgram(dept.id)).id)).id,
         dept.id,
-        { email: `stu-gen-${u}@test.com`, password: "Pass@1234" }
+        { email: `stu-gen-${u}@test.com`, password: "Pass@1234" },
       );
       const channel = await createChannel(dept.serverId, {
         name: `gen-${u}`,
@@ -120,7 +123,10 @@ describe("Module 9 - Posts & Announcements", () => {
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", cookies)
-        .send({ title: "Unauthorized Post", content: "Should not be allowed." });
+        .send({
+          title: "Unauthorized Post",
+          content: "Should not be allowed.",
+        });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -153,7 +159,11 @@ describe("Module 9 - Posts & Announcements", () => {
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
         .set("Cookie", cookies)
-        .send({ title: "Lecture Notes", content: "Check the slides.", priority: "IMPORTANT" });
+        .send({
+          title: "Lecture Notes",
+          content: "Check the slides.",
+          priority: "IMPORTANT",
+        });
 
       expect(res.status).toBe(201);
       expect(res.body.data.priority).toBe("IMPORTANT");
@@ -302,7 +312,9 @@ describe("Module 9 - Posts & Announcements", () => {
 
       jest
         .spyOn(cloudinaryService, "uploadImage")
-        .mockResolvedValue({ url: "https://cloudinary.com/post-attachments/test.jpg" });
+        .mockResolvedValue({
+          url: "https://cloudinary.com/post-attachments/test.jpg",
+        });
 
       const res = await request(app)
         .post(`/api/channels/${channel.id}/posts`)
@@ -325,7 +337,7 @@ describe("Module 9 - Posts & Announcements", () => {
       expect(res.body.data.priority).toBe("URGENT");
       expect(res.body.data.attachments).toHaveLength(2);
       expect(res.body.data.attachments[0].fileUrl).toBe(
-        "https://cloudinary.com/post-attachments/test.jpg"
+        "https://cloudinary.com/post-attachments/test.jpg",
       );
     });
 
@@ -348,10 +360,22 @@ describe("Module 9 - Posts & Announcements", () => {
         .set("Cookie", cookies)
         .field("title", "Too Many Images")
         .field("content", "Overflow")
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "a.jpg", contentType: "image/jpeg" })
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "b.jpg", contentType: "image/jpeg" })
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "c.jpg", contentType: "image/jpeg" })
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "d.jpg", contentType: "image/jpeg" });
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "a.jpg",
+          contentType: "image/jpeg",
+        })
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "b.jpg",
+          contentType: "image/jpeg",
+        })
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "c.jpg",
+          contentType: "image/jpeg",
+        })
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "d.jpg",
+          contentType: "image/jpeg",
+        });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -459,6 +483,40 @@ describe("Module 9 - Posts & Announcements", () => {
       expect(res.body.pagination.page).toBe(1);
     });
 
+    it("should include attachment previews in list results → 200", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `LP-ATT-${u}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-att-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+      const channel = await createChannel(dept.serverId, {
+        name: `att-${u}`,
+        type: "GENERAL",
+      });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Post with attachment ${u}`,
+      });
+      await createPostAttachment(post.id, {
+        fileUrl: `https://res.cloudinary.com/test/post-attachments/${u}.jpg`,
+        fileSize: 2048,
+      });
+
+      const cookies = await loginAs(`hod-att-${u}@test.com`, "Pass@1234");
+      const res = await request(app)
+        .get(`/api/channels/${channel.id}/posts`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data[0].title).toBe(`Post with attachment ${u}`);
+      expect(res.body.data[0]._count.attachments).toBe(1);
+      expect(res.body.data[0].attachments).toHaveLength(1);
+      expect(res.body.data[0].attachments[0].fileUrl).toBe(
+        `https://res.cloudinary.com/test/post-attachments/${u}.jpg`,
+      );
+    });
+
     it("should filter posts by search query → 200", async () => {
       const u = uid();
       const dept = await createDepartment({ code: `LP-SRC-${u}` });
@@ -483,7 +541,9 @@ describe("Module 9 - Posts & Announcements", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.length).toBe(2);
-      expect(res.body.data.every((p: { title: string }) => p.title.includes("Exam"))).toBe(true);
+      expect(
+        res.body.data.every((p: { title: string }) => p.title.includes("Exam")),
+      ).toBe(true);
     });
 
     it("should filter posts by priority → 200", async () => {
@@ -499,9 +559,18 @@ describe("Module 9 - Posts & Announcements", () => {
         type: "GENERAL",
       });
 
-      await createPost(channel.id, hod.id, { title: `Normal ${u}`, priority: "NORMAL" });
-      await createPost(channel.id, hod.id, { title: `Urgent ${u}`, priority: "URGENT" });
-      await createPost(channel.id, hod.id, { title: `Important ${u}`, priority: "IMPORTANT" });
+      await createPost(channel.id, hod.id, {
+        title: `Normal ${u}`,
+        priority: "NORMAL",
+      });
+      await createPost(channel.id, hod.id, {
+        title: `Urgent ${u}`,
+        priority: "URGENT",
+      });
+      await createPost(channel.id, hod.id, {
+        title: `Important ${u}`,
+        priority: "IMPORTANT",
+      });
 
       const cookies = await loginAs(`hod-pri-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -542,7 +611,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-dr-${u}@test.com`, "Pass@1234");
       const res = await request(app)
         .get(
-          `/api/channels/${channel.id}/posts?startDate=2026-02-01&endDate=2026-02-28`
+          `/api/channels/${channel.id}/posts?startDate=2026-02-01&endDate=2026-02-28`,
         )
         .set("Cookie", cookies);
 
@@ -565,7 +634,9 @@ describe("Module 9 - Posts & Announcements", () => {
       });
 
       await createPost(channel.id, hod.id, { title: `Active ${u}` });
-      const deletedPost = await createPost(channel.id, hod.id, { title: `Deleted ${u}` });
+      const deletedPost = await createPost(channel.id, hod.id, {
+        title: `Deleted ${u}`,
+      });
       await prisma.post.update({
         where: { id: deletedPost.id },
         data: { isDeleted: true, deletedAt: new Date(), deletedBy: hod.id },
@@ -702,7 +773,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `gp-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Detail ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Detail ${u}`,
+      });
       await createPostAttachment(post.id);
 
       const cookies = await loginAs(`hod-gp-${u}@test.com`, "Pass@1234");
@@ -730,7 +803,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `gpdl-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Deleted ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Deleted ${u}`,
+      });
       await prisma.post.update({
         where: { id: post.id },
         data: { isDeleted: true, deletedAt: new Date(), deletedBy: hod.id },
@@ -762,7 +837,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `gpnm-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Private ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Private ${u}`,
+      });
 
       const cookies = await loginAs(`nm-gp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -801,7 +878,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `gpadm-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, teacher.id, { title: `Admin View ${u}` });
+      const post = await createPost(channel.id, teacher.id, {
+        title: `Admin View ${u}`,
+      });
       const admin = await createUser({
         email: `admin-gp-${u}@test.com`,
         password: "Pass@1234",
@@ -835,7 +914,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `up-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Original ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Original ${u}`,
+      });
 
       const cookies = await loginAs(`hod-up-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -894,7 +975,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `upna-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Author Only ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Author Only ${u}`,
+      });
 
       const cookies = await loginAs(`tch-upna-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -918,7 +1001,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `eb-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Empty ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Empty ${u}`,
+      });
 
       const cookies = await loginAs(`hod-eb-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -942,7 +1027,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `updl-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Del Upd ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Del Upd ${u}`,
+      });
       await prisma.post.update({
         where: { id: post.id },
         data: { isDeleted: true, deletedAt: new Date(), deletedBy: hod.id },
@@ -970,7 +1057,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `uppri-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Priority ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Priority ${u}`,
+      });
 
       const cookies = await loginAs(`hod-uppri-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1000,7 +1089,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `dlau-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Delete Me ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Delete Me ${u}`,
+      });
 
       const cookies = await loginAs(`hod-dlau-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1028,7 +1119,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `dladm-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, teacher.id, { title: `Admin Del ${u}` });
+      const post = await createPost(channel.id, teacher.id, {
+        title: `Admin Del ${u}`,
+      });
 
       const admin = await createUser({
         email: `admin-dl-${u}@test.com`,
@@ -1059,7 +1152,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `dlna-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, author.id, { title: `Protected ${u}` });
+      const post = await createPost(channel.id, author.id, {
+        title: `Protected ${u}`,
+      });
 
       const cookies = await loginAs(`oth-dlna-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1082,7 +1177,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `dlad-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Already Del ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Already Del ${u}`,
+      });
       await prisma.post.update({
         where: { id: post.id },
         data: { isDeleted: true, deletedAt: new Date(), deletedBy: hod.id },
@@ -1115,7 +1212,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `pn-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Pin Me ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Pin Me ${u}`,
+      });
 
       const cookies = await loginAs(`hod-pn-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1170,7 +1269,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `pnnmg-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, teacher.id, { title: `No Pin ${u}` });
+      const post = await createPost(channel.id, teacher.id, {
+        title: `No Pin ${u}`,
+      });
 
       const cookies = await loginAs(`tch-pnnmg-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1192,7 +1293,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `pnadm-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, teacher.id, { title: `Admin Pin ${u}` });
+      const post = await createPost(channel.id, teacher.id, {
+        title: `Admin Pin ${u}`,
+      });
 
       const admin = await createUser({
         email: `admin-pn-${u}@test.com`,
@@ -1224,7 +1327,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `pncr-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, student.id, { title: `CR Pin ${u}` });
+      const post = await createPost(channel.id, student.id, {
+        title: `CR Pin ${u}`,
+      });
 
       const cookies = await loginAs(`cr-pn-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1254,7 +1359,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `aaemp-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `No Files ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `No Files ${u}`,
+      });
 
       const cookies = await loginAs(`hod-aaemp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1277,11 +1384,15 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `aa-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Attach ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Attach ${u}`,
+      });
 
       jest
         .spyOn(cloudinaryService, "uploadImage")
-        .mockResolvedValue({ url: "https://cloudinary.com/post-attachments/new.jpg" });
+        .mockResolvedValue({
+          url: "https://cloudinary.com/post-attachments/new.jpg",
+        });
 
       const cookies = await loginAs(`hod-aa-${u}@test.com`, "Pass@1234");
       const res = await request(app)
@@ -1309,7 +1420,9 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `aamx-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, hod.id, { title: `Max Att ${u}` });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Max Att ${u}`,
+      });
 
       // Pre-add 2 attachments
       await createPostAttachment(post.id);
@@ -1317,14 +1430,22 @@ describe("Module 9 - Posts & Announcements", () => {
 
       jest
         .spyOn(cloudinaryService, "uploadImage")
-        .mockResolvedValue({ url: "https://cloudinary.com/post-attachments/extra.jpg" });
+        .mockResolvedValue({
+          url: "https://cloudinary.com/post-attachments/extra.jpg",
+        });
 
       const cookies = await loginAs(`hod-aamx-${u}@test.com`, "Pass@1234");
       const res = await request(app)
         .post(`/api/posts/${post.id}/attachments`)
         .set("Cookie", cookies)
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "a.jpg", contentType: "image/jpeg" })
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "b.jpg", contentType: "image/jpeg" });
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "a.jpg",
+          contentType: "image/jpeg",
+        })
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "b.jpg",
+          contentType: "image/jpeg",
+        });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -1344,17 +1465,24 @@ describe("Module 9 - Posts & Announcements", () => {
         name: `aana-${u}`,
         type: "GENERAL",
       });
-      const post = await createPost(channel.id, author.id, { title: `Others Att ${u}` });
+      const post = await createPost(channel.id, author.id, {
+        title: `Others Att ${u}`,
+      });
 
       jest
         .spyOn(cloudinaryService, "uploadImage")
-        .mockResolvedValue({ url: "https://cloudinary.com/post-attachments/x.jpg" });
+        .mockResolvedValue({
+          url: "https://cloudinary.com/post-attachments/x.jpg",
+        });
 
       const cookies = await loginAs(`oth-aana-${u}@test.com`, "Pass@1234");
       const res = await request(app)
         .post(`/api/posts/${post.id}/attachments`)
         .set("Cookie", cookies)
-        .attach("attachments", VALID_JPEG_BUFFER, { filename: "x.jpg", contentType: "image/jpeg" });
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "x.jpg",
+          contentType: "image/jpeg",
+        });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);

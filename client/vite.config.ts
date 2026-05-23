@@ -1,10 +1,10 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
-const proxyTarget = process.env.VITE_PROXY_TARGET ?? 'http://localhost:4000'
+const proxyTarget = process.env.VITE_PROXY_TARGET ?? 'http://localhost:4000';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) {
-            return undefined
+            return undefined;
           }
 
           if (
@@ -27,7 +27,7 @@ export default defineConfig({
             id.includes('/react-dom/') ||
             id.includes('/react-router-dom/')
           ) {
-            return 'react-vendor'
+            return 'react-vendor';
           }
 
           if (
@@ -36,7 +36,7 @@ export default defineConfig({
             id.includes('/zustand/') ||
             id.includes('/socket.io-client/')
           ) {
-            return 'data-vendor'
+            return 'data-vendor';
           }
 
           if (
@@ -45,7 +45,7 @@ export default defineConfig({
             id.includes('/sonner/') ||
             id.includes('/next-themes/')
           ) {
-            return 'ui-vendor'
+            return 'ui-vendor';
           }
 
           if (
@@ -53,10 +53,10 @@ export default defineConfig({
             id.includes('/@hookform/resolvers/') ||
             id.includes('/zod/')
           ) {
-            return 'form-vendor'
+            return 'form-vendor';
           }
 
-          return undefined
+          return undefined;
         },
       },
     },
@@ -75,6 +75,8 @@ export default defineConfig({
     },
   },
   test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
     exclude: ['e2e/**', 'node_modules/**'],
   },
-})
+});

@@ -1,27 +1,29 @@
-import { Plus, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { StableAvatar } from '@/components/shared/StableAvatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
-import { useAuthStore } from '@/stores/auth.store';
 import { useServers } from '@/features/servers/hooks/useServers';
 
 interface ServerSidebarProps {
   activeServerId: number | null;
   onSelectServer?: () => void;
+  variant?: 'rail' | 'drawer';
 }
 
 function getServerInitial(name: string) {
   return name.trim().charAt(0).toUpperCase();
 }
 
-export function ServerSidebar({ activeServerId, onSelectServer }: ServerSidebarProps) {
-  const user = useAuthStore((state) => state.user);
+export function ServerSidebar({
+  activeServerId,
+  onSelectServer,
+  variant = 'rail',
+}: ServerSidebarProps) {
   const serversQuery = useServers();
 
   if (serversQuery.isLoading) {
@@ -60,62 +62,97 @@ export function ServerSidebar({ activeServerId, onSelectServer }: ServerSidebarP
   }
 
   return (
-    <div className="flex h-full flex-col border-r border-border bg-sidebar">
-      <div className="flex h-16 items-center justify-center border-b border-border text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-        UC
+    <div
+      className={cn(
+        'flex h-full flex-col bg-sidebar',
+        variant === 'rail' && 'border-r border-border',
+      )}
+    >
+      <div className="flex h-16 items-center justify-center border-b border-border">
+        <Tooltip>
+          <TooltipTrigger render={<div />}>
+            <NavLink
+              to={ROUTES.SERVERS}
+              aria-label="Go to UniConnect home"
+              onClick={onSelectServer}
+              className="flex size-12 items-center justify-center overflow-hidden rounded-full border border-border bg-white p-1 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <img src="/logo.svg" alt="" className="size-full object-contain" />
+            </NavLink>
+          </TooltipTrigger>
+          <TooltipContent side="right">UniConnect home</TooltipContent>
+        </Tooltip>
       </div>
       <ScrollArea className="flex-1">
-        <div className="flex flex-col items-center gap-3 px-2 py-4">
-          {servers.map((server) => (
-            <Tooltip key={server.id}>
-              <TooltipTrigger render={<div />}>
-                <NavLink
-                  to={ROUTES.SERVER(server.id)}
-                  onClick={onSelectServer}
-                  aria-label={server.name}
-                  className={cn(
-                    'group relative flex size-11 items-center justify-center rounded-2xl border border-transparent transition-all hover:-translate-y-0.5 hover:border-border hover:bg-accent',
-                    activeServerId === server.id &&
-                      'border-primary/30 bg-primary/10 text-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_20%,transparent)]',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'absolute -left-2 h-8 w-1 rounded-full bg-primary opacity-0 transition-opacity',
-                      activeServerId === server.id && 'opacity-100',
-                    )}
-                    aria-hidden="true"
-                  />
-                  <Avatar>
-                    <AvatarImage src={server.iconUrl ?? undefined} alt={server.name} />
-                    <AvatarFallback>{getServerInitial(server.name)}</AvatarFallback>
-                  </Avatar>
-                </NavLink>
-              </TooltipTrigger>
-              <TooltipContent side="right">{server.name}</TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-      </ScrollArea>
-      {user?.userType === 'ADMIN' ? (
-        <div className="flex justify-center border-t border-border px-2 py-3">
-          <Tooltip>
-            <TooltipTrigger render={<div />}>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled
-                aria-disabled="true"
-                className="rounded-2xl"
+        {variant === 'drawer' ? (
+          <div className="grid gap-2 p-3">
+            {servers.map((server) => (
+              <NavLink
+                key={server.id}
+                to={ROUTES.SERVER(server.id)}
+                onClick={onSelectServer}
+                aria-label={server.name}
+                className={cn(
+                  'flex min-w-0 items-center gap-3 rounded-xl border border-transparent px-3 py-2 transition-colors hover:border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  activeServerId === server.id &&
+                    'border-primary/30 bg-primary/10 text-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_18%,transparent)]',
+                )}
               >
-                <Plus className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Server creation ships in a later module.</TooltipContent>
-          </Tooltip>
-        </div>
-      ) : null}
+                <StableAvatar
+                  src={server.iconUrl}
+                  alt={server.name}
+                  fallback={getServerInitial(server.name)}
+                  className="size-12 rounded-2xl"
+                  imageClassName="rounded-2xl"
+                  fallbackClassName="rounded-2xl text-base"
+                />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{server.name}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {server.description ?? server.type.replace('_', ' ')}
+                  </span>
+                </span>
+              </NavLink>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3 px-2 py-4">
+            {servers.map((server) => (
+              <Tooltip key={server.id}>
+                <TooltipTrigger render={<div />}>
+                  <NavLink
+                    to={ROUTES.SERVER(server.id)}
+                    onClick={onSelectServer}
+                    aria-label={server.name}
+                    className={cn(
+                      'group relative flex size-14 items-center justify-center rounded-2xl border border-transparent transition-all hover:-translate-y-0.5 hover:border-border hover:bg-accent',
+                      activeServerId === server.id &&
+                        'border-primary/30 bg-primary/10 text-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_20%,transparent)]',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'absolute -left-2 h-9 w-1 rounded-full bg-primary opacity-0 transition-opacity',
+                        activeServerId === server.id && 'opacity-100',
+                      )}
+                      aria-hidden="true"
+                    />
+                    <StableAvatar
+                      src={server.iconUrl}
+                      alt={server.name}
+                      fallback={getServerInitial(server.name)}
+                      className="size-10 rounded-2xl"
+                      imageClassName="rounded-2xl"
+                      fallbackClassName="rounded-2xl"
+                    />
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right">{server.name}</TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
     </div>
   );
 }

@@ -7,14 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { RoleBadge } from '@/components/shared/RoleBadge';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import { usePost } from '../hooks/usePost';
-import { getInitials, sanitizePostHtml } from '../utils';
+import { sanitizePostHtml } from '../utils';
 import { AttachmentPreview } from './AttachmentPreview';
 import { PostActions } from './PostActions';
 import { PriorityBadge } from './PriorityBadge';
@@ -62,7 +62,10 @@ export function PostDetailDialog({
                 <div className="min-w-0 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     {post.isPinned ? (
-                      <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-100 text-amber-900">
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-amber-200 bg-amber-100 text-amber-900"
+                      >
                         <Pin className="size-3.5" />
                         Pinned
                       </Badge>
@@ -86,10 +89,10 @@ export function PostDetailDialog({
 
             <div className="space-y-5 px-5 py-5">
               <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={post.author.profilePictureUrl ?? undefined} alt={post.author.fullName} />
-                  <AvatarFallback>{getInitials(post.author.fullName)}</AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  fullName={post.author.fullName}
+                  profilePictureUrl={post.author.profilePictureUrl}
+                />
                 <div className="min-w-0">
                   <div className="font-medium">{post.author.fullName}</div>
                   <div className="mt-1 flex flex-wrap gap-1.5">

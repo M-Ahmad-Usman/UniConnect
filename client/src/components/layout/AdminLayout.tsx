@@ -10,7 +10,6 @@ const adminNavItems = [
   { label: 'Departments', to: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
   { label: 'Programs', to: ROUTES.ADMIN_PROGRAMS, icon: GraduationCap },
   { label: 'Disciplines', to: ROUTES.ADMIN_DISCIPLINES, icon: Shield },
-  { label: 'Classes', to: ROUTES.ADMIN_CLASSES, icon: GraduationCap },
   { label: 'Courses', to: ROUTES.ADMIN_COURSES, icon: BookOpen },
 ];
 

@@ -79,6 +79,11 @@ const notificationListSelect = {
         select: {
           name: true,
           serverId: true,
+          server: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },
@@ -118,7 +123,7 @@ const preferenceListSelect = {
 async function getSubscribedMemberIds(
   serverId: number,
   channelId: number,
-  excludeUserId: number
+  excludeUserId: number,
 ): Promise<number[]> {
   // Get all server members except the excluded user (post author)
   const members = await prisma.serverMembership.findMany({
@@ -184,7 +189,10 @@ function formatRoleName(role: string): string {
     .join(" ");
 }
 
-async function isRoleNotificationSubscribed(userId: number, serverId: number): Promise<boolean> {
+async function isRoleNotificationSubscribed(
+  userId: number,
+  serverId: number,
+): Promise<boolean> {
   const preference = await prisma.notificationPreference.findFirst({
     where: {
       userId,
@@ -206,23 +214,32 @@ async function isRoleNotificationSubscribed(userId: number, serverId: number): P
  * Called asynchronously via EventEmitter — errors are logged, not thrown.
  */
 export async function createPostNotifications(
-  input: CreatePostNotificationsInput
+  input: CreatePostNotificationsInput,
 ): Promise<void> {
-  const { postId, channelId, serverId, authorId, title, priority, serverType } = input;
+  const { postId, channelId, serverId, authorId, title, priority, serverType } =
+    input;
 
-  if (serverType !== "DEPARTMENT" && serverType !== "CLASS" && serverType !== "SOCIETY") {
+  if (
+    serverType !== "DEPARTMENT" &&
+    serverType !== "CLASS" &&
+    serverType !== "SOCIETY"
+  ) {
     return;
   }
 
-  // Get channel name for notification message
+  // Get channel and server names for notification message
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-    select: { name: true },
+    select: { name: true, server: { select: { name: true } } },
   });
 
   if (!channel) return;
 
-  const subscribedIds = await getSubscribedMemberIds(serverId, channelId, authorId);
+  const subscribedIds = await getSubscribedMemberIds(
+    serverId,
+    channelId,
+    authorId,
+  );
 
   if (subscribedIds.length === 0) return;
 
@@ -230,8 +247,8 @@ export async function createPostNotifications(
   const isUrgent = priority === "URGENT";
   const notificationTitle = isUrgent ? `🚨 [URGENT] ${title}` : title;
   const message = isUrgent
-    ? `Urgent post in #${channel.name} requires your attention`
-    : `New post in #${channel.name}`;
+    ? `Urgent post in ${channel.server.name} / #${channel.name} requires your attention`
+    : `New post in ${channel.server.name} / #${channel.name}`;
 
   // Bulk create notifications
   await prisma.notification.createMany({
@@ -258,7 +275,7 @@ export async function createPostNotifications(
   ]);
 
   const unreadCountMap = new Map(
-    unreadCounts.map((r) => [r.userId, r._count._all])
+    unreadCounts.map((r) => [r.userId, r._count._all]),
   );
 
   // Emit real-time events using pre-computed counts — no per-user DB queries
@@ -279,10 +296,51 @@ export async function createPostNotifications(
   }
 }
 
-export async function createRoleAssignedNotification(
-  input: CreateRoleAssignedNotificationInput
+export async function emitPostNotificationsDeleted(
+  postId: number,
+  notifications: Array<{ id: number; userId: number }>,
 ): Promise<void> {
-  const isSubscribed = await isRoleNotificationSubscribed(input.userId, input.serverId);
+  if (notifications.length === 0) {
+    return;
+  }
+
+  const userIds = [
+    ...new Set(notifications.map((notification) => notification.userId)),
+  ];
+  const notificationIdsByUserId = new Map<number, number[]>();
+  for (const notification of notifications) {
+    const current = notificationIdsByUserId.get(notification.userId) ?? [];
+    current.push(notification.id);
+    notificationIdsByUserId.set(notification.userId, current);
+  }
+
+  const unreadCounts = await prisma.notification.groupBy({
+    by: ["userId"],
+    where: { userId: { in: userIds }, readAt: null },
+    _count: { _all: true },
+  });
+  const unreadCountMap = new Map(
+    unreadCounts.map((r) => [r.userId, r._count._all]),
+  );
+
+  for (const userId of userIds) {
+    emitToUser(userId, "notification:deleted", {
+      postId,
+      notificationIds: notificationIdsByUserId.get(userId) ?? [],
+    });
+    emitToUser(userId, "notification:unread-count", {
+      count: unreadCountMap.get(userId) ?? 0,
+    });
+  }
+}
+
+export async function createRoleAssignedNotification(
+  input: CreateRoleAssignedNotificationInput,
+): Promise<void> {
+  const isSubscribed = await isRoleNotificationSubscribed(
+    input.userId,
+    input.serverId,
+  );
   if (!isSubscribed) {
     return;
   }
@@ -328,14 +386,16 @@ export async function createRoleAssignedNotification(
 }
 
 export async function createSocietyRequestReviewedNotification(
-  input: CreateSocietyRequestReviewedNotificationInput
+  input: CreateSocietyRequestReviewedNotificationInput,
 ): Promise<void> {
   const isApproved = input.status === "APPROVED";
   const notification = await prisma.notification.create({
     data: {
       userId: input.userId,
       type: "SOCIETY_REQUEST_REVIEWED",
-      title: isApproved ? "Society request approved" : "Society request rejected",
+      title: isApproved
+        ? "Society request approved"
+        : "Society request rejected",
       message: isApproved
         ? `Your request to join ${input.societyName} was approved`
         : `Your request to join ${input.societyName} was rejected`,
@@ -349,7 +409,7 @@ export async function createSocietyRequestReviewedNotification(
 
 export async function listNotifications(
   userId: number,
-  query: ListNotificationsQuery
+  query: ListNotificationsQuery,
 ) {
   const { page, limit, skip, take } = parsePagination(query);
 
@@ -432,7 +492,10 @@ export async function markAllAsRead(userId: number) {
   return { count: result.count };
 }
 
-export async function getPreferences(userId: number, query: ListPreferencesQuery = {}) {
+export async function getPreferences(
+  userId: number,
+  query: ListPreferencesQuery = {},
+) {
   const preferences = await prisma.notificationPreference.findMany({
     where: {
       userId,
@@ -451,16 +514,23 @@ export async function getPreferences(userId: number, query: ListPreferencesQuery
   return preferences;
 }
 
-export async function updatePreference(userId: number, input: UpdatePreferenceInput) {
+export async function updatePreference(
+  userId: number,
+  input: UpdatePreferenceInput,
+) {
   const notificationType = input.notificationType ?? "NEW_POST";
   const { scopeType, serverId, channelId, isSubscribed } = input;
 
   if (notificationType === "ROLE_ASSIGNED" && scopeType !== "SERVER") {
-    throw new ValidationError("Role assignment notifications only support server-level preferences");
+    throw new ValidationError(
+      "Role assignment notifications only support server-level preferences",
+    );
   }
 
   if (notificationType === "ROLE_ASSIGNED" && channelId) {
-    throw new ValidationError("channelId is not supported for role assignment notifications");
+    throw new ValidationError(
+      "channelId is not supported for role assignment notifications",
+    );
   }
 
   // Validate user is a member of the server

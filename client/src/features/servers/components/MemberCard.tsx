@@ -1,20 +1,11 @@
 import { CalendarDays, Mail } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RoleBadge } from '@/components/shared/RoleBadge';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 import { UserType, type ServerMember } from '@/types';
 
 interface MemberCardProps {
   member: ServerMember;
-}
-
-function getInitials(fullName: string) {
-  return fullName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
 }
 
 function getUserTypeLabel(userType: ServerMember['user']['userType']) {
@@ -39,18 +30,15 @@ function formatJoinedAt(dateString: string) {
 
 export function MemberCard({ member }: MemberCardProps) {
   return (
-    <article className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-background via-background to-accent/10 p-4 shadow-sm">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
-        aria-hidden="true"
-      />
-
+    <article className="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Avatar size="lg" className="ring-2 ring-background">
-            <AvatarImage src={member.user.profilePictureUrl ?? undefined} alt={member.user.fullName} />
-            <AvatarFallback>{getInitials(member.user.fullName)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            fullName={member.user.fullName}
+            profilePictureUrl={member.user.profilePictureUrl}
+            size="lg"
+            className="ring-2 ring-background"
+          />
 
           <div className="space-y-1">
             <h3 className="text-sm font-semibold leading-none">{member.user.fullName}</h3>

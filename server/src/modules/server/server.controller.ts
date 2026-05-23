@@ -1,6 +1,10 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
+import type {
+  ApiResponse,
+  PaginatedResponse,
+} from "../../shared/types/index.js";
+import { ValidationError } from "../../shared/errors/index.js";
 import * as serverService from "./server.service.js";
 import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
 
@@ -14,7 +18,10 @@ function auditContextFromRequest(req: Request) {
 
 // ─── Server Handlers ───────────────────────────────────────────────────────
 
-export async function handleListServers(req: Request, res: Response): Promise<void> {
+export async function handleListServers(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await serverService.listServers(
     {
@@ -22,7 +29,7 @@ export async function handleListServers(req: Request, res: Response): Promise<vo
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
     },
-    { id: req.user!.id, userType: req.user!.userType }
+    { id: req.user!.id, userType: req.user!.userType },
   );
 
   const response: PaginatedResponse<(typeof result.data)[number]> = {
@@ -34,7 +41,10 @@ export async function handleListServers(req: Request, res: Response): Promise<vo
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleGetServer(req: Request, res: Response): Promise<void> {
+export async function handleGetServer(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const server = await serverService.getServer(Number(req.params.id), {
     id: req.user!.id,
     userType: req.user!.userType,
@@ -48,12 +58,15 @@ export async function handleGetServer(req: Request, res: Response): Promise<void
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleListServerChannels(req: Request, res: Response): Promise<void> {
+export async function handleListServerChannels(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const query = req.query as { includeArchived?: boolean };
   const channels = await serverService.listServerChannels(
     Number(req.params.id),
     { id: req.user!.id, userType: req.user!.userType },
-    { includeArchived: query.includeArchived ?? false }
+    { includeArchived: query.includeArchived ?? false },
   );
 
   const response: ApiResponse<typeof channels> = {
@@ -64,7 +77,10 @@ export async function handleListServerChannels(req: Request, res: Response): Pro
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleListServerMembers(req: Request, res: Response): Promise<void> {
+export async function handleListServerMembers(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await serverService.listServerMembers(
     Number(req.params.id),
@@ -72,7 +88,7 @@ export async function handleListServerMembers(req: Request, res: Response): Prom
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
     },
-    { id: req.user!.id, userType: req.user!.userType }
+    { id: req.user!.id, userType: req.user!.userType },
   );
 
   const response: PaginatedResponse<(typeof result.data)[number]> = {
@@ -84,11 +100,14 @@ export async function handleListServerMembers(req: Request, res: Response): Prom
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleCreateChannel(req: Request, res: Response): Promise<void> {
+export async function handleCreateChannel(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const channel = await serverService.createChannel(
     Number(req.params.id),
     req.body,
-    { id: req.user!.id, userType: req.user!.userType }
+    { id: req.user!.id, userType: req.user!.userType },
   );
   await recordAuditLog(
     {
@@ -101,7 +120,7 @@ export async function handleCreateChannel(req: Request, res: Response): Promise<
         type: channel.type,
       },
     },
-    auditContextFromRequest(req)
+    auditContextFromRequest(req),
   );
 
   const response: ApiResponse<typeof channel> = {
@@ -111,4 +130,37 @@ export async function handleCreateChannel(req: Request, res: Response): Promise<
   };
 
   res.status(StatusCodes.CREATED).json(response);
+}
+
+export async function handleUpdateServerIcon(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  if (!req.file?.buffer) {
+    throw new ValidationError("Server icon file is required");
+  }
+
+  const updated = await serverService.updateServerIcon(
+    Number(req.params.id),
+    req.file.buffer,
+  );
+  await recordAuditLog(
+    {
+      action: "server.icon.update",
+      targetType: "server",
+      targetId: updated.id,
+      summary: {
+        serverId: req.params.id,
+      },
+    },
+    auditContextFromRequest(req),
+  );
+
+  const response: ApiResponse<typeof updated> = {
+    success: true,
+    data: updated,
+    message: "Server icon updated successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
 }

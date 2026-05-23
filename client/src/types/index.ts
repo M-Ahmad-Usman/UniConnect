@@ -100,6 +100,7 @@ export type {
   UpdatePreferenceRequest,
   UnreadCountResponse,
   NewNotificationPayload,
+  DeletedNotificationPayload,
   UnreadCountPayload,
 } from './notification.types';
 

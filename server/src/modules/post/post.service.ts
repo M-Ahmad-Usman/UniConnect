@@ -12,6 +12,7 @@ import {
 } from "../../shared/utils/pagination.js";
 import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
+import { emitPostNotificationsDeleted } from "../notification/notification.service.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
@@ -79,6 +80,17 @@ const postListSelect = {
   },
   _count: {
     select: { attachments: true },
+  },
+  attachments: {
+    select: {
+      id: true,
+      fileUrl: true,
+      fileType: true,
+      fileSize: true,
+      uploadedAt: true,
+    },
+    orderBy: { uploadedAt: "asc" },
+    take: MAX_ATTACHMENTS,
   },
 } as const;
 
@@ -181,7 +193,7 @@ async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
 async function resolveAuthorBadges(
   serverId: number,
   serverType: ServerType,
-  authorUserIds: number[]
+  authorUserIds: number[],
 ): Promise<Map<number, string[]>> {
   const badgeMap = new Map<number, string[]>();
 
@@ -220,12 +232,18 @@ async function resolveAuthorBadges(
       addBadge(department.hodId, "hod");
     }
     for (const program of programs) {
-      if (program.programDirectorId && uniqueIds.includes(program.programDirectorId)) {
+      if (
+        program.programDirectorId &&
+        uniqueIds.includes(program.programDirectorId)
+      ) {
         addBadge(program.programDirectorId, "program_director");
       }
     }
     for (const mod of moderators) {
-      addBadge(mod.userId, mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator");
+      addBadge(
+        mod.userId,
+        mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+      );
     }
   } else if (serverType === "CLASS") {
     const [classRecord, moderators] = await Promise.all([
@@ -243,7 +261,10 @@ async function resolveAuthorBadges(
       addBadge(classRecord.crId, "cr");
     }
     for (const mod of moderators) {
-      addBadge(mod.userId, mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator");
+      addBadge(
+        mod.userId,
+        mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+      );
     }
   } else if (serverType === "SOCIETY") {
     const [society, moderators] = await Promise.all([
@@ -272,7 +293,10 @@ async function resolveAuthorBadges(
       }
     }
     for (const mod of moderators) {
-      addBadge(mod.userId, mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator");
+      addBadge(
+        mod.userId,
+        mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+      );
     }
   }
 
@@ -281,11 +305,13 @@ async function resolveAuthorBadges(
 
 async function uploadAttachments(
   postId: number,
-  files: UploadedFile[]
+  files: UploadedFile[],
 ): Promise<void> {
   // Upload all files to Cloudinary in parallel
   const uploaded = await Promise.all(
-    files.map((file) => cloudinaryService.uploadImage(file.buffer, "post-attachments"))
+    files.map((file) =>
+      cloudinaryService.uploadImage(file.buffer, "post-attachments"),
+    ),
   );
 
   // Batch-insert all attachment records in one query
@@ -327,7 +353,7 @@ export async function createPost(
   channelId: number,
   data: CreatePostInput,
   files: UploadedFile[],
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   const channel = await findActiveChannelForPostsOrThrow(channelId);
 
@@ -336,9 +362,16 @@ export async function createPost(
   }
 
   // Check posting rights
-  const allowed = await canPostInChannel(caller.id, caller.userType, channelId, caller.userRoles);
+  const allowed = await canPostInChannel(
+    caller.id,
+    caller.userType,
+    channelId,
+    caller.userRoles,
+  );
   if (!allowed) {
-    throw new ForbiddenError("You do not have permission to post in this channel");
+    throw new ForbiddenError(
+      "You do not have permission to post in this channel",
+    );
   }
 
   // Create the post
@@ -370,7 +403,7 @@ export async function createPost(
     const badgeMap = await resolveAuthorBadges(
       channel.serverId,
       channel.server.type,
-      [withAttachments.author.id]
+      [withAttachments.author.id],
     );
 
     appEvents.emit(APP_EVENTS.POST_CREATED, {
@@ -401,7 +434,7 @@ export async function createPost(
   const badgeMap = await resolveAuthorBadges(
     channel.serverId,
     channel.server.type,
-    [post.author.id]
+    [post.author.id],
   );
 
   appEvents.emit(APP_EVENTS.POST_CREATED, {
@@ -431,7 +464,7 @@ export async function createPost(
 export async function listPosts(
   channelId: number,
   query: ListPostsQuery,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   const channel = await findActiveChannelForPostsOrThrow(channelId);
 
@@ -456,10 +489,14 @@ export async function listPosts(
   if (query.startDate || query.endDate) {
     const createdAt: Record<string, Date> = {};
     if (query.startDate) {
-      createdAt.gte = query.startDate instanceof Date ? query.startDate : new Date(query.startDate);
+      createdAt.gte =
+        query.startDate instanceof Date
+          ? query.startDate
+          : new Date(query.startDate);
     }
     if (query.endDate) {
-      createdAt.lte = query.endDate instanceof Date ? query.endDate : new Date(query.endDate);
+      createdAt.lte =
+        query.endDate instanceof Date ? query.endDate : new Date(query.endDate);
     }
     where.createdAt = createdAt;
   }
@@ -480,7 +517,7 @@ export async function listPosts(
   const badgeMap = await resolveAuthorBadges(
     channel.serverId,
     channel.server.type,
-    authorIds
+    authorIds,
   );
 
   const data = posts.map((p) => ({
@@ -523,11 +560,16 @@ export async function getPost(postId: number, caller: CallerInfo) {
   const badgeMap = await resolveAuthorBadges(
     post.channel.serverId,
     post.channel.server.type,
-    [post.author.id]
+    [post.author.id],
   );
 
   // Strip internal fields from response
-  const { channelId: _channelId, channel: _channel, isDeleted: _isDeleted, ...postData } = post;
+  const {
+    channelId: _channelId,
+    channel: _channel,
+    isDeleted: _isDeleted,
+    ...postData
+  } = post;
 
   return {
     ...postData,
@@ -541,7 +583,7 @@ export async function getPost(postId: number, caller: CallerInfo) {
 export async function updatePost(
   postId: number,
   data: UpdatePostInput,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   const post = await findActivePostOrThrow(postId);
 
@@ -573,7 +615,7 @@ export async function updatePost(
   const badgeMap = await resolveAuthorBadges(
     post.channel.serverId,
     post.channel.server.type,
-    [updated.author.id]
+    [updated.author.id],
   );
 
   const response = {
@@ -600,14 +642,29 @@ export async function deletePost(postId: number, caller: CallerInfo) {
     throw new ForbiddenError("You do not have permission to delete this post");
   }
 
-  await prisma.post.update({
-    where: { id: postId },
-    data: {
-      isDeleted: true,
-      deletedAt: new Date(),
-      deletedBy: caller.id,
-    },
+  const deletedNotifications = await prisma.$transaction(async (tx) => {
+    await tx.post.update({
+      where: { id: postId },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: caller.id,
+      },
+    });
+
+    const notifications = await tx.notification.findMany({
+      where: { postId },
+      select: { id: true, userId: true },
+    });
+
+    if (notifications.length > 0) {
+      await tx.notification.deleteMany({ where: { postId } });
+    }
+
+    return notifications;
   });
+
+  await emitPostNotificationsDeleted(postId, deletedNotifications);
 
   emitToChannel(post.channelId, "post:deleted", {
     channelId: post.channelId,
@@ -621,7 +678,7 @@ export async function deletePost(postId: number, caller: CallerInfo) {
 export async function pinPost(
   postId: number,
   data: PinPostInput,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   const post = await findActivePostOrThrow(postId);
 
@@ -636,7 +693,7 @@ export async function pinPost(
   const badgeMap = await resolveAuthorBadges(
     post.channel.serverId,
     post.channel.server.type,
-    [updated.author.id]
+    [updated.author.id],
   );
 
   const response = {
@@ -658,7 +715,7 @@ export async function pinPost(
 export async function addAttachments(
   postId: number,
   files: UploadedFile[],
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   if (files.length === 0) {
     throw new ValidationError("At least one attachment is required");
@@ -668,7 +725,9 @@ export async function addAttachments(
 
   // Only the author can add attachments
   if (post.authorId !== caller.id) {
-    throw new ForbiddenError("Only the author can add attachments to this post");
+    throw new ForbiddenError(
+      "Only the author can add attachments to this post",
+    );
   }
 
   // Check total attachment count
@@ -678,7 +737,7 @@ export async function addAttachments(
 
   if (existingCount + files.length > MAX_ATTACHMENTS) {
     throw new ValidationError(
-      `Cannot exceed ${MAX_ATTACHMENTS} attachments per post (currently ${existingCount})`
+      `Cannot exceed ${MAX_ATTACHMENTS} attachments per post (currently ${existingCount})`,
     );
   }
 
@@ -697,7 +756,7 @@ export async function addAttachments(
   const badgeMap = await resolveAuthorBadges(
     post.channel.serverId,
     post.channel.server.type,
-    [updated.author.id]
+    [updated.author.id],
   );
 
   const response = {

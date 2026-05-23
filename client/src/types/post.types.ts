@@ -33,6 +33,7 @@ export interface PostListItem {
   createdAt: string;
   updatedAt: string | null;
   author: PostAuthor;
+  attachments: PostAttachment[];
   _count: {
     attachments: number;
   };

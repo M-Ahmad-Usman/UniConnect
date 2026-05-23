@@ -37,8 +37,8 @@ function getStrengthState(score: number) {
   if (score <= 1) {
     return {
       label: 'Weak',
-      color: 'bg-rose-500',
-      textColor: 'text-rose-300',
+      color: 'bg-destructive',
+      textColor: 'text-destructive',
     };
   }
 
@@ -52,8 +52,8 @@ function getStrengthState(score: number) {
 
   return {
     label: 'Strong',
-    color: 'bg-emerald-500',
-    textColor: 'text-emerald-300',
+    color: 'bg-primary',
+    textColor: 'text-primary',
   };
 }
 
@@ -63,13 +63,13 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
   const width = `${(score / passwordChecks.length) * 100}%`;
 
   return (
-    <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+    <div className="space-y-3 rounded-xl border bg-card p-4">
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-slate-400">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-muted-foreground">
           <span>Password strength</span>
           <span className={strength.textColor}>{password ? strength.label : 'Too short'}</span>
         </div>
-        <div className="h-2 rounded-full bg-white/10">
+        <div className="h-2 rounded-full bg-muted">
           <div
             className={cn('h-2 rounded-full transition-all duration-200', strength.color)}
             style={{ width }}
@@ -82,13 +82,13 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
           const isSatisfied = check.test(password);
 
           return (
-            <div key={check.id} className="flex items-center gap-2 text-sm text-slate-300">
+            <div key={check.id} className="flex items-center gap-2 text-sm text-muted-foreground">
               {isSatisfied ? (
-                <Check className="size-4 text-emerald-400" />
+                <Check className="size-4 text-primary" />
               ) : (
-                <X className="size-4 text-slate-500" />
+                <X className="size-4 text-muted-foreground" />
               )}
-              <span className={isSatisfied ? 'text-slate-100' : 'text-slate-400'}>
+              <span className={isSatisfied ? 'text-foreground' : 'text-muted-foreground'}>
                 {check.label}
               </span>
             </div>

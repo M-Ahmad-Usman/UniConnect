@@ -18,7 +18,7 @@ uniconnect/
 - Backend commands: run inside `server/`
 - Frontend commands: run inside `client/`
 - Never run commands from the repo root.
-- Make sure that every command exits cleanly and doesn't leak any memory or leave open handles. Use heavy commands with timeout like timeout 120 <command>.
+- Make sure that every command exits cleanly and doesn't leak any memory or leave open handles. Don't run heavy commands like linting, building and testing simultaneously. Running multiple heavy commands simulataneoulsy makes the system unresponsive
 - Always try to save context. Don't try to read the full output of long commands like `npm test`. Only read the relevant chunk like using `npm test 2>&1 | tail -40`. If all tests pass then `tail -40` is enough but if any test fail then you can update the command to find the failing tests. You can use `grep` or any other tool or even read the whole command output if necessary. Rerunning the command with updated flags is cheaper than trying to read the whole output in one go. Using `2>&1 | tail -<number>` isn't a hard constraint. You can use any other more better way if you found any. The goal is to save context.
 
 ## Tech Stack

@@ -21,7 +21,7 @@
 | 3 | Society Management UX and Access Hardening | Complete | Codex | 2026-05-20 | 2026-05-20 | Backend/frontend implementation, focused Jest/Vitest coverage, Playwright society flows, lint, build, type-check, and docs complete |
 | 4 | Role Management Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | Scoped backend option APIs, lazy frontend role workspace, focused Jest/Vitest coverage, Playwright role flows, lint, build, type-check, and docs complete |
 | 5 | Security Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | CSRF, audit logs, content/link safety, upload pixel limits, Cloudinary folder allowlist, focused unit/Jest/Playwright verification complete |
-| 6 | UI and Accessibility Hardening | Not started | TBD |  |  |  |
+| 6 | UI and Accessibility Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | Cookie-backed theme support, semantic tabs, accessible state/form/table primitives, hardened society/class/role flows, Vitest coverage, Playwright keyboard/mobile/axe coverage, lint, type-check, build complete |
 | 7 | Cross-Cutting Release Readiness | Not started | TBD |  |  |  |
 
 ## Module 1 Checklist: Permission Policy Foundation
@@ -300,36 +300,40 @@
 ## Module 6 Checklist: UI and Accessibility Hardening
 
 ### Implementation
-- [ ] Replace ad hoc tabs with accessible tab semantics.
-- [ ] Improve dialog focus, labels, descriptions, and validation state.
-- [ ] Add accessible names for icon-only and compact action buttons.
-- [ ] Add consistent destructive confirmations.
-- [ ] Improve data table captions/headings and responsive behavior.
-- [ ] Improve form labels and error associations.
-- [ ] Improve loading, empty, forbidden, retry, and success states.
-- [ ] Review mobile layouts for hardened class, society, and role workflows.
-- [ ] Review text overflow and clipped actions.
+- [x] Replace ad hoc tabs with accessible tab semantics.
+- [x] Improve dialog focus, labels, descriptions, and validation state.
+- [x] Add accessible names for icon-only and compact action buttons.
+- [x] Add consistent destructive confirmations.
+- [x] Improve data table captions/headings and responsive behavior.
+- [x] Improve form labels and error associations.
+- [x] Improve loading, empty, forbidden, retry, and success states.
+- [x] Review mobile layouts for hardened class, society, and role workflows.
+- [x] Review text overflow and clipped actions.
 
 ### Tests
-- [ ] Frontend tests for accessible tab markup.
-- [ ] Frontend tests for dialog accessible names/descriptions.
-- [ ] Frontend tests for form error associations.
-- [ ] Playwright keyboard navigation through society detail.
-- [ ] Playwright keyboard navigation through class detail.
-- [ ] Playwright keyboard navigation through role management.
-- [ ] Playwright mobile viewport smoke tests.
+- [x] Frontend tests for accessible tab markup.
+- [x] Frontend tests for dialog accessible names/descriptions.
+- [x] Frontend tests for form error associations.
+- [x] Playwright keyboard navigation through society detail.
+- [x] Playwright keyboard navigation through class detail.
+- [x] Playwright keyboard navigation through role management.
+- [x] Playwright mobile viewport smoke tests.
 
 ### Documentation
-- [ ] Update `client/ARCHITECTURE.md`.
-- [ ] Update `client/PLAN.md`.
-- [ ] Update `client/PROGRESS.md`.
-- [ ] Update API docs only if accessibility-driven UI behavior changes API usage.
+- [x] Update `client/ARCHITECTURE.md`.
+- [x] Update `client/PLAN.md`.
+- [x] Update `client/PROGRESS.md`.
+- [x] Update API docs only if accessibility-driven UI behavior changes API usage.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd client && timeout 120 npm run type-check`
+  - `cd client && timeout 120 npm run lint`
+  - `cd client && timeout 120 npm run test`
+  - `cd client && timeout 120 npm run build`
+  - `cd client && timeout 120 npx playwright test e2e/module6-ui-accessibility.spec.ts --reporter=line`
 - Result:
-  - Not verified.
+  - Passed. Initial Playwright run required escalation because the sandbox blocked `tsx` IPC under `/tmp`; the final escalated run passed 2/2.
 
 ## Module 7 Checklist: Cross-Cutting Release Readiness
 

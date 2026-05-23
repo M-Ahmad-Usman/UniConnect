@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { StableAvatar } from './StableAvatar';
 
 interface UserAvatarProps {
   fullName: string;
@@ -26,39 +24,14 @@ export function UserAvatar({
   className,
   fallbackClassName,
 }: UserAvatarProps) {
-  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
-  const shouldShowImage = Boolean(profilePictureUrl && loadedSrc === profilePictureUrl);
-
-  useEffect(() => {
-    if (!profilePictureUrl) {
-      return;
-    }
-
-    let cancelled = false;
-    const image = new Image();
-    image.decoding = 'async';
-    image.onload = () => {
-      if (!cancelled) {
-        setLoadedSrc(profilePictureUrl);
-      }
-    };
-    image.src = profilePictureUrl;
-
-    return () => {
-      cancelled = true;
-    };
-  }, [profilePictureUrl]);
-
   return (
-    <Avatar size={size} className={cn('overflow-hidden bg-muted', className)}>
-      {shouldShowImage ? (
-        <AvatarImage
-          src={profilePictureUrl ?? undefined}
-          alt={fullName}
-          className="transition-opacity duration-150"
-        />
-      ) : null}
-      <AvatarFallback className={fallbackClassName}>{getInitials(fullName)}</AvatarFallback>
-    </Avatar>
+    <StableAvatar
+      src={profilePictureUrl}
+      alt={fullName}
+      fallback={getInitials(fullName)}
+      size={size}
+      className={className}
+      fallbackClassName={fallbackClassName}
+    />
   );
 }

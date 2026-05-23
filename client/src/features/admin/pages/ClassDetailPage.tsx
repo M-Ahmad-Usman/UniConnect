@@ -3,7 +3,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, GraduationCap, Plus, RefreshCw, Trash2, UserRoundPlus, Wand2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  GraduationCap,
+  Plus,
+  RefreshCw,
+  Trash2,
+  UserRoundPlus,
+  Wand2,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -34,7 +42,12 @@ import {
   useTeacherCandidates,
   useTransferClassStudent,
 } from '../hooks/useAcademicCatalog';
-import { AdminPageHeader, DataState, inputClassName } from '../components/AdminDataPrimitives';
+import {
+  AdminPageHeader,
+  DataState,
+  TableSurface,
+  inputClassName,
+} from '../components/AdminDataPrimitives';
 import { AssignCourseDialog } from '../components/CatalogDialogs';
 import {
   replaceTeacherSchema,
@@ -50,7 +63,9 @@ export function ClassDetailPage() {
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [graduationOpen, setGraduationOpen] = useState(false);
   const [removingCourseId, setRemovingCourseId] = useState<number | null>(null);
-  const [replacingAssignment, setReplacingAssignment] = useState<ClassCourseAssignment | null>(null);
+  const [replacingAssignment, setReplacingAssignment] = useState<ClassCourseAssignment | null>(
+    null,
+  );
   const [teacherByCourse, setTeacherByCourse] = useState<Record<number, number>>({});
 
   const classQuery = useAdminClass(classId);
@@ -92,9 +107,7 @@ export function ClassDetailPage() {
   );
   const nextCurriculumQuery = useCurriculum(
     canAdvanceSemester && klass ? klass.program.id : null,
-    klass
-      ? { semesterNumber: klass.currentSemester + 1, batchYear: klass.admissionYear }
-      : {},
+    klass ? { semesterNumber: klass.currentSemester + 1, batchYear: klass.admissionYear } : {},
   );
 
   const curriculumCourses: CourseListItem[] = useMemo(
@@ -232,63 +245,67 @@ export function ClassDetailPage() {
             </Button>
           ) : null}
         </div>
-        <div className="overflow-hidden rounded-lg border bg-background">
-          <DataState
-            isLoading={coursesQuery.isLoading}
-            isError={coursesQuery.isError}
-            onRetry={() => void coursesQuery.refetch()}
-            empty={assignments.length === 0}
+        <DataState
+          isLoading={coursesQuery.isLoading}
+          isError={coursesQuery.isError}
+          onRetry={() => void coursesQuery.refetch()}
+          empty={assignments.length === 0}
+          emptyTitle="No assigned courses"
+          emptyDescription="Assigned courses and teachers will appear here."
+        >
+          <TableSurface
+            title="Assigned class courses"
+            description="Course, teacher, credit hours, and available assignment actions."
+            tableClassName="min-w-205"
           >
-            <table className="w-full min-w-205 text-sm">
-              <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Course</th>
-                  <th className="px-4 py-3 font-medium">Teacher</th>
-                  <th className="px-4 py-3 font-medium">Credits</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+            <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-medium">Course</th>
+                <th className="px-4 py-3 font-medium">Teacher</th>
+                <th className="px-4 py-3 font-medium">Credits</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {assignments.map((assignment) => (
+                <tr key={`${assignment.courseId}-${assignment.teacherId}`}>
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{assignment.course.code}</p>
+                    <p className="text-xs text-muted-foreground">{assignment.course.title}</p>
+                  </td>
+                  <td className="px-4 py-3">{assignment.teacher.user.fullName}</td>
+                  <td className="px-4 py-3">{assignment.course.creditHours}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="inline-flex gap-1">
+                      {canReplaceCourseTeacher ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setReplacingAssignment(assignment)}
+                        >
+                          <RefreshCw className="size-4" />
+                          <span className="sr-only">Replace teacher</span>
+                        </Button>
+                      ) : null}
+                      {canRemoveCourses ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setRemovingCourseId(assignment.courseId)}
+                        >
+                          <Trash2 className="size-4" />
+                          <span className="sr-only">Remove course assignment</span>
+                        </Button>
+                      ) : null}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y">
-                {assignments.map((assignment) => (
-                  <tr key={`${assignment.courseId}-${assignment.teacherId}`}>
-                    <td className="px-4 py-3">
-                      <p className="font-medium">{assignment.course.code}</p>
-                      <p className="text-xs text-muted-foreground">{assignment.course.title}</p>
-                    </td>
-                    <td className="px-4 py-3">{assignment.teacher.user.fullName}</td>
-                    <td className="px-4 py-3">{assignment.course.creditHours}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex gap-1">
-                        {canReplaceCourseTeacher ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setReplacingAssignment(assignment)}
-                          >
-                            <RefreshCw className="size-4" />
-                            <span className="sr-only">Replace teacher</span>
-                          </Button>
-                        ) : null}
-                        {canRemoveCourses ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setRemovingCourseId(assignment.courseId)}
-                          >
-                            <Trash2 className="size-4" />
-                            <span className="sr-only">Remove course assignment</span>
-                          </Button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </DataState>
-        </div>
+              ))}
+            </tbody>
+          </TableSurface>
+        </DataState>
       </div>
 
       <AssignCourseDialog
@@ -357,11 +374,15 @@ export function ClassDetailPage() {
             {nextCurriculumQuery.isLoading ? <LoadingSpinner /> : null}
             {!nextCurriculumQuery.isLoading && nextCurriculum.length === 0 ? (
               <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-                No curriculum exists for semester {klass.currentSemester + 1}. Progression will advance the class without creating course assignments.
+                No curriculum exists for semester {klass.currentSemester + 1}. Progression will
+                advance the class without creating course assignments.
               </p>
             ) : null}
             {nextCurriculum.map((entry) => (
-              <label key={entry.id} className="grid gap-2 rounded-lg border bg-background p-3 sm:grid-cols-[1fr_18rem] sm:items-center">
+              <label
+                key={entry.id}
+                className="grid gap-2 rounded-lg border bg-background p-3 sm:grid-cols-[1fr_18rem] sm:items-center"
+              >
                 <span>
                   <span className="block font-medium">{entry.course.code}</span>
                   <span className="text-sm text-muted-foreground">{entry.course.title}</span>
@@ -390,7 +411,11 @@ export function ClassDetailPage() {
             ))}
           </div>
           <DialogFooter>
-            <Button type="button" disabled={!canProgress || advanceSemester.isPending} onClick={() => void handleAdvance()}>
+            <Button
+              type="button"
+              disabled={!canProgress || advanceSemester.isPending}
+              onClick={() => void handleAdvance()}
+            >
               <Wand2 className="size-4" />
               Advance to semester {klass.currentSemester + 1}
             </Button>
@@ -420,33 +445,42 @@ function ClassStudentsSection({
   return (
     <div className="space-y-3">
       <h2 className="text-lg font-semibold">Students</h2>
-      <div className="overflow-hidden rounded-lg border bg-background">
-        <DataState isLoading={isLoading} isError={isError} onRetry={onRetry} empty={students.length === 0}>
-          <table className="w-full min-w-190 text-sm">
-            <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Roll number</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Class</th>
+      <DataState
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={onRetry}
+        empty={students.length === 0}
+        emptyTitle="No students found"
+        emptyDescription="Students assigned to this class will appear here."
+      >
+        <TableSurface
+          title="Class students"
+          description="Student name, roll number, email, and current class."
+          tableClassName="min-w-190"
+        >
+          <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 font-medium">Name</th>
+              <th className="px-4 py-3 font-medium">Roll number</th>
+              <th className="px-4 py-3 font-medium">Email</th>
+              <th className="px-4 py-3 font-medium">Class</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {students.map((student) => (
+              <tr key={student.studentId}>
+                <td className="px-4 py-3 font-medium">{student.user.fullName}</td>
+                <td className="px-4 py-3">{student.rollNumber}</td>
+                <td className="px-4 py-3">{student.user.email}</td>
+                <td className="px-4 py-3">
+                  {student.class.program.code} · S{student.class.currentSemester}
+                  {student.class.section}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y">
-              {students.map((student) => (
-                <tr key={student.studentId}>
-                  <td className="px-4 py-3 font-medium">{student.user.fullName}</td>
-                  <td className="px-4 py-3">{student.rollNumber}</td>
-                  <td className="px-4 py-3">{student.user.email}</td>
-                  <td className="px-4 py-3">
-                    {student.class.program.code} · S{student.class.currentSemester}
-                    {student.class.section}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </DataState>
-      </div>
+            ))}
+          </tbody>
+        </TableSurface>
+      </DataState>
     </div>
   );
 }
@@ -479,7 +513,9 @@ function TransferStudentDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Transfer student</DialogTitle>
-          <DialogDescription>Only same-department students with an existing class are eligible.</DialogDescription>
+          <DialogDescription>
+            Only same-department students with an existing class are eligible.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"
@@ -491,7 +527,14 @@ function TransferStudentDialog({
         >
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Student</span>
-            <select className={inputClassName} {...form.register('studentId')}>
+            <select
+              className={inputClassName}
+              aria-invalid={form.formState.errors.studentId ? 'true' : undefined}
+              aria-describedby={
+                form.formState.errors.studentId ? 'transfer-student-error' : undefined
+              }
+              {...form.register('studentId')}
+            >
               <option value="">Select student</option>
               {candidates.map((student) => (
                 <option key={student.studentId} value={student.studentId}>
@@ -502,7 +545,11 @@ function TransferStudentDialog({
               ))}
             </select>
             {form.formState.errors.studentId ? (
-              <span className="block text-sm text-destructive">
+              <span
+                id="transfer-student-error"
+                className="block text-sm text-destructive"
+                role="alert"
+              >
                 {form.formState.errors.studentId.message}
               </span>
             ) : null}
@@ -558,7 +605,14 @@ function ReplaceTeacherDialog({
         >
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Teacher</span>
-            <select className={inputClassName} {...form.register('teacherId')}>
+            <select
+              className={inputClassName}
+              aria-invalid={form.formState.errors.teacherId ? 'true' : undefined}
+              aria-describedby={
+                form.formState.errors.teacherId ? 'replace-teacher-error' : undefined
+              }
+              {...form.register('teacherId')}
+            >
               <option value="">Select teacher</option>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
@@ -567,7 +621,11 @@ function ReplaceTeacherDialog({
               ))}
             </select>
             {form.formState.errors.teacherId ? (
-              <span className="block text-sm text-destructive">
+              <span
+                id="replace-teacher-error"
+                className="block text-sm text-destructive"
+                role="alert"
+              >
                 {form.formState.errors.teacherId.message}
               </span>
             ) : null}

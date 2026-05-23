@@ -158,6 +158,10 @@ export const programSchema = z.object({
   code: shortCodeSchema,
 });
 
+export const globalProgramSchema = programSchema.extend({
+  departmentId: requiredNumericIdSchema,
+});
+
 export const updateProgramSchema = z.object({
   semesters: z.coerce.number().int().min(1, 'Minimum is 1').max(10, 'Maximum is 10'),
   code: shortCodeSchema,
@@ -207,6 +211,7 @@ export const replaceTeacherSchema = z.object({
 export type DepartmentFormValues = z.output<typeof departmentSchema>;
 export type DisciplineFormValues = z.output<typeof disciplineSchema>;
 export type ProgramFormValues = z.output<typeof programSchema>;
+export type GlobalProgramFormValues = z.output<typeof globalProgramSchema>;
 export type UpdateProgramFormValues = z.output<typeof updateProgramSchema>;
 export type ClassFormValues = z.output<typeof classSchema>;
 export type CourseFormValues = z.output<typeof courseSchema>;

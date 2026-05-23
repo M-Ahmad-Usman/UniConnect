@@ -2,6 +2,11 @@ import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
 import { validate } from "../../middleware/validate.js";
+import { uploadLimiter } from "../../middleware/rateLimiter.js";
+import {
+  uploadServerIcon,
+  validateImageMagicBytes,
+} from "../../middleware/upload.js";
 import {
   listServersSchema,
   serverIdParamSchema,
@@ -15,38 +20,34 @@ import {
   handleListServerChannels,
   handleListServerMembers,
   handleCreateChannel,
+  handleUpdateServerIcon,
 } from "./server.controller.js";
 
 const router = Router();
 
 // ─── Server Endpoints ──────────────────────────────────────────────────────
 
-router.get(
-  "/",
-  authenticate,
-  validate(listServersSchema),
-  handleListServers
-);
+router.get("/", authenticate, validate(listServersSchema), handleListServers);
 
 router.get(
   "/:id",
   authenticate,
   validate(serverIdParamSchema),
-  handleGetServer
+  handleGetServer,
 );
 
 router.get(
   "/:id/channels",
   authenticate,
   validate(listServerChannelsSchema),
-  handleListServerChannels
+  handleListServerChannels,
 );
 
 router.get(
   "/:id/members",
   authenticate,
   validate(listServerMembersSchema),
-  handleListServerMembers
+  handleListServerMembers,
 );
 
 // ─── Channel Creation ──────────────────────────────────────────────────────
@@ -56,7 +57,18 @@ router.post(
   authenticate,
   validate(createChannelSchema),
   authorize({ permission: "create:channel", serverIdFrom: "id" }),
-  handleCreateChannel
+  handleCreateChannel,
+);
+
+router.patch(
+  "/:id/icon",
+  authenticate,
+  validate(serverIdParamSchema),
+  authorize({ permission: "create:channel", serverIdFrom: "id" }),
+  uploadLimiter,
+  uploadServerIcon,
+  validateImageMagicBytes,
+  handleUpdateServerIcon,
 );
 
 export default router;

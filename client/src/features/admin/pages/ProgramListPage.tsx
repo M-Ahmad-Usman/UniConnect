@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Edit, Search } from 'lucide-react';
+import { Edit, Plus, Search } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ROUTES } from '@/lib/constants';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
@@ -10,16 +10,27 @@ import { useDepartments } from '../hooks/useDepartments';
 import {
   useDegreeLevels,
   useDisciplines,
+  useCreateGlobalProgram,
   usePrograms,
   useUpdateProgram,
 } from '../hooks/useAcademicCatalog';
-import { AdminPageHeader, DataState, PaginationControls, inputClassName } from '../components/AdminDataPrimitives';
-import { ProgramDialog } from '../components/CatalogDialogs';
+import {
+  AdminPageHeader,
+  DataState,
+  PaginationControls,
+  inputClassName,
+} from '../components/AdminDataPrimitives';
+import { GlobalProgramDialog, ProgramDialog } from '../components/CatalogDialogs';
 import type { ProgramDetail, ProgramListItem } from '@/types';
-import type { ProgramFormValues, UpdateProgramFormValues } from '../schemas';
+import type {
+  GlobalProgramFormValues,
+  ProgramFormValues,
+  UpdateProgramFormValues,
+} from '../schemas';
 
 export function ProgramListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [createOpen, setCreateOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<ProgramListItem | null>(null);
   const searchParamValue = searchParams.get('search') ?? '';
   const [searchValue, setSearchValue] = useState(searchParamValue);
@@ -32,6 +43,7 @@ export function ProgramListPage() {
   const departmentsQuery = useDepartments();
   const disciplinesQuery = useDisciplines();
   const degreeLevelsQuery = useDegreeLevels();
+  const createProgram = useCreateGlobalProgram();
   const updateProgram = useUpdateProgram(editingProgram?.id ?? 0);
   const programs = programsQuery.data?.data ?? [];
   const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
@@ -69,11 +81,22 @@ export function ProgramListPage() {
     await updateProgram.mutateAsync(values as UpdateProgramFormValues);
   }
 
+  async function handleCreate(values: GlobalProgramFormValues) {
+    const { departmentId: selectedDepartmentId, ...payload } = values;
+    await createProgram.mutateAsync({ departmentId: selectedDepartmentId, payload });
+  }
+
   return (
     <section className="space-y-5">
       <AdminPageHeader
         title="Programs"
-        description="Browse and update program codes and semester counts across departments."
+        description="Browse, create, and update program codes and semester counts across departments."
+        actions={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Create program
+          </Button>
+        }
       />
       <div className="rounded-lg border bg-background p-3">
         <div className="grid gap-3 lg:grid-cols-[minmax(16rem,1fr)_16rem]">
@@ -140,7 +163,12 @@ export function ProgramListPage() {
                         >
                           Curriculum
                         </Link>
-                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => setEditingProgram(program)}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setEditingProgram(program)}
+                        >
                           <Edit className="size-4" />
                           <span className="sr-only">Edit program</span>
                         </Button>
@@ -156,6 +184,15 @@ export function ProgramListPage() {
       <PaginationControls
         pagination={programsQuery.data?.pagination}
         onPageChange={(nextPage) => updateFilter({ page: nextPage })}
+      />
+      <GlobalProgramDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        departments={departments}
+        disciplines={disciplinesQuery.data ?? []}
+        degreeLevels={degreeLevelsQuery.data ?? []}
+        loading={createProgram.isPending}
+        onSubmit={handleCreate}
       />
       <ProgramDialog
         open={editingProgram !== null}

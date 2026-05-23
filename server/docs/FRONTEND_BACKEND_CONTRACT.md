@@ -1,14 +1,17 @@
 # Frontend-Backend Contract
 
 ## Purpose
+
 This document is the frontend integration contract for the UniConnect backend. It is derived from the active implementation in `server/src`.
 
 ## Base URL and Transport
+
 - Base API prefix: `/api`
 - Health check: `GET /api/health`
 - Realtime: Socket.IO on the same backend origin
 
 ## Authentication Model
+
 - Auth is cookie-based, not bearer-header based.
 - Cookies set by backend:
   - `access_token` (path `/api`)
@@ -30,6 +33,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 ## Response Contract
 
 ### Success
+
 ```json
 {
   "success": true,
@@ -39,6 +43,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 ```
 
 ### Paginated success
+
 ```json
 {
   "success": true,
@@ -53,6 +58,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 ```
 
 ### Error
+
 ```json
 {
   "success": false,
@@ -67,11 +73,13 @@ This document is the frontend integration contract for the UniConnect backend. I
 ```
 
 ## Pagination and Limits
+
 - Default page size: `20`
 - Max page size: `50`
 - Common query params: `page`, `limit`
 
 ## File Upload Constraints
+
 - Max file size: `5MB`
 - Max post attachments: `3`
 - Accepted images: JPEG, PNG, WEBP
@@ -79,22 +87,26 @@ This document is the frontend integration contract for the UniConnect backend. I
 - CSV upload route validates non-binary content
 
 ## Audit Logging
+
 - Privileged successful writes create persistent `AuditLog` records.
 - Covered areas include user activation, role changes, academic/class/catalog changes, society management, and channel management.
 - Audit summaries are field-level and redacted; passwords, tokens, cookies, secrets, and raw uploaded/post content are not logged.
 
 ## Rate Limits
+
 - General API: `100` requests/minute
 - Auth sensitive endpoints: `5` requests/15 minutes
 - Upload endpoints: `10` requests/minute
 - Rate-limit error code: `RATE_LIMIT_EXCEEDED`
 
 ## Frontend Behavior Notes
+
 - If `mustChangePassword` is true on login, user can only access change-password flow.
 - `POST /api/auth/forgot-password` is silent for unknown emails by design.
 - `POST /api/auth/refresh` requires `refresh_token` cookie and returns new cookies.
 
 ## Realtime Contract (Socket.IO)
+
 - Auth source: `access_token` cookie
 - User room: `user:{userId}`
 - Server events:
@@ -105,9 +117,11 @@ This document is the frontend integration contract for the UniConnect backend. I
 ## Endpoint Catalog
 
 ### System
+
 - `GET /api/health`
 
 ### Auth (`/api/auth`)
+
 - `POST /login`
   - Body: `{ email, password }`
 - `POST /logout`
@@ -120,6 +134,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Body: `{ currentPassword, newPassword }`
 
 ### Users (`/api/users`)
+
 - `POST /`
   - Body: `{ fullName, email, phone, gender, userType, departmentId?, classId?, rollNumber?, designation? }`
   - Student `rollNumber` uses NTU format such as `22-NTU-CS-1184`.
@@ -141,11 +156,13 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `PATCH /:id/reactivate`
 
 ### Disciplines (`/api/disciplines`)
+
 - `POST /`
   - Body: `{ name }`
 - `GET /`
 
 ### Departments (`/api/departments`)
+
 - `POST /`
   - Body: `{ name, code }`
 - `GET /`
@@ -158,6 +175,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `GET /:id/programs`
 
 ### Programs (`/api/programs`)
+
 - `PATCH /:id`
   - Body: `{ semesters?, code? }`
 - `GET /:id/curriculum`
@@ -167,6 +185,7 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `DELETE /:id/curriculum/:curriculumId`
 
 ### Classes (`/api/classes`)
+
 - `POST /`
   - Body: `{ programId, currentSemester, academicYear, admissionYear, section }`
 - `GET /`
@@ -199,6 +218,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Final-semester active classes only; locks class channels and keeps history visible.
 
 ### Courses (`/api/courses`)
+
 - `POST /`
   - Body: `{ title, code, creditHours, departmentId }`
 - `GET /`
@@ -208,6 +228,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Body: `{ title?, code?, creditHours? }`
 
 ### Societies (`/api/societies`)
+
 - `POST /`
   - Body: `{ name, description?, departmentId, presidentId, convenorId }`
   - Auth: admin or HOD for the target department
@@ -244,6 +265,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Returns same-department students with `StudentInfo` for president or same-department teachers with `TeacherInfo` for convenor
 
 ### Roles (`/api/roles`)
+
 - `GET /assignable`
   - Returns only caller-assignable role options.
   - Role values are `hod | program_director | cr | server_moderator | channel_moderator`.
@@ -282,6 +304,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Role changes emit `auth:roles-updated` to affected users so clients can refetch `/api/users/me`
 
 ### Permissions (`/api/permissions`)
+
 - `GET /me`
   - Returns grouped boolean capabilities for current-user navigation and UI gating.
   - Shape: `{ global, roleWorkspace, scopes }`.
@@ -290,6 +313,7 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Role changes emit `auth:roles-updated`; clients should refresh `/api/users/me`, `/api/permissions/me`, and active permission-sensitive queries.
 
 ### Servers (`/api/servers`)
+
 - `GET /`
   - Query: `page, limit, type?`
 - `GET /:id`
@@ -299,8 +323,13 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Query: `page, limit`
 - `POST /:id/channels`
   - Body: `{ name, description? }`
+- `PATCH /:id/icon`
+  - Multipart field: `serverIcon`
+  - Requires `create:channel` permission on the server
+  - Response: `{ id, iconUrl }`
 
 ### Channels (`/api/channels`)
+
 - `PATCH /:id`
   - Body: `{ name?, description? }`
 - `PATCH /:id/lock`
@@ -308,32 +337,40 @@ This document is the frontend integration contract for the UniConnect backend. I
 - `DELETE /:id`
 
 ### Channel Posts (mounted under `/api/channels`)
+
 - `POST /:id/posts`
   - Body: `{ title, content, priority? }`
   - Multipart field for attachments: `attachments`
+  - General channels accept posts from any active server member unless locked.
+  - New-post notification messages include both server and channel names.
 - `GET /:id/posts`
   - Query: `page, limit, search?, priority?, startDate?, endDate?`
+  - Response items include bounded `attachments[]` preview metadata plus `_count.attachments`
 
 ### Posts (`/api/posts`)
+
 - `GET /:id`
 - `PATCH /:id`
   - Body: `{ title?, content?, priority? }`
 - `DELETE /:id`
+  - Soft-deletes the post and removes linked `NEW_POST` notifications.
 - `PATCH /:id/pin`
   - Body: `{ isPinned: boolean }`
 - `POST /:id/attachments`
   - Multipart field: `attachments`
 
 ### Notifications (`/api/notifications`)
+
 - `GET /`
   - Query: `page, limit, type?, unreadOnly?`
-  - `NEW_POST` items include post channel and priority metadata for routing and urgent UI.
+  - `NEW_POST` items include post channel, server, and priority metadata for routing and urgent UI.
   - `SOCIETY_REQUEST_REVIEWED` items are emitted when a society join request is approved or rejected.
 - `GET /unread-count`
 - `PATCH /read-all`
 - `PATCH /:id/read`
 
 ### Notification Preferences (`/api/notification-preferences`)
+
 - `GET /`
   - Query: `serverId?, notificationType?`
 - `PATCH /`
@@ -344,11 +381,13 @@ This document is the frontend integration contract for the UniConnect backend. I
   - Missing preference means subscribed.
 
 ### Admin (`/api/admin`)
+
 - `GET /stats`
 - `GET /users`
   - Query: `page, limit, userType?, departmentId?, isActive?, search?`
 
 ## References
+
 - Error code catalog: `docs/API_ERROR_CODES.md`
 - Architecture conventions: `API_DEVELOPMENT_PLAN.md`
 - Progress and status: `PROGRESS.md`

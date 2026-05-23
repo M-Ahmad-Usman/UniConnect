@@ -2,12 +2,18 @@
 
 **Project:** UniConnect Frontend
 **Start Date:** 2026-03-07
-**Status:** Hardening Module 4 Complete
-**Current Phase:** Role management hardening verified; ready for Module 5 security hardening
+**Status:** Hardening Module 6 Implemented
+**Current Phase:** UI/accessibility hardening implemented; verification in progress
 
 ---
 
 ## Overview
+
+### 2026-05-21 - Hardening Module 6 UI and Accessibility Implemented
+- ✅ Added cookie-backed light/dark/system theme support with a top-bar theme control and dark-mode token refresh.
+- ✅ Added shared accessible tabs, improved form/data-state primitives, table captions, and reduced-motion handling.
+- ✅ Hardened society, class, and role workflows with semantic tabs, clearer labels/help text, responsive table/list behavior, and high-impact destructive confirmations.
+- ✅ Added Testing Library/jsdom component coverage and Module 6 Playwright keyboard/mobile/axe coverage.
 
 ### 2026-05-21 - Hardening Module 5 Security Implemented
 - ✅ Added frontend CSRF bootstrap, `X-XSRF-TOKEN` attachment, and one-time stale-token retry in the shared API client.
@@ -441,7 +447,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 #### Challenges & Solutions
 - Build-time Geist font warnings were resolved by moving the font import out of `index.css` and into `main.tsx`
-- The toast wrapper originally depended on `next-themes` without a mounted provider; adding `ThemeProvider` fixed that runtime gap
+- The toast wrapper now consumes the app theme provider so it follows the cookie-backed light/dark/system theme.
 - The initial route tree redirected authenticated users to `/servers` before that route existed; a concrete `/servers` placeholder route and fallback page fixed navigation correctness
 
 ### 2026-03-07 - Planning Phase Complete
@@ -486,7 +492,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 | Socket.IO client setup | ✅ Complete | 2026-03-07 | Same-origin socket client with notification/auth listeners |
 | Type definitions | ✅ Complete | 2026-03-07 | Backend-aligned type layer implemented under `src/types` |
 | Route tree + guards | ✅ Complete | 2026-03-08 | Default route fixed, `/servers` placeholder added, wildcard fallback added |
-| Error boundary + toast system | ✅ Complete | 2026-03-08 | ErrorBoundary mounted globally and Sonner wired through ThemeProvider |
+| Error boundary + toast system | ✅ Complete | 2026-03-08 | ErrorBoundary mounted globally and Sonner wired through the app theme provider |
 | Shared components | ✅ Complete | 2026-03-07 | EmptyState, LoadingSpinner, ConfirmDialog, RoleBadge, ErrorBoundary |
 | API endpoint functions | ⏳ Deferred | - | Planned for feature modules; not a blocker for Module 0 foundation |
 
@@ -497,7 +503,7 @@ This document tracks the implementation progress of the UniConnect frontend, log
 
 ### Challenges & Solutions
 - Initial `/` navigation redirected to a non-existent `/servers` page; a concrete placeholder route fixed the mismatch
-- `next-themes` was installed for Sonner theming but no provider was mounted; the app now wraps routing in `ThemeProvider`
+- The app now wraps routing in a cookie-backed theme provider so Sonner and shell controls share one resolved theme.
 - Vite emitted unresolved Geist font warnings during production build; importing `@fontsource-variable/geist/wght.css` from `main.tsx` resolved them
 
 ---

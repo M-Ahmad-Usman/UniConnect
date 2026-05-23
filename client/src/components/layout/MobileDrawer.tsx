@@ -28,7 +28,7 @@ export function MobileDrawer({
         <DialogPrimitive.Viewport className="fixed inset-0 z-50 flex justify-start">
           <DialogPrimitive.Popup
             className={cn(
-              'pointer-events-auto flex h-full w-[min(22rem,calc(100vw-1.5rem))] flex-col bg-background shadow-2xl outline-none',
+              'pointer-events-auto flex h-full w-[min(24rem,calc(100vw-1rem))] flex-col bg-background shadow-2xl outline-none',
               'data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left',
             )}
           >
