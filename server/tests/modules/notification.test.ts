@@ -39,10 +39,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 10 - Notifications", () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // POST CREATION → NOTIFICATION GENERATION (via EventEmitter)

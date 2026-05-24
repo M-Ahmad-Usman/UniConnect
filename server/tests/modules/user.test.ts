@@ -25,10 +25,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 2 - User Management", () => {
   describe("POST /api/users", () => {
     it("should allow admin to create a student with auto-memberships", async () => {

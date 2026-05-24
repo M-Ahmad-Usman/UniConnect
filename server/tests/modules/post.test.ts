@@ -38,10 +38,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 9 - Posts & Announcements", () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // POST /api/channels/:id/posts

@@ -29,10 +29,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 6 - Society Management", () => {
   // ─── POST /api/societies ─────────────────────────────────────────────
 

@@ -30,10 +30,6 @@ beforeAll(async () => {
   await resetDB();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 1 - Permission Policy Foundation", () => {
   it("returns global permission bootstrap for admin, HOD, PD, CR, society leadership, and ordinary student", async () => {
     const fixture = await createPermissionFixture();

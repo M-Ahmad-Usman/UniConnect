@@ -26,10 +26,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 12 - Admin Dashboard", () => {
   // ─── GET /api/admin/stats ──────────────────────────────────────────────
 

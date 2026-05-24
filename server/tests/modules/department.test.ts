@@ -94,10 +94,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 3 - Department & Program Management", () => {
   // ─── Discipline Endpoints ──────────────────────────────────────────────
 

@@ -37,10 +37,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
   // ─── PATCH /api/channels/:id ─────────────────────────────────────────
 

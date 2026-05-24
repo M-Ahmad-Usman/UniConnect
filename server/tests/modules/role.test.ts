@@ -32,10 +32,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Module 7 - Role Management", () => {
   describe("Module 4 hardening scoped option endpoints", () => {
     it("should return admin assignable roles without society leadership roles", async () => {

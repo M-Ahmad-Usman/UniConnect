@@ -2,10 +2,6 @@ import request from "supertest";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/prisma.js";
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 describe("Express App Foundation", () => {
   describe("GET /api/health", () => {
     it("should return 200 with success response", async () => {

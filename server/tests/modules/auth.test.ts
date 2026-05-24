@@ -12,10 +12,6 @@ beforeAll(async () => {
   await resetDB();
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 // ─── Helper ─────────────────────────────────────────────────────────────────
 
 function extractCookies(res: request.Response): Record<string, string> {
