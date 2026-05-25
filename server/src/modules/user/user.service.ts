@@ -7,6 +7,7 @@ import { emailService } from "../../config/email.js";
 import { cloudinaryService } from "../../config/cloudinary.js";
 import { BCRYPT_ROUNDS, TEMP_PASSWORD_PREFIX } from "../../shared/constants.js";
 import {
+  ApiErrorCode,
   ConflictError,
   ForbiddenError,
   NotFoundError,
@@ -162,7 +163,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
   });
 
   if (existingUser) {
-    throw new ConflictError("A user with this email already exists");
+    throw new ConflictError("A user with this email already exists", ApiErrorCode.DUPLICATE_EMAIL);
   }
 
   const tempPassword = generateTempPassword();
@@ -482,7 +483,7 @@ export async function listUsers(
     const departmentId = await resolveHodDepartmentId(requestingUser.id);
     where.departmentId = departmentId;
   } else {
-    throw new ForbiddenError("Insufficient permissions");
+    throw new ForbiddenError("You do not have permission to view this user", ApiErrorCode.SCOPE_FORBIDDEN);
   }
 
   if (filters.search) {
@@ -558,7 +559,7 @@ export async function getUserById(userId: number, requestingUser: AuthUser) {
   }
 
   if (requestingUser.userType !== "TEACHER") {
-    throw new ForbiddenError("Insufficient permissions");
+    throw new ForbiddenError("You do not have permission to deactivate this user", ApiErrorCode.SCOPE_FORBIDDEN);
   }
 
   const departmentId = await resolveHodDepartmentId(requestingUser.id);

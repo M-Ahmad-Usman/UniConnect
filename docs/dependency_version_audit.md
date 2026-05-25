@@ -1,6 +1,6 @@
 # Dependency Version Audit
 
-**Date:** 2026-03-07
+**Date:** 2026-05-25
 
 This document records the direct dependency audit for the UniConnect client and server. It identifies which packages are already current, which packages were safely updated during this audit, and which major upgrades should be deferred until their breaking changes are intentionally handled.
 
@@ -14,6 +14,8 @@ This document records the direct dependency audit for the UniConnect client and 
 
 - The audited safe updates have been applied.
 - The server direct dependency set is current after those updates.
+- Optional Sentry telemetry packages were added during Module 7 and are enabled
+  only when DSN/release environment variables are configured.
 - The remaining outdated direct dependencies are all intentional deferrals on the client side.
 - The main upgrade that should **not** be applied automatically right now is `eslint` / `@eslint/js` v10.
 - `@types/node` v25 is intentionally deferred because the project currently targets Node 20, and newer type definitions can expose runtime APIs that are not actually available in production.
@@ -27,6 +29,8 @@ This document records the direct dependency audit for the UniConnect client and 
 | `eslint-plugin-react-refresh` | `^0.5.2` | `0.5.2` | Current |
 | `globals` | `^17.4.0` | `17.4.0` | Current |
 | `@types/node` | `^24.10.1` | `25.3.5` | Defer |
+| `@sentry/react` | `^10.53.1` | `10.53.1` | Current |
+| `@sentry/vite-plugin` | `^5.3.0` | `5.3.0` | Current |
 
 ## Server Audit
 
@@ -40,6 +44,7 @@ This document records the direct dependency audit for the UniConnect client and 
 | `@types/multer` | `^2.1.0` | `2.1.0` | Current |
 | `@types/pg` | `^8.18.0` | `8.18.0` | Current |
 | `@types/supertest` | `^6.0.3` | `^6.0.3` installed; no remaining action from current audit | Current for this repo |
+| `@sentry/node` | `^10.53.1` | `10.53.1` | Current |
 
 ## Applied Safe Updates
 
@@ -60,6 +65,14 @@ The following direct dependency updates were applied during this audit:
 - `resend` from `^6.9.2` to `^6.9.3`
 - `@types/multer` from `^2.0.0` to `^2.1.0`
 - `@types/pg` from `^8.16.0` to `^8.18.0`
+
+### Module 7 Additions
+
+- `@sentry/node` at `^10.53.1` for optional backend error telemetry.
+- `@sentry/react` at `^10.53.1` for optional frontend error telemetry.
+- `@sentry/vite-plugin` at `^5.3.0` for optional release source-map upload.
+
+These packages are inert unless Sentry environment variables are configured.
 
 ## Breaking Changes and Upgrade Notes
 
@@ -200,6 +213,15 @@ After applying the safe updates, the remaining intentionally deferred direct dep
 - `@eslint/js` 10.x
 - `eslint` 10.x
 - `@types/node` 25.x
+
+## npm Audit Notes
+
+After adding optional Sentry packages, npm reported existing audit findings:
+- server: `7` moderate severity findings
+- client: `1` moderate severity finding
+
+Do not run `npm audit fix` blindly. Treat remediation as a scoped dependency
+task because automated fixes can introduce unrelated upgrades or behavior changes.
 
 ## Validation Checklist After Applying Safe Updates
 

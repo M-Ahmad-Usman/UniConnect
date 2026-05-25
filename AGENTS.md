@@ -342,13 +342,17 @@ import { PasswordField } from './PasswordField';
 ## Reference Documents
 | Document | Location |
 |----------|----------|
+| Documentation index | `docs/README.md` |
+| Release readiness | `docs/release_readiness.md` |
+| Release log | `docs/release_log.md` |
+| Security posture | `docs/security.md` |
+| Backend summary | `docs/backend.md` |
+| Frontend summary | `docs/frontend.md` |
 | Frontend architecture | `client/ARCHITECTURE.md` |
-| Frontend plan | `client/PLAN.md` |
-| Frontend progress | `client/PROGRESS.md` |
+| Frontend implementation plan | `client/FRONTEND_IMPLEMENTATION_PLAN.md` |
 | API contract | `client/API_CONTRACT.md` |
-| Backend architecture | `server/API_DEVELOPMENT_PLAN.md` |
-| Backend progress | `server/PROGRESS.md` |
+| Backend architecture | `server/BACKEND_ARCHITECTURE.md` |
 | API error codes | `server/docs/API_ERROR_CODES.md` |
 | Frontend-backend contract | `server/docs/FRONTEND_BACKEND_CONTRACT.md` |
-| Database schema | `docs/schema.md` |
+| Database ERD | `docs/database_erd.md` |
 | Functional requirements | `docs/functional_requirements.md` |

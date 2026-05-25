@@ -8,6 +8,7 @@ import { emailService } from "../../config/email.js";
 import { UnauthorizedError } from "../../shared/errors/index.js";
 import { parseExpiry } from "../../shared/utils/parseExpiry.js";
 import { BCRYPT_ROUNDS } from "../../shared/constants.js";
+import { recordAuditLog, type AuditContext } from "../audit/audit.service.js";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -156,16 +157,32 @@ export async function refresh(refreshTokenCookie: string) {
 
 // ─── Logout ─────────────────────────────────────────────────────────────────
 
-export async function logout(refreshTokenCookie: string | undefined): Promise<void> {
+export async function logout(
+  refreshTokenCookie: string | undefined,
+  userId: number,
+  auditContext: AuditContext
+): Promise<void> {
   if (!refreshTokenCookie) return;
 
   const tokenHash = hashToken(refreshTokenCookie);
 
   // Revoke if exists — idempotent
-  await prisma.refreshToken.updateMany({
+  const revokeResult = await prisma.refreshToken.updateMany({
     where: { tokenHash, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+
+  if (revokeResult.count > 0) {
+    await recordAuditLog(
+      {
+        action: "auth.refresh_token_revoked_logout",
+        targetType: "User",
+        targetId: userId,
+        summary: { revokedRefreshTokens: revokeResult.count, reason: "logout" },
+      },
+      auditContext
+    );
+  }
 
   console.warn("[AUTH] Session revoked", { reason: "logout", timestamp: new Date().toISOString() });
 }
@@ -196,13 +213,17 @@ export async function forgotPassword(email: string): Promise<void> {
   } catch (error) {
     // Log but don't throw — forgotPassword must always return silently
     // to prevent user enumeration via error responses
-    console.error("Failed to send reset-password email:", error);
+    console.error("[AUTH] Failed to send reset-password email", { error });
   }
 }
 
 // ─── Reset Password ────────────────────────────────────────────────────────
 
-export async function resetPassword(token: string, newPassword: string): Promise<void> {
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+  auditContext: AuditContext
+): Promise<void> {
   let payload: jwt.JwtPayload;
   try {
     payload = jwt.verify(token, env.RESET_PASSWORD_SECRET) as jwt.JwtPayload;
@@ -211,9 +232,14 @@ export async function resetPassword(token: string, newPassword: string): Promise
   }
 
   // Verify token matches stored hash (one-time use)
+  const userId = Number(payload.id);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new UnauthorizedError("Invalid or expired reset token");
+  }
+
   const user = await prisma.user.findUnique({
-    where: { id: payload.id },
-    select: { passwordResetTokenHash: true },
+    where: { id: userId },
+    select: { passwordResetTokenHash: true, mustChangePassword: true },
   });
 
   const tokenHash = hashToken(token);
@@ -223,19 +249,35 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-  // Clear the hash after successful reset (one-time use)
-  await prisma.user.update({
-    where: { id: payload.id },
-    data: { passwordHash, mustChangePassword: false, passwordResetTokenHash: null },
+  await prisma.$transaction(async (tx) => {
+    // Clear the hash after successful reset (one-time use)
+    await tx.user.update({
+      where: { id: userId },
+      data: { passwordHash, mustChangePassword: false, passwordResetTokenHash: null },
+    });
+
+    // Revoke all refresh tokens for security (force re-login)
+    const revokeResult = await tx.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    await recordAuditLog(
+      {
+        action: "auth.password_reset_completed",
+        targetType: "User",
+        targetId: userId,
+        summary: {
+          mustChangePasswordBefore: user.mustChangePassword,
+          revokedRefreshTokens: revokeResult.count,
+        },
+      },
+      { ...auditContext, actorUserId: null },
+      tx
+    );
   });
 
-  // Revoke all refresh tokens for security (force re-login)
-  await prisma.refreshToken.updateMany({
-    where: { userId: payload.id, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
-
-  console.warn("[AUTH] Password reset completed", { userId: payload.id, timestamp: new Date().toISOString() });
+  console.warn("[AUTH] Password reset completed", { userId, timestamp: new Date().toISOString() });
 }
 
 // ─── Change Password ───────────────────────────────────────────────────────
@@ -243,7 +285,8 @@ export async function resetPassword(token: string, newPassword: string): Promise
 export async function changePassword(
   userId: number,
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
+  auditContext: AuditContext
 ): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
@@ -258,15 +301,31 @@ export async function changePassword(
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { passwordHash, mustChangePassword: false },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { passwordHash, mustChangePassword: false },
+    });
 
-  // Revoke all refresh tokens for this user (force re-login on other devices)
-  await prisma.refreshToken.updateMany({
-    where: { userId, revokedAt: null },
-    data: { revokedAt: new Date() },
+    // Revoke all refresh tokens for this user (force re-login on other devices)
+    const revokeResult = await tx.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    await recordAuditLog(
+      {
+        action: "auth.password_changed",
+        targetType: "User",
+        targetId: userId,
+        summary: {
+          mustChangePasswordBefore: user.mustChangePassword,
+          revokedRefreshTokens: revokeResult.count,
+        },
+      },
+      auditContext,
+      tx
+    );
   });
 
   console.warn("[AUTH] Password changed", { userId, timestamp: new Date().toISOString() });

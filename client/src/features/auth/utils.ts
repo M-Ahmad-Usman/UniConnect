@@ -1,5 +1,6 @@
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
 import { ApiError } from '@/types';
+import { getDisplayErrorMessage } from '@/lib/api-error';
 
 interface ValidationDetail {
   field?: unknown;
@@ -10,15 +11,7 @@ export function getApiErrorMessage(
   error: unknown,
   fallback = 'Something went wrong. Please try again.',
 ) {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
+  return getDisplayErrorMessage(error, fallback);
 }
 
 export function applyApiValidationErrors<TFieldValues extends FieldValues>(

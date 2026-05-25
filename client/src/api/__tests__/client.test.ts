@@ -87,4 +87,52 @@ describe('apiClient CSRF handling', () => {
     expect(calls).toBe(2);
     expect(csrfSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('normalizes API errors with backend request IDs', async () => {
+    installDocumentCookie('XSRF-TOKEN=csrf-token');
+
+    apiClient.defaults.adapter = async (config) =>
+      Promise.reject(
+        new AxiosError('Conflict', undefined, config, undefined, {
+          config,
+          data: {
+            success: false,
+            error: {
+              code: 'DUPLICATE_EMAIL',
+              message: 'A user with this email already exists',
+              requestId: 'req-12345678',
+            },
+          },
+          headers: { 'x-request-id': 'req-12345678' },
+          status: 409,
+          statusText: 'Conflict',
+        }),
+      );
+
+    await expect(apiClient.post('/users', {})).rejects.toMatchObject({
+      code: 'DUPLICATE_EMAIL',
+      message: 'A user with this email already exists',
+      statusCode: 409,
+      requestId: 'req-12345678',
+    });
+  });
+
+  it('uses a safe fallback for malformed error payloads', async () => {
+    apiClient.defaults.adapter = async (config) =>
+      Promise.reject(
+        new AxiosError('Server Error', undefined, config, undefined, {
+          config,
+          data: { message: 'raw failure' },
+          headers: {},
+          status: 500,
+          statusText: 'Server Error',
+        }),
+      );
+
+    await expect(apiClient.get('/broken')).rejects.toMatchObject({
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred',
+      statusCode: 500,
+    });
+  });
 });

@@ -216,6 +216,7 @@ describe("POST /api/auth/logout", () => {
 
   it("should return 200 and clear cookies", async () => {
     const cookies = await loginAs("logout@test.com", PASSWORD);
+    const user = await prisma.user.findUnique({ where: { email: "logout@test.com" } });
 
     const res = await request(app)
       .post("/api/auth/logout")
@@ -228,6 +229,15 @@ describe("POST /api/auth/logout", () => {
     const setCookies = res.headers["set-cookie"] as unknown as string[];
     const accessCookie = setCookies?.find((c) => c.startsWith("access_token="));
     expect(accessCookie).toBeDefined();
+
+    const auditLog = await prisma.auditLog.findFirst({
+      where: {
+        action: "auth.refresh_token_revoked_logout",
+        targetType: "User",
+        targetId: String(user!.id),
+      },
+    });
+    expect(auditLog).not.toBeNull();
   });
 
   it("should return 401 without auth cookie", async () => {
@@ -259,6 +269,17 @@ describe("PATCH /api/auth/change-password", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+
+    const user = await prisma.user.findUnique({ where: { email: "changepw@test.com" } });
+    const auditLog = await prisma.auditLog.findFirst({
+      where: {
+        action: "auth.password_changed",
+        targetType: "User",
+        targetId: String(user!.id),
+      },
+    });
+    expect(auditLog).not.toBeNull();
+    expect(JSON.stringify(auditLog!.summary)).not.toMatch(/NewPass|OldPass|passwordHash|tokenHash/i);
 
     // Old password should no longer work
     const loginRes = await request(app)
@@ -374,6 +395,17 @@ describe("POST /api/auth/reset-password", () => {
     // Hash should be cleared after use
     const updated = await prisma.user.findUnique({ where: { id: user!.id } });
     expect(updated!.passwordResetTokenHash).toBeNull();
+
+    const auditLog = await prisma.auditLog.findFirst({
+      where: {
+        action: "auth.password_reset_completed",
+        targetType: "User",
+        targetId: String(user!.id),
+      },
+    });
+    expect(auditLog).not.toBeNull();
+    expect(auditLog!.actorUserId).toBeNull();
+    expect(JSON.stringify(auditLog!.summary)).not.toMatch(/NewReset|resetToken|tokenHash|passwordHash/i);
   });
 
   it("should return 401 for expired token", async () => {
@@ -467,7 +499,7 @@ describe("First-login mustChangePassword guard", () => {
       .set("Cookie", cookies);
 
     expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("FORBIDDEN");
+    expect(res.body.error.code).toBe("PASSWORD_CHANGE_REQUIRED");
   });
 
   it("should allow access to change-password when mustChangePassword is true", async () => {

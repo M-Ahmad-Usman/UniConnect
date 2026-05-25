@@ -1,8 +1,10 @@
 import request from "supertest";
 import express from "express";
 import { errorHandler } from "../../src/middleware/errorHandler.js";
+import { requestId } from "../../src/middleware/requestId.js";
 import {
   AppError,
+  ApiErrorCode,
   NotFoundError,
   UnauthorizedError,
   ForbiddenError,
@@ -13,6 +15,7 @@ import {
 function createTestApp(errorToThrow: Error) {
   const app = express();
   app.use(express.json());
+  app.use(requestId);
 
   app.get("/test", () => {
     throw errorToThrow;
@@ -24,16 +27,14 @@ function createTestApp(errorToThrow: Error) {
 
 describe("Error Handler Middleware", () => {
   it("should format AppError into standard JSON response", async () => {
-    const app = createTestApp(new AppError("Test error", 418, "TEST_ERROR"));
+    const app = createTestApp(new AppError("Test error", 418, ApiErrorCode.INTERNAL_ERROR));
     const res = await request(app).get("/test");
 
     expect(res.status).toBe(418);
-    expect(res.body).toEqual({
-      success: false,
-      error: {
-        code: "TEST_ERROR",
-        message: "Test error",
-      },
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatchObject({
+      code: "INTERNAL_ERROR",
+      message: "Test error",
     });
   });
 
@@ -90,8 +91,8 @@ describe("Error Handler Middleware", () => {
     const res = await request(app).get("/test");
 
     expect(res.status).toBe(409);
-    expect(res.body.error.code).toBe("CONFLICT");
-    expect(res.body.error.message).toBe("A record with these values already exists");
+    expect(res.body.error.code).toBe("DUPLICATE_EMAIL");
+    expect(res.body.error.message).toBe("A user with this email already exists");
   });
 
   it("should handle Prisma not found error (P2025) → 404", async () => {
@@ -114,5 +115,14 @@ describe("Error Handler Middleware", () => {
     expect(res.body.error.code).toBe("INTERNAL_ERROR");
     expect(res.body.error.message).toBe("An unexpected error occurred");
     expect(res.body.error.debug).toBe("Something broke");
+  });
+
+  it("should include a trusted request ID in error responses", async () => {
+    const app = createTestApp(new NotFoundError("User not found"));
+    const res = await request(app).get("/test").set("X-Request-ID", "module7-test-request");
+
+    expect(res.status).toBe(404);
+    expect(res.headers["x-request-id"]).toBe("module7-test-request");
+    expect(res.body.error.requestId).toBe("module7-test-request");
   });
 });

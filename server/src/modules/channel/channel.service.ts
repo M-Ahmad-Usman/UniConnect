@@ -1,5 +1,5 @@
 import { prisma } from "../../config/prisma.js";
-import { NotFoundError, ValidationError } from "../../shared/errors/index.js";
+import { ApiErrorCode, NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { getUserRoles } from "../../middleware/authorize.js";
 import type { UserRole } from "../../shared/types/index.js";
 
@@ -98,7 +98,7 @@ export async function lockChannel(channelId: number, caller: CallerInfo) {
   const channel = await findActiveChannelOrThrow(channelId);
 
   if (channel.isLocked) {
-    throw new ValidationError("Channel is already locked");
+    throw new ValidationError("Channel is already locked", undefined, ApiErrorCode.CHANNEL_LOCKED);
   }
 
   const updated = await prisma.channel.update({

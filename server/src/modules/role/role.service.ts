@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import {
+  ApiErrorCode,
   ConflictError,
   ForbiddenError,
   NotFoundError,
@@ -332,7 +333,10 @@ function buildUserSearch(search: string | undefined): Prisma.UserWhereInput | un
 async function assertCallerCanOpenRoleManagement(caller: CallerInfo): Promise<void> {
   const options = await getAssignableRoles(caller);
   if (options.length === 0) {
-    throw new ForbiddenError("Insufficient permissions to manage roles");
+    throw new ForbiddenError(
+      "You do not have permission to manage roles in this scope",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 }
 
@@ -377,7 +381,10 @@ async function assertCallerCanUseModeratorServer(
 ): Promise<void> {
   const where = await getCallerModeratorServerWhere(caller);
   if (!where) {
-    throw new ForbiddenError("Insufficient permissions to manage moderators for this server");
+    throw new ForbiddenError(
+      "You do not have permission to manage moderators for this server",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   const server = await prisma.server.findFirst({
@@ -386,7 +393,10 @@ async function assertCallerCanUseModeratorServer(
   });
 
   if (!server) {
-    throw new ForbiddenError("Insufficient permissions to manage moderators for this server");
+    throw new ForbiddenError(
+      "You do not have permission to manage moderators for this server",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 }
 
@@ -1245,7 +1255,10 @@ async function assertCallerCanAssignPD(
   const hodDeptId = await getCallerHODDepartmentId(caller.id);
   if (hodDeptId === targetDepartmentId) return;
 
-  throw new ForbiddenError("Insufficient permissions to assign program director");
+  throw new ForbiddenError(
+    "You do not have permission to assign a program director for this scope",
+    ApiErrorCode.SCOPE_FORBIDDEN
+  );
 }
 
 async function assertCallerCanAssignCR(
@@ -1263,7 +1276,10 @@ async function assertCallerCanAssignCR(
   const pdProgram = await getCallerPDProgram(caller.id);
   if (pdProgram && pdProgram.id === targetClassProgramId) return;
 
-  throw new ForbiddenError("Insufficient permissions to assign CR");
+  throw new ForbiddenError(
+    "You do not have permission to assign a class representative for this scope",
+    ApiErrorCode.SCOPE_FORBIDDEN
+  );
 }
 
 async function assertCallerCanAssignModerator(
@@ -1303,7 +1319,10 @@ async function assertCallerCanAssignModerator(
   const societyLeadership = await getCallerSocietyLeadership(caller.id);
   if (societyLeadership && societyLeadership.serverId === targetServerId) return;
 
-  throw new ForbiddenError("Insufficient permissions to assign moderator");
+  throw new ForbiddenError(
+    "You do not have permission to assign a moderator for this scope",
+    ApiErrorCode.SCOPE_FORBIDDEN
+  );
 }
 
 // ─── Assign Role ───────────────────────────────────────────────────────────
@@ -1760,7 +1779,10 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
   if (caller.userType !== "ADMIN") {
     const hodDeptId = await getCallerHODDepartmentId(caller.id);
     if (!hodDeptId) {
-      throw new ForbiddenError("Insufficient permissions to view user roles");
+      throw new ForbiddenError(
+        "You do not have permission to view roles for this user",
+        ApiErrorCode.SCOPE_FORBIDDEN
+      );
     }
     if (targetUser.departmentId !== hodDeptId) {
       throw new ForbiddenError("You can only view roles for users in your department");

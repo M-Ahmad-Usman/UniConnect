@@ -7,7 +7,7 @@ import {
   MAX_FILE_SIZE,
   MAX_IMAGE_PIXELS,
 } from "../shared/constants.js";
-import { ValidationError } from "../shared/errors/index.js";
+import { ApiErrorCode, ValidationError } from "../shared/errors/index.js";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_CSV_TYPES = [
@@ -19,12 +19,18 @@ const ALLOWED_CSV_TYPES = [
 function validateImageDimensions(buffer: Buffer): void {
   const dimensions = imageSize(buffer);
   if (!dimensions.width || !dimensions.height) {
-    throw new ValidationError("Unable to determine image dimensions");
+    throw new ValidationError(
+      "Unable to determine image dimensions",
+      undefined,
+      ApiErrorCode.UPLOAD_UNSUPPORTED_TYPE
+    );
   }
 
   if (dimensions.width * dimensions.height > MAX_IMAGE_PIXELS) {
     throw new ValidationError(
       "Image dimensions exceed the maximum allowed pixel count",
+      undefined,
+      ApiErrorCode.UPLOAD_IMAGE_TOO_LARGE
     );
   }
 }
@@ -32,7 +38,11 @@ function validateImageDimensions(buffer: Buffer): void {
 function handleUploadErrors(error: unknown): never {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
-      throw new ValidationError("File size exceeds maximum allowed size");
+      throw new ValidationError(
+        "File size exceeds maximum allowed size",
+        undefined,
+        ApiErrorCode.UPLOAD_FILE_TOO_LARGE
+      );
     }
     throw new ValidationError(error.message);
   }
@@ -74,7 +84,13 @@ const imageUpload = multer({
       return;
     }
 
-    cb(new ValidationError("Only JPEG, PNG, and WEBP images are allowed"));
+    cb(
+      new ValidationError(
+        "Only JPEG, PNG, and WEBP images are allowed",
+        undefined,
+        ApiErrorCode.UPLOAD_UNSUPPORTED_TYPE
+      )
+    );
   },
 });
 
@@ -102,7 +118,9 @@ const csvUpload = multer({
       return;
     }
 
-    cb(new ValidationError("Only CSV files are allowed"));
+    cb(
+      new ValidationError("Only CSV files are allowed", undefined, ApiErrorCode.UPLOAD_UNSUPPORTED_TYPE)
+    );
   },
 });
 
@@ -129,6 +147,8 @@ export async function validateImageMagicBytes(
     if (!detected || !ALLOWED_IMAGE_TYPES.includes(detected.mime)) {
       throw new ValidationError(
         "File content does not match an allowed image type",
+        undefined,
+        ApiErrorCode.UPLOAD_UNSUPPORTED_TYPE
       );
     }
 
@@ -160,6 +180,8 @@ export async function validateCSVNotBinary(
     // A real CSV has no magic bytes — if we detect a binary format, reject it
     throw new ValidationError(
       "File appears to be a binary format, not a valid CSV",
+      undefined,
+      ApiErrorCode.UPLOAD_UNSUPPORTED_TYPE
     );
   }
 

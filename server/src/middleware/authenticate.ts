@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
-import { UnauthorizedError, ForbiddenError } from "../shared/errors/index.js";
+import { ApiErrorCode, UnauthorizedError, ForbiddenError } from "../shared/errors/index.js";
 import type { AuthUser } from "../shared/types/index.js";
 
 interface AccessTokenPayload {
@@ -32,7 +32,10 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
 
     // Block all non-change-password routes when mustChangePassword is true
     if (payload.mustChangePassword && !req.path.endsWith("/change-password")) {
-      throw new ForbiddenError("Password change required before accessing this resource");
+      throw new ForbiddenError(
+        "Password change required before accessing this resource",
+        ApiErrorCode.PASSWORD_CHANGE_REQUIRED
+      );
     }
 
     next();

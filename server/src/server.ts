@@ -4,6 +4,7 @@ import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { prisma } from "./config/prisma.js";
 import { initializeSocket, getIO } from "./socket/index.js";
+import { captureException } from "./config/telemetry.js";
 
 const server = http.createServer(app);
 
@@ -25,7 +26,7 @@ const gracefulShutdown = async (signal: string) => {
 
   // Force exit if graceful shutdown takes too long
   const forceExit = setTimeout(() => {
-    console.error("Graceful shutdown timed out. Forcing exit.");
+    console.error("[SERVER] Graceful shutdown timed out. Forcing exit.");
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS);
   forceExit.unref();
@@ -46,11 +47,13 @@ process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 // ─── Process Error Handlers ─────────────────────────────────────────────────
 process.on("unhandledRejection", (reason) => {
-  console.error("Unhandled Rejection:", reason);
+  console.error("[SERVER] Unhandled rejection", { reason });
+  captureException(reason, { source: "unhandledRejection" });
   process.exit(1);
 });
 
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  console.error("[SERVER] Uncaught exception", { error });
+  captureException(error, { source: "uncaughtException" });
   process.exit(1);
 });

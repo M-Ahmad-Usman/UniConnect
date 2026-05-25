@@ -2,19 +2,37 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import path from 'path';
 
 const proxyTarget = process.env.VITE_PROXY_TARGET ?? 'http://localhost:4000';
+const sentrySourceMapsEnabled = Boolean(
+  process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT,
+);
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [tailwindcss(), react()],
+  plugins: [
+    tailwindcss(),
+    react(),
+    ...(sentrySourceMapsEnabled
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: { name: process.env.VITE_SENTRY_RELEASE },
+          }),
+        ]
+      : []),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
+    sourcemap: sentrySourceMapsEnabled,
     rollupOptions: {
       output: {
         manualChunks(id) {

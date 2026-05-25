@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { captureException } from '@/lib/telemetry';
 
 interface Props {
   children: ReactNode;
@@ -22,7 +23,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('[UI] ErrorBoundary caught an error', { error, errorInfo });
+    captureException(error, { componentStack: errorInfo.componentStack });
   }
 
   handleReload = () => {

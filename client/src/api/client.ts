@@ -16,6 +16,7 @@ const CSRF_COOKIE_NAME = 'XSRF-TOKEN';
 const CSRF_HEADER_NAME = 'X-XSRF-TOKEN';
 const CSRF_EXCLUDED_PATHS = new Set(['/auth/csrf']);
 const UNSAFE_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+const REQUEST_ID_HEADER = 'x-request-id';
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -60,6 +61,35 @@ async function fetchCsrfToken() {
   }
 
   return token;
+}
+
+function normalizeApiError(error: unknown): ApiError {
+  if (!axios.isAxiosError(error)) {
+    return new ApiError(
+      'INTERNAL_ERROR',
+      error instanceof Error ? error.message : 'An unexpected error occurred',
+      [],
+      500,
+    );
+  }
+
+  const responseError = error.response?.data?.error;
+  const requestId =
+    typeof responseError?.requestId === 'string'
+      ? responseError.requestId
+      : typeof error.response?.headers?.[REQUEST_ID_HEADER] === 'string'
+        ? error.response.headers[REQUEST_ID_HEADER]
+        : undefined;
+
+  return new ApiError(
+    typeof responseError?.code === 'string' ? responseError.code : 'INTERNAL_ERROR',
+    typeof responseError?.message === 'string'
+      ? responseError.message
+      : 'An unexpected error occurred',
+    Array.isArray(responseError?.details) ? responseError.details : [],
+    error.response?.status ?? 500,
+    requestId,
+  );
 }
 
 async function ensureCsrfToken(forceRefresh = false) {
@@ -159,13 +189,6 @@ apiClient.interceptors.response.use(
     }
 
     // ─── Normalize error into ApiError ────────────────────────────────────
-    const apiError = new ApiError(
-      error.response?.data?.error?.code ?? 'INTERNAL_ERROR',
-      error.response?.data?.error?.message ?? 'An unexpected error occurred',
-      error.response?.data?.error?.details ?? [],
-      error.response?.status ?? 500,
-    );
-
-    return Promise.reject(apiError);
+    return Promise.reject(normalizeApiError(error));
   },
 );

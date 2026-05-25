@@ -1,34 +1,75 @@
 # UniConnect
 
-UniConnect is a full-stack university collaboration platform.
+UniConnect is a Discord-like university communication platform for National
+Textile University. It organizes official communication into department, class,
+and society servers with scoped role-based access control.
 
-Current status:
-- Backend: complete
-- Frontend: in progress
+## Status
+- Backend: complete and hardened.
+- Frontend: complete and hardened.
+- Full-system hardening Modules 1-7: complete.
+- Current follow-ups are tracked through the release readiness and release log
+  docs.
 
-## Project Structure
+## Repository Layout
+```text
+UniConnect-development/
+├── client/   # React 19 + Vite frontend
+├── server/   # Express 5 + Prisma backend
+├── docs/     # Project-level docs, release readiness, security, requirements
+└── AGENTS.md # Coding-agent operating instructions
+```
 
-- `server/` — Node.js + TypeScript + Prisma API
-- `docs/` — requirements, proposal, and schema docs
+This is not a root workspace. Run app commands inside the relevant directory.
 
-## Quick Start (Current)
+## First Docs To Read
+- Project documentation index: `docs/README.md`
+- Release readiness checklist: `docs/release_readiness.md`
+- Active release log: `docs/release_log.md`
+- Security posture: `docs/security.md`
+- Backend summary: `docs/backend.md`
+- Frontend summary: `docs/frontend.md`
 
-Since frontend is not completed yet, run backend only for now.
+## Backend Quick Start
+```bash
+cd server
+npm ci
+docker compose up -d
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
 
-1. Go to backend:
-	- `cd server`
-2. Install dependencies:
-	- `npm install`
-3. Start database:
-	- `docker compose up -d`
-4. Apply dev DB migrations and seed:
-	- `npx prisma migrate deploy`
-	- `npm run db:seed`
-5. Apply test DB migrations (required before first full test run):
-	- `npm run db:migrate:test`
-6. Start server:
-	- `npm run dev`
-7. Run tests:
-	- `npm test`
+Useful backend checks:
+```bash
+cd server
+timeout 120 npm run build
+timeout 120 npm test
+```
 
-For backend-specific notes, see `server/README.md`.
+## Frontend Quick Start
+```bash
+cd client
+npm ci
+npm run dev
+```
+
+Useful frontend checks:
+```bash
+cd client
+timeout 120 npm run type-check
+timeout 120 npm run lint
+timeout 120 npm run test
+timeout 120 npm run build
+```
+
+## Runtime Model
+- Local frontend uses the Vite proxy for `/api` and `/api/socket.io`.
+- Production default is same-origin frontend/backend deployment.
+- Auth is cookie-based with CSRF protection for unsafe methods.
+- Optional Sentry telemetry is disabled unless DSN environment variables are set.
+
+## Documentation Rule
+Root `docs/` owns cross-system navigation, security posture, and release state.
+Backend-local and frontend-local docs remain authoritative for subsystem-specific
+implementation contracts.

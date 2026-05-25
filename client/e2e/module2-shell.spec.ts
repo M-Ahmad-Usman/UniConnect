@@ -46,7 +46,7 @@ test.describe('Module 2 shell flows', () => {
 
     await page.getByRole('button', { name: 'Open navigation' }).click();
     await expect(page.getByRole('heading', { name: 'Servers' })).toBeVisible();
-    await expect(page.getByText(module2Fixtures.shellServerName)).toBeVisible();
+    await expect(page.getByRole('link', { name: module2Fixtures.shellServerName })).toBeVisible();
 
     await page.getByRole('link', { name: module2Fixtures.shellServerName }).click();
     await expect(page.getByRole('heading', { name: 'Channels' })).toBeVisible();

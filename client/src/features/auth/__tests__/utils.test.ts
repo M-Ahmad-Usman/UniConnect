@@ -19,6 +19,21 @@ describe('getApiErrorMessage', () => {
   it('returns a custom fallback when provided', () => {
     expect(getApiErrorMessage(42, 'Custom fallback')).toBe('Custom fallback');
   });
+
+  it('keeps enriched backend messages for specific error codes', () => {
+    const error = new ApiError(
+      'CURRICULUM_TEACHER_ASSIGNMENT_REQUIRED',
+      'Teacher assignments are required for all curriculum courses.',
+      [],
+      400,
+      'req-12345678',
+    );
+
+    expect(getApiErrorMessage(error)).toBe(
+      'Teacher assignments are required for all curriculum courses.',
+    );
+    expect(error.requestId).toBe('req-12345678');
+  });
 });
 
 describe('applyApiValidationErrors', () => {

@@ -24,6 +24,7 @@ export interface ApiErrorResponse {
     code: string;
     message: string;
     details?: Record<string, unknown>[];
+    requestId?: string;
   };
 }
 
@@ -33,18 +34,21 @@ export class ApiError extends Error {
   readonly code: string;
   readonly details: Record<string, unknown>[];
   readonly statusCode: number;
+  readonly requestId?: string;
 
   constructor(
     code: string,
     message: string,
     details: Record<string, unknown>[],
     statusCode: number,
+    requestId?: string,
   ) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.details = details;
     this.statusCode = statusCode;
+    this.requestId = requestId;
   }
 }
 

@@ -66,7 +66,7 @@ test.describe('Module 3 society hardening flows', () => {
 
     await expect(page.getByText(e2eUsers.moduleSocietyApplicant.fullName)).toBeVisible();
     await page.getByRole('button', { name: 'Approve' }).click();
-    await page.getByRole('button', { name: 'members' }).click();
+    await page.getByRole('tab', { name: 'members' }).click();
     await expect(page.getByText(e2eUsers.moduleSocietyApplicant.fullName)).toBeVisible();
   });
 });

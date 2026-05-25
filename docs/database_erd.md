@@ -1,4 +1,4 @@
-# **UniConnect ERD Visualization using eraser.io**
+# UniConnect Database ERD
 
 ## Erasor.io Syntax Explanation
 

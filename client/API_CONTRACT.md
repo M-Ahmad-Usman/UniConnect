@@ -270,9 +270,14 @@ interface ApiErrorResponse {
       message: string;
       source: 'body' | 'params' | 'query';
     }>;
+    requestId?: string;
   };
 }
 ```
+
+The axios client normalizes errors into `ApiError` with `code`, `message`,
+`details`, `statusCode`, and `requestId`. UI copy for stable backend codes lives
+in `src/lib/api-error.ts`.
 
 ### Error Codes
 
@@ -284,7 +289,11 @@ interface ApiErrorResponse {
 | `NOT_FOUND`           | 404         | Resource not found        | Show empty state or 404 page                             |
 | `CONFLICT`            | 409         | Resource already exists   | Show conflict message (e.g., "Email already registered") |
 | `RATE_LIMIT_EXCEEDED` | 429         | Too many requests         | Show cooldown message, retry after delay                 |
+| `REQUEST_TIMEOUT`     | 408         | Server request timeout    | Retry if the action is safe                              |
 | `INTERNAL_ERROR`      | 500         | Server error              | Show generic error, log to error tracking                |
+| `SCOPE_FORBIDDEN`     | 403         | Role exists but not for this scope | Hide/disable scoped action                         |
+| `PASSWORD_CHANGE_REQUIRED` | 403    | Temporary password must be changed | Redirect to change-password flow                   |
+| Domain-specific codes | 400/403/409 | Duplicate, upload, class, society, post state errors | Use `src/lib/api-error.ts` mapping |
 
 ### Validation Error Example
 
@@ -3453,7 +3462,7 @@ See [`client/src/types/`](./src/types/) for full TypeScript definitions mirrorin
 
 ### Backend Reference Documents
 
-- [Backend API Development Plan](../server/API_DEVELOPMENT_PLAN.md)
+- [Backend Architecture](../server/BACKEND_ARCHITECTURE.md)
 - [Backend Error Codes](../server/docs/API_ERROR_CODES.md)
 - [Backend Frontend Contract](../server/docs/FRONTEND_BACKEND_CONTRACT.md)
 

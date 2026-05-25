@@ -3,6 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env.js";
 import * as authService from "./auth.service.js";
 import type { ApiResponse } from "../../shared/types/index.js";
+import { UnauthorizedError } from "../../shared/errors/index.js";
+import { buildAuditContext } from "../audit/audit.service.js";
 import { parseExpiry } from "../../shared/utils/parseExpiry.js";
 import {
   clearCsrfCookie,
@@ -42,6 +44,14 @@ function clearCookies(res: Response): void {
 
 // ─── Handlers ───────────────────────────────────────────────────────────────
 
+function auditContextFromRequest(req: Request) {
+  return buildAuditContext({
+    actorUserId: req.user?.id ?? null,
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+}
+
 export async function handleLogin(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body;
   const result = await authService.login(email, password);
@@ -63,11 +73,7 @@ export async function handleRefresh(req: Request, res: Response): Promise<void> 
   const refreshTokenCookie = req.cookies?.refresh_token;
 
   if (!refreshTokenCookie) {
-    res.status(StatusCodes.UNAUTHORIZED).json({
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "No refresh token provided" },
-    });
-    return;
+    throw new UnauthorizedError("Authentication required");
   }
 
   const result = await authService.refresh(refreshTokenCookie);
@@ -85,7 +91,7 @@ export async function handleRefresh(req: Request, res: Response): Promise<void> 
 
 export async function handleLogout(req: Request, res: Response): Promise<void> {
   const refreshTokenCookie = req.cookies?.refresh_token;
-  await authService.logout(refreshTokenCookie);
+  await authService.logout(refreshTokenCookie, req.user!.id, auditContextFromRequest(req));
   clearCookies(res);
 
   const response: ApiResponse<null> = {
@@ -112,7 +118,7 @@ export async function handleForgotPassword(req: Request, res: Response): Promise
 
 export async function handleResetPassword(req: Request, res: Response): Promise<void> {
   const { token, newPassword } = req.body;
-  await authService.resetPassword(token, newPassword);
+  await authService.resetPassword(token, newPassword, auditContextFromRequest(req));
   clearCookies(res);
 
   const response: ApiResponse<null> = {
@@ -126,7 +132,7 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
 
 export async function handleChangePassword(req: Request, res: Response): Promise<void> {
   const { currentPassword, newPassword } = req.body;
-  await authService.changePassword(req.user!.id, currentPassword, newPassword);
+  await authService.changePassword(req.user!.id, currentPassword, newPassword, auditContextFromRequest(req));
   clearCookies(res);
 
   const response: ApiResponse<null> = {

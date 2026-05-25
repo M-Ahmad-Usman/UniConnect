@@ -3,11 +3,13 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import "./config/telemetry.js";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { csrfProtection } from "./middleware/csrf.js";
 import { NotFoundError } from "./shared/errors/index.js";
+import { requestId } from "./middleware/requestId.js";
 import { prisma } from "./config/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/user/user.routes.js";
@@ -38,6 +40,7 @@ const app = express();
 app.set("trust proxy", 1);
 
 // ─── Security & Parsing Middleware ──────────────────────────────────────────
+app.use(requestId);
 app.use(
   helmet({
     // API-only server: disable HTML-focused headers that add no value
@@ -64,7 +67,14 @@ const REQUEST_TIMEOUT_MS = 30_000;
 app.use((_req, res, next) => {
   const timer = setTimeout(() => {
     if (!res.headersSent) {
-      res.status(408).json({ success: false, message: "Request timeout" });
+      res.status(408).json({
+        success: false,
+        error: {
+          code: "REQUEST_TIMEOUT",
+          message: "The request took too long to complete. Please try again.",
+          ...(_req.requestId && { requestId: _req.requestId }),
+        },
+      });
     }
   }, REQUEST_TIMEOUT_MS);
   res.on("close", () => clearTimeout(timer));

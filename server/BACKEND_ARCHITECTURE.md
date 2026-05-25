@@ -1,4 +1,4 @@
-# UniConnect Backend API Development Plan
+# UniConnect Backend Architecture
 
 ## Document Control
 - Version: 2.0
@@ -98,5 +98,5 @@ Notes:
 
 ## Maintenance Rules
 - Update this file when architecture conventions, module boundaries, or baseline standards change.
-- Do not log per-step implementation history here; use `HARDENING_LOG.md` for that level of detail.
-- Keep implementation status and test counts synchronized with `PROGRESS.md`.
+- Do not log per-step implementation history here; use `../docs/release_log.md`.
+- Keep release status synchronized with `../docs/release_readiness.md`.

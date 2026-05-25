@@ -1,5 +1,5 @@
 import { prisma } from "../../config/prisma.js";
-import { ConflictError, NotFoundError } from "../../shared/errors/index.js";
+import { ApiErrorCode, ConflictError, NotFoundError } from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -67,7 +67,7 @@ export async function createCourse(data: CreateCourseInput) {
   });
 
   if (existing) {
-    throw new ConflictError("A course with this code already exists");
+    throw new ConflictError("A course with this code already exists", ApiErrorCode.DUPLICATE_COURSE_CODE);
   }
 
   return prisma.course.create({
@@ -140,7 +140,7 @@ export async function updateCourse(id: number, data: UpdateCourseInput) {
     });
 
     if (existing) {
-      throw new ConflictError("A course with this code already exists");
+      throw new ConflictError("A course with this code already exists", ApiErrorCode.DUPLICATE_COURSE_CODE);
     }
   }
 

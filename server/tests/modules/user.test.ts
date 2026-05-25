@@ -178,7 +178,7 @@ describe("Module 2 - User Management", () => {
 
       expect(duplicateRes.status).toBe(409);
       expect(duplicateRes.body.success).toBe(false);
-      expect(duplicateRes.body.error.code).toBe("CONFLICT");
+      expect(duplicateRes.body.error.code).toBe("DUPLICATE_EMAIL");
     });
 
     it("should return 400 for missing student rollNumber", async () => {
@@ -493,7 +493,7 @@ describe("Module 2 - User Management", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+      expect(res.body.error.code).toBe("UPLOAD_UNSUPPORTED_TYPE");
     });
   });
 

@@ -138,6 +138,6 @@ describe("Module 5 security hardening", () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.code).toBe("UPLOAD_IMAGE_TOO_LARGE");
   });
 });

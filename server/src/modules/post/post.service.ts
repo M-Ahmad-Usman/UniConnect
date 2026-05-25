@@ -2,6 +2,7 @@ import type { PostPriority, ServerType } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
 import { cloudinaryService } from "../../config/cloudinary.js";
 import {
+  ApiErrorCode,
   ForbiddenError,
   NotFoundError,
   ValidationError,
@@ -358,7 +359,7 @@ export async function createPost(
   const channel = await findActiveChannelForPostsOrThrow(channelId);
 
   if (channel.isLocked) {
-    throw new ForbiddenError("Channel is locked");
+    throw new ForbiddenError("Channel is locked", ApiErrorCode.CHANNEL_LOCKED);
   }
 
   // Check posting rights
@@ -596,7 +597,7 @@ export async function updatePost(
   const editWindowMs = 24 * 60 * 60 * 1000;
   const elapsed = Date.now() - post.createdAt.getTime();
   if (elapsed > editWindowMs) {
-    throw new ForbiddenError("Edit window has expired");
+    throw new ForbiddenError("Edit window has expired", ApiErrorCode.EDIT_WINDOW_EXPIRED);
   }
 
   const updated = await prisma.post.update({

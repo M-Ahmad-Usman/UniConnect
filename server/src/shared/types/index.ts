@@ -23,6 +23,7 @@ export interface ApiErrorResponse {
     code: string;
     message: string;
     details?: Record<string, unknown>[];
+    requestId?: string;
   };
 }
 
@@ -48,6 +49,7 @@ declare global {
     interface Request {
       user?: AuthUser;
       userRoles?: UserRole[];
+      requestId?: string;
     }
   }
 }

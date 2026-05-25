@@ -1,4 +1,4 @@
-# UniConnect
+# UniConnect Product Proposal
 
 **Project Title:** UniConnect
 

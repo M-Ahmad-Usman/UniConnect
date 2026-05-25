@@ -1,10 +1,10 @@
-# UniConnect Frontend and Security Hardening Plan
+# UniConnect Full-System Hardening Plan
 
 ## Document Control
 - Created: 2026-05-18
-- Status: Planned
+- Status: Complete
 - Scope: Frontend, backend, schema, security, permissions, accessibility, and documentation alignment
-- Companion tracker: `docs/hardening_progress.md`
+- Companion tracker: `docs/full_system_hardening_progress.md`
 
 ## Purpose
 The frontend implementation plan is complete, but the current system still needs a hardening pass before production-style use. The main gaps are permission-aware UI behavior, delegated academic management, society access states, class student/course workflows, security controls, accessibility, and synchronized documentation.
@@ -82,7 +82,7 @@ Make backend permissions the source of truth and expose enough caller-specific c
 - Update `docs/functional_requirements.md` with final role/capability rules.
 - Update `client/API_CONTRACT.md` and `server/docs/FRONTEND_BACKEND_CONTRACT.md` with capability fields.
 - Update `client/ARCHITECTURE.md` to document backend-driven UI authorization.
-- Update `client/PROGRESS.md` and `server/PROGRESS.md` after implementation.
+- Update `docs/release_log.md` after implementation.
 
 ### Acceptance Criteria
 - No frontend module has to infer high-risk management rights from role names alone when backend capability data is available.
@@ -155,10 +155,10 @@ Expose complete class operations to the correct delegated users and close gaps a
   - graduation flow.
 
 ### Documentation Updates for This Module
-- Update `docs/schema.md` for class status and class-course uniqueness changes.
+- Update `docs/database_erd.md` for class status and class-course uniqueness changes.
 - Update `server/docs/FRONTEND_BACKEND_CONTRACT.md` and `client/API_CONTRACT.md` for new class endpoints.
-- Update `client/PLAN.md`, `client/ARCHITECTURE.md`, and `client/PROGRESS.md` with the academic workspace.
-- Update `server/PROGRESS.md`.
+- Update `client/FRONTEND_IMPLEMENTATION_PLAN.md`, `client/ARCHITECTURE.md`, and `docs/release_log.md` with the academic workspace.
+- Update `docs/release_log.md`.
 
 ### Acceptance Criteria
 - HOD and PD users can complete their delegated academic tasks without entering the admin-only route tree.
@@ -213,7 +213,7 @@ Keep the society workspace useful for all authenticated users while preventing u
 - Update `client/API_CONTRACT.md` society auth notes.
 - Update `server/docs/FRONTEND_BACKEND_CONTRACT.md` society visibility rules.
 - Update `client/ARCHITECTURE.md` with society permission-gated query behavior.
-- Update `client/PROGRESS.md` and `server/PROGRESS.md`.
+- Update `docs/release_log.md`.
 
 ### Acceptance Criteria
 - Users never see a 403-driven error state just because the UI exposed a tab or query they cannot use.
@@ -275,7 +275,7 @@ Make the role-management workspace safe for scoped managers by loading only assi
 - Update `client/API_CONTRACT.md` role-management endpoints and authorization.
 - Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
 - Update role matrix in `docs/functional_requirements.md`.
-- Update `client/PROGRESS.md` and `server/PROGRESS.md`.
+- Update `docs/release_log.md`.
 
 ### Acceptance Criteria
 - The role-management UI does not expose global lists to scoped managers.
@@ -328,12 +328,12 @@ Add production-oriented security controls that complement the existing cookie au
   - stale/missing CSRF token path redirects or recovers cleanly.
 
 ### Documentation Updates for This Module
-- Update `server/API_DEVELOPMENT_PLAN.md` security section.
+- Update `server/BACKEND_ARCHITECTURE.md` security section.
 - Update `server/docs/FRONTEND_BACKEND_CONTRACT.md` auth and CSRF contract.
 - Update `server/docs/API_ERROR_CODES.md` with CSRF/audit-related errors if new codes are added.
-- Update `docs/schema.md` for audit log schema.
+- Update `docs/database_erd.md` for audit log schema.
 - Update `.env.example` if new cookie/CSRF environment variables are added.
-- Update `server/PROGRESS.md` and `client/PROGRESS.md`.
+- Update `docs/release_log.md`.
 
 ### Acceptance Criteria
 - Unsafe state-changing requests are protected against CSRF under the chosen deployment config.
@@ -385,7 +385,7 @@ Improve the overall frontend quality and accessibility of permission-heavy workf
 
 ### Documentation Updates for This Module
 - Update `client/ARCHITECTURE.md` with accessibility conventions.
-- Update `client/PLAN.md` and `client/PROGRESS.md`.
+- Update `client/FRONTEND_IMPLEMENTATION_PLAN.md` and `docs/release_log.md`.
 - Add accessibility notes to the relevant feature sections in `client/API_CONTRACT.md` only if UI behavior affects API usage.
 
 ### Acceptance Criteria
@@ -431,7 +431,7 @@ Handle items that do not belong to one feature module and prepare the hardened s
 - Final pass only:
   - verify all module docs were already updated during implementation.
   - update root-level or shared summary docs if needed.
-  - update `docs/hardening_progress.md` final status.
+  - update `docs/full_system_hardening_progress.md` final status.
 
 ### Acceptance Criteria
 - All module-specific docs and tests are complete before final regression starts.
@@ -455,5 +455,5 @@ This order fixes the most visible permission bug early, then stabilizes role cap
 - Do not run heavy build/test commands simultaneously.
 - Use `timeout 120 <command>` for heavy commands.
 - Each module must update its tests and docs before it is marked complete.
-- Schema changes require migration updates, generated Prisma client sync, and `docs/schema.md` updates in the same module.
+- Schema changes require migration updates, generated Prisma client sync, and `docs/database_erd.md` updates in the same module.
 - Backend remains the authority for permissions; frontend gating improves UX but never replaces backend checks.

@@ -17,13 +17,12 @@ describe("Express App Foundation", () => {
       const res = await request(app).get("/api/unknown-route");
 
       expect(res.status).toBe(404);
-      expect(res.body).toEqual({
-        success: false,
-        error: {
-          code: "NOT_FOUND",
-          message: "Route not found",
-        },
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toMatchObject({
+        code: "NOT_FOUND",
+        message: "Route not found",
       });
+      expect(res.body.error.requestId).toEqual(expect.any(String));
     });
 
     it("should return 404 for unknown POST route", async () => {

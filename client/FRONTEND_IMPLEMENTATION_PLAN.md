@@ -1,4 +1,4 @@
-# UniConnect Frontend Development Plan
+# UniConnect Frontend Implementation Plan
 
 **Version:** 1.0
 **Last Updated:** 2026-03-10
@@ -2223,4 +2223,4 @@ export function Can({ action, serverId, children }: CanProps) {
 2. **Add explicit auth-expired/session-expiry redirect coverage** when that flow can be exercised deterministically
 3. **Use traces and HTML reports** as the debugging baseline for runtime failures
 4. **Begin Module 2** implementation now that Module 1 has focused runtime verification
-5. **Use PROGRESS.md** to log decisions and track completion
+5. **Use `../docs/release_log.md`** to log release decisions and track completion

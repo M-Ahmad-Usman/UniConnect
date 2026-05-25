@@ -1863,7 +1863,7 @@ describe("Module 6 - Society Management", () => {
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
-      expect(res.body.error.message).toBe("You do not have permission to view society members");
+      expect(res.body.error.message).toBe("You do not have permission to view members of this society");
     });
   });
 

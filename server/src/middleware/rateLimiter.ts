@@ -1,4 +1,16 @@
 import rateLimit from "express-rate-limit";
+import { ApiErrorCode } from "../shared/errors/index.js";
+
+function rateLimitResponse(message: string, requestId: string | undefined) {
+  return {
+    success: false,
+    error: {
+      code: ApiErrorCode.RATE_LIMIT_EXCEEDED,
+      message,
+      ...(requestId && { requestId }),
+    },
+  };
+}
 
 // ─── Auth Limiter ───────────────────────────────────────────────────────────
 // Used on: POST /api/auth/login, /forgot-password, /reset-password
@@ -8,12 +20,10 @@ export const authLimiter = rateLimit({
   max: 5,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: {
-    success: false,
-    error: {
-      code: "RATE_LIMIT_EXCEEDED",
-      message: "Too many attempts. Try again in 15 minutes.",
-    },
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json(rateLimitResponse("Too many attempts. Try again in 15 minutes.", req.requestId));
   },
   skip: () => process.env.NODE_ENV === "test",
 });
@@ -26,12 +36,8 @@ export const generalLimiter = rateLimit({
   max: 100,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: {
-    success: false,
-    error: {
-      code: "RATE_LIMIT_EXCEEDED",
-      message: "Too many requests. Slow down.",
-    },
+  handler: (req, res) => {
+    res.status(429).json(rateLimitResponse("Too many requests. Slow down.", req.requestId));
   },
   skip: () => process.env.NODE_ENV === "test",
 });
@@ -44,12 +50,8 @@ export const uploadLimiter = rateLimit({
   max: 10,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: {
-    success: false,
-    error: {
-      code: "RATE_LIMIT_EXCEEDED",
-      message: "Too many upload requests.",
-    },
+  handler: (req, res) => {
+    res.status(429).json(rateLimitResponse("Too many upload requests.", req.requestId));
   },
   skip: () => process.env.NODE_ENV === "test",
 });

@@ -4,11 +4,12 @@
 This service provides the UniConnect backend API, authentication, authorization, notifications, and realtime delivery.
 
 ## Core Docs
-- Documentation index: `docs/README.md`
-- Architecture and coding standards: `API_DEVELOPMENT_PLAN.md`
-- Delivery and module status: `PROGRESS.md`
-- Hardening roadmap and status: `HARDENING_PLAN.md`
-- Hardening implementation history: `HARDENING_LOG.md`
+- Project documentation index: `../docs/README.md`
+- Backend documentation index: `docs/README.md`
+- Backend summary: `../docs/backend.md`
+- Security posture: `../docs/security.md`
+- Release log: `../docs/release_log.md`
+- Architecture and coding standards: `BACKEND_ARCHITECTURE.md`
 - Frontend integration contract: `docs/FRONTEND_BACKEND_CONTRACT.md`
 - API error code catalog: `docs/API_ERROR_CODES.md`
 - Dependency version audit: `../docs/dependency_version_audit.md`
@@ -100,4 +101,5 @@ npx prisma generate
 ## Notes
 - Health endpoint: `GET /api/health`
 - Realtime uses Socket.IO with cookie-based auth.
-- Keep this README operational; keep architecture and governance decisions in the linked docs.
+- Keep this README operational; keep architecture, security, and release
+  decisions in the linked docs.

@@ -67,10 +67,14 @@ This document is the frontend integration contract for the UniConnect backend. I
     "message": "Invalid input",
     "details": [
       { "field": "email", "message": "Invalid email", "source": "body" }
-    ]
+    ],
+    "requestId": "optional request id"
   }
 }
 ```
+
+Every response includes `X-Request-ID`. Error payloads include `requestId` when
+available.
 
 ## Pagination and Limits
 
@@ -90,7 +94,18 @@ This document is the frontend integration contract for the UniConnect backend. I
 
 - Privileged successful writes create persistent `AuditLog` records.
 - Covered areas include user activation, role changes, academic/class/catalog changes, society management, and channel management.
+- Auth-sensitive successful events include password reset completion, password
+  change, logout refresh-token revocation, and refresh-token revocation caused
+  by password reset/change.
 - Audit summaries are field-level and redacted; passwords, tokens, cookies, secrets, and raw uploaded/post content are not logged.
+
+## Optional Telemetry
+
+- Backend Sentry telemetry is disabled unless `SENTRY_DSN` is configured.
+- Frontend Sentry telemetry is disabled unless `VITE_SENTRY_DSN` is configured.
+- Telemetry events are scrubbed before sending and must not include request
+  bodies, cookies, auth headers, tokens, passwords, hashes, secrets, or raw
+  uploaded content.
 
 ## Rate Limits
 
@@ -389,5 +404,5 @@ This document is the frontend integration contract for the UniConnect backend. I
 ## References
 
 - Error code catalog: `docs/API_ERROR_CODES.md`
-- Architecture conventions: `API_DEVELOPMENT_PLAN.md`
-- Progress and status: `PROGRESS.md`
+- Architecture conventions: `BACKEND_ARCHITECTURE.md`
+- Release status: `../docs/release_log.md`

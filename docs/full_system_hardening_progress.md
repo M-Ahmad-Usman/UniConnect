@@ -1,9 +1,9 @@
-# UniConnect Hardening Progress Tracker
+# UniConnect Full-System Hardening Progress
 
 ## Document Control
 - Created: 2026-05-18
-- Status: In progress
-- Plan reference: `docs/hardening_plan.md`
+- Status: Complete
+- Plan reference: `docs/full_system_hardening_plan.md`
 
 ## Status Legend
 - Not started: no implementation work has begun.
@@ -22,7 +22,7 @@
 | 4 | Role Management Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | Scoped backend option APIs, lazy frontend role workspace, focused Jest/Vitest coverage, Playwright role flows, lint, build, type-check, and docs complete |
 | 5 | Security Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | CSRF, audit logs, content/link safety, upload pixel limits, Cloudinary folder allowlist, focused unit/Jest/Playwright verification complete |
 | 6 | UI and Accessibility Hardening | Complete | Codex | 2026-05-21 | 2026-05-21 | Cookie-backed theme support, semantic tabs, accessible state/form/table primitives, hardened society/class/role flows, Vitest coverage, Playwright keyboard/mobile/axe coverage, lint, type-check, build complete |
-| 7 | Cross-Cutting Release Readiness | Not started | TBD |  |  |  |
+| 7 | Cross-Cutting Release Readiness | Complete | Codex | 2026-05-25 | 2026-05-25 | Request ID/error-code hardening, auth audit coverage, optional telemetry, docs unification, final regression, and release-readiness docs complete |
 
 ## Module 1 Checklist: Permission Policy Foundation
 
@@ -49,8 +49,8 @@
 - [x] Update `client/API_CONTRACT.md`.
 - [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
 - [x] Update `client/ARCHITECTURE.md`.
-- [x] Update `client/PROGRESS.md`.
-- [x] Update `server/PROGRESS.md`.
+- [x] Update `docs/release_log.md`.
+- [x] Update `docs/release_log.md`.
 
 ### Verification Log
 - Commands run:
@@ -100,13 +100,13 @@
 - [x] Playwright graduation flow.
 
 ### Documentation
-- [x] Update `docs/schema.md`.
+- [x] Update `docs/database_erd.md`.
 - [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
 - [x] Update `client/API_CONTRACT.md`.
-- [x] Update `client/PLAN.md`.
+- [x] Update `client/FRONTEND_IMPLEMENTATION_PLAN.md`.
 - [x] Update `client/ARCHITECTURE.md`.
-- [x] Update `client/PROGRESS.md`.
-- [x] Update `server/PROGRESS.md`.
+- [x] Update `docs/release_log.md`.
+- [x] Update `docs/release_log.md`.
 
 ### Verification Log
 - Commands run:
@@ -166,8 +166,8 @@
 - [x] Update `client/API_CONTRACT.md`.
 - [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
 - [x] Update `client/ARCHITECTURE.md`.
-- [x] Update `client/PROGRESS.md`.
-- [x] Update `server/PROGRESS.md`.
+- [x] Update `docs/release_log.md`.
+- [x] Update `docs/release_log.md`.
 
 ### Verification Log
 - Commands run:
@@ -217,8 +217,8 @@
 - [x] Update `client/API_CONTRACT.md`.
 - [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
 - [x] Update `docs/functional_requirements.md`.
-- [x] Update `client/PROGRESS.md`.
-- [x] Update `server/PROGRESS.md`.
+- [x] Update `docs/release_log.md`.
+- [x] Update `docs/release_log.md`.
 
 ### Verification Log
 - Commands run:
@@ -267,13 +267,13 @@
 - [x] Playwright missing/stale CSRF recovery path.
 
 ### Documentation
-- [x] Update `server/API_DEVELOPMENT_PLAN.md`.
+- [x] Update `server/BACKEND_ARCHITECTURE.md`.
 - [x] Update `server/docs/FRONTEND_BACKEND_CONTRACT.md`.
 - [x] Update `server/docs/API_ERROR_CODES.md` if new codes are added.
-- [x] Update `docs/schema.md`.
+- [x] Update `docs/database_erd.md`.
 - [x] Update `.env.example` if new env vars are added.
-- [x] Update `server/PROGRESS.md`.
-- [x] Update `client/PROGRESS.md`.
+- [x] Update `docs/release_log.md`.
+- [x] Update `docs/release_log.md`.
 
 ### Verification Log
 - Commands run:
@@ -321,8 +321,8 @@
 
 ### Documentation
 - [x] Update `client/ARCHITECTURE.md`.
-- [x] Update `client/PLAN.md`.
-- [x] Update `client/PROGRESS.md`.
+- [x] Update `client/FRONTEND_IMPLEMENTATION_PLAN.md`.
+- [x] Update `docs/release_log.md`.
 - [x] Update API docs only if accessibility-driven UI behavior changes API usage.
 
 ### Verification Log
@@ -338,31 +338,52 @@
 ## Module 7 Checklist: Cross-Cutting Release Readiness
 
 ### Implementation
-- [ ] Review dependency/version audit follow-ups.
-- [ ] Align environment/runbook notes after all module changes.
-- [ ] Review seed/demo data for every hardened role.
-- [ ] Add missing seed/demo data not already covered by earlier modules.
-- [ ] Confirm migrations and generated Prisma client are in sync.
-- [ ] Confirm delegated workflows are not only reachable through admin routes.
-- [ ] Final consistency review across frontend, backend, schema, and docs.
+- [x] Review dependency/version audit follow-ups.
+- [x] Align environment/runbook notes after all module changes.
+- [x] Review seed/demo data for every hardened role.
+- [x] Add missing seed/demo data not already covered by earlier modules.
+- [x] Confirm migrations and generated Prisma client are in sync.
+- [x] Confirm delegated workflows are not only reachable through admin routes.
+- [x] Final consistency review across frontend, backend, schema, and docs.
+- [x] Add request ID propagation for API errors and response correlation.
+- [x] Replace generic frontend-safe errors with stable domain-specific error codes where recoverable.
+- [x] Add optional backend/frontend telemetry with sensitive-data scrubbing.
+- [x] Add auth-sensitive audit logs for password reset/change/logout token revocation.
 
 ### Final Regression
-- [ ] Server: `cd server && timeout 120 npm test`
-- [ ] Client type-check: `cd client && timeout 120 npm run type-check`
-- [ ] Client lint: `cd client && timeout 120 npm run lint`
-- [ ] Client unit tests: `cd client && timeout 120 npm run test`
-- [ ] Client Playwright hardened-flow smoke suite.
+- [x] Server: `cd server && timeout 180 npm test`
+- [x] Client type-check: `cd client && npm run type-check`
+- [x] Client lint: `cd client && npm run lint`
+- [x] Client unit tests: `cd client && npm run test`
+- [x] Client production build: `cd client && npm run build`
+- [x] Client Playwright hardened-flow smoke suite: `cd client && npx playwright test --reporter=line`
 
 ### Documentation
-- [ ] Verify all module-specific docs were updated inside their modules.
-- [ ] Update root/shared summary docs only if still needed.
-- [ ] Mark final status in this tracker.
+- [x] Verify all module-specific docs were updated inside their modules.
+- [x] Update root/shared summary docs only if still needed.
+- [x] Mark final status in this tracker.
+- [x] Unify stale backend/frontend progress docs into canonical root docs without dropping retained implementation context.
 
 ### Verification Log
 - Commands run:
-  - None yet.
+  - `cd server && timeout 120 npm run build`
+  - `cd server && timeout 120 npm test -- tests/shared/errorHandler.test.ts tests/modules/auth.test.ts`
+  - `cd server && timeout 180 npm test`
+  - `cd client && timeout 120 npm run type-check`
+  - `cd client && timeout 120 npm run lint`
+  - `cd client && timeout 120 npm run test`
+  - `cd client && timeout 120 npm run build`
+  - `cd client && npx playwright test e2e/auth-flows.spec.ts e2e/auth-force-change.spec.ts e2e/module2-shell.spec.ts e2e/module3-societies.spec.ts e2e/module4-posts-announcements.spec.ts --reporter=line`
+  - `cd client && npx playwright test --reporter=line`
 - Result:
-  - Not verified.
+  - Backend build passes.
+  - Focused backend auth/error-handler suites pass.
+  - Full backend Jest suite passes, 490/490.
+  - Frontend type-check, lint, Vitest, production build, targeted Playwright, and full Playwright pass.
+  - Full frontend Vitest suite passes, 129/129.
+  - Full Playwright suite passes, 36/36.
+  - Vite still reports the existing large `react-vendor` chunk warning during production build.
+  - Playwright runs still emit shutdown-time Vite websocket proxy `ECONNRESET` noise and a pg deprecation warning about concurrent `client.query()` usage; these did not fail the suite and should be tracked as follow-up operational cleanup.
 
 ## Decision Log
 

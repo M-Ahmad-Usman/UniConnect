@@ -1,6 +1,11 @@
 import type { MembershipRequestStatus } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
-import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
+import {
+  ApiErrorCode,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
 import {
   buildSocietyPermissions,
@@ -461,7 +466,10 @@ export async function updateSociety(id: number, data: UpdateSocietyInput, caller
   } else if (hasInfoChange) {
     // Info-only changes allowed for Convenor, President, HOD, or Admin
     if (!isCallerAuthorized(society, caller) && !isCallerHODOrAdmin(society, caller)) {
-      throw new ForbiddenError("You do not have permission to update this society");
+      throw new ForbiddenError(
+        "You do not have permission to update this society",
+        ApiErrorCode.SCOPE_FORBIDDEN
+      );
     }
   }
 
@@ -555,7 +563,7 @@ export async function submitJoinRequest(societyId: number, userId: number) {
   });
 
   if (existingMembership) {
-    throw new ConflictError("You are already a member of this society");
+    throw new ConflictError("You are already a member of this society", ApiErrorCode.ALREADY_MEMBER);
   }
 
   // Check existing request
@@ -566,7 +574,7 @@ export async function submitJoinRequest(societyId: number, userId: number) {
 
   if (existingRequest) {
     if (existingRequest.status === "PENDING") {
-      throw new ConflictError("You already have a pending join request");
+      throw new ConflictError("You already have a pending join request", ApiErrorCode.JOIN_REQUEST_PENDING);
     }
     if (existingRequest.status === "APPROVED") {
       throw new ConflictError("Your request has already been approved");
@@ -602,7 +610,10 @@ export async function listJoinRequests(
   const society = await findSocietyOrThrow(societyId);
 
   if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError("You do not have permission to view join requests");
+    throw new ForbiddenError(
+      "You do not have permission to view join requests for this society",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   const { page, limit, skip, take } = parsePagination(query);
@@ -636,7 +647,10 @@ export async function reviewJoinRequest(
   const society = await findSocietyOrThrow(societyId);
 
   if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError("You do not have permission to review join requests");
+    throw new ForbiddenError(
+      "You do not have permission to review join requests for this society",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   const request = await prisma.societyMembershipRequest.findFirst({
@@ -691,7 +705,10 @@ export async function addMember(societyId: number, userId: number, caller: Calle
   const society = await findSocietyOrThrow(societyId);
 
   if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError("You do not have permission to add members");
+    throw new ForbiddenError(
+      "You do not have permission to add members to this society",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   // Verify target user exists
@@ -716,7 +733,7 @@ export async function addMember(societyId: number, userId: number, caller: Calle
   });
 
   if (existingMembership) {
-    throw new ConflictError("User is already a member of this society");
+    throw new ConflictError("User is already a member of this society", ApiErrorCode.ALREADY_MEMBER);
   }
 
   return prisma.$transaction(async (tx) => {
@@ -751,7 +768,10 @@ export async function removeMember(societyId: number, userId: number, caller: Ca
   const society = await findSocietyOrThrow(societyId);
 
   if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError("You do not have permission to remove members");
+    throw new ForbiddenError(
+      "You do not have permission to remove members from this society",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   // Cannot remove president or convenor
@@ -791,7 +811,10 @@ export async function listMembers(societyId: number, query: PaginationQuery, cal
     });
 
     if (!callerMembership) {
-      throw new ForbiddenError("You do not have permission to view society members");
+      throw new ForbiddenError(
+        "You do not have permission to view members of this society",
+        ApiErrorCode.SCOPE_FORBIDDEN
+      );
     }
   }
 
@@ -854,7 +877,10 @@ export async function listMemberCandidates(
   const society = await findSocietyOrThrow(societyId);
 
   if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError("You do not have permission to add members");
+    throw new ForbiddenError(
+      "You do not have permission to add members to this society",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   const { page, limit, skip, take } = parsePagination(query);

@@ -36,7 +36,9 @@ test.describe('Module 4 posts and announcements', () => {
     await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
     await page.goto(`/servers/${serverId}/channels/${channelId}`);
 
-    await expect(page.getByRole('heading', { name: 'Posts and announcements' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: module4Fixtures.announcementChannelName, exact: true }),
+    ).toBeVisible();
     await expect(postArticle(page, module4Fixtures.pinnedPostTitle)).toContainText('Pinned');
 
     await page.getByPlaceholder('Search posts in this channel').fill('Important Date');

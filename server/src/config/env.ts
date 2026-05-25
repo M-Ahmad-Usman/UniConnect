@@ -25,6 +25,10 @@ function parseStringList(value: string | string[]): string[] {
         .filter(Boolean);
 }
 
+function emptyStringToUndefined(value: unknown): unknown {
+  return value === "" ? undefined : value;
+}
+
 const defaultCsrfEnabled = process.env.NODE_ENV === "test" ? "false" : "true";
 
 const envSchema = z.object({
@@ -81,6 +85,14 @@ const envSchema = z.object({
 
       return value === "true";
     }),
+
+  SENTRY_DSN: z.preprocess(
+    emptyStringToUndefined,
+    z.string().url({ error: "SENTRY_DSN must be a valid URL" }).optional()
+  ),
+  SENTRY_ENVIRONMENT: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+  SENTRY_RELEASE: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
 });
 
 function validateEnv() {

@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma.js";
 import {
+  ApiErrorCode,
   ConflictError,
   ForbiddenError,
   NotFoundError,
@@ -255,7 +256,7 @@ async function assertHodOrPdOrAdmin(
 
 function assertClassIsActive(classRecord: { status: string }): void {
   if (classRecord.status === "GRADUATED") {
-    throw new ConflictError("Graduated classes are read-only");
+    throw new ConflictError("Graduated classes are read-only", ApiErrorCode.CLASS_GRADUATED);
   }
 }
 
@@ -370,7 +371,10 @@ function buildScopedClassWhere(
   context: Awaited<ReturnType<typeof getPermissionContext>>
 ): Prisma.ClassWhereInput {
   if (!context.user?.isActive) {
-    throw new ForbiddenError("Insufficient permissions");
+    throw new ForbiddenError(
+      "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   const where: Prisma.ClassWhereInput = {};
@@ -396,7 +400,10 @@ function buildScopedClassWhere(
   }
 
   if (scopedConditions.length === 0) {
-    throw new ForbiddenError("Insufficient permissions");
+    throw new ForbiddenError(
+      "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   where.AND = [...(Array.isArray(where.AND) ? where.AND : []), { OR: scopedConditions }];
@@ -889,7 +896,10 @@ export async function transferStudentToClass(
     student.user.departmentId !== targetClass.program.departmentId ||
     student.class.program.departmentId !== targetClass.program.departmentId
   ) {
-    throw new ForbiddenError("Student transfer is limited to the same department");
+    throw new ForbiddenError(
+      "Student transfer is limited to the same department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
   }
 
   if (student.class.crId === student.studentId) {
@@ -1042,7 +1052,9 @@ export async function advanceSemester(
     const missingCourses = curriculumCourseIds.filter((id) => !assignedCourseIds.includes(id));
     if (missingCourses.length > 0) {
       throw new ValidationError(
-        `Teacher assignments are required for all curriculum courses. Missing assignments for course IDs: ${missingCourses.join(", ")}`
+        `Teacher assignments are required for all curriculum courses. Missing assignments for course IDs: ${missingCourses.join(", ")}`,
+        undefined,
+        ApiErrorCode.CURRICULUM_TEACHER_ASSIGNMENT_REQUIRED
       );
     }
 
@@ -1184,7 +1196,11 @@ export async function graduateClass(classId: number, userId: number, userType: s
   await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
 
   if (classRecord.currentSemester !== classRecord.program.semesters) {
-    throw new ValidationError("Only final-semester classes can be graduated");
+    throw new ValidationError(
+      "Only final-semester classes can be graduated",
+      undefined,
+      ApiErrorCode.CLASS_FINAL_SEMESTER_REQUIRED
+    );
   }
 
   const graduatedClass = await prisma.$transaction(async (tx) => {

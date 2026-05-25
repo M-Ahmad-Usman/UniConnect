@@ -1,17 +1,9 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ApiError } from '@/types';
+import { getDisplayErrorMessage } from '@/lib/api-error';
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
+  return getDisplayErrorMessage(error);
 }
 
 function shouldSuppressToast(meta: Record<string, unknown> | undefined): boolean {

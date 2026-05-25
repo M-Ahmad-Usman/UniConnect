@@ -40,7 +40,8 @@ export function AuthGuard() {
         if (
           error instanceof ApiError &&
           error.statusCode === 403 &&
-          error.message.includes('Password change required')
+          (error.code === 'PASSWORD_CHANGE_REQUIRED' ||
+            error.message.includes('Password change required'))
         ) {
           markPasswordChangeRequired();
           return;

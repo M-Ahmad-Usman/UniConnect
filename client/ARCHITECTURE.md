@@ -1034,6 +1034,16 @@ export function LoginForm() {
 
 ## Error Handling
 
+Current implementation notes:
+- `ApiError` preserves backend `code`, `message`, `details`, `statusCode`, and
+  `requestId`.
+- `src/lib/api-error.ts` maps stable backend error codes to safe UI copy and
+  retryability.
+- Form flows should apply backend validation details inline and suppress
+  duplicate global mutation toasts when the page already renders the error.
+- Optional Sentry telemetry is initialized only when `VITE_SENTRY_DSN` is set.
+  Error events are scrubbed before sending.
+
 ### Global Error Boundary
 
 ```typescript
