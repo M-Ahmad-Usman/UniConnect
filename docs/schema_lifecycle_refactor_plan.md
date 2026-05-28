@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 1 complete, Module 2 not started
+- Status: Module 2 complete, Module 3 not started
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
 - Source references: `pulled-docs/`
@@ -223,11 +223,30 @@ Acceptance:
 Goal: make public-ID migration predictable before changing every route.
 
 Changes:
-- Add shared public-ID-to-internal-ID resolver helpers.
-- Add response mapping helpers that omit numeric IDs for core DTOs.
-- Update backend test factories to expose public IDs for API calls and internal
-  IDs for DB setup.
-- Add temporary dual-resolution support only where needed for staged migration.
+- Added shared public-ID helpers in `server/src/shared/ids/`.
+- Added strict UUIDv7 validation via `publicIdSchema`, `parsePublicId`, and
+  `isPublicId`.
+- Added public-ID-to-internal-ID resolvers for core entities:
+  `resolveUserPublicId`, `resolveClassPublicId`, `resolveSocietyPublicId`,
+  `resolveServerPublicId`, `resolveChannelPublicId`, and `resolvePostPublicId`.
+- Added `resolveCoreIdentifier` for temporary staged migration support. Default
+  mode is public-ID only; `mode: "dual"` accepts UUIDv7 public IDs or positive
+  internal IDs and reports `source: "publicId" | "internalId"`.
+- Added shallow public DTO mappers:
+  `mapUserPublicDto`, `mapClassPublicDto`, `mapSocietyPublicDto`,
+  `mapServerPublicDto`, `mapChannelPublicDto`, and `mapPostPublicDto`.
+- Updated backend test factories with `apiId(entity)` and `entityIds(entity)` so
+  future API tests can use public IDs while DB setup can keep internal IDs.
+
+Usage notes for later modules:
+- Live routes and live response bodies were not changed in Module 2.
+- Route migration modules should resolve `:publicId` with the entity-specific
+  resolver, keep service internals numeric, then map outgoing core DTOs with the
+  public DTO mappers.
+- Use `includeDeleted: true` only for restore, deletion-impact, or admin
+  lifecycle paths that intentionally target deleted rows.
+- Dual mode exists only for staged compatibility and must be removed in the
+  final cleanup module.
 
 Acceptance:
 - Resolver tests pass.

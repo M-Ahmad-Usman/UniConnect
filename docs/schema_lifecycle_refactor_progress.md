@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 1 complete
+- Status: Module 2 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -21,7 +21,7 @@
 |---|---|---|---|---|---|
 | 0 | Canonical Planning and Tracking | Complete | 2026-05-28 | 2026-05-28 | Canonical docs and pulled-doc archive policy established |
 | 1 | Schema Foundation and Transitional State | Complete | 2026-05-28 | 2026-05-28 | Public IDs, status enums, soft-delete metadata, designation lookup, FK policies, and baseline migration added |
-| 2 | Public-ID Resolver and Test Foundation | Not started | - | - | Adds resolvers, DTO mapping helpers, test helper support |
+| 2 | Public-ID Resolver and Test Foundation | Complete | 2026-05-28 | 2026-05-28 | Strict UUIDv7 validation, resolvers, DTO mappers, dual helper, and API-ID test helper support added |
 | 3 | User Lifecycle and Auth | Not started | - | - | Adds user delete/restore/status/impact and auth enforcement |
 | 4 | Platform RBAC Refactor | Not started | - | - | Replaces moderator assignments with platform role assignments |
 | 5 | Society Lifecycle and Notifications | Not started | - | - | Adds society status/delete/restore cascade and lifecycle notifications |
@@ -84,7 +84,40 @@
 
 ### Follow-Up for Module 2
 
-- Add public-ID resolver helpers and DTO mapping helpers.
-- Extend test helpers to support public-ID route/body contracts.
+- Reuse the Module 2 foundation from `server/src/shared/ids/`; do not recreate
+  public-ID validators, resolvers, or DTO mappers in later modules.
 - Keep transitional internal numeric route compatibility scoped until the final
   cleanup module removes it.
+
+## Module 2 Checklist
+
+### Implementation
+
+- [x] Added strict UUIDv7 validation helpers:
+  `publicIdSchema`, `parsePublicId`, and `isPublicId`.
+- [x] Added core entity resolver helpers:
+  `resolveUserPublicId`, `resolveClassPublicId`, `resolveSocietyPublicId`,
+  `resolveServerPublicId`, `resolveChannelPublicId`, and
+  `resolvePostPublicId`.
+- [x] Added `resolveCoreIdentifier` with public-only default mode and explicit
+  temporary `mode: "dual"` support for staged route migration.
+- [x] Added `includeDeleted` resolver option for future lifecycle restore and
+  impact paths.
+- [x] Added shallow public DTO mappers for users, classes, societies, servers,
+  channels, and posts.
+- [x] Added test factory helpers `apiId(entity)` and `entityIds(entity)`.
+- [x] Kept live API routes, live response bodies, and frontend code unchanged.
+
+### Verification
+
+- [x] `npx prisma validate`
+- [x] `npm run build`
+- [x] `npm test -- tests/modules/public-id.test.ts` (14 tests)
+- [x] `npm test` (21 suites, 512 tests)
+
+### Follow-Up for Module 3
+
+- Use `resolveUserPublicId` for new user lifecycle routes.
+- Use public DTO mappers when user lifecycle responses expose core user data.
+- Do not use `mode: "dual"` for final public user lifecycle endpoints unless a
+  temporary compatibility route is explicitly needed and covered by tests.

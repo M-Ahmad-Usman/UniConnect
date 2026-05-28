@@ -21,6 +21,25 @@ function uniqueRollNumber(): string {
   return `22-NTU-CS-${sequence}`;
 }
 
+interface CoreFixtureRecord {
+  id: number;
+  publicId: string;
+}
+
+export function apiId(entity: CoreFixtureRecord): string {
+  return entity.publicId;
+}
+
+export function entityIds(entity: CoreFixtureRecord): {
+  internalId: number;
+  publicId: string;
+} {
+  return {
+    internalId: entity.id,
+    publicId: entity.publicId,
+  };
+}
+
 // ─── Seed Helpers ──────────────────────────────────────────────────────────
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {

@@ -57,6 +57,21 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-05-28 - Schema/Lifecycle Refactor Module 2 Complete
+- Added backend-only public-ID foundation utilities in `server/src/shared/ids/`:
+  strict UUIDv7 validation, core entity resolvers, temporary dual-resolution
+  support, and shallow public DTO mappers.
+- Added `includeDeleted` resolver support for future lifecycle restore and
+  deletion-impact modules without changing live route behavior.
+- Added test factory helpers so future API tests can use public IDs while DB
+  setup continues using internal IDs.
+- Kept frontend code, live API routes, and live response bodies unchanged.
+- Verification passed:
+  - Prisma validate
+  - focused public-ID foundation suite, 14/14
+  - full backend Jest suite, 512/512
+  - backend build
+
 ### 2026-05-28 - Schema/Lifecycle Refactor Module 1 Complete
 - Added schema foundations for the public-ID and lifecycle refactor:
   UUIDv7 public IDs, user/society status enums, soft-delete metadata, lifecycle
