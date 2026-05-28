@@ -57,6 +57,16 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-05-28 - Schema/Lifecycle Refactor Module 0 Complete
+- Added canonical planning and tracking docs for the schema, lifecycle,
+  public-ID, platform-role, and deletion-policy refactor.
+- Added `docs/entity_deletion_policy.md` as the branch source of truth for
+  soft-delete, status, restore, cascade, and blocker-report behavior.
+- Marked `pulled-docs/` as imported source material rather than canonical target
+  docs.
+- Locked JWT/public-ID policy: JWTs may keep internal numeric user IDs as signed
+  readable metadata, while public APIs must use public IDs for core entities.
+
 ### 2026-05-25 - Module 7 Complete
 - Added request ID propagation to backend error responses.
 - Added specific safe API error codes for common domain conflicts, scoped

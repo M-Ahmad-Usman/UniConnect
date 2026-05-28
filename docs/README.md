@@ -20,6 +20,9 @@ This is the primary documentation entry point. It points to the canonical source
 | Cross-system security posture | `docs/security.md` |
 | Release readiness and final gate | `docs/release_readiness.md` |
 | Active implementation/release log | `docs/release_log.md` |
+| Schema/lifecycle/public-ID refactor plan | `docs/schema_lifecycle_refactor_plan.md` |
+| Schema/lifecycle/public-ID refactor progress | `docs/schema_lifecycle_refactor_progress.md` |
+| Entity deletion and lifecycle policy | `docs/entity_deletion_policy.md` |
 | Full-system hardening plan | `docs/full_system_hardening_plan.md` |
 | Full-system hardening progress | `docs/full_system_hardening_progress.md` |
 | Functional requirements and role policy | `docs/functional_requirements.md` |
@@ -39,6 +42,10 @@ This is the primary documentation entry point. It points to the canonical source
   integration behavior.
 - Historical implementation notes should be summarized into `docs/release_log.md`
   instead of creating new long-lived progress files.
+- The schema/lifecycle/public-ID refactor is an active multi-module exception
+  with its own plan and progress tracker until Module 9 cleanup is complete.
+- `pulled-docs/` is imported source material only. Canonical decisions for the
+  current branch live under `docs/`.
 - Do not duplicate endpoint catalogs or architecture rules in root summaries;
   link to the app-local source of truth instead.
 
@@ -47,4 +54,7 @@ This is the primary documentation entry point. It points to the canonical source
 2. `docs/README.md` for the current documentation map.
 3. `docs/release_readiness.md` and `docs/release_log.md` for active work.
 4. `docs/security.md` for auth, CSRF, audit, telemetry, and error policy.
-5. App-local docs only for the subsystem being changed.
+5. `docs/schema_lifecycle_refactor_plan.md` and
+   `docs/entity_deletion_policy.md` when working on the schema/lifecycle
+   refactor.
+6. App-local docs only for the subsystem being changed.
