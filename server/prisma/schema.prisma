@@ -24,6 +24,20 @@ enum UserType {
   @@map("user_type")
 }
 
+enum UserStatus {
+  ACTIVE    @map("active")
+  SUSPENDED @map("suspended")
+
+  @@map("user_status")
+}
+
+enum SocietyStatus {
+  ACTIVE    @map("active")
+  SUSPENDED @map("suspended")
+
+  @@map("society_status")
+}
+
 enum ServerType {
   DEPARTMENT @map("Department")
   CLASS      @map("Class")
@@ -111,15 +125,24 @@ model Discipline {
   @@map("disciplines")
 }
 
-model Department {
-  id       Int     @id @default(autoincrement())
-  name     String  @unique @db.VarChar(100)
-  code     String  @unique @db.VarChar(20)
-  hodId    Int?    @unique @map("hod_id")
-  serverId Int     @unique @map("server_id")
+model Designation {
+  value       String        @id @db.VarChar(50)
+  label       String        @db.VarChar(100)
+  description String?       @db.VarChar(500)
+  teachers    TeacherInfo[]
 
-  hod      TeacherInfo? @relation("DepartmentHOD", fields: [hodId], references: [teacherId])
-  server   Server       @relation("DepartmentServer", fields: [serverId], references: [id])
+  @@map("designations")
+}
+
+model Department {
+  id       Int    @id @default(autoincrement())
+  name     String @unique @db.VarChar(100)
+  code     String @unique @db.VarChar(20)
+  hodId    Int?   @unique @map("hod_id")
+  serverId Int    @unique @map("server_id")
+
+  hod    TeacherInfo? @relation("DepartmentHOD", fields: [hodId], references: [teacherId], onDelete: Restrict)
+  server Server       @relation("DepartmentServer", fields: [serverId], references: [id], onDelete: Restrict)
 
   programs  Program[]
   users     User[]
@@ -130,21 +153,21 @@ model Department {
 }
 
 model Program {
-  id                Int  @id @default(autoincrement())
-  departmentId      Int  @map("department_id")
-  disciplineId      Int  @map("discipline_id")
-  degreeLevelId     Int  @map("degree_level_id")
+  id                Int    @id @default(autoincrement())
+  departmentId      Int    @map("department_id")
+  disciplineId      Int    @map("discipline_id")
+  degreeLevelId     Int    @map("degree_level_id")
   semesters         Int
   code              String @unique @db.VarChar(20)
   programDirectorId Int?   @unique @map("program_director_id")
 
-  department      Department   @relation(fields: [departmentId], references: [id])
-  discipline      Discipline   @relation(fields: [disciplineId], references: [id])
-  degreeLevel     DegreeLevel  @relation(fields: [degreeLevelId], references: [id])
-  programDirector TeacherInfo? @relation("ProgramDirector", fields: [programDirectorId], references: [teacherId])
+  department      Department   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  discipline      Discipline   @relation(fields: [disciplineId], references: [id], onDelete: Restrict)
+  degreeLevel     DegreeLevel  @relation(fields: [degreeLevelId], references: [id], onDelete: Restrict)
+  programDirector TeacherInfo? @relation("ProgramDirector", fields: [programDirectorId], references: [teacherId], onDelete: Restrict)
 
   classes    Class[]
-  channels   Channel[]          @relation("ProgramChannel")
+  channels   Channel[]           @relation("ProgramChannel")
   curriculum ProgramCurriculum[]
 
   @@unique([departmentId, disciplineId, degreeLevelId])
@@ -152,37 +175,44 @@ model Program {
 }
 
 model User {
-  id               Int       @id @default(autoincrement())
-  fullName         String    @map("full_name") @db.VarChar(100)
-  email            String    @unique @db.VarChar(255)
-  phone            String    @db.VarChar(20)
-  passwordHash     String    @map("password_hash") @db.VarChar(255)
-  gender           Gender
-  profilePictureUrl String?  @map("profile_picture_url")
-  bio              String?
-  userType         UserType  @map("user_type")
-  departmentId     Int?      @map("department_id")
-  isActive         Boolean   @default(true) @map("is_active")
-  mustChangePassword Boolean @default(false) @map("must_change_password")
-  passwordResetTokenHash String? @map("password_reset_token_hash") @db.VarChar(255)
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                     Int        @id @default(autoincrement())
+  publicId               String     @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  fullName               String     @map("full_name") @db.VarChar(100)
+  email                  String     @db.VarChar(255)
+  phone                  String     @db.VarChar(20)
+  passwordHash           String     @map("password_hash") @db.VarChar(255)
+  gender                 Gender
+  profilePictureUrl      String?    @map("profile_picture_url")
+  bio                    String?
+  userType               UserType   @map("user_type")
+  departmentId           Int?       @map("department_id")
+  status                 UserStatus @default(ACTIVE)
+  isActive               Boolean    @default(true) @map("is_active")
+  isDeleted              Boolean    @default(false) @map("is_deleted")
+  deletedAt              DateTime?  @map("deleted_at")
+  deletedBy              Int?       @map("deleted_by")
+  mustChangePassword     Boolean    @default(false) @map("must_change_password")
+  passwordResetTokenHash String?    @map("password_reset_token_hash") @db.VarChar(255)
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
 
-  department Department? @relation(fields: [departmentId], references: [id])
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  deletedByUser User?       @relation("UserDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
 
-  studentInfo      StudentInfo?
-  teacherInfo      TeacherInfo?
+  studentInfo       StudentInfo?
+  teacherInfo       TeacherInfo?
   serverMemberships ServerMembership[]
-  createdServers   Server[]            @relation("ServerCreator")
-  lockedChannels   Channel[]           @relation("ChannelLocker")
-  deletedChannels  Channel[]           @relation("ChannelDeleter")
-  createdChannels  Channel[]           @relation("ChannelCreator")
-  archivedChannels Channel[]           @relation("ChannelArchiver")
+  createdServers    Server[]           @relation("ServerCreator")
+  deletedServers    Server[]           @relation("ServerDeleter")
+  lockedChannels    Channel[]          @relation("ChannelLocker")
+  deletedChannels   Channel[]          @relation("ChannelDeleter")
+  createdChannels   Channel[]          @relation("ChannelCreator")
+  archivedChannels  Channel[]          @relation("ChannelArchiver")
 
-  authoredPosts    Post[]              @relation("PostAuthor")
-  deletedPosts     Post[]              @relation("PostDeleter")
-  updatedPosts     Post[]              @relation("PostUpdater")
-  pinnedPosts      Post[]              @relation("PostPinner")
+  authoredPosts Post[] @relation("PostAuthor")
+  deletedPosts  Post[] @relation("PostDeleter")
+  updatedPosts  Post[] @relation("PostUpdater")
+  pinnedPosts   Post[] @relation("PostPinner")
 
   moderatorAssignments        ModeratorAssignment[] @relation("ModeratorUser")
   moderatorAssignmentsCreated ModeratorAssignment[] @relation("ModeratorAssigner")
@@ -190,12 +220,15 @@ model User {
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
   refreshTokens           RefreshToken[]
-  graduatedClasses        Class[] @relation("ClassGraduator")
-  auditLogs               AuditLog[] @relation("AuditActor")
+  graduatedClasses        Class[]                  @relation("ClassGraduator")
+  auditLogs               AuditLog[]               @relation("AuditActor")
 
-  societyMembershipRequests SocietyMembershipRequest[] @relation("MembershipRequester")
+  deletedUsers               User[]                     @relation("UserDeleter")
+  deletedSocieties           Society[]                  @relation("SocietyDeleter")
+  societyMembershipRequests  SocietyMembershipRequest[] @relation("MembershipRequester")
   reviewedMembershipRequests SocietyMembershipRequest[] @relation("MembershipReviewer")
 
+  @@index([departmentId, userType, status])
   @@map("users")
 }
 
@@ -204,8 +237,8 @@ model StudentInfo {
   classId    Int    @map("class_id")
   rollNumber String @unique @map("roll_number") @db.VarChar(30)
 
-  user  User  @relation(fields: [studentId], references: [id])
-  class Class @relation(fields: [classId], references: [id])
+  user  User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class Class @relation(fields: [classId], references: [id], onDelete: Restrict)
 
   crOfClass          Class?   @relation("ClassCR")
   presidentOfSociety Society? @relation("SocietyPresident")
@@ -215,13 +248,14 @@ model StudentInfo {
 
 model TeacherInfo {
   teacherId   Int    @id @map("teacher_id")
-  designation String @db.VarChar(100)
+  designation String @db.VarChar(50)
 
-  user User @relation(fields: [teacherId], references: [id])
+  user              User        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  designationRecord Designation @relation(fields: [designation], references: [value], onDelete: Restrict, onUpdate: Cascade)
 
-  hodOfDepartment         Department? @relation("DepartmentHOD")
-  programDirectorOfProgram Program?   @relation("ProgramDirector")
-  convenorOfSociety       Society?   @relation("SocietyConvenor")
+  hodOfDepartment          Department? @relation("DepartmentHOD")
+  programDirectorOfProgram Program?    @relation("ProgramDirector")
+  convenorOfSociety        Society?    @relation("SocietyConvenor")
 
   teaches Teaches[]
 
@@ -229,22 +263,23 @@ model TeacherInfo {
 }
 
 model Class {
-  id              Int     @id @default(autoincrement())
-  programId       Int     @map("program_id")
-  currentSemester Int     @map("current_semester")
-  academicYear    Int     @map("academic_year")
-  admissionYear   Int     @map("admission_year")
+  id              Int         @id @default(autoincrement())
+  publicId        String      @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  programId       Int         @map("program_id")
+  currentSemester Int         @map("current_semester")
+  academicYear    Int         @map("academic_year")
+  admissionYear   Int         @map("admission_year")
   section         Section
-  crId            Int?    @unique @map("cr_id")
-  serverId        Int     @unique @map("server_id")
+  crId            Int?        @unique @map("cr_id")
+  serverId        Int         @unique @map("server_id")
   status          ClassStatus @default(ACTIVE)
-  graduatedAt     DateTime? @map("graduated_at")
-  graduatedBy     Int? @map("graduated_by")
+  graduatedAt     DateTime?   @map("graduated_at")
+  graduatedBy     Int?        @map("graduated_by")
 
-  program  Program      @relation(fields: [programId], references: [id])
-  cr       StudentInfo? @relation("ClassCR", fields: [crId], references: [studentId])
-  server   Server       @relation("ClassServer", fields: [serverId], references: [id])
-  graduator User?       @relation("ClassGraduator", fields: [graduatedBy], references: [id])
+  program   Program      @relation(fields: [programId], references: [id], onDelete: Restrict)
+  cr        StudentInfo? @relation("ClassCR", fields: [crId], references: [studentId], onDelete: Restrict)
+  server    Server       @relation("ClassServer", fields: [serverId], references: [id], onDelete: Restrict)
+  graduator User?        @relation("ClassGraduator", fields: [graduatedBy], references: [id], onDelete: SetNull)
 
   students StudentInfo[]
   teaches  Teaches[]
@@ -255,38 +290,52 @@ model Class {
 }
 
 model Society {
-  id           Int      @id @default(autoincrement())
-  name         String   @unique @db.VarChar(100)
-  description  String?
-  departmentId Int      @map("department_id")
-  presidentId  Int      @unique @map("president_id")
-  convenorId   Int      @unique @map("convenor_id")
-  serverId     Int      @unique @map("server_id")
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id               Int           @id @default(autoincrement())
+  publicId         String        @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  name             String        @db.VarChar(100)
+  description      String?
+  departmentId     Int           @map("department_id")
+  presidentId      Int           @unique @map("president_id")
+  convenorId       Int           @unique @map("convenor_id")
+  serverId         Int           @unique @map("server_id")
+  status           SocietyStatus @default(ACTIVE)
+  isActive         Boolean       @default(true) @map("is_active")
+  isDeleted        Boolean       @default(false) @map("is_deleted")
+  deletedAt        DateTime?     @map("deleted_at")
+  deletedBy        Int?          @map("deleted_by")
+  deletedCascadeId String?       @map("deleted_cascade_id") @db.Uuid
+  createdAt        DateTime      @default(now()) @map("created_at")
 
-  department Department  @relation(fields: [departmentId], references: [id])
-  president  StudentInfo @relation("SocietyPresident", fields: [presidentId], references: [studentId])
-  convenor   TeacherInfo @relation("SocietyConvenor", fields: [convenorId], references: [teacherId])
-  server     Server      @relation("SocietyServer", fields: [serverId], references: [id])
+  department    Department  @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  president     StudentInfo @relation("SocietyPresident", fields: [presidentId], references: [studentId], onDelete: Restrict)
+  convenor      TeacherInfo @relation("SocietyConvenor", fields: [convenorId], references: [teacherId], onDelete: Restrict)
+  server        Server      @relation("SocietyServer", fields: [serverId], references: [id], onDelete: Restrict)
+  deletedByUser User?       @relation("SocietyDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
 
   membershipRequests SocietyMembershipRequest[]
 
-  @@index([departmentId])
+  @@index([departmentId, isDeleted])
+  @@index([status, isDeleted])
   @@map("societies")
 }
 
 model Server {
-  id          Int        @id @default(autoincrement())
-  name        String     @db.VarChar(100)
-  description String?
-  type        ServerType
-  iconUrl     String?    @map("icon_url")
-  isActive    Boolean    @default(true) @map("is_active")
-  createdBy   Int        @map("created_by")
-  createdAt   DateTime   @default(now()) @map("created_at")
+  id               Int        @id @default(autoincrement())
+  publicId         String     @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  name             String     @db.VarChar(100)
+  description      String?
+  type             ServerType
+  iconUrl          String?    @map("icon_url")
+  isActive         Boolean    @default(true) @map("is_active")
+  isDeleted        Boolean    @default(false) @map("is_deleted")
+  deletedAt        DateTime?  @map("deleted_at")
+  deletedBy        Int?       @map("deleted_by")
+  deletedCascadeId String?    @map("deleted_cascade_id") @db.Uuid
+  createdBy        Int?       @map("created_by")
+  createdAt        DateTime   @default(now()) @map("created_at")
 
-  creator User @relation("ServerCreator", fields: [createdBy], references: [id])
+  creator       User? @relation("ServerCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  deletedByUser User? @relation("ServerDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
 
   department Department? @relation("DepartmentServer")
   class      Class?      @relation("ClassServer")
@@ -295,53 +344,54 @@ model Server {
   channels    Channel[]
   memberships ServerMembership[]
 
-  moderatorAssignments   ModeratorAssignment[]
+  moderatorAssignments    ModeratorAssignment[]
   notificationPreferences NotificationPreference[]
 
+  @@index([type, isDeleted])
   @@map("servers")
 }
 
 model Channel {
   id          Int         @id @default(autoincrement())
+  publicId    String      @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
   serverId    Int         @map("server_id")
   name        String      @db.VarChar(100)
   description String?
   type        ChannelType
 
-  courseId   Int? @map("course_id")
+  courseId  Int? @map("course_id")
   programId Int? @map("program_id")
 
-  isLocked  Boolean   @default(false) @map("is_locked")
-  lockedBy  Int?      @map("locked_by")
-  lockedAt  DateTime? @map("locked_at")
+  isLocked Boolean   @default(false) @map("is_locked")
+  lockedBy Int?      @map("locked_by")
+  lockedAt DateTime? @map("locked_at")
 
-  isDeleted Boolean   @default(false) @map("is_deleted")
-  deletedAt DateTime? @map("deleted_at")
-  deletedBy Int?      @map("deleted_by")
+  isDeleted        Boolean   @default(false) @map("is_deleted")
+  deletedAt        DateTime? @map("deleted_at")
+  deletedBy        Int?      @map("deleted_by")
+  deletedCascadeId String?   @map("deleted_cascade_id") @db.Uuid
 
   isAutoCreated Boolean  @default(false) @map("is_auto_created")
   createdAt     DateTime @default(now()) @map("created_at")
   createdBy     Int?     @map("created_by")
 
-  server  Server   @relation(fields: [serverId], references: [id])
-  course  Course?  @relation("CourseChannel", fields: [courseId], references: [id])
-  program Program? @relation("ProgramChannel", fields: [programId], references: [id])
+  server  Server   @relation(fields: [serverId], references: [id], onDelete: Restrict)
+  course  Course?  @relation("CourseChannel", fields: [courseId], references: [id], onDelete: Restrict)
+  program Program? @relation("ProgramChannel", fields: [programId], references: [id], onDelete: Restrict)
 
-  isArchived  Boolean   @default(false) @map("is_archived")
-  archivedAt  DateTime? @map("archived_at")
-  archivedBy  Int?      @map("archived_by")
+  isArchived Boolean   @default(false) @map("is_archived")
+  archivedAt DateTime? @map("archived_at")
+  archivedBy Int?      @map("archived_by")
 
-  locker   User? @relation("ChannelLocker", fields: [lockedBy], references: [id])
-  deleter  User? @relation("ChannelDeleter", fields: [deletedBy], references: [id])
-  creator  User? @relation("ChannelCreator", fields: [createdBy], references: [id])
-  archiver User? @relation("ChannelArchiver", fields: [archivedBy], references: [id])
+  locker   User? @relation("ChannelLocker", fields: [lockedBy], references: [id], onDelete: SetNull)
+  deleter  User? @relation("ChannelDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+  creator  User? @relation("ChannelCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  archiver User? @relation("ChannelArchiver", fields: [archivedBy], references: [id], onDelete: SetNull)
 
   posts                   Post[]
   moderatorAssignments    ModeratorAssignment[]
   notificationPreferences NotificationPreference[]
 
-  @@unique([serverId, name])
-  @@unique([serverId, courseId])
   @@index([serverId, isDeleted, isArchived])
   @@map("channels")
 }
@@ -352,8 +402,8 @@ model ServerMembership {
   joinedAt     DateTime @default(now()) @map("joined_at")
   isAutoJoined Boolean  @default(false) @map("is_auto_joined")
 
-  user   User   @relation(fields: [userId], references: [id])
-  server Server @relation(fields: [serverId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
 
   @@id([userId, serverId])
   @@index([serverId])
@@ -362,17 +412,17 @@ model ServerMembership {
 }
 
 model SocietyMembershipRequest {
-  id         Int                     @id @default(autoincrement())
-  societyId  Int                     @map("society_id")
-  userId     Int                     @map("user_id")
-  status     MembershipRequestStatus @default(PENDING)
-  requestedAt DateTime              @default(now()) @map("requested_at")
-  reviewedBy  Int?                  @map("reviewed_by")
-  reviewedAt  DateTime?             @map("reviewed_at")
+  id          Int                     @id @default(autoincrement())
+  societyId   Int                     @map("society_id")
+  userId      Int                     @map("user_id")
+  status      MembershipRequestStatus @default(PENDING)
+  requestedAt DateTime                @default(now()) @map("requested_at")
+  reviewedBy  Int?                    @map("reviewed_by")
+  reviewedAt  DateTime?               @map("reviewed_at")
 
-  society  Society @relation(fields: [societyId], references: [id])
-  user     User    @relation("MembershipRequester", fields: [userId], references: [id])
-  reviewer User?   @relation("MembershipReviewer", fields: [reviewedBy], references: [id])
+  society  Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  user     User    @relation("MembershipRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User?   @relation("MembershipReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
 
   @@unique([societyId, userId])
   @@index([societyId, status, requestedAt])
@@ -387,7 +437,7 @@ model Course {
   creditHours  Int    @map("credit_hours")
   departmentId Int    @map("department_id")
 
-  department Department @relation(fields: [departmentId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
 
   channels   Channel[]           @relation("CourseChannel")
   teaches    Teaches[]
@@ -398,12 +448,12 @@ model Course {
 
 model Teaches {
   teacherId Int @map("teacher_id")
-  courseId   Int @map("course_id")
-  classId    Int @map("class_id")
+  courseId  Int @map("course_id")
+  classId   Int @map("class_id")
 
-  teacher TeacherInfo @relation(fields: [teacherId], references: [teacherId])
-  course  Course      @relation(fields: [courseId], references: [id])
-  class   Class       @relation(fields: [classId], references: [id])
+  teacher TeacherInfo @relation(fields: [teacherId], references: [teacherId], onDelete: Restrict)
+  course  Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  class   Class       @relation(fields: [classId], references: [id], onDelete: Restrict)
 
   @@id([teacherId, courseId, classId])
   @@unique([classId, courseId])
@@ -412,6 +462,7 @@ model Teaches {
 
 model Post {
   id        Int          @id @default(autoincrement())
+  publicId  String       @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
   authorId  Int          @map("author_id")
   channelId Int          @map("channel_id")
   title     String       @db.VarChar(100)
@@ -430,12 +481,12 @@ model Post {
   updatedAt DateTime? @map("updated_at")
   updatedBy Int?      @map("updated_by")
 
-  author  User    @relation("PostAuthor", fields: [authorId], references: [id])
-  channel Channel @relation(fields: [channelId], references: [id])
+  author  User    @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
-  deleter User? @relation("PostDeleter", fields: [deletedBy], references: [id])
-  updater User? @relation("PostUpdater", fields: [updatedBy], references: [id])
-  pinner  User? @relation("PostPinner", fields: [pinnedBy], references: [id])
+  deleter User? @relation("PostDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+  updater User? @relation("PostUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  pinner  User? @relation("PostPinner", fields: [pinnedBy], references: [id], onDelete: SetNull)
 
   attachments   PostAttachment[]
   notifications Notification[]
@@ -453,7 +504,7 @@ model PostAttachment {
   fileSize   Int      @map("file_size")
   uploadedAt DateTime @default(now()) @map("uploaded_at")
 
-  post Post @relation(fields: [postId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@map("post_attachments")
@@ -481,8 +532,8 @@ model RolePermission {
   roleId       Int @map("role_id")
   permissionId Int @map("permission_id")
 
-  role       Role       @relation(fields: [roleId], references: [id])
-  permission Permission @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
@@ -495,13 +546,13 @@ model ModeratorAssignment {
   serverId  Int                @map("server_id")
   channelId Int?               @map("channel_id")
 
-  assignedBy Int      @map("assigned_by")
+  assignedBy Int?     @map("assigned_by")
   assignedAt DateTime @default(now()) @map("assigned_at")
 
-  user     User    @relation("ModeratorUser", fields: [userId], references: [id])
-  server   Server  @relation(fields: [serverId], references: [id])
-  channel  Channel? @relation(fields: [channelId], references: [id])
-  assigner User    @relation("ModeratorAssigner", fields: [assignedBy], references: [id])
+  user     User     @relation("ModeratorUser", fields: [userId], references: [id], onDelete: Cascade)
+  server   Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channel  Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  assigner User?    @relation("ModeratorAssigner", fields: [assignedBy], references: [id], onDelete: SetNull)
 
   @@unique([userId, serverId, channelId])
   @@index([serverId])
@@ -509,17 +560,17 @@ model ModeratorAssignment {
 }
 
 model Notification {
-  id        Int               @id @default(autoincrement())
-  userId    Int               @map("user_id")
-  postId    Int?              @map("post_id")
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  postId    Int?             @map("post_id")
   type      NotificationType
-  title     String            @db.VarChar(200)
+  title     String           @db.VarChar(200)
   message   String?
-  readAt    DateTime?         @map("read_at")
-  createdAt DateTime          @default(now()) @map("created_at")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
 
-  user User  @relation(fields: [userId], references: [id])
-  post Post? @relation(fields: [postId], references: [id])
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt])
   @@index([userId, type, createdAt])
@@ -528,18 +579,18 @@ model Notification {
 }
 
 model NotificationPreference {
-  id               Int                    @id @default(autoincrement())
-  userId           Int                    @map("user_id")
-  notificationType NotificationType       @default(NEW_POST) @map("notification_type")
-  scopeType        NotificationScopeType  @map("scope_type")
-  serverId         Int                    @map("server_id")
-  channelId        Int?                   @map("channel_id")
-  isSubscribed     Boolean                @default(true) @map("is_subscribed")
-  updatedAt        DateTime               @updatedAt @map("updated_at")
+  id               Int                   @id @default(autoincrement())
+  userId           Int                   @map("user_id")
+  notificationType NotificationType      @default(NEW_POST) @map("notification_type")
+  scopeType        NotificationScopeType @map("scope_type")
+  serverId         Int                   @map("server_id")
+  channelId        Int?                  @map("channel_id")
+  isSubscribed     Boolean               @default(true) @map("is_subscribed")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
 
-  user    User     @relation(fields: [userId], references: [id])
-  server  Server   @relation(fields: [serverId], references: [id])
-  channel Channel? @relation(fields: [channelId], references: [id])
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server  Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   @@unique([userId, notificationType, scopeType, serverId, channelId])
   @@map("notification_preferences")
@@ -553,7 +604,7 @@ model RefreshToken {
   createdAt DateTime  @default(now()) @map("created_at")
   revokedAt DateTime? @map("revoked_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("refresh_tokens")
@@ -570,7 +621,7 @@ model AuditLog {
   userAgent   String?  @map("user_agent") @db.VarChar(500)
   createdAt   DateTime @default(now()) @map("created_at")
 
-  actor User? @relation("AuditActor", fields: [actorUserId], references: [id])
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([actorUserId, createdAt])
   @@index([targetType, targetId, createdAt])
@@ -581,12 +632,12 @@ model AuditLog {
 model ProgramCurriculum {
   id             Int @id @default(autoincrement())
   programId      Int @map("program_id")
-  courseId        Int @map("course_id")
+  courseId       Int @map("course_id")
   semesterNumber Int @map("semester_number")
   batchYear      Int @map("batch_year")
 
-  program Program @relation(fields: [programId], references: [id])
-  course  Course  @relation(fields: [courseId], references: [id])
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   @@unique([programId, courseId, batchYear])
   @@map("program_curriculum")

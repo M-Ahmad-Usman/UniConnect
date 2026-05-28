@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 0 complete, implementation modules not started
+- Status: Module 1 complete, Module 2 not started
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
 - Source references: `pulled-docs/`
@@ -378,4 +378,3 @@ Frontend:
 - Background cleanup or revocation events for expired platform roles.
 - Full trigger-based lifecycle stamping.
 - Opaque server-side sessions.
-

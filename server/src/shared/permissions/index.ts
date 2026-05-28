@@ -60,6 +60,7 @@ export interface PermissionContext {
     id: number;
     userType: string;
     departmentId: number | null;
+    status: string;
     isActive: boolean;
   } | null;
   scopes: PermissionScopeSummary;
@@ -151,9 +152,9 @@ export function emptyRoleWorkspacePermissions(): RoleWorkspacePermissions {
 export async function getPermissionContext(userId: number): Promise<PermissionContext> {
   const [user, hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, moderatorAssignments] =
     await Promise.all([
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, userType: true, departmentId: true, isActive: true },
+      prisma.user.findFirst({
+        where: { id: userId, isDeleted: false },
+        select: { id: true, userType: true, departmentId: true, status: true, isActive: true },
       }),
       prisma.department.findMany({
         where: { hodId: userId },
@@ -172,15 +173,19 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
         select: { id: true, serverId: true },
       }),
       prisma.society.findMany({
-        where: { presidentId: userId },
+        where: { presidentId: userId, isDeleted: false },
         select: { id: true, serverId: true },
       }),
       prisma.society.findMany({
-        where: { convenorId: userId },
+        where: { convenorId: userId, isDeleted: false },
         select: { id: true, serverId: true },
       }),
       prisma.moderatorAssignment.findMany({
-        where: { userId },
+        where: {
+          userId,
+          server: { isDeleted: false },
+          OR: [{ channelId: null }, { channel: { isDeleted: false } }],
+        },
         select: { serverId: true, channelId: true, scopeType: true },
       }),
     ]);
@@ -381,7 +386,7 @@ export function buildSocietyPermissions(
 function isActiveUser(
   context: PermissionContext
 ): context is PermissionContext & { user: NonNullable<PermissionContext["user"]> } {
-  return Boolean(context.user?.isActive);
+  return Boolean(context.user?.isActive && context.user.status === "ACTIVE");
 }
 
 function allClassPermissions(): ClassPermissions {

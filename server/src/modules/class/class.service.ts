@@ -589,6 +589,7 @@ export async function assignCourseToClass(
       where: {
         serverId: classRecord.serverId,
         courseId: data.courseId,
+        isDeleted: false,
       },
       select: { id: true, isArchived: true, isLocked: true },
     });
@@ -1112,6 +1113,7 @@ export async function advanceSemester(
           where: {
             serverId: classRecord.serverId,
             courseId: entry.courseId,
+            isDeleted: false,
           },
           select: { id: true },
         });

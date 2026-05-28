@@ -44,6 +44,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   channel_moderator: ["post:channel"],
 };
 
+const TEST_DESIGNATIONS = [
+  { value: "Professor", label: "Professor" },
+  { value: "Associate Professor", label: "Associate Professor" },
+  { value: "Assistant Professor", label: "Assistant Professor" },
+  { value: "Lecturer", label: "Lecturer" },
+];
+
 /**
  * Seed roles, permissions, and role-permission mappings.
  * Required for tests that use the permission-based authorize middleware.
@@ -101,6 +108,21 @@ export async function seedRolesAndPermissions() {
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
+async function ensureDesignation(value: string): Promise<void> {
+  await prisma.designation.upsert({
+    where: { value },
+    update: { label: value },
+    create: { value, label: value },
+  });
+}
+
+export async function seedDesignations() {
+  await prisma.designation.createMany({
+    data: TEST_DESIGNATIONS,
+    skipDuplicates: true,
+  });
+}
+
 async function ensureCreatorUser(userId?: number): Promise<number> {
   if (userId) {
     return userId;
@@ -125,7 +147,9 @@ export async function createAdmin(overrides?: { email?: string; fullName?: strin
       gender: "MALE",
       userType: "ADMIN",
       departmentId: null,
+      status: "ACTIVE",
       isActive: true,
+      isDeleted: false,
       mustChangePassword: true,
     },
   });
@@ -145,6 +169,7 @@ export async function createUser(overrides: {
 }) {
   const password = overrides.password ?? "Test@1234";
   const passwordHash = await bcrypt.hash(password, 1);
+  const isActive = overrides.isActive ?? true;
 
   return prisma.user.create({
     data: {
@@ -155,7 +180,9 @@ export async function createUser(overrides: {
       gender: "MALE",
       userType: overrides.userType ?? "STUDENT",
       departmentId: overrides.departmentId ?? null,
-      isActive: overrides.isActive ?? true,
+      status: isActive ? "ACTIVE" : "SUSPENDED",
+      isActive,
+      isDeleted: false,
       mustChangePassword: overrides.mustChangePassword ?? false,
     },
   });
@@ -206,6 +233,7 @@ export async function createServer(
       description: overrides?.description ?? null,
       type,
       createdBy,
+      isDeleted: false,
       isActive: true,
     },
   });
@@ -276,6 +304,9 @@ export async function createTeacherWithInfo(
   departmentId: number,
   overrides?: { email?: string; designation?: string; fullName?: string; password?: string }
 ) {
+  const designation = overrides?.designation ?? "Lecturer";
+  await ensureDesignation(designation);
+
   const teacher = await createUser({
     email: overrides?.email ?? `teacher-${uniqueSuffix()}@test.com`,
     fullName: overrides?.fullName ?? "Test Teacher",
@@ -287,7 +318,7 @@ export async function createTeacherWithInfo(
   await prisma.teacherInfo.create({
     data: {
       teacherId: teacher.id,
-      designation: overrides?.designation ?? "Lecturer",
+      designation,
     },
   });
 
@@ -390,6 +421,7 @@ export async function createSociety(
       name: overrides?.name ?? `Society-${uniqueSuffix()}`,
       type: "SOCIETY",
       createdBy,
+      isDeleted: false,
       isActive: true,
     },
   });
@@ -409,6 +441,9 @@ export async function createSociety(
       presidentId: presidentUserId,
       convenorId: convenorUserId,
       serverId: server.id,
+      status: "ACTIVE",
+      isDeleted: false,
+      isActive: true,
     },
   });
 

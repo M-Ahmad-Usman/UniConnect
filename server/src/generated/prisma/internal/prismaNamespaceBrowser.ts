@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   DegreeLevel: 'DegreeLevel',
   Discipline: 'Discipline',
+  Designation: 'Designation',
   Department: 'Department',
   Program: 'Program',
   User: 'User',
@@ -111,6 +112,15 @@ export const DisciplineScalarFieldEnum = {
 export type DisciplineScalarFieldEnum = (typeof DisciplineScalarFieldEnum)[keyof typeof DisciplineScalarFieldEnum]
 
 
+export const DesignationScalarFieldEnum = {
+  value: 'value',
+  label: 'label',
+  description: 'description'
+} as const
+
+export type DesignationScalarFieldEnum = (typeof DesignationScalarFieldEnum)[keyof typeof DesignationScalarFieldEnum]
+
+
 export const DepartmentScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -137,6 +147,7 @@ export type ProgramScalarFieldEnum = (typeof ProgramScalarFieldEnum)[keyof typeo
 
 export const UserScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   fullName: 'fullName',
   email: 'email',
   phone: 'phone',
@@ -146,7 +157,11 @@ export const UserScalarFieldEnum = {
   bio: 'bio',
   userType: 'userType',
   departmentId: 'departmentId',
+  status: 'status',
   isActive: 'isActive',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
   mustChangePassword: 'mustChangePassword',
   passwordResetTokenHash: 'passwordResetTokenHash',
   createdAt: 'createdAt',
@@ -175,6 +190,7 @@ export type TeacherInfoScalarFieldEnum = (typeof TeacherInfoScalarFieldEnum)[key
 
 export const ClassScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   programId: 'programId',
   currentSemester: 'currentSemester',
   academicYear: 'academicYear',
@@ -192,13 +208,19 @@ export type ClassScalarFieldEnum = (typeof ClassScalarFieldEnum)[keyof typeof Cl
 
 export const SocietyScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   name: 'name',
   description: 'description',
   departmentId: 'departmentId',
   presidentId: 'presidentId',
   convenorId: 'convenorId',
   serverId: 'serverId',
+  status: 'status',
   isActive: 'isActive',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
+  deletedCascadeId: 'deletedCascadeId',
   createdAt: 'createdAt'
 } as const
 
@@ -207,11 +229,16 @@ export type SocietyScalarFieldEnum = (typeof SocietyScalarFieldEnum)[keyof typeo
 
 export const ServerScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   name: 'name',
   description: 'description',
   type: 'type',
   iconUrl: 'iconUrl',
   isActive: 'isActive',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
+  deletedCascadeId: 'deletedCascadeId',
   createdBy: 'createdBy',
   createdAt: 'createdAt'
 } as const
@@ -221,6 +248,7 @@ export type ServerScalarFieldEnum = (typeof ServerScalarFieldEnum)[keyof typeof 
 
 export const ChannelScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   serverId: 'serverId',
   name: 'name',
   description: 'description',
@@ -233,6 +261,7 @@ export const ChannelScalarFieldEnum = {
   isDeleted: 'isDeleted',
   deletedAt: 'deletedAt',
   deletedBy: 'deletedBy',
+  deletedCascadeId: 'deletedCascadeId',
   isAutoCreated: 'isAutoCreated',
   createdAt: 'createdAt',
   createdBy: 'createdBy',
@@ -289,6 +318,7 @@ export type TeachesScalarFieldEnum = (typeof TeachesScalarFieldEnum)[keyof typeo
 
 export const PostScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   authorId: 'authorId',
   channelId: 'channelId',
   title: 'title',

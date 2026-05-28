@@ -34,6 +34,10 @@ function generateRefreshToken(userId: number): string {
   });
 }
 
+function canAuthenticate(user: { isActive: boolean; isDeleted: boolean; status: string }): boolean {
+  return user.isActive && !user.isDeleted && user.status === "ACTIVE";
+}
+
 async function storeRefreshToken(userId: number, token: string): Promise<void> {
   const tokenHash = hashToken(token);
   const expiresAt = new Date(Date.now() + parseExpiry(env.JWT_REFRESH_EXPIRY));
@@ -46,9 +50,11 @@ async function storeRefreshToken(userId: number, token: string): Promise<void> {
 // ─── Login ──────────────────────────────────────────────────────────────────
 
 export async function login(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findFirst({
+    where: { email, isDeleted: false },
+  });
 
-  if (!user || !user.isActive) {
+  if (!user || !canAuthenticate(user)) {
     console.warn("[AUTH] Failed login attempt", { email, reason: "invalid_credentials", timestamp: new Date().toISOString() });
     throw new UnauthorizedError("Invalid credentials");
   }
@@ -127,7 +133,7 @@ export async function refresh(refreshTokenCookie: string) {
       where: { id: storedToken.userId },
     });
 
-    if (!user || !user.isActive) {
+    if (!user || !canAuthenticate(user)) {
       throw new UnauthorizedError("Invalid refresh token");
     }
 
@@ -190,10 +196,12 @@ export async function logout(
 // ─── Forgot Password ───────────────────────────────────────────────────────
 
 export async function forgotPassword(email: string): Promise<void> {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findFirst({
+    where: { email, isDeleted: false },
+  });
 
   // Always return silently to avoid user enumeration
-  if (!user) return;
+  if (!user || !canAuthenticate(user)) return;
 
   const resetToken = jwt.sign(
     { id: user.id, email: user.email },
@@ -239,11 +247,17 @@ export async function resetPassword(
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { passwordResetTokenHash: true, mustChangePassword: true },
+    select: {
+      passwordResetTokenHash: true,
+      mustChangePassword: true,
+      status: true,
+      isActive: true,
+      isDeleted: true,
+    },
   });
 
   const tokenHash = hashToken(token);
-  if (!user || user.passwordResetTokenHash !== tokenHash) {
+  if (!user || !canAuthenticate(user) || user.passwordResetTokenHash !== tokenHash) {
     throw new UnauthorizedError("Invalid or expired reset token");
   }
 
@@ -290,7 +304,7 @@ export async function changePassword(
 ): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
-  if (!user) {
+  if (!user || !canAuthenticate(user)) {
     throw new UnauthorizedError("Invalid credentials");
   }
 

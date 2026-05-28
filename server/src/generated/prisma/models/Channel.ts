@@ -50,6 +50,7 @@ export type ChannelSumAggregateOutputType = {
 
 export type ChannelMinAggregateOutputType = {
   id: number | null
+  publicId: string | null
   serverId: number | null
   name: string | null
   description: string | null
@@ -62,6 +63,7 @@ export type ChannelMinAggregateOutputType = {
   isDeleted: boolean | null
   deletedAt: Date | null
   deletedBy: number | null
+  deletedCascadeId: string | null
   isAutoCreated: boolean | null
   createdAt: Date | null
   createdBy: number | null
@@ -72,6 +74,7 @@ export type ChannelMinAggregateOutputType = {
 
 export type ChannelMaxAggregateOutputType = {
   id: number | null
+  publicId: string | null
   serverId: number | null
   name: string | null
   description: string | null
@@ -84,6 +87,7 @@ export type ChannelMaxAggregateOutputType = {
   isDeleted: boolean | null
   deletedAt: Date | null
   deletedBy: number | null
+  deletedCascadeId: string | null
   isAutoCreated: boolean | null
   createdAt: Date | null
   createdBy: number | null
@@ -94,6 +98,7 @@ export type ChannelMaxAggregateOutputType = {
 
 export type ChannelCountAggregateOutputType = {
   id: number
+  publicId: number
   serverId: number
   name: number
   description: number
@@ -106,6 +111,7 @@ export type ChannelCountAggregateOutputType = {
   isDeleted: number
   deletedAt: number
   deletedBy: number
+  deletedCascadeId: number
   isAutoCreated: number
   createdAt: number
   createdBy: number
@@ -140,6 +146,7 @@ export type ChannelSumAggregateInputType = {
 
 export type ChannelMinAggregateInputType = {
   id?: true
+  publicId?: true
   serverId?: true
   name?: true
   description?: true
@@ -152,6 +159,7 @@ export type ChannelMinAggregateInputType = {
   isDeleted?: true
   deletedAt?: true
   deletedBy?: true
+  deletedCascadeId?: true
   isAutoCreated?: true
   createdAt?: true
   createdBy?: true
@@ -162,6 +170,7 @@ export type ChannelMinAggregateInputType = {
 
 export type ChannelMaxAggregateInputType = {
   id?: true
+  publicId?: true
   serverId?: true
   name?: true
   description?: true
@@ -174,6 +183,7 @@ export type ChannelMaxAggregateInputType = {
   isDeleted?: true
   deletedAt?: true
   deletedBy?: true
+  deletedCascadeId?: true
   isAutoCreated?: true
   createdAt?: true
   createdBy?: true
@@ -184,6 +194,7 @@ export type ChannelMaxAggregateInputType = {
 
 export type ChannelCountAggregateInputType = {
   id?: true
+  publicId?: true
   serverId?: true
   name?: true
   description?: true
@@ -196,6 +207,7 @@ export type ChannelCountAggregateInputType = {
   isDeleted?: true
   deletedAt?: true
   deletedBy?: true
+  deletedCascadeId?: true
   isAutoCreated?: true
   createdAt?: true
   createdBy?: true
@@ -293,6 +305,7 @@ export type ChannelGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 
 export type ChannelGroupByOutputType = {
   id: number
+  publicId: string
   serverId: number
   name: string
   description: string | null
@@ -305,6 +318,7 @@ export type ChannelGroupByOutputType = {
   isDeleted: boolean
   deletedAt: Date | null
   deletedBy: number | null
+  deletedCascadeId: string | null
   isAutoCreated: boolean
   createdAt: Date
   createdBy: number | null
@@ -338,6 +352,7 @@ export type ChannelWhereInput = {
   OR?: Prisma.ChannelWhereInput[]
   NOT?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
   id?: Prisma.IntFilter<"Channel"> | number
+  publicId?: Prisma.UuidFilter<"Channel"> | string
   serverId?: Prisma.IntFilter<"Channel"> | number
   name?: Prisma.StringFilter<"Channel"> | string
   description?: Prisma.StringNullableFilter<"Channel"> | string | null
@@ -350,6 +365,7 @@ export type ChannelWhereInput = {
   isDeleted?: Prisma.BoolFilter<"Channel"> | boolean
   deletedAt?: Prisma.DateTimeNullableFilter<"Channel"> | Date | string | null
   deletedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableFilter<"Channel"> | string | null
   isAutoCreated?: Prisma.BoolFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableFilter<"Channel"> | number | null
@@ -370,6 +386,7 @@ export type ChannelWhereInput = {
 
 export type ChannelOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -382,6 +399,7 @@ export type ChannelOrderByWithRelationInput = {
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrderInput | Prisma.SortOrder
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -402,8 +420,7 @@ export type ChannelOrderByWithRelationInput = {
 
 export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  serverId_name?: Prisma.ChannelServerIdNameCompoundUniqueInput
-  serverId_courseId?: Prisma.ChannelServerIdCourseIdCompoundUniqueInput
+  publicId?: string
   AND?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
   OR?: Prisma.ChannelWhereInput[]
   NOT?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
@@ -419,6 +436,7 @@ export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   isDeleted?: Prisma.BoolFilter<"Channel"> | boolean
   deletedAt?: Prisma.DateTimeNullableFilter<"Channel"> | Date | string | null
   deletedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableFilter<"Channel"> | string | null
   isAutoCreated?: Prisma.BoolFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableFilter<"Channel"> | number | null
@@ -435,10 +453,11 @@ export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   posts?: Prisma.PostListRelationFilter
   moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
-}, "id" | "serverId_name" | "serverId_courseId">
+}, "id" | "publicId">
 
 export type ChannelOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -451,6 +470,7 @@ export type ChannelOrderByWithAggregationInput = {
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrderInput | Prisma.SortOrder
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -469,6 +489,7 @@ export type ChannelScalarWhereWithAggregatesInput = {
   OR?: Prisma.ChannelScalarWhereWithAggregatesInput[]
   NOT?: Prisma.ChannelScalarWhereWithAggregatesInput | Prisma.ChannelScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Channel"> | number
+  publicId?: Prisma.UuidWithAggregatesFilter<"Channel"> | string
   serverId?: Prisma.IntWithAggregatesFilter<"Channel"> | number
   name?: Prisma.StringWithAggregatesFilter<"Channel"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Channel"> | string | null
@@ -481,6 +502,7 @@ export type ChannelScalarWhereWithAggregatesInput = {
   isDeleted?: Prisma.BoolWithAggregatesFilter<"Channel"> | boolean
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Channel"> | Date | string | null
   deletedBy?: Prisma.IntNullableWithAggregatesFilter<"Channel"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableWithAggregatesFilter<"Channel"> | string | null
   isAutoCreated?: Prisma.BoolWithAggregatesFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableWithAggregatesFilter<"Channel"> | number | null
@@ -490,6 +512,7 @@ export type ChannelScalarWhereWithAggregatesInput = {
 }
 
 export type ChannelCreateInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -497,6 +520,7 @@ export type ChannelCreateInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -515,6 +539,7 @@ export type ChannelCreateInput = {
 
 export type ChannelUncheckedCreateInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -527,6 +552,7 @@ export type ChannelUncheckedCreateInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -539,6 +565,7 @@ export type ChannelUncheckedCreateInput = {
 }
 
 export type ChannelUpdateInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -546,6 +573,7 @@ export type ChannelUpdateInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -564,6 +592,7 @@ export type ChannelUpdateInput = {
 
 export type ChannelUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -576,6 +605,7 @@ export type ChannelUncheckedUpdateInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -589,6 +619,7 @@ export type ChannelUncheckedUpdateInput = {
 
 export type ChannelCreateManyInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -601,6 +632,7 @@ export type ChannelCreateManyInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -610,6 +642,7 @@ export type ChannelCreateManyInput = {
 }
 
 export type ChannelUpdateManyMutationInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -617,6 +650,7 @@ export type ChannelUpdateManyMutationInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -625,6 +659,7 @@ export type ChannelUpdateManyMutationInput = {
 
 export type ChannelUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -637,6 +672,7 @@ export type ChannelUncheckedUpdateManyInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -655,18 +691,9 @@ export type ChannelOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type ChannelServerIdNameCompoundUniqueInput = {
-  serverId: number
-  name: string
-}
-
-export type ChannelServerIdCourseIdCompoundUniqueInput = {
-  serverId: number
-  courseId: number
-}
-
 export type ChannelCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
@@ -679,6 +706,7 @@ export type ChannelCountOrderByAggregateInput = {
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrder
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -700,6 +728,7 @@ export type ChannelAvgOrderByAggregateInput = {
 
 export type ChannelMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
@@ -712,6 +741,7 @@ export type ChannelMaxOrderByAggregateInput = {
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrder
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -722,6 +752,7 @@ export type ChannelMaxOrderByAggregateInput = {
 
 export type ChannelMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
@@ -734,6 +765,7 @@ export type ChannelMinOrderByAggregateInput = {
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrder
   isAutoCreated?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -1108,6 +1140,7 @@ export type ChannelUpdateOneWithoutNotificationPreferencesNestedInput = {
 }
 
 export type ChannelCreateWithoutProgramInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1115,6 +1148,7 @@ export type ChannelCreateWithoutProgramInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1132,6 +1166,7 @@ export type ChannelCreateWithoutProgramInput = {
 
 export type ChannelUncheckedCreateWithoutProgramInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1143,6 +1178,7 @@ export type ChannelUncheckedCreateWithoutProgramInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1185,6 +1221,7 @@ export type ChannelScalarWhereInput = {
   OR?: Prisma.ChannelScalarWhereInput[]
   NOT?: Prisma.ChannelScalarWhereInput | Prisma.ChannelScalarWhereInput[]
   id?: Prisma.IntFilter<"Channel"> | number
+  publicId?: Prisma.UuidFilter<"Channel"> | string
   serverId?: Prisma.IntFilter<"Channel"> | number
   name?: Prisma.StringFilter<"Channel"> | string
   description?: Prisma.StringNullableFilter<"Channel"> | string | null
@@ -1197,6 +1234,7 @@ export type ChannelScalarWhereInput = {
   isDeleted?: Prisma.BoolFilter<"Channel"> | boolean
   deletedAt?: Prisma.DateTimeNullableFilter<"Channel"> | Date | string | null
   deletedBy?: Prisma.IntNullableFilter<"Channel"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableFilter<"Channel"> | string | null
   isAutoCreated?: Prisma.BoolFilter<"Channel"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Channel"> | Date | string
   createdBy?: Prisma.IntNullableFilter<"Channel"> | number | null
@@ -1206,6 +1244,7 @@ export type ChannelScalarWhereInput = {
 }
 
 export type ChannelCreateWithoutLockerInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1213,6 +1252,7 @@ export type ChannelCreateWithoutLockerInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1230,6 +1270,7 @@ export type ChannelCreateWithoutLockerInput = {
 
 export type ChannelUncheckedCreateWithoutLockerInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1241,6 +1282,7 @@ export type ChannelUncheckedCreateWithoutLockerInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1263,6 +1305,7 @@ export type ChannelCreateManyLockerInputEnvelope = {
 }
 
 export type ChannelCreateWithoutDeleterInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1270,6 +1313,7 @@ export type ChannelCreateWithoutDeleterInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1287,6 +1331,7 @@ export type ChannelCreateWithoutDeleterInput = {
 
 export type ChannelUncheckedCreateWithoutDeleterInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1298,6 +1343,7 @@ export type ChannelUncheckedCreateWithoutDeleterInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1320,6 +1366,7 @@ export type ChannelCreateManyDeleterInputEnvelope = {
 }
 
 export type ChannelCreateWithoutCreatorInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1327,6 +1374,7 @@ export type ChannelCreateWithoutCreatorInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1344,6 +1392,7 @@ export type ChannelCreateWithoutCreatorInput = {
 
 export type ChannelUncheckedCreateWithoutCreatorInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1356,6 +1405,7 @@ export type ChannelUncheckedCreateWithoutCreatorInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1377,6 +1427,7 @@ export type ChannelCreateManyCreatorInputEnvelope = {
 }
 
 export type ChannelCreateWithoutArchiverInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1384,6 +1435,7 @@ export type ChannelCreateWithoutArchiverInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1401,6 +1453,7 @@ export type ChannelCreateWithoutArchiverInput = {
 
 export type ChannelUncheckedCreateWithoutArchiverInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1413,6 +1466,7 @@ export type ChannelUncheckedCreateWithoutArchiverInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1498,6 +1552,7 @@ export type ChannelUpdateManyWithWhereWithoutArchiverInput = {
 }
 
 export type ChannelCreateWithoutServerInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1505,6 +1560,7 @@ export type ChannelCreateWithoutServerInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1522,6 +1578,7 @@ export type ChannelCreateWithoutServerInput = {
 
 export type ChannelUncheckedCreateWithoutServerInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1533,6 +1590,7 @@ export type ChannelUncheckedCreateWithoutServerInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1571,6 +1629,7 @@ export type ChannelUpdateManyWithWhereWithoutServerInput = {
 }
 
 export type ChannelCreateWithoutCourseInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1578,6 +1637,7 @@ export type ChannelCreateWithoutCourseInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1595,6 +1655,7 @@ export type ChannelCreateWithoutCourseInput = {
 
 export type ChannelUncheckedCreateWithoutCourseInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1606,6 +1667,7 @@ export type ChannelUncheckedCreateWithoutCourseInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1644,6 +1706,7 @@ export type ChannelUpdateManyWithWhereWithoutCourseInput = {
 }
 
 export type ChannelCreateWithoutPostsInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1651,6 +1714,7 @@ export type ChannelCreateWithoutPostsInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1668,6 +1732,7 @@ export type ChannelCreateWithoutPostsInput = {
 
 export type ChannelUncheckedCreateWithoutPostsInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1680,6 +1745,7 @@ export type ChannelUncheckedCreateWithoutPostsInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1707,6 +1773,7 @@ export type ChannelUpdateToOneWithWhereWithoutPostsInput = {
 }
 
 export type ChannelUpdateWithoutPostsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -1714,6 +1781,7 @@ export type ChannelUpdateWithoutPostsInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1731,6 +1799,7 @@ export type ChannelUpdateWithoutPostsInput = {
 
 export type ChannelUncheckedUpdateWithoutPostsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1743,6 +1812,7 @@ export type ChannelUncheckedUpdateWithoutPostsInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1754,6 +1824,7 @@ export type ChannelUncheckedUpdateWithoutPostsInput = {
 }
 
 export type ChannelCreateWithoutModeratorAssignmentsInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1761,6 +1832,7 @@ export type ChannelCreateWithoutModeratorAssignmentsInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1778,6 +1850,7 @@ export type ChannelCreateWithoutModeratorAssignmentsInput = {
 
 export type ChannelUncheckedCreateWithoutModeratorAssignmentsInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1790,6 +1863,7 @@ export type ChannelUncheckedCreateWithoutModeratorAssignmentsInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1817,6 +1891,7 @@ export type ChannelUpdateToOneWithWhereWithoutModeratorAssignmentsInput = {
 }
 
 export type ChannelUpdateWithoutModeratorAssignmentsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -1824,6 +1899,7 @@ export type ChannelUpdateWithoutModeratorAssignmentsInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1841,6 +1917,7 @@ export type ChannelUpdateWithoutModeratorAssignmentsInput = {
 
 export type ChannelUncheckedUpdateWithoutModeratorAssignmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1853,6 +1930,7 @@ export type ChannelUncheckedUpdateWithoutModeratorAssignmentsInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1864,6 +1942,7 @@ export type ChannelUncheckedUpdateWithoutModeratorAssignmentsInput = {
 }
 
 export type ChannelCreateWithoutNotificationPreferencesInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -1871,6 +1950,7 @@ export type ChannelCreateWithoutNotificationPreferencesInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -1888,6 +1968,7 @@ export type ChannelCreateWithoutNotificationPreferencesInput = {
 
 export type ChannelUncheckedCreateWithoutNotificationPreferencesInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1900,6 +1981,7 @@ export type ChannelUncheckedCreateWithoutNotificationPreferencesInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1927,6 +2009,7 @@ export type ChannelUpdateToOneWithWhereWithoutNotificationPreferencesInput = {
 }
 
 export type ChannelUpdateWithoutNotificationPreferencesInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -1934,6 +2017,7 @@ export type ChannelUpdateWithoutNotificationPreferencesInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1951,6 +2035,7 @@ export type ChannelUpdateWithoutNotificationPreferencesInput = {
 
 export type ChannelUncheckedUpdateWithoutNotificationPreferencesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1963,6 +2048,7 @@ export type ChannelUncheckedUpdateWithoutNotificationPreferencesInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1975,6 +2061,7 @@ export type ChannelUncheckedUpdateWithoutNotificationPreferencesInput = {
 
 export type ChannelCreateManyProgramInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -1986,6 +2073,7 @@ export type ChannelCreateManyProgramInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -1995,6 +2083,7 @@ export type ChannelCreateManyProgramInput = {
 }
 
 export type ChannelUpdateWithoutProgramInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2002,6 +2091,7 @@ export type ChannelUpdateWithoutProgramInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2019,6 +2109,7 @@ export type ChannelUpdateWithoutProgramInput = {
 
 export type ChannelUncheckedUpdateWithoutProgramInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2030,6 +2121,7 @@ export type ChannelUncheckedUpdateWithoutProgramInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2043,6 +2135,7 @@ export type ChannelUncheckedUpdateWithoutProgramInput = {
 
 export type ChannelUncheckedUpdateManyWithoutProgramInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2054,6 +2147,7 @@ export type ChannelUncheckedUpdateManyWithoutProgramInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2064,6 +2158,7 @@ export type ChannelUncheckedUpdateManyWithoutProgramInput = {
 
 export type ChannelCreateManyLockerInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -2075,6 +2170,7 @@ export type ChannelCreateManyLockerInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -2085,6 +2181,7 @@ export type ChannelCreateManyLockerInput = {
 
 export type ChannelCreateManyDeleterInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -2096,6 +2193,7 @@ export type ChannelCreateManyDeleterInput = {
   lockedAt?: Date | string | null
   isDeleted?: boolean
   deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -2106,6 +2204,7 @@ export type ChannelCreateManyDeleterInput = {
 
 export type ChannelCreateManyCreatorInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -2118,6 +2217,7 @@ export type ChannelCreateManyCreatorInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   isArchived?: boolean
@@ -2127,6 +2227,7 @@ export type ChannelCreateManyCreatorInput = {
 
 export type ChannelCreateManyArchiverInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -2139,6 +2240,7 @@ export type ChannelCreateManyArchiverInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -2147,6 +2249,7 @@ export type ChannelCreateManyArchiverInput = {
 }
 
 export type ChannelUpdateWithoutLockerInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2154,6 +2257,7 @@ export type ChannelUpdateWithoutLockerInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2171,6 +2275,7 @@ export type ChannelUpdateWithoutLockerInput = {
 
 export type ChannelUncheckedUpdateWithoutLockerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2182,6 +2287,7 @@ export type ChannelUncheckedUpdateWithoutLockerInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2195,6 +2301,7 @@ export type ChannelUncheckedUpdateWithoutLockerInput = {
 
 export type ChannelUncheckedUpdateManyWithoutLockerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2206,6 +2313,7 @@ export type ChannelUncheckedUpdateManyWithoutLockerInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2215,6 +2323,7 @@ export type ChannelUncheckedUpdateManyWithoutLockerInput = {
 }
 
 export type ChannelUpdateWithoutDeleterInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2222,6 +2331,7 @@ export type ChannelUpdateWithoutDeleterInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2239,6 +2349,7 @@ export type ChannelUpdateWithoutDeleterInput = {
 
 export type ChannelUncheckedUpdateWithoutDeleterInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2250,6 +2361,7 @@ export type ChannelUncheckedUpdateWithoutDeleterInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2263,6 +2375,7 @@ export type ChannelUncheckedUpdateWithoutDeleterInput = {
 
 export type ChannelUncheckedUpdateManyWithoutDeleterInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2274,6 +2387,7 @@ export type ChannelUncheckedUpdateManyWithoutDeleterInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2283,6 +2397,7 @@ export type ChannelUncheckedUpdateManyWithoutDeleterInput = {
 }
 
 export type ChannelUpdateWithoutCreatorInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2290,6 +2405,7 @@ export type ChannelUpdateWithoutCreatorInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2307,6 +2423,7 @@ export type ChannelUpdateWithoutCreatorInput = {
 
 export type ChannelUncheckedUpdateWithoutCreatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2319,6 +2436,7 @@ export type ChannelUncheckedUpdateWithoutCreatorInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2331,6 +2449,7 @@ export type ChannelUncheckedUpdateWithoutCreatorInput = {
 
 export type ChannelUncheckedUpdateManyWithoutCreatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2343,6 +2462,7 @@ export type ChannelUncheckedUpdateManyWithoutCreatorInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2351,6 +2471,7 @@ export type ChannelUncheckedUpdateManyWithoutCreatorInput = {
 }
 
 export type ChannelUpdateWithoutArchiverInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2358,6 +2479,7 @@ export type ChannelUpdateWithoutArchiverInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2375,6 +2497,7 @@ export type ChannelUpdateWithoutArchiverInput = {
 
 export type ChannelUncheckedUpdateWithoutArchiverInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2387,6 +2510,7 @@ export type ChannelUncheckedUpdateWithoutArchiverInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2399,6 +2523,7 @@ export type ChannelUncheckedUpdateWithoutArchiverInput = {
 
 export type ChannelUncheckedUpdateManyWithoutArchiverInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2411,6 +2536,7 @@ export type ChannelUncheckedUpdateManyWithoutArchiverInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2420,6 +2546,7 @@ export type ChannelUncheckedUpdateManyWithoutArchiverInput = {
 
 export type ChannelCreateManyServerInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ChannelType
@@ -2431,6 +2558,7 @@ export type ChannelCreateManyServerInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -2440,6 +2568,7 @@ export type ChannelCreateManyServerInput = {
 }
 
 export type ChannelUpdateWithoutServerInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2447,6 +2576,7 @@ export type ChannelUpdateWithoutServerInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2464,6 +2594,7 @@ export type ChannelUpdateWithoutServerInput = {
 
 export type ChannelUncheckedUpdateWithoutServerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2475,6 +2606,7 @@ export type ChannelUncheckedUpdateWithoutServerInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2488,6 +2620,7 @@ export type ChannelUncheckedUpdateWithoutServerInput = {
 
 export type ChannelUncheckedUpdateManyWithoutServerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2499,6 +2632,7 @@ export type ChannelUncheckedUpdateManyWithoutServerInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2509,6 +2643,7 @@ export type ChannelUncheckedUpdateManyWithoutServerInput = {
 
 export type ChannelCreateManyCourseInput = {
   id?: number
+  publicId?: string
   serverId: number
   name: string
   description?: string | null
@@ -2520,6 +2655,7 @@ export type ChannelCreateManyCourseInput = {
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
+  deletedCascadeId?: string | null
   isAutoCreated?: boolean
   createdAt?: Date | string
   createdBy?: number | null
@@ -2529,6 +2665,7 @@ export type ChannelCreateManyCourseInput = {
 }
 
 export type ChannelUpdateWithoutCourseInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
@@ -2536,6 +2673,7 @@ export type ChannelUpdateWithoutCourseInput = {
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2553,6 +2691,7 @@ export type ChannelUpdateWithoutCourseInput = {
 
 export type ChannelUncheckedUpdateWithoutCourseInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2564,6 +2703,7 @@ export type ChannelUncheckedUpdateWithoutCourseInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2577,6 +2717,7 @@ export type ChannelUncheckedUpdateWithoutCourseInput = {
 
 export type ChannelUncheckedUpdateManyWithoutCourseInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2588,6 +2729,7 @@ export type ChannelUncheckedUpdateManyWithoutCourseInput = {
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAutoCreated?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2647,6 +2789,7 @@ export type ChannelCountOutputTypeCountNotificationPreferencesArgs<ExtArgs exten
 
 export type ChannelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   serverId?: boolean
   name?: boolean
   description?: boolean
@@ -2659,6 +2802,7 @@ export type ChannelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
+  deletedCascadeId?: boolean
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
@@ -2680,6 +2824,7 @@ export type ChannelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 
 export type ChannelSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   serverId?: boolean
   name?: boolean
   description?: boolean
@@ -2692,6 +2837,7 @@ export type ChannelSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
+  deletedCascadeId?: boolean
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
@@ -2709,6 +2855,7 @@ export type ChannelSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
 
 export type ChannelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   serverId?: boolean
   name?: boolean
   description?: boolean
@@ -2721,6 +2868,7 @@ export type ChannelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
+  deletedCascadeId?: boolean
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
@@ -2738,6 +2886,7 @@ export type ChannelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
 
 export type ChannelSelectScalar = {
   id?: boolean
+  publicId?: boolean
   serverId?: boolean
   name?: boolean
   description?: boolean
@@ -2750,6 +2899,7 @@ export type ChannelSelectScalar = {
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
+  deletedCascadeId?: boolean
   isAutoCreated?: boolean
   createdAt?: boolean
   createdBy?: boolean
@@ -2758,7 +2908,7 @@ export type ChannelSelectScalar = {
   archivedBy?: boolean
 }
 
-export type ChannelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serverId" | "name" | "description" | "type" | "courseId" | "programId" | "isLocked" | "lockedBy" | "lockedAt" | "isDeleted" | "deletedAt" | "deletedBy" | "isAutoCreated" | "createdAt" | "createdBy" | "isArchived" | "archivedAt" | "archivedBy", ExtArgs["result"]["channel"]>
+export type ChannelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "serverId" | "name" | "description" | "type" | "courseId" | "programId" | "isLocked" | "lockedBy" | "lockedAt" | "isDeleted" | "deletedAt" | "deletedBy" | "deletedCascadeId" | "isAutoCreated" | "createdAt" | "createdBy" | "isArchived" | "archivedAt" | "archivedBy", ExtArgs["result"]["channel"]>
 export type ChannelInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   course?: boolean | Prisma.Channel$courseArgs<ExtArgs>
@@ -2807,6 +2957,7 @@ export type $ChannelPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    publicId: string
     serverId: number
     name: string
     description: string | null
@@ -2819,6 +2970,7 @@ export type $ChannelPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     isDeleted: boolean
     deletedAt: Date | null
     deletedBy: number | null
+    deletedCascadeId: string | null
     isAutoCreated: boolean
     createdAt: Date
     createdBy: number | null
@@ -3259,6 +3411,7 @@ export interface Prisma__ChannelClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface ChannelFieldRefs {
   readonly id: Prisma.FieldRef<"Channel", 'Int'>
+  readonly publicId: Prisma.FieldRef<"Channel", 'String'>
   readonly serverId: Prisma.FieldRef<"Channel", 'Int'>
   readonly name: Prisma.FieldRef<"Channel", 'String'>
   readonly description: Prisma.FieldRef<"Channel", 'String'>
@@ -3271,6 +3424,7 @@ export interface ChannelFieldRefs {
   readonly isDeleted: Prisma.FieldRef<"Channel", 'Boolean'>
   readonly deletedAt: Prisma.FieldRef<"Channel", 'DateTime'>
   readonly deletedBy: Prisma.FieldRef<"Channel", 'Int'>
+  readonly deletedCascadeId: Prisma.FieldRef<"Channel", 'String'>
   readonly isAutoCreated: Prisma.FieldRef<"Channel", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Channel", 'DateTime'>
   readonly createdBy: Prisma.FieldRef<"Channel", 'Int'>

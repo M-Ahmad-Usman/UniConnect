@@ -46,6 +46,7 @@ export type PostSumAggregateOutputType = {
 
 export type PostMinAggregateOutputType = {
   id: number | null
+  publicId: string | null
   authorId: number | null
   channelId: number | null
   title: string | null
@@ -64,6 +65,7 @@ export type PostMinAggregateOutputType = {
 
 export type PostMaxAggregateOutputType = {
   id: number | null
+  publicId: string | null
   authorId: number | null
   channelId: number | null
   title: string | null
@@ -82,6 +84,7 @@ export type PostMaxAggregateOutputType = {
 
 export type PostCountAggregateOutputType = {
   id: number
+  publicId: number
   authorId: number
   channelId: number
   title: number
@@ -120,6 +123,7 @@ export type PostSumAggregateInputType = {
 
 export type PostMinAggregateInputType = {
   id?: true
+  publicId?: true
   authorId?: true
   channelId?: true
   title?: true
@@ -138,6 +142,7 @@ export type PostMinAggregateInputType = {
 
 export type PostMaxAggregateInputType = {
   id?: true
+  publicId?: true
   authorId?: true
   channelId?: true
   title?: true
@@ -156,6 +161,7 @@ export type PostMaxAggregateInputType = {
 
 export type PostCountAggregateInputType = {
   id?: true
+  publicId?: true
   authorId?: true
   channelId?: true
   title?: true
@@ -261,6 +267,7 @@ export type PostGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 
 export type PostGroupByOutputType = {
   id: number
+  publicId: string
   authorId: number
   channelId: number
   title: string
@@ -302,6 +309,7 @@ export type PostWhereInput = {
   OR?: Prisma.PostWhereInput[]
   NOT?: Prisma.PostWhereInput | Prisma.PostWhereInput[]
   id?: Prisma.IntFilter<"Post"> | number
+  publicId?: Prisma.UuidFilter<"Post"> | string
   authorId?: Prisma.IntFilter<"Post"> | number
   channelId?: Prisma.IntFilter<"Post"> | number
   title?: Prisma.StringFilter<"Post"> | string
@@ -327,6 +335,7 @@ export type PostWhereInput = {
 
 export type PostOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
   title?: Prisma.SortOrder
@@ -352,6 +361,7 @@ export type PostOrderByWithRelationInput = {
 
 export type PostWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  publicId?: string
   AND?: Prisma.PostWhereInput | Prisma.PostWhereInput[]
   OR?: Prisma.PostWhereInput[]
   NOT?: Prisma.PostWhereInput | Prisma.PostWhereInput[]
@@ -376,10 +386,11 @@ export type PostWhereUniqueInput = Prisma.AtLeast<{
   pinner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   attachments?: Prisma.PostAttachmentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
-}, "id">
+}, "id" | "publicId">
 
 export type PostOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
   title?: Prisma.SortOrder
@@ -406,6 +417,7 @@ export type PostScalarWhereWithAggregatesInput = {
   OR?: Prisma.PostScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PostScalarWhereWithAggregatesInput | Prisma.PostScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Post"> | number
+  publicId?: Prisma.UuidWithAggregatesFilter<"Post"> | string
   authorId?: Prisma.IntWithAggregatesFilter<"Post"> | number
   channelId?: Prisma.IntWithAggregatesFilter<"Post"> | number
   title?: Prisma.StringWithAggregatesFilter<"Post"> | string
@@ -423,6 +435,7 @@ export type PostScalarWhereWithAggregatesInput = {
 }
 
 export type PostCreateInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -443,6 +456,7 @@ export type PostCreateInput = {
 
 export type PostUncheckedCreateInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -462,6 +476,7 @@ export type PostUncheckedCreateInput = {
 }
 
 export type PostUpdateInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -482,6 +497,7 @@ export type PostUpdateInput = {
 
 export type PostUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -502,6 +518,7 @@ export type PostUncheckedUpdateInput = {
 
 export type PostCreateManyInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -519,6 +536,7 @@ export type PostCreateManyInput = {
 }
 
 export type PostUpdateManyMutationInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -532,6 +550,7 @@ export type PostUpdateManyMutationInput = {
 
 export type PostUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -560,6 +579,7 @@ export type PostOrderByRelationAggregateInput = {
 
 export type PostCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
   title?: Prisma.SortOrder
@@ -587,6 +607,7 @@ export type PostAvgOrderByAggregateInput = {
 
 export type PostMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
   title?: Prisma.SortOrder
@@ -605,6 +626,7 @@ export type PostMaxOrderByAggregateInput = {
 
 export type PostMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
   title?: Prisma.SortOrder
@@ -885,6 +907,7 @@ export type PostUpdateOneWithoutNotificationsNestedInput = {
 }
 
 export type PostCreateWithoutAuthorInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -904,6 +927,7 @@ export type PostCreateWithoutAuthorInput = {
 
 export type PostUncheckedCreateWithoutAuthorInput = {
   id?: number
+  publicId?: string
   channelId: number
   title: string
   content: string
@@ -932,6 +956,7 @@ export type PostCreateManyAuthorInputEnvelope = {
 }
 
 export type PostCreateWithoutDeleterInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -951,6 +976,7 @@ export type PostCreateWithoutDeleterInput = {
 
 export type PostUncheckedCreateWithoutDeleterInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -979,6 +1005,7 @@ export type PostCreateManyDeleterInputEnvelope = {
 }
 
 export type PostCreateWithoutUpdaterInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -998,6 +1025,7 @@ export type PostCreateWithoutUpdaterInput = {
 
 export type PostUncheckedCreateWithoutUpdaterInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1026,6 +1054,7 @@ export type PostCreateManyUpdaterInputEnvelope = {
 }
 
 export type PostCreateWithoutPinnerInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -1045,6 +1074,7 @@ export type PostCreateWithoutPinnerInput = {
 
 export type PostUncheckedCreateWithoutPinnerInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1093,6 +1123,7 @@ export type PostScalarWhereInput = {
   OR?: Prisma.PostScalarWhereInput[]
   NOT?: Prisma.PostScalarWhereInput | Prisma.PostScalarWhereInput[]
   id?: Prisma.IntFilter<"Post"> | number
+  publicId?: Prisma.UuidFilter<"Post"> | string
   authorId?: Prisma.IntFilter<"Post"> | number
   channelId?: Prisma.IntFilter<"Post"> | number
   title?: Prisma.StringFilter<"Post"> | string
@@ -1158,6 +1189,7 @@ export type PostUpdateManyWithWhereWithoutPinnerInput = {
 }
 
 export type PostCreateWithoutChannelInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -1177,6 +1209,7 @@ export type PostCreateWithoutChannelInput = {
 
 export type PostUncheckedCreateWithoutChannelInput = {
   id?: number
+  publicId?: string
   authorId: number
   title: string
   content: string
@@ -1221,6 +1254,7 @@ export type PostUpdateManyWithWhereWithoutChannelInput = {
 }
 
 export type PostCreateWithoutAttachmentsInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -1240,6 +1274,7 @@ export type PostCreateWithoutAttachmentsInput = {
 
 export type PostUncheckedCreateWithoutAttachmentsInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1274,6 +1309,7 @@ export type PostUpdateToOneWithWhereWithoutAttachmentsInput = {
 }
 
 export type PostUpdateWithoutAttachmentsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1293,6 +1329,7 @@ export type PostUpdateWithoutAttachmentsInput = {
 
 export type PostUncheckedUpdateWithoutAttachmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1311,6 +1348,7 @@ export type PostUncheckedUpdateWithoutAttachmentsInput = {
 }
 
 export type PostCreateWithoutNotificationsInput = {
+  publicId?: string
   title: string
   content: string
   priority?: $Enums.PostPriority
@@ -1330,6 +1368,7 @@ export type PostCreateWithoutNotificationsInput = {
 
 export type PostUncheckedCreateWithoutNotificationsInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1364,6 +1403,7 @@ export type PostUpdateToOneWithWhereWithoutNotificationsInput = {
 }
 
 export type PostUpdateWithoutNotificationsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1383,6 +1423,7 @@ export type PostUpdateWithoutNotificationsInput = {
 
 export type PostUncheckedUpdateWithoutNotificationsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1402,6 +1443,7 @@ export type PostUncheckedUpdateWithoutNotificationsInput = {
 
 export type PostCreateManyAuthorInput = {
   id?: number
+  publicId?: string
   channelId: number
   title: string
   content: string
@@ -1419,6 +1461,7 @@ export type PostCreateManyAuthorInput = {
 
 export type PostCreateManyDeleterInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1436,6 +1479,7 @@ export type PostCreateManyDeleterInput = {
 
 export type PostCreateManyUpdaterInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1453,6 +1497,7 @@ export type PostCreateManyUpdaterInput = {
 
 export type PostCreateManyPinnerInput = {
   id?: number
+  publicId?: string
   authorId: number
   channelId: number
   title: string
@@ -1469,6 +1514,7 @@ export type PostCreateManyPinnerInput = {
 }
 
 export type PostUpdateWithoutAuthorInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1488,6 +1534,7 @@ export type PostUpdateWithoutAuthorInput = {
 
 export type PostUncheckedUpdateWithoutAuthorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1507,6 +1554,7 @@ export type PostUncheckedUpdateWithoutAuthorInput = {
 
 export type PostUncheckedUpdateManyWithoutAuthorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1523,6 +1571,7 @@ export type PostUncheckedUpdateManyWithoutAuthorInput = {
 }
 
 export type PostUpdateWithoutDeleterInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1542,6 +1591,7 @@ export type PostUpdateWithoutDeleterInput = {
 
 export type PostUncheckedUpdateWithoutDeleterInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1561,6 +1611,7 @@ export type PostUncheckedUpdateWithoutDeleterInput = {
 
 export type PostUncheckedUpdateManyWithoutDeleterInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1577,6 +1628,7 @@ export type PostUncheckedUpdateManyWithoutDeleterInput = {
 }
 
 export type PostUpdateWithoutUpdaterInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1596,6 +1648,7 @@ export type PostUpdateWithoutUpdaterInput = {
 
 export type PostUncheckedUpdateWithoutUpdaterInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1615,6 +1668,7 @@ export type PostUncheckedUpdateWithoutUpdaterInput = {
 
 export type PostUncheckedUpdateManyWithoutUpdaterInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1631,6 +1685,7 @@ export type PostUncheckedUpdateManyWithoutUpdaterInput = {
 }
 
 export type PostUpdateWithoutPinnerInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1650,6 +1705,7 @@ export type PostUpdateWithoutPinnerInput = {
 
 export type PostUncheckedUpdateWithoutPinnerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1669,6 +1725,7 @@ export type PostUncheckedUpdateWithoutPinnerInput = {
 
 export type PostUncheckedUpdateManyWithoutPinnerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1686,6 +1743,7 @@ export type PostUncheckedUpdateManyWithoutPinnerInput = {
 
 export type PostCreateManyChannelInput = {
   id?: number
+  publicId?: string
   authorId: number
   title: string
   content: string
@@ -1702,6 +1760,7 @@ export type PostCreateManyChannelInput = {
 }
 
 export type PostUpdateWithoutChannelInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumPostPriorityFieldUpdateOperationsInput | $Enums.PostPriority
@@ -1721,6 +1780,7 @@ export type PostUpdateWithoutChannelInput = {
 
 export type PostUncheckedUpdateWithoutChannelInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1740,6 +1800,7 @@ export type PostUncheckedUpdateWithoutChannelInput = {
 
 export type PostUncheckedUpdateManyWithoutChannelInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1797,6 +1858,7 @@ export type PostCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Ty
 
 export type PostSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   authorId?: boolean
   channelId?: boolean
   title?: boolean
@@ -1823,6 +1885,7 @@ export type PostSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 
 export type PostSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   authorId?: boolean
   channelId?: boolean
   title?: boolean
@@ -1846,6 +1909,7 @@ export type PostSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
 
 export type PostSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   authorId?: boolean
   channelId?: boolean
   title?: boolean
@@ -1869,6 +1933,7 @@ export type PostSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
 
 export type PostSelectScalar = {
   id?: boolean
+  publicId?: boolean
   authorId?: boolean
   channelId?: boolean
   title?: boolean
@@ -1885,7 +1950,7 @@ export type PostSelectScalar = {
   updatedBy?: boolean
 }
 
-export type PostOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "authorId" | "channelId" | "title" | "content" | "priority" | "isPinned" | "pinnedBy" | "pinnedAt" | "isDeleted" | "deletedAt" | "deletedBy" | "createdAt" | "updatedAt" | "updatedBy", ExtArgs["result"]["post"]>
+export type PostOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "authorId" | "channelId" | "title" | "content" | "priority" | "isPinned" | "pinnedBy" | "pinnedAt" | "isDeleted" | "deletedAt" | "deletedBy" | "createdAt" | "updatedAt" | "updatedBy", ExtArgs["result"]["post"]>
 export type PostInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   author?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ChannelDefaultArgs<ExtArgs>
@@ -1924,6 +1989,7 @@ export type $PostPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    publicId: string
     authorId: number
     channelId: number
     title: string
@@ -2369,6 +2435,7 @@ export interface Prisma__PostClient<T, Null = never, ExtArgs extends runtime.Typ
  */
 export interface PostFieldRefs {
   readonly id: Prisma.FieldRef<"Post", 'Int'>
+  readonly publicId: Prisma.FieldRef<"Post", 'String'>
   readonly authorId: Prisma.FieldRef<"Post", 'Int'>
   readonly channelId: Prisma.FieldRef<"Post", 'Int'>
   readonly title: Prisma.FieldRef<"Post", 'String'>

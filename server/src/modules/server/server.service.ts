@@ -1,7 +1,7 @@
 import type { ServerType } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
 import { cloudinaryService } from "../../config/cloudinary.js";
-import { ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
+import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import {
   parsePagination,
   buildPaginationResponse,
@@ -146,7 +146,7 @@ async function canManageServer(
       select: { serverId: true },
     }),
     prisma.society.findFirst({
-      where: { OR: [{ presidentId: userId }, { convenorId: userId }] },
+      where: { isDeleted: false, OR: [{ presidentId: userId }, { convenorId: userId }] },
       select: { serverId: true },
     }),
   ]);
@@ -157,9 +157,10 @@ async function canManageServer(
     const scopedServer = await prisma.server.findFirst({
       where: {
         id: serverId,
+        isDeleted: false,
         OR: [
           { class: { program: { departmentId: department.id } } },
-          { society: { departmentId: department.id } },
+          { society: { departmentId: department.id, isDeleted: false } },
         ],
       },
       select: { id: true },
@@ -174,8 +175,8 @@ async function canManageServer(
 }
 
 async function findServerOrThrow(serverId: number) {
-  const server = await prisma.server.findUnique({
-    where: { id: serverId },
+  const server = await prisma.server.findFirst({
+    where: { id: serverId, isDeleted: false },
     select: { id: true, isActive: true },
   });
 
@@ -310,6 +311,7 @@ export async function listServers(query: ListServersQuery, caller: CallerInfo) {
   const { page, limit, skip, take } = parsePagination(query);
 
   const where = {
+    isDeleted: false,
     ...(caller.userType !== "ADMIN"
       ? { memberships: { some: { userId: caller.id } } }
       : {}),
@@ -334,8 +336,8 @@ export async function listServers(query: ListServersQuery, caller: CallerInfo) {
 }
 
 export async function getServer(serverId: number, caller: CallerInfo) {
-  const server = await prisma.server.findUnique({
-    where: { id: serverId },
+  const server = await prisma.server.findFirst({
+    where: { id: serverId, isDeleted: false },
     select: serverDetailSelect,
   });
 
@@ -379,8 +381,8 @@ export async function listServerMembers(
   query: ListMembersQuery,
   caller: CallerInfo,
 ) {
-  const server = await prisma.server.findUnique({
-    where: { id: serverId },
+  const server = await prisma.server.findFirst({
+    where: { id: serverId, isDeleted: false },
     select: { id: true, type: true },
   });
 
@@ -433,6 +435,15 @@ export async function createChannel(
 
   if (!server.isActive) {
     throw new ForbiddenError("Cannot create channels in an inactive server");
+  }
+
+  const existing = await prisma.channel.findFirst({
+    where: { serverId, name: data.name, isDeleted: false },
+    select: { id: true },
+  });
+
+  if (existing) {
+    throw new ConflictError("A channel with this name already exists in this server");
   }
 
   const channel = await prisma.channel.create({

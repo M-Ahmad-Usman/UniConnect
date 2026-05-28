@@ -50,6 +50,7 @@ export type ClassSumAggregateOutputType = {
 
 export type ClassMinAggregateOutputType = {
   id: number | null
+  publicId: string | null
   programId: number | null
   currentSemester: number | null
   academicYear: number | null
@@ -64,6 +65,7 @@ export type ClassMinAggregateOutputType = {
 
 export type ClassMaxAggregateOutputType = {
   id: number | null
+  publicId: string | null
   programId: number | null
   currentSemester: number | null
   academicYear: number | null
@@ -78,6 +80,7 @@ export type ClassMaxAggregateOutputType = {
 
 export type ClassCountAggregateOutputType = {
   id: number
+  publicId: number
   programId: number
   currentSemester: number
   academicYear: number
@@ -116,6 +119,7 @@ export type ClassSumAggregateInputType = {
 
 export type ClassMinAggregateInputType = {
   id?: true
+  publicId?: true
   programId?: true
   currentSemester?: true
   academicYear?: true
@@ -130,6 +134,7 @@ export type ClassMinAggregateInputType = {
 
 export type ClassMaxAggregateInputType = {
   id?: true
+  publicId?: true
   programId?: true
   currentSemester?: true
   academicYear?: true
@@ -144,6 +149,7 @@ export type ClassMaxAggregateInputType = {
 
 export type ClassCountAggregateInputType = {
   id?: true
+  publicId?: true
   programId?: true
   currentSemester?: true
   academicYear?: true
@@ -245,6 +251,7 @@ export type ClassGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 
 export type ClassGroupByOutputType = {
   id: number
+  publicId: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -282,6 +289,7 @@ export type ClassWhereInput = {
   OR?: Prisma.ClassWhereInput[]
   NOT?: Prisma.ClassWhereInput | Prisma.ClassWhereInput[]
   id?: Prisma.IntFilter<"Class"> | number
+  publicId?: Prisma.UuidFilter<"Class"> | string
   programId?: Prisma.IntFilter<"Class"> | number
   currentSemester?: Prisma.IntFilter<"Class"> | number
   academicYear?: Prisma.IntFilter<"Class"> | number
@@ -302,6 +310,7 @@ export type ClassWhereInput = {
 
 export type ClassOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   programId?: Prisma.SortOrder
   currentSemester?: Prisma.SortOrder
   academicYear?: Prisma.SortOrder
@@ -322,6 +331,7 @@ export type ClassOrderByWithRelationInput = {
 
 export type ClassWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  publicId?: string
   crId?: number
   serverId?: number
   programId_currentSemester_section_admissionYear?: Prisma.ClassProgramIdCurrentSemesterSectionAdmissionYearCompoundUniqueInput
@@ -342,10 +352,11 @@ export type ClassWhereUniqueInput = Prisma.AtLeast<{
   graduator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   students?: Prisma.StudentInfoListRelationFilter
   teaches?: Prisma.TeachesListRelationFilter
-}, "id" | "crId" | "serverId" | "programId_currentSemester_section_admissionYear">
+}, "id" | "publicId" | "crId" | "serverId" | "programId_currentSemester_section_admissionYear">
 
 export type ClassOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   programId?: Prisma.SortOrder
   currentSemester?: Prisma.SortOrder
   academicYear?: Prisma.SortOrder
@@ -368,6 +379,7 @@ export type ClassScalarWhereWithAggregatesInput = {
   OR?: Prisma.ClassScalarWhereWithAggregatesInput[]
   NOT?: Prisma.ClassScalarWhereWithAggregatesInput | Prisma.ClassScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Class"> | number
+  publicId?: Prisma.UuidWithAggregatesFilter<"Class"> | string
   programId?: Prisma.IntWithAggregatesFilter<"Class"> | number
   currentSemester?: Prisma.IntWithAggregatesFilter<"Class"> | number
   academicYear?: Prisma.IntWithAggregatesFilter<"Class"> | number
@@ -381,6 +393,7 @@ export type ClassScalarWhereWithAggregatesInput = {
 }
 
 export type ClassCreateInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -397,6 +410,7 @@ export type ClassCreateInput = {
 
 export type ClassUncheckedCreateInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -412,6 +426,7 @@ export type ClassUncheckedCreateInput = {
 }
 
 export type ClassUpdateInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -428,6 +443,7 @@ export type ClassUpdateInput = {
 
 export type ClassUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -444,6 +460,7 @@ export type ClassUncheckedUpdateInput = {
 
 export type ClassCreateManyInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -457,6 +474,7 @@ export type ClassCreateManyInput = {
 }
 
 export type ClassUpdateManyMutationInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -467,6 +485,7 @@ export type ClassUpdateManyMutationInput = {
 
 export type ClassUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -508,6 +527,7 @@ export type ClassProgramIdCurrentSemesterSectionAdmissionYearCompoundUniqueInput
 
 export type ClassCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   programId?: Prisma.SortOrder
   currentSemester?: Prisma.SortOrder
   academicYear?: Prisma.SortOrder
@@ -533,6 +553,7 @@ export type ClassAvgOrderByAggregateInput = {
 
 export type ClassMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   programId?: Prisma.SortOrder
   currentSemester?: Prisma.SortOrder
   academicYear?: Prisma.SortOrder
@@ -547,6 +568,7 @@ export type ClassMaxOrderByAggregateInput = {
 
 export type ClassMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   programId?: Prisma.SortOrder
   currentSemester?: Prisma.SortOrder
   academicYear?: Prisma.SortOrder
@@ -708,10 +730,6 @@ export type EnumClassStatusFieldUpdateOperationsInput = {
   set?: $Enums.ClassStatus
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type ClassCreateNestedOneWithoutServerInput = {
   create?: Prisma.XOR<Prisma.ClassCreateWithoutServerInput, Prisma.ClassUncheckedCreateWithoutServerInput>
   connectOrCreate?: Prisma.ClassCreateOrConnectWithoutServerInput
@@ -759,6 +777,7 @@ export type ClassUpdateOneRequiredWithoutTeachesNestedInput = {
 }
 
 export type ClassCreateWithoutProgramInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -774,6 +793,7 @@ export type ClassCreateWithoutProgramInput = {
 
 export type ClassUncheckedCreateWithoutProgramInput = {
   id?: number
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -818,6 +838,7 @@ export type ClassScalarWhereInput = {
   OR?: Prisma.ClassScalarWhereInput[]
   NOT?: Prisma.ClassScalarWhereInput | Prisma.ClassScalarWhereInput[]
   id?: Prisma.IntFilter<"Class"> | number
+  publicId?: Prisma.UuidFilter<"Class"> | string
   programId?: Prisma.IntFilter<"Class"> | number
   currentSemester?: Prisma.IntFilter<"Class"> | number
   academicYear?: Prisma.IntFilter<"Class"> | number
@@ -831,6 +852,7 @@ export type ClassScalarWhereInput = {
 }
 
 export type ClassCreateWithoutGraduatorInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -846,6 +868,7 @@ export type ClassCreateWithoutGraduatorInput = {
 
 export type ClassUncheckedCreateWithoutGraduatorInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -886,6 +909,7 @@ export type ClassUpdateManyWithWhereWithoutGraduatorInput = {
 }
 
 export type ClassCreateWithoutStudentsInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -901,6 +925,7 @@ export type ClassCreateWithoutStudentsInput = {
 
 export type ClassUncheckedCreateWithoutStudentsInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -920,6 +945,7 @@ export type ClassCreateOrConnectWithoutStudentsInput = {
 }
 
 export type ClassCreateWithoutCrInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -935,6 +961,7 @@ export type ClassCreateWithoutCrInput = {
 
 export type ClassUncheckedCreateWithoutCrInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -965,6 +992,7 @@ export type ClassUpdateToOneWithWhereWithoutStudentsInput = {
 }
 
 export type ClassUpdateWithoutStudentsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -980,6 +1008,7 @@ export type ClassUpdateWithoutStudentsInput = {
 
 export type ClassUncheckedUpdateWithoutStudentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1005,6 +1034,7 @@ export type ClassUpdateToOneWithWhereWithoutCrInput = {
 }
 
 export type ClassUpdateWithoutCrInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1020,6 +1050,7 @@ export type ClassUpdateWithoutCrInput = {
 
 export type ClassUncheckedUpdateWithoutCrInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1034,6 +1065,7 @@ export type ClassUncheckedUpdateWithoutCrInput = {
 }
 
 export type ClassCreateWithoutServerInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -1049,6 +1081,7 @@ export type ClassCreateWithoutServerInput = {
 
 export type ClassUncheckedCreateWithoutServerInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -1079,6 +1112,7 @@ export type ClassUpdateToOneWithWhereWithoutServerInput = {
 }
 
 export type ClassUpdateWithoutServerInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1094,6 +1128,7 @@ export type ClassUpdateWithoutServerInput = {
 
 export type ClassUncheckedUpdateWithoutServerInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1108,6 +1143,7 @@ export type ClassUncheckedUpdateWithoutServerInput = {
 }
 
 export type ClassCreateWithoutTeachesInput = {
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -1123,6 +1159,7 @@ export type ClassCreateWithoutTeachesInput = {
 
 export type ClassUncheckedCreateWithoutTeachesInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -1153,6 +1190,7 @@ export type ClassUpdateToOneWithWhereWithoutTeachesInput = {
 }
 
 export type ClassUpdateWithoutTeachesInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1168,6 +1206,7 @@ export type ClassUpdateWithoutTeachesInput = {
 
 export type ClassUncheckedUpdateWithoutTeachesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1183,6 +1222,7 @@ export type ClassUncheckedUpdateWithoutTeachesInput = {
 
 export type ClassCreateManyProgramInput = {
   id?: number
+  publicId?: string
   currentSemester: number
   academicYear: number
   admissionYear: number
@@ -1195,6 +1235,7 @@ export type ClassCreateManyProgramInput = {
 }
 
 export type ClassUpdateWithoutProgramInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1210,6 +1251,7 @@ export type ClassUpdateWithoutProgramInput = {
 
 export type ClassUncheckedUpdateWithoutProgramInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1225,6 +1267,7 @@ export type ClassUncheckedUpdateWithoutProgramInput = {
 
 export type ClassUncheckedUpdateManyWithoutProgramInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1238,6 +1281,7 @@ export type ClassUncheckedUpdateManyWithoutProgramInput = {
 
 export type ClassCreateManyGraduatorInput = {
   id?: number
+  publicId?: string
   programId: number
   currentSemester: number
   academicYear: number
@@ -1250,6 +1294,7 @@ export type ClassCreateManyGraduatorInput = {
 }
 
 export type ClassUpdateWithoutGraduatorInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
   admissionYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1265,6 +1310,7 @@ export type ClassUpdateWithoutGraduatorInput = {
 
 export type ClassUncheckedUpdateWithoutGraduatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1280,6 +1326,7 @@ export type ClassUncheckedUpdateWithoutGraduatorInput = {
 
 export type ClassUncheckedUpdateManyWithoutGraduatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   programId?: Prisma.IntFieldUpdateOperationsInput | number
   currentSemester?: Prisma.IntFieldUpdateOperationsInput | number
   academicYear?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1333,6 +1380,7 @@ export type ClassCountOutputTypeCountTeachesArgs<ExtArgs extends runtime.Types.E
 
 export type ClassSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   programId?: boolean
   currentSemester?: boolean
   academicYear?: boolean
@@ -1354,6 +1402,7 @@ export type ClassSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
 
 export type ClassSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   programId?: boolean
   currentSemester?: boolean
   academicYear?: boolean
@@ -1372,6 +1421,7 @@ export type ClassSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 
 export type ClassSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   programId?: boolean
   currentSemester?: boolean
   academicYear?: boolean
@@ -1390,6 +1440,7 @@ export type ClassSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 
 export type ClassSelectScalar = {
   id?: boolean
+  publicId?: boolean
   programId?: boolean
   currentSemester?: boolean
   academicYear?: boolean
@@ -1402,7 +1453,7 @@ export type ClassSelectScalar = {
   graduatedBy?: boolean
 }
 
-export type ClassOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "programId" | "currentSemester" | "academicYear" | "admissionYear" | "section" | "crId" | "serverId" | "status" | "graduatedAt" | "graduatedBy", ExtArgs["result"]["class"]>
+export type ClassOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "programId" | "currentSemester" | "academicYear" | "admissionYear" | "section" | "crId" | "serverId" | "status" | "graduatedAt" | "graduatedBy", ExtArgs["result"]["class"]>
 export type ClassInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   program?: boolean | Prisma.ProgramDefaultArgs<ExtArgs>
   cr?: boolean | Prisma.Class$crArgs<ExtArgs>
@@ -1437,6 +1488,7 @@ export type $ClassPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    publicId: string
     programId: number
     currentSemester: number
     academicYear: number
@@ -1877,6 +1929,7 @@ export interface Prisma__ClassClient<T, Null = never, ExtArgs extends runtime.Ty
  */
 export interface ClassFieldRefs {
   readonly id: Prisma.FieldRef<"Class", 'Int'>
+  readonly publicId: Prisma.FieldRef<"Class", 'String'>
   readonly programId: Prisma.FieldRef<"Class", 'Int'>
   readonly currentSemester: Prisma.FieldRef<"Class", 'Int'>
   readonly academicYear: Prisma.FieldRef<"Class", 'Int'>

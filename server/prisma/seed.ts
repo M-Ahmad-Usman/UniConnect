@@ -84,6 +84,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 
 const DEGREE_LEVELS = ["Bachelors", "Masters", "PHD"] as const;
 
+const DESIGNATIONS = [
+  { value: "Professor", label: "Professor" },
+  { value: "Associate Professor", label: "Associate Professor" },
+  { value: "Assistant Professor", label: "Assistant Professor" },
+  { value: "Lecturer", label: "Lecturer" },
+] as const;
+
 interface SeedUserInput {
   email: string;
   fullName: string;
@@ -107,6 +114,11 @@ async function seedRolesAndPermissions() {
       create: { level },
     });
   }
+
+  await prisma.designation.createMany({
+    data: DESIGNATIONS,
+    skipDuplicates: true,
+  });
 
   for (const roleName of ROLES) {
     await prisma.role.upsert({
@@ -153,34 +165,46 @@ async function seedRolesAndPermissions() {
 
 async function upsertUser(input: SeedUserInput) {
   const passwordHash = await hashPassword(input.password);
+  const userData = {
+    fullName: input.fullName,
+    phone: input.phone,
+    gender: input.gender,
+    userType: input.userType,
+    departmentId: input.departmentId ?? null,
+    passwordHash,
+    status: "ACTIVE" as const,
+    isActive: true,
+    isDeleted: false,
+    mustChangePassword: input.mustChangePassword ?? false,
+  };
 
-  return prisma.user.upsert({
-    where: { email: input.email },
-    update: {
-      fullName: input.fullName,
-      phone: input.phone,
-      gender: input.gender,
-      userType: input.userType,
-      departmentId: input.departmentId ?? null,
-      passwordHash,
-      isActive: true,
-      mustChangePassword: input.mustChangePassword ?? false,
-    },
-    create: {
-      fullName: input.fullName,
+  const existing = await prisma.user.findFirst({
+    where: { email: input.email, isDeleted: false },
+    select: { id: true },
+  });
+
+  if (existing) {
+    return prisma.user.update({
+      where: { id: existing.id },
+      data: userData,
+    });
+  }
+
+  return prisma.user.create({
+    data: {
+      ...userData,
       email: input.email,
-      phone: input.phone,
-      passwordHash,
-      gender: input.gender,
-      userType: input.userType,
-      departmentId: input.departmentId ?? null,
-      isActive: true,
-      mustChangePassword: input.mustChangePassword ?? false,
     },
   });
 }
 
 async function ensureTeacherInfo(teacherId: number, designation: string) {
+  await prisma.designation.upsert({
+    where: { value: designation },
+    update: { label: designation },
+    create: { value: designation, label: designation },
+  });
+
   await prisma.teacherInfo.upsert({
     where: { teacherId },
     update: { designation },
@@ -203,7 +227,7 @@ async function ensureServer(
   description: string,
 ) {
   const existing = await prisma.server.findFirst({
-    where: { name, type },
+    where: { name, type, isDeleted: false },
   });
 
   if (existing) {
@@ -212,6 +236,7 @@ async function ensureServer(
       data: {
         description,
         createdBy,
+        isDeleted: false,
         isActive: true,
       },
     });
@@ -223,6 +248,7 @@ async function ensureServer(
       type,
       description,
       createdBy,
+      isDeleted: false,
       isActive: true,
     },
   });
@@ -239,7 +265,7 @@ async function ensureChannel(input: {
   courseId?: number | null;
 }) {
   const existing = await prisma.channel.findFirst({
-    where: { serverId: input.serverId, name: input.name },
+    where: { serverId: input.serverId, name: input.name, isDeleted: false },
   });
 
   const data = {
@@ -554,26 +580,33 @@ async function seedDemoWorkspace() {
     "Community updates, event planning, and member announcements for IEEE student activities.",
   );
 
-  const society = await prisma.society.upsert({
-    where: { name: "IEEE Student Society" },
-    update: {
-      description: "Technical society for workshops, events, and student-led initiatives.",
-      departmentId: department.id,
-      presidentId: president.id,
-      convenorId: convenor.id,
-      serverId: societyServer.id,
-      isActive: true,
-    },
-    create: {
-      name: "IEEE Student Society",
-      description: "Technical society for workshops, events, and student-led initiatives.",
-      departmentId: department.id,
-      presidentId: president.id,
-      convenorId: convenor.id,
-      serverId: societyServer.id,
-      isActive: true,
-    },
+  const societyData = {
+    description: "Technical society for workshops, events, and student-led initiatives.",
+    departmentId: department.id,
+    presidentId: president.id,
+    convenorId: convenor.id,
+    serverId: societyServer.id,
+    status: "ACTIVE" as const,
+    isActive: true,
+    isDeleted: false,
+  };
+
+  const existingSociety = await prisma.society.findFirst({
+    where: { name: "IEEE Student Society", isDeleted: false },
+    select: { id: true },
   });
+
+  const society = existingSociety
+    ? await prisma.society.update({
+        where: { id: existingSociety.id },
+        data: societyData,
+      })
+    : await prisma.society.create({
+        data: {
+          ...societyData,
+          name: "IEEE Student Society",
+        },
+      });
 
   const course = await prisma.course.upsert({
     where: { code: "CS301-DEMO" },

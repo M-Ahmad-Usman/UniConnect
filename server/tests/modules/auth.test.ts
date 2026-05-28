@@ -216,7 +216,7 @@ describe("POST /api/auth/logout", () => {
 
   it("should return 200 and clear cookies", async () => {
     const cookies = await loginAs("logout@test.com", PASSWORD);
-    const user = await prisma.user.findUnique({ where: { email: "logout@test.com" } });
+    const user = await prisma.user.findFirst({ where: { email: "logout@test.com" } });
 
     const res = await request(app)
       .post("/api/auth/logout")
@@ -270,7 +270,7 @@ describe("PATCH /api/auth/change-password", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
-    const user = await prisma.user.findUnique({ where: { email: "changepw@test.com" } });
+    const user = await prisma.user.findFirst({ where: { email: "changepw@test.com" } });
     const auditLog = await prisma.auditLog.findFirst({
       where: {
         action: "auth.password_changed",
@@ -306,6 +306,27 @@ describe("PATCH /api/auth/change-password", () => {
     expect(res.body.success).toBe(false);
   });
 
+  it("should return 401 when an authenticated user is suspended before changing password", async () => {
+    const suspendedUser = await createUser({
+      email: "changepw-suspended@test.com",
+      password: OLD_PASSWORD,
+    });
+    const cookies = await loginAs("changepw-suspended@test.com", OLD_PASSWORD);
+
+    await prisma.user.update({
+      where: { id: suspendedUser.id },
+      data: { isActive: false, status: "SUSPENDED" },
+    });
+
+    const res = await request(app)
+      .patch("/api/auth/change-password")
+      .set("Cookie", cookies)
+      .send({ currentPassword: OLD_PASSWORD, newPassword: NEW_PASSWORD });
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
+
   it("should return 401 without auth cookie", async () => {
     const res = await request(app)
       .patch("/api/auth/change-password")
@@ -334,6 +355,11 @@ describe("POST /api/auth/forgot-password", () => {
   beforeAll(async () => {
     await resetDB();
     await createUser({ email: "forgot@test.com", password: "Pass@1234" });
+    await createUser({
+      email: "forgot-suspended@test.com",
+      password: "Pass@1234",
+      isActive: false,
+    });
   });
 
   it("should return 200 for existing email (no enumeration)", async () => {
@@ -354,6 +380,18 @@ describe("POST /api/auth/forgot-password", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
   });
+
+  it("should return 200 but not store a reset token for suspended users", async () => {
+    const res = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "forgot-suspended@test.com" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+
+    const user = await prisma.user.findFirst({ where: { email: "forgot-suspended@test.com" } });
+    expect(user!.passwordResetTokenHash).toBeNull();
+  });
 });
 
 // ─── POST /api/auth/reset-password ──────────────────────────────────────────
@@ -365,7 +403,7 @@ describe("POST /api/auth/reset-password", () => {
   });
 
   it("should return 200 and reset password with valid token", async () => {
-    const user = await prisma.user.findUnique({ where: { email: "reset@test.com" } });
+    const user = await prisma.user.findFirst({ where: { email: "reset@test.com" } });
     const resetToken = jwt.sign(
       { id: user!.id, email: user!.email },
       env.RESET_PASSWORD_SECRET,
@@ -409,7 +447,7 @@ describe("POST /api/auth/reset-password", () => {
   });
 
   it("should return 401 for expired token", async () => {
-    const user = await prisma.user.findUnique({ where: { email: "reset@test.com" } });
+    const user = await prisma.user.findFirst({ where: { email: "reset@test.com" } });
     const expiredToken = jwt.sign(
       { id: user!.id, email: user!.email },
       env.RESET_PASSWORD_SECRET,
@@ -437,7 +475,7 @@ describe("POST /api/auth/reset-password", () => {
   });
 
   it("should return 401 when using the same reset token twice", async () => {
-    const user = await prisma.user.findUnique({ where: { email: "reset@test.com" } });
+    const user = await prisma.user.findFirst({ where: { email: "reset@test.com" } });
     const resetToken = jwt.sign(
       { id: user!.id, email: user!.email },
       env.RESET_PASSWORD_SECRET,
@@ -463,6 +501,31 @@ describe("POST /api/auth/reset-password", () => {
       .send({ token: resetToken, newPassword: "SecondReset@123" });
     expect(res2.status).toBe(401);
     expect(res2.body.success).toBe(false);
+  });
+
+  it("should return 401 for a suspended user with an otherwise valid reset token", async () => {
+    const suspendedUser = await createUser({
+      email: "reset-suspended@test.com",
+      password: "OldPass@123",
+      isActive: false,
+    });
+    const resetToken = jwt.sign(
+      { id: suspendedUser.id, email: suspendedUser.email },
+      env.RESET_PASSWORD_SECRET,
+      { expiresIn: "1h" }
+    );
+    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    await prisma.user.update({
+      where: { id: suspendedUser.id },
+      data: { passwordResetTokenHash: tokenHash },
+    });
+
+    const res = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ token: resetToken, newPassword: "NewReset@123" });
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
   });
 });
 
@@ -514,7 +577,7 @@ describe("First-login mustChangePassword guard", () => {
     expect(res.body.success).toBe(true);
 
     // Verify the flag is cleared in DB
-    const user = await prisma.user.findUnique({ where: { email: "firstlogin@test.com" } });
+    const user = await prisma.user.findFirst({ where: { email: "firstlogin@test.com" } });
     expect(user!.mustChangePassword).toBe(false);
   });
 

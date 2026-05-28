@@ -29,15 +29,18 @@ export type AggregateUser = {
 export type UserAvgAggregateOutputType = {
   id: number | null
   departmentId: number | null
+  deletedBy: number | null
 }
 
 export type UserSumAggregateOutputType = {
   id: number | null
   departmentId: number | null
+  deletedBy: number | null
 }
 
 export type UserMinAggregateOutputType = {
   id: number | null
+  publicId: string | null
   fullName: string | null
   email: string | null
   phone: string | null
@@ -47,7 +50,11 @@ export type UserMinAggregateOutputType = {
   bio: string | null
   userType: $Enums.UserType | null
   departmentId: number | null
+  status: $Enums.UserStatus | null
   isActive: boolean | null
+  isDeleted: boolean | null
+  deletedAt: Date | null
+  deletedBy: number | null
   mustChangePassword: boolean | null
   passwordResetTokenHash: string | null
   createdAt: Date | null
@@ -56,6 +63,7 @@ export type UserMinAggregateOutputType = {
 
 export type UserMaxAggregateOutputType = {
   id: number | null
+  publicId: string | null
   fullName: string | null
   email: string | null
   phone: string | null
@@ -65,7 +73,11 @@ export type UserMaxAggregateOutputType = {
   bio: string | null
   userType: $Enums.UserType | null
   departmentId: number | null
+  status: $Enums.UserStatus | null
   isActive: boolean | null
+  isDeleted: boolean | null
+  deletedAt: Date | null
+  deletedBy: number | null
   mustChangePassword: boolean | null
   passwordResetTokenHash: string | null
   createdAt: Date | null
@@ -74,6 +86,7 @@ export type UserMaxAggregateOutputType = {
 
 export type UserCountAggregateOutputType = {
   id: number
+  publicId: number
   fullName: number
   email: number
   phone: number
@@ -83,7 +96,11 @@ export type UserCountAggregateOutputType = {
   bio: number
   userType: number
   departmentId: number
+  status: number
   isActive: number
+  isDeleted: number
+  deletedAt: number
+  deletedBy: number
   mustChangePassword: number
   passwordResetTokenHash: number
   createdAt: number
@@ -95,15 +112,18 @@ export type UserCountAggregateOutputType = {
 export type UserAvgAggregateInputType = {
   id?: true
   departmentId?: true
+  deletedBy?: true
 }
 
 export type UserSumAggregateInputType = {
   id?: true
   departmentId?: true
+  deletedBy?: true
 }
 
 export type UserMinAggregateInputType = {
   id?: true
+  publicId?: true
   fullName?: true
   email?: true
   phone?: true
@@ -113,7 +133,11 @@ export type UserMinAggregateInputType = {
   bio?: true
   userType?: true
   departmentId?: true
+  status?: true
   isActive?: true
+  isDeleted?: true
+  deletedAt?: true
+  deletedBy?: true
   mustChangePassword?: true
   passwordResetTokenHash?: true
   createdAt?: true
@@ -122,6 +146,7 @@ export type UserMinAggregateInputType = {
 
 export type UserMaxAggregateInputType = {
   id?: true
+  publicId?: true
   fullName?: true
   email?: true
   phone?: true
@@ -131,7 +156,11 @@ export type UserMaxAggregateInputType = {
   bio?: true
   userType?: true
   departmentId?: true
+  status?: true
   isActive?: true
+  isDeleted?: true
+  deletedAt?: true
+  deletedBy?: true
   mustChangePassword?: true
   passwordResetTokenHash?: true
   createdAt?: true
@@ -140,6 +169,7 @@ export type UserMaxAggregateInputType = {
 
 export type UserCountAggregateInputType = {
   id?: true
+  publicId?: true
   fullName?: true
   email?: true
   phone?: true
@@ -149,7 +179,11 @@ export type UserCountAggregateInputType = {
   bio?: true
   userType?: true
   departmentId?: true
+  status?: true
   isActive?: true
+  isDeleted?: true
+  deletedAt?: true
+  deletedBy?: true
   mustChangePassword?: true
   passwordResetTokenHash?: true
   createdAt?: true
@@ -245,6 +279,7 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 
 export type UserGroupByOutputType = {
   id: number
+  publicId: string
   fullName: string
   email: string
   phone: string
@@ -254,7 +289,11 @@ export type UserGroupByOutputType = {
   bio: string | null
   userType: $Enums.UserType
   departmentId: number | null
+  status: $Enums.UserStatus
   isActive: boolean
+  isDeleted: boolean
+  deletedAt: Date | null
+  deletedBy: number | null
   mustChangePassword: boolean
   passwordResetTokenHash: string | null
   createdAt: Date
@@ -286,6 +325,7 @@ export type UserWhereInput = {
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   id?: Prisma.IntFilter<"User"> | number
+  publicId?: Prisma.UuidFilter<"User"> | string
   fullName?: Prisma.StringFilter<"User"> | string
   email?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringFilter<"User"> | string
@@ -295,16 +335,22 @@ export type UserWhereInput = {
   bio?: Prisma.StringNullableFilter<"User"> | string | null
   userType?: Prisma.EnumUserTypeFilter<"User"> | $Enums.UserType
   departmentId?: Prisma.IntNullableFilter<"User"> | number | null
+  status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  isDeleted?: Prisma.BoolFilter<"User"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  deletedBy?: Prisma.IntNullableFilter<"User"> | number | null
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
   passwordResetTokenHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
+  deletedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   studentInfo?: Prisma.XOR<Prisma.StudentInfoNullableScalarRelationFilter, Prisma.StudentInfoWhereInput> | null
   teacherInfo?: Prisma.XOR<Prisma.TeacherInfoNullableScalarRelationFilter, Prisma.TeacherInfoWhereInput> | null
   serverMemberships?: Prisma.ServerMembershipListRelationFilter
   createdServers?: Prisma.ServerListRelationFilter
+  deletedServers?: Prisma.ServerListRelationFilter
   lockedChannels?: Prisma.ChannelListRelationFilter
   deletedChannels?: Prisma.ChannelListRelationFilter
   createdChannels?: Prisma.ChannelListRelationFilter
@@ -320,12 +366,15 @@ export type UserWhereInput = {
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
   graduatedClasses?: Prisma.ClassListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
+  deletedUsers?: Prisma.UserListRelationFilter
+  deletedSocieties?: Prisma.SocietyListRelationFilter
   societyMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
@@ -335,16 +384,22 @@ export type UserOrderByWithRelationInput = {
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
   userType?: Prisma.SortOrder
   departmentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   passwordResetTokenHash?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   department?: Prisma.DepartmentOrderByWithRelationInput
+  deletedByUser?: Prisma.UserOrderByWithRelationInput
   studentInfo?: Prisma.StudentInfoOrderByWithRelationInput
   teacherInfo?: Prisma.TeacherInfoOrderByWithRelationInput
   serverMemberships?: Prisma.ServerMembershipOrderByRelationAggregateInput
   createdServers?: Prisma.ServerOrderByRelationAggregateInput
+  deletedServers?: Prisma.ServerOrderByRelationAggregateInput
   lockedChannels?: Prisma.ChannelOrderByRelationAggregateInput
   deletedChannels?: Prisma.ChannelOrderByRelationAggregateInput
   createdChannels?: Prisma.ChannelOrderByRelationAggregateInput
@@ -360,17 +415,20 @@ export type UserOrderByWithRelationInput = {
   refreshTokens?: Prisma.RefreshTokenOrderByRelationAggregateInput
   graduatedClasses?: Prisma.ClassOrderByRelationAggregateInput
   auditLogs?: Prisma.AuditLogOrderByRelationAggregateInput
+  deletedUsers?: Prisma.UserOrderByRelationAggregateInput
+  deletedSocieties?: Prisma.SocietyOrderByRelationAggregateInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestOrderByRelationAggregateInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  email?: string
+  publicId?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   fullName?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringFilter<"User"> | string
   passwordHash?: Prisma.StringFilter<"User"> | string
   gender?: Prisma.EnumGenderFilter<"User"> | $Enums.Gender
@@ -378,16 +436,22 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   bio?: Prisma.StringNullableFilter<"User"> | string | null
   userType?: Prisma.EnumUserTypeFilter<"User"> | $Enums.UserType
   departmentId?: Prisma.IntNullableFilter<"User"> | number | null
+  status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  isDeleted?: Prisma.BoolFilter<"User"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  deletedBy?: Prisma.IntNullableFilter<"User"> | number | null
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
   passwordResetTokenHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
+  deletedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   studentInfo?: Prisma.XOR<Prisma.StudentInfoNullableScalarRelationFilter, Prisma.StudentInfoWhereInput> | null
   teacherInfo?: Prisma.XOR<Prisma.TeacherInfoNullableScalarRelationFilter, Prisma.TeacherInfoWhereInput> | null
   serverMemberships?: Prisma.ServerMembershipListRelationFilter
   createdServers?: Prisma.ServerListRelationFilter
+  deletedServers?: Prisma.ServerListRelationFilter
   lockedChannels?: Prisma.ChannelListRelationFilter
   deletedChannels?: Prisma.ChannelListRelationFilter
   createdChannels?: Prisma.ChannelListRelationFilter
@@ -403,12 +467,15 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
   graduatedClasses?: Prisma.ClassListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
+  deletedUsers?: Prisma.UserListRelationFilter
+  deletedSocieties?: Prisma.SocietyListRelationFilter
   societyMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
-}, "id" | "email">
+}, "id" | "publicId">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
@@ -418,7 +485,11 @@ export type UserOrderByWithAggregationInput = {
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
   userType?: Prisma.SortOrder
   departmentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   passwordResetTokenHash?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -435,6 +506,7 @@ export type UserScalarWhereWithAggregatesInput = {
   OR?: Prisma.UserScalarWhereWithAggregatesInput[]
   NOT?: Prisma.UserScalarWhereWithAggregatesInput | Prisma.UserScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"User"> | number
+  publicId?: Prisma.UuidWithAggregatesFilter<"User"> | string
   fullName?: Prisma.StringWithAggregatesFilter<"User"> | string
   email?: Prisma.StringWithAggregatesFilter<"User"> | string
   phone?: Prisma.StringWithAggregatesFilter<"User"> | string
@@ -444,7 +516,11 @@ export type UserScalarWhereWithAggregatesInput = {
   bio?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   userType?: Prisma.EnumUserTypeWithAggregatesFilter<"User"> | $Enums.UserType
   departmentId?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  status?: Prisma.EnumUserStatusWithAggregatesFilter<"User"> | $Enums.UserStatus
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  isDeleted?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  deletedBy?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   mustChangePassword?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   passwordResetTokenHash?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -452,6 +528,7 @@ export type UserScalarWhereWithAggregatesInput = {
 }
 
 export type UserCreateInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -460,16 +537,21 @@ export type UserCreateInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -485,12 +567,15 @@ export type UserCreateInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -500,7 +585,11 @@ export type UserUncheckedCreateInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -509,6 +598,7 @@ export type UserUncheckedCreateInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -524,11 +614,14 @@ export type UserUncheckedCreateInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUpdateInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -537,16 +630,21 @@ export type UserUpdateInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -562,12 +660,15 @@ export type UserUpdateInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -577,7 +678,11 @@ export type UserUncheckedUpdateInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -586,6 +691,7 @@ export type UserUncheckedUpdateInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -601,12 +707,15 @@ export type UserUncheckedUpdateInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateManyInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -616,7 +725,11 @@ export type UserCreateManyInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -624,6 +737,7 @@ export type UserCreateManyInput = {
 }
 
 export type UserUpdateManyMutationInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -632,7 +746,10 @@ export type UserUpdateManyMutationInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -641,6 +758,7 @@ export type UserUpdateManyMutationInput = {
 
 export type UserUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -650,7 +768,11 @@ export type UserUncheckedUpdateManyInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -667,8 +789,14 @@ export type UserOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
+}
+
 export type UserCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
@@ -678,7 +806,11 @@ export type UserCountOrderByAggregateInput = {
   bio?: Prisma.SortOrder
   userType?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   passwordResetTokenHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -688,10 +820,12 @@ export type UserCountOrderByAggregateInput = {
 export type UserAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
@@ -701,7 +835,11 @@ export type UserMaxOrderByAggregateInput = {
   bio?: Prisma.SortOrder
   userType?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   passwordResetTokenHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -710,6 +848,7 @@ export type UserMaxOrderByAggregateInput = {
 
 export type UserMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   email?: Prisma.SortOrder
   phone?: Prisma.SortOrder
@@ -719,7 +858,11 @@ export type UserMinOrderByAggregateInput = {
   bio?: Prisma.SortOrder
   userType?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   passwordResetTokenHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -729,16 +872,12 @@ export type UserMinOrderByAggregateInput = {
 export type UserSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
-}
-
-export type UserNullableScalarRelationFilter = {
-  is?: Prisma.UserWhereInput | null
-  isNot?: Prisma.UserWhereInput | null
 }
 
 export type UserCreateNestedManyWithoutDepartmentInput = {
@@ -783,24 +922,86 @@ export type UserUncheckedUpdateManyWithoutDepartmentNestedInput = {
   deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
 }
 
-export type EnumGenderFieldUpdateOperationsInput = {
-  set?: $Enums.Gender
+export type UserCreateNestedOneWithoutDeletedUsersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedUsersInput, Prisma.UserUncheckedCreateWithoutDeletedUsersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedUsersInput
+  connect?: Prisma.UserWhereUniqueInput
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
+export type UserCreateNestedManyWithoutDeletedByUserInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedByUserInput, Prisma.UserUncheckedCreateWithoutDeletedByUserInput> | Prisma.UserCreateWithoutDeletedByUserInput[] | Prisma.UserUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedByUserInput | Prisma.UserCreateOrConnectWithoutDeletedByUserInput[]
+  createMany?: Prisma.UserCreateManyDeletedByUserInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type UserUncheckedCreateNestedManyWithoutDeletedByUserInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedByUserInput, Prisma.UserUncheckedCreateWithoutDeletedByUserInput> | Prisma.UserCreateWithoutDeletedByUserInput[] | Prisma.UserUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedByUserInput | Prisma.UserCreateOrConnectWithoutDeletedByUserInput[]
+  createMany?: Prisma.UserCreateManyDeletedByUserInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type EnumGenderFieldUpdateOperationsInput = {
+  set?: $Enums.Gender
 }
 
 export type EnumUserTypeFieldUpdateOperationsInput = {
   set?: $Enums.UserType
 }
 
+export type EnumUserStatusFieldUpdateOperationsInput = {
+  set?: $Enums.UserStatus
+}
+
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserUpdateOneWithoutDeletedUsersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedUsersInput, Prisma.UserUncheckedCreateWithoutDeletedUsersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedUsersInput
+  upsert?: Prisma.UserUpsertWithoutDeletedUsersInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeletedUsersInput, Prisma.UserUpdateWithoutDeletedUsersInput>, Prisma.UserUncheckedUpdateWithoutDeletedUsersInput>
+}
+
+export type UserUpdateManyWithoutDeletedByUserNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedByUserInput, Prisma.UserUncheckedCreateWithoutDeletedByUserInput> | Prisma.UserCreateWithoutDeletedByUserInput[] | Prisma.UserUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedByUserInput | Prisma.UserCreateOrConnectWithoutDeletedByUserInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutDeletedByUserInput | Prisma.UserUpsertWithWhereUniqueWithoutDeletedByUserInput[]
+  createMany?: Prisma.UserCreateManyDeletedByUserInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutDeletedByUserInput | Prisma.UserUpdateWithWhereUniqueWithoutDeletedByUserInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutDeletedByUserInput | Prisma.UserUpdateManyWithWhereWithoutDeletedByUserInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+}
+
+export type UserUncheckedUpdateManyWithoutDeletedByUserNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedByUserInput, Prisma.UserUncheckedCreateWithoutDeletedByUserInput> | Prisma.UserCreateWithoutDeletedByUserInput[] | Prisma.UserUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedByUserInput | Prisma.UserCreateOrConnectWithoutDeletedByUserInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutDeletedByUserInput | Prisma.UserUpsertWithWhereUniqueWithoutDeletedByUserInput[]
+  createMany?: Prisma.UserCreateManyDeletedByUserInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutDeletedByUserInput | Prisma.UserUpdateWithWhereUniqueWithoutDeletedByUserInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutDeletedByUserInput | Prisma.UserUpdateManyWithWhereWithoutDeletedByUserInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
 }
 
 export type UserCreateNestedOneWithoutStudentInfoInput = {
@@ -847,18 +1048,52 @@ export type UserUpdateOneWithoutGraduatedClassesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGraduatedClassesInput, Prisma.UserUpdateWithoutGraduatedClassesInput>, Prisma.UserUncheckedUpdateWithoutGraduatedClassesInput>
 }
 
+export type UserCreateNestedOneWithoutDeletedSocietiesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedSocietiesInput, Prisma.UserUncheckedCreateWithoutDeletedSocietiesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedSocietiesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutDeletedSocietiesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedSocietiesInput, Prisma.UserUncheckedCreateWithoutDeletedSocietiesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedSocietiesInput
+  upsert?: Prisma.UserUpsertWithoutDeletedSocietiesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeletedSocietiesInput, Prisma.UserUpdateWithoutDeletedSocietiesInput>, Prisma.UserUncheckedUpdateWithoutDeletedSocietiesInput>
+}
+
 export type UserCreateNestedOneWithoutCreatedServersInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedServersInput, Prisma.UserUncheckedCreateWithoutCreatedServersInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedServersInput
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutCreatedServersNestedInput = {
+export type UserCreateNestedOneWithoutDeletedServersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedServersInput, Prisma.UserUncheckedCreateWithoutDeletedServersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedServersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutCreatedServersNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedServersInput, Prisma.UserUncheckedCreateWithoutCreatedServersInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedServersInput
   upsert?: Prisma.UserUpsertWithoutCreatedServersInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedServersInput, Prisma.UserUpdateWithoutCreatedServersInput>, Prisma.UserUncheckedUpdateWithoutCreatedServersInput>
+}
+
+export type UserUpdateOneWithoutDeletedServersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeletedServersInput, Prisma.UserUncheckedCreateWithoutDeletedServersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeletedServersInput
+  upsert?: Prisma.UserUpsertWithoutDeletedServersInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeletedServersInput, Prisma.UserUpdateWithoutDeletedServersInput>, Prisma.UserUncheckedUpdateWithoutDeletedServersInput>
 }
 
 export type UserCreateNestedOneWithoutLockedChannelsInput = {
@@ -1051,10 +1286,12 @@ export type UserUpdateOneRequiredWithoutModeratorAssignmentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutModeratorAssignmentsInput, Prisma.UserUpdateWithoutModeratorAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsInput>
 }
 
-export type UserUpdateOneRequiredWithoutModeratorAssignmentsCreatedNestedInput = {
+export type UserUpdateOneWithoutModeratorAssignmentsCreatedNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutModeratorAssignmentsCreatedInput
   upsert?: Prisma.UserUpsertWithoutModeratorAssignmentsCreatedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutModeratorAssignmentsCreatedInput, Prisma.UserUpdateWithoutModeratorAssignmentsCreatedInput>, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput>
 }
@@ -1118,6 +1355,7 @@ export type UserUpdateOneWithoutAuditLogsNestedInput = {
 }
 
 export type UserCreateWithoutDepartmentInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1126,15 +1364,20 @@ export type UserCreateWithoutDepartmentInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -1150,12 +1393,15 @@ export type UserCreateWithoutDepartmentInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutDepartmentInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1164,7 +1410,11 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -1173,6 +1423,7 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -1188,6 +1439,8 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1223,6 +1476,7 @@ export type UserScalarWhereInput = {
   OR?: Prisma.UserScalarWhereInput[]
   NOT?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
   id?: Prisma.IntFilter<"User"> | number
+  publicId?: Prisma.UuidFilter<"User"> | string
   fullName?: Prisma.StringFilter<"User"> | string
   email?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringFilter<"User"> | string
@@ -1232,14 +1486,19 @@ export type UserScalarWhereInput = {
   bio?: Prisma.StringNullableFilter<"User"> | string | null
   userType?: Prisma.EnumUserTypeFilter<"User"> | $Enums.UserType
   departmentId?: Prisma.IntNullableFilter<"User"> | number | null
+  status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  isDeleted?: Prisma.BoolFilter<"User"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  deletedBy?: Prisma.IntNullableFilter<"User"> | number | null
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
   passwordResetTokenHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
 
-export type UserCreateWithoutStudentInfoInput = {
+export type UserCreateWithoutDeletedUsersInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1248,15 +1507,21 @@ export type UserCreateWithoutStudentInfoInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -1272,12 +1537,14 @@ export type UserCreateWithoutStudentInfoInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
-export type UserUncheckedCreateWithoutStudentInfoInput = {
+export type UserUncheckedCreateWithoutDeletedUsersInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1287,14 +1554,20 @@ export type UserUncheckedCreateWithoutStudentInfoInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -1310,6 +1583,322 @@ export type UserUncheckedCreateWithoutStudentInfoInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutDeletedUsersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedUsersInput, Prisma.UserUncheckedCreateWithoutDeletedUsersInput>
+}
+
+export type UserCreateWithoutDeletedByUserInput = {
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutDeletedByUserInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutDeletedByUserInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedByUserInput, Prisma.UserUncheckedCreateWithoutDeletedByUserInput>
+}
+
+export type UserCreateManyDeletedByUserInputEnvelope = {
+  data: Prisma.UserCreateManyDeletedByUserInput | Prisma.UserCreateManyDeletedByUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type UserUpsertWithoutDeletedUsersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDeletedUsersInput, Prisma.UserUncheckedUpdateWithoutDeletedUsersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedUsersInput, Prisma.UserUncheckedCreateWithoutDeletedUsersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDeletedUsersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDeletedUsersInput, Prisma.UserUncheckedUpdateWithoutDeletedUsersInput>
+}
+
+export type UserUpdateWithoutDeletedUsersInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDeletedUsersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUpsertWithWhereUniqueWithoutDeletedByUserInput = {
+  where: Prisma.UserWhereUniqueInput
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDeletedByUserInput, Prisma.UserUncheckedUpdateWithoutDeletedByUserInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedByUserInput, Prisma.UserUncheckedCreateWithoutDeletedByUserInput>
+}
+
+export type UserUpdateWithWhereUniqueWithoutDeletedByUserInput = {
+  where: Prisma.UserWhereUniqueInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDeletedByUserInput, Prisma.UserUncheckedUpdateWithoutDeletedByUserInput>
+}
+
+export type UserUpdateManyWithWhereWithoutDeletedByUserInput = {
+  where: Prisma.UserScalarWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateManyMutationInput, Prisma.UserUncheckedUpdateManyWithoutDeletedByUserInput>
+}
+
+export type UserCreateWithoutStudentInfoInput = {
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutStudentInfoInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1331,6 +1920,7 @@ export type UserUpdateToOneWithWhereWithoutStudentInfoInput = {
 }
 
 export type UserUpdateWithoutStudentInfoInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1339,15 +1929,20 @@ export type UserUpdateWithoutStudentInfoInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -1363,12 +1958,15 @@ export type UserUpdateWithoutStudentInfoInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStudentInfoInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1378,7 +1976,11 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1386,6 +1988,7 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -1401,11 +2004,14 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutTeacherInfoInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1414,15 +2020,20 @@ export type UserCreateWithoutTeacherInfoInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -1438,12 +2049,15 @@ export type UserCreateWithoutTeacherInfoInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutTeacherInfoInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1453,7 +2067,11 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -1461,6 +2079,7 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -1476,6 +2095,8 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1497,6 +2118,7 @@ export type UserUpdateToOneWithWhereWithoutTeacherInfoInput = {
 }
 
 export type UserUpdateWithoutTeacherInfoInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1505,15 +2127,20 @@ export type UserUpdateWithoutTeacherInfoInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -1529,12 +2156,15 @@ export type UserUpdateWithoutTeacherInfoInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1544,7 +2174,11 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1552,6 +2186,7 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -1567,11 +2202,14 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutGraduatedClassesInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1580,16 +2218,21 @@ export type UserCreateWithoutGraduatedClassesInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -1604,12 +2247,15 @@ export type UserCreateWithoutGraduatedClassesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutGraduatedClassesInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1619,7 +2265,11 @@ export type UserUncheckedCreateWithoutGraduatedClassesInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -1628,6 +2278,7 @@ export type UserUncheckedCreateWithoutGraduatedClassesInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -1642,6 +2293,8 @@ export type UserUncheckedCreateWithoutGraduatedClassesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1663,6 +2316,7 @@ export type UserUpdateToOneWithWhereWithoutGraduatedClassesInput = {
 }
 
 export type UserUpdateWithoutGraduatedClassesInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1671,12 +2325,610 @@ export type UserUpdateWithoutGraduatedClassesInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutGraduatedClassesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserCreateWithoutDeletedSocietiesInput = {
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutDeletedSocietiesInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutDeletedSocietiesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedSocietiesInput, Prisma.UserUncheckedCreateWithoutDeletedSocietiesInput>
+}
+
+export type UserUpsertWithoutDeletedSocietiesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDeletedSocietiesInput, Prisma.UserUncheckedUpdateWithoutDeletedSocietiesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedSocietiesInput, Prisma.UserUncheckedCreateWithoutDeletedSocietiesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDeletedSocietiesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDeletedSocietiesInput, Prisma.UserUncheckedUpdateWithoutDeletedSocietiesInput>
+}
+
+export type UserUpdateWithoutDeletedSocietiesInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDeletedSocietiesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserCreateWithoutCreatedServersInput = {
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutCreatedServersInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutCreatedServersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedServersInput, Prisma.UserUncheckedCreateWithoutCreatedServersInput>
+}
+
+export type UserCreateWithoutDeletedServersInput = {
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutDeletedServersInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutDeletedServersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedServersInput, Prisma.UserUncheckedCreateWithoutDeletedServersInput>
+}
+
+export type UserUpsertWithoutCreatedServersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCreatedServersInput, Prisma.UserUncheckedUpdateWithoutCreatedServersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedServersInput, Prisma.UserUncheckedCreateWithoutCreatedServersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCreatedServersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCreatedServersInput, Prisma.UserUncheckedUpdateWithoutCreatedServersInput>
+}
+
+export type UserUpdateWithoutCreatedServersInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCreatedServersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUpsertWithoutDeletedServersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDeletedServersInput, Prisma.UserUncheckedUpdateWithoutDeletedServersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeletedServersInput, Prisma.UserUncheckedCreateWithoutDeletedServersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDeletedServersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDeletedServersInput, Prisma.UserUncheckedUpdateWithoutDeletedServersInput>
+}
+
+export type UserUpdateWithoutDeletedServersInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
@@ -1694,13 +2946,17 @@ export type UserUpdateWithoutGraduatedClassesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
-export type UserUncheckedUpdateWithoutGraduatedClassesInput = {
+export type UserUncheckedUpdateWithoutDeletedServersInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1710,7 +2966,11 @@ export type UserUncheckedUpdateWithoutGraduatedClassesInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1732,178 +2992,16 @@ export type UserUncheckedUpdateWithoutGraduatedClassesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
-  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
-  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
-}
-
-export type UserCreateWithoutCreatedServersInput = {
-  fullName: string
-  email: string
-  phone: string
-  passwordHash: string
-  gender: $Enums.Gender
-  profilePictureUrl?: string | null
-  bio?: string | null
-  userType: $Enums.UserType
-  isActive?: boolean
-  mustChangePassword?: boolean
-  passwordResetTokenHash?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
-  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
-  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
-  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
-  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
-  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
-  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
-  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
-  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
-  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
-  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
-  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
-  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
-  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
-  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
-  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
-  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
-  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
-}
-
-export type UserUncheckedCreateWithoutCreatedServersInput = {
-  id?: number
-  fullName: string
-  email: string
-  phone: string
-  passwordHash: string
-  gender: $Enums.Gender
-  profilePictureUrl?: string | null
-  bio?: string | null
-  userType: $Enums.UserType
-  departmentId?: number | null
-  isActive?: boolean
-  mustChangePassword?: boolean
-  passwordResetTokenHash?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
-  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
-  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
-  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
-  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
-  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
-  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
-  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
-  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
-  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
-  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
-  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
-  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
-  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
-  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
-  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
-  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
-}
-
-export type UserCreateOrConnectWithoutCreatedServersInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedServersInput, Prisma.UserUncheckedCreateWithoutCreatedServersInput>
-}
-
-export type UserUpsertWithoutCreatedServersInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutCreatedServersInput, Prisma.UserUncheckedUpdateWithoutCreatedServersInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedServersInput, Prisma.UserUncheckedCreateWithoutCreatedServersInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutCreatedServersInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutCreatedServersInput, Prisma.UserUncheckedUpdateWithoutCreatedServersInput>
-}
-
-export type UserUpdateWithoutCreatedServersInput = {
-  fullName?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
-  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
-  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
-  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
-  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
-  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
-  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
-  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
-  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
-  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
-  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
-  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
-  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
-  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
-  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
-  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
-  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
-  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
-}
-
-export type UserUncheckedUpdateWithoutCreatedServersInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  fullName?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
-  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
-  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
-  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
-  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
-  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
-  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
-  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
-  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
-  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
-  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
-  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
-  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
-  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
-  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutLockedChannelsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1912,16 +3010,21 @@ export type UserCreateWithoutLockedChannelsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
   archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
@@ -1936,12 +3039,15 @@ export type UserCreateWithoutLockedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutLockedChannelsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1951,7 +3057,11 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -1960,6 +3070,7 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
   archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
@@ -1974,6 +3085,8 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -1984,6 +3097,7 @@ export type UserCreateOrConnectWithoutLockedChannelsInput = {
 }
 
 export type UserCreateWithoutDeletedChannelsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -1992,16 +3106,21 @@ export type UserCreateWithoutDeletedChannelsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
   archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
@@ -2016,12 +3135,15 @@ export type UserCreateWithoutDeletedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2031,7 +3153,11 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -2040,6 +3166,7 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
   archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
@@ -2054,6 +3181,8 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2064,6 +3193,7 @@ export type UserCreateOrConnectWithoutDeletedChannelsInput = {
 }
 
 export type UserCreateWithoutCreatedChannelsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2072,16 +3202,21 @@ export type UserCreateWithoutCreatedChannelsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
@@ -2096,12 +3231,15 @@ export type UserCreateWithoutCreatedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2111,7 +3249,11 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -2120,6 +3262,7 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
@@ -2134,6 +3277,8 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2144,6 +3289,7 @@ export type UserCreateOrConnectWithoutCreatedChannelsInput = {
 }
 
 export type UserCreateWithoutArchivedChannelsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2152,16 +3298,21 @@ export type UserCreateWithoutArchivedChannelsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -2176,12 +3327,15 @@ export type UserCreateWithoutArchivedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2191,7 +3345,11 @@ export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -2200,6 +3358,7 @@ export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -2214,6 +3373,8 @@ export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2235,6 +3396,7 @@ export type UserUpdateToOneWithWhereWithoutLockedChannelsInput = {
 }
 
 export type UserUpdateWithoutLockedChannelsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2243,16 +3405,21 @@ export type UserUpdateWithoutLockedChannelsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
   archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
@@ -2267,12 +3434,15 @@ export type UserUpdateWithoutLockedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2282,7 +3452,11 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2291,6 +3465,7 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
   archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
@@ -2305,6 +3480,8 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2321,6 +3498,7 @@ export type UserUpdateToOneWithWhereWithoutDeletedChannelsInput = {
 }
 
 export type UserUpdateWithoutDeletedChannelsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2329,16 +3507,21 @@ export type UserUpdateWithoutDeletedChannelsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
   archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
@@ -2353,12 +3536,15 @@ export type UserUpdateWithoutDeletedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2368,7 +3554,11 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2377,6 +3567,7 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
   archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
@@ -2391,6 +3582,8 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2407,6 +3600,7 @@ export type UserUpdateToOneWithWhereWithoutCreatedChannelsInput = {
 }
 
 export type UserUpdateWithoutCreatedChannelsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2415,16 +3609,21 @@ export type UserUpdateWithoutCreatedChannelsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
@@ -2439,12 +3638,15 @@ export type UserUpdateWithoutCreatedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2454,7 +3656,11 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2463,6 +3669,7 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
@@ -2477,6 +3684,8 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -2493,6 +3702,7 @@ export type UserUpdateToOneWithWhereWithoutArchivedChannelsInput = {
 }
 
 export type UserUpdateWithoutArchivedChannelsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2501,16 +3711,21 @@ export type UserUpdateWithoutArchivedChannelsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -2525,12 +3740,15 @@ export type UserUpdateWithoutArchivedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2540,7 +3758,11 @@ export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2549,6 +3771,7 @@ export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -2563,11 +3786,14 @@ export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutServerMembershipsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2576,15 +3802,20 @@ export type UserCreateWithoutServerMembershipsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -2600,12 +3831,15 @@ export type UserCreateWithoutServerMembershipsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutServerMembershipsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2615,7 +3849,11 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -2623,6 +3861,7 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -2638,6 +3877,8 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -2659,6 +3900,7 @@ export type UserUpdateToOneWithWhereWithoutServerMembershipsInput = {
 }
 
 export type UserUpdateWithoutServerMembershipsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2667,15 +3909,20 @@ export type UserUpdateWithoutServerMembershipsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -2691,12 +3938,15 @@ export type UserUpdateWithoutServerMembershipsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2706,7 +3956,11 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2714,6 +3968,7 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -2729,11 +3984,14 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutSocietyMembershipRequestsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2742,16 +4000,21 @@ export type UserCreateWithoutSocietyMembershipRequestsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -2767,11 +4030,14 @@ export type UserCreateWithoutSocietyMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2781,7 +4047,11 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -2790,6 +4060,7 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -2805,6 +4076,8 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
 
@@ -2814,6 +4087,7 @@ export type UserCreateOrConnectWithoutSocietyMembershipRequestsInput = {
 }
 
 export type UserCreateWithoutReviewedMembershipRequestsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2822,16 +4096,21 @@ export type UserCreateWithoutReviewedMembershipRequestsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -2847,11 +4126,14 @@ export type UserCreateWithoutReviewedMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -2861,7 +4143,11 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -2870,6 +4156,7 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -2885,6 +4172,8 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -2905,6 +4194,7 @@ export type UserUpdateToOneWithWhereWithoutSocietyMembershipRequestsInput = {
 }
 
 export type UserUpdateWithoutSocietyMembershipRequestsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2913,16 +4203,21 @@ export type UserUpdateWithoutSocietyMembershipRequestsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -2938,11 +4233,14 @@ export type UserUpdateWithoutSocietyMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2952,7 +4250,11 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2961,6 +4263,7 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -2976,6 +4279,8 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
@@ -2991,6 +4296,7 @@ export type UserUpdateToOneWithWhereWithoutReviewedMembershipRequestsInput = {
 }
 
 export type UserUpdateWithoutReviewedMembershipRequestsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2999,16 +4305,21 @@ export type UserUpdateWithoutReviewedMembershipRequestsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -3024,11 +4335,14 @@ export type UserUpdateWithoutReviewedMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3038,7 +4352,11 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3047,6 +4365,7 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -3062,10 +4381,13 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuthoredPostsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3074,16 +4396,21 @@ export type UserCreateWithoutAuthoredPostsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -3098,12 +4425,15 @@ export type UserCreateWithoutAuthoredPostsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3113,7 +4443,11 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -3122,6 +4456,7 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -3136,6 +4471,8 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3146,6 +4483,7 @@ export type UserCreateOrConnectWithoutAuthoredPostsInput = {
 }
 
 export type UserCreateWithoutDeletedPostsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3154,16 +4492,21 @@ export type UserCreateWithoutDeletedPostsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -3178,12 +4521,15 @@ export type UserCreateWithoutDeletedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutDeletedPostsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3193,7 +4539,11 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -3202,6 +4552,7 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -3216,6 +4567,8 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3226,6 +4579,7 @@ export type UserCreateOrConnectWithoutDeletedPostsInput = {
 }
 
 export type UserCreateWithoutUpdatedPostsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3234,16 +4588,21 @@ export type UserCreateWithoutUpdatedPostsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -3258,12 +4617,15 @@ export type UserCreateWithoutUpdatedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3273,7 +4635,11 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -3282,6 +4648,7 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -3296,6 +4663,8 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3306,6 +4675,7 @@ export type UserCreateOrConnectWithoutUpdatedPostsInput = {
 }
 
 export type UserCreateWithoutPinnedPostsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3314,16 +4684,21 @@ export type UserCreateWithoutPinnedPostsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -3338,12 +4713,15 @@ export type UserCreateWithoutPinnedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutPinnedPostsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3353,7 +4731,11 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -3362,6 +4744,7 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -3376,6 +4759,8 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3397,6 +4782,7 @@ export type UserUpdateToOneWithWhereWithoutAuthoredPostsInput = {
 }
 
 export type UserUpdateWithoutAuthoredPostsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3405,16 +4791,21 @@ export type UserUpdateWithoutAuthoredPostsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -3429,12 +4820,15 @@ export type UserUpdateWithoutAuthoredPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3444,7 +4838,11 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3453,6 +4851,7 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -3467,6 +4866,8 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3483,6 +4884,7 @@ export type UserUpdateToOneWithWhereWithoutDeletedPostsInput = {
 }
 
 export type UserUpdateWithoutDeletedPostsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3491,16 +4893,21 @@ export type UserUpdateWithoutDeletedPostsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -3515,12 +4922,15 @@ export type UserUpdateWithoutDeletedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3530,7 +4940,11 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3539,6 +4953,7 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -3553,6 +4968,8 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3569,6 +4986,7 @@ export type UserUpdateToOneWithWhereWithoutUpdatedPostsInput = {
 }
 
 export type UserUpdateWithoutUpdatedPostsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3577,16 +4995,21 @@ export type UserUpdateWithoutUpdatedPostsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -3601,12 +5024,15 @@ export type UserUpdateWithoutUpdatedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3616,7 +5042,11 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3625,6 +5055,7 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -3639,6 +5070,8 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3655,6 +5088,7 @@ export type UserUpdateToOneWithWhereWithoutPinnedPostsInput = {
 }
 
 export type UserUpdateWithoutPinnedPostsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3663,16 +5097,21 @@ export type UserUpdateWithoutPinnedPostsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -3687,12 +5126,15 @@ export type UserUpdateWithoutPinnedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3702,7 +5144,11 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3711,6 +5157,7 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -3725,11 +5172,14 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutModeratorAssignmentsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3738,16 +5188,21 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -3762,12 +5217,15 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3777,7 +5235,11 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -3786,6 +5248,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -3800,6 +5263,8 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3810,6 +5275,7 @@ export type UserCreateOrConnectWithoutModeratorAssignmentsInput = {
 }
 
 export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3818,16 +5284,21 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -3842,12 +5313,15 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -3857,7 +5331,11 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -3866,6 +5344,7 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -3880,6 +5359,8 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -3901,6 +5382,7 @@ export type UserUpdateToOneWithWhereWithoutModeratorAssignmentsInput = {
 }
 
 export type UserUpdateWithoutModeratorAssignmentsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3909,16 +5391,21 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -3933,12 +5420,15 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3948,7 +5438,11 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3957,6 +5451,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -3971,6 +5466,8 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
@@ -3987,6 +5484,7 @@ export type UserUpdateToOneWithWhereWithoutModeratorAssignmentsCreatedInput = {
 }
 
 export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3995,16 +5493,21 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -4019,12 +5522,15 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4034,7 +5540,11 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4043,6 +5553,7 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -4057,11 +5568,14 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4070,16 +5584,21 @@ export type UserCreateWithoutNotificationsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -4094,12 +5613,15 @@ export type UserCreateWithoutNotificationsInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4109,7 +5631,11 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -4118,6 +5644,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -4132,6 +5659,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -4153,6 +5682,7 @@ export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
 }
 
 export type UserUpdateWithoutNotificationsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4161,16 +5691,21 @@ export type UserUpdateWithoutNotificationsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -4185,12 +5720,15 @@ export type UserUpdateWithoutNotificationsInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4200,7 +5738,11 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4209,6 +5751,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -4223,11 +5766,14 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutNotificationPreferencesInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4236,16 +5782,21 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -4260,12 +5811,15 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4275,7 +5829,11 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -4284,6 +5842,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -4298,6 +5857,8 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -4319,6 +5880,7 @@ export type UserUpdateToOneWithWhereWithoutNotificationPreferencesInput = {
 }
 
 export type UserUpdateWithoutNotificationPreferencesInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4327,16 +5889,21 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -4351,12 +5918,15 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4366,7 +5936,11 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4375,6 +5949,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -4389,11 +5964,14 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutRefreshTokensInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4402,16 +5980,21 @@ export type UserCreateWithoutRefreshTokensInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -4426,12 +6009,15 @@ export type UserCreateWithoutRefreshTokensInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutRefreshTokensInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4441,7 +6027,11 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -4450,6 +6040,7 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -4464,6 +6055,8 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -4485,6 +6078,7 @@ export type UserUpdateToOneWithWhereWithoutRefreshTokensInput = {
 }
 
 export type UserUpdateWithoutRefreshTokensInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4493,16 +6087,21 @@ export type UserUpdateWithoutRefreshTokensInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -4517,12 +6116,15 @@ export type UserUpdateWithoutRefreshTokensInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4532,7 +6134,11 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4541,6 +6147,7 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -4555,11 +6162,14 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4568,16 +6178,21 @@ export type UserCreateWithoutAuditLogsInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
   studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
   teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
@@ -4592,12 +6207,15 @@ export type UserCreateWithoutAuditLogsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4607,7 +6225,11 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   bio?: string | null
   userType: $Enums.UserType
   departmentId?: number | null
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -4616,6 +6238,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
   serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
   createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
   lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
   deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
   createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
@@ -4630,6 +6253,8 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
@@ -4651,6 +6276,7 @@ export type UserUpdateToOneWithWhereWithoutAuditLogsInput = {
 }
 
 export type UserUpdateWithoutAuditLogsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4659,16 +6285,21 @@ export type UserUpdateWithoutAuditLogsInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -4683,12 +6314,15 @@ export type UserUpdateWithoutAuditLogsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4698,7 +6332,11 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
   departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4707,6 +6345,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -4721,12 +6360,15 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateManyDepartmentInput = {
   id?: number
+  publicId?: string
   fullName: string
   email: string
   phone: string
@@ -4735,7 +6377,11 @@ export type UserCreateManyDepartmentInput = {
   profilePictureUrl?: string | null
   bio?: string | null
   userType: $Enums.UserType
+  status?: $Enums.UserStatus
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
   mustChangePassword?: boolean
   passwordResetTokenHash?: string | null
   createdAt?: Date | string
@@ -4743,6 +6389,7 @@ export type UserCreateManyDepartmentInput = {
 }
 
 export type UserUpdateWithoutDepartmentInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4751,15 +6398,20 @@ export type UserUpdateWithoutDepartmentInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
   studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
   teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
@@ -4775,12 +6427,15 @@ export type UserUpdateWithoutDepartmentInput = {
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDepartmentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4789,7 +6444,11 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4798,6 +6457,7 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
   serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
   createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
   lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
   deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
   createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
@@ -4813,12 +6473,15 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
   societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutDepartmentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4827,7 +6490,146 @@ export type UserUncheckedUpdateManyWithoutDepartmentInput = {
   profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type UserCreateManyDeletedByUserInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type UserUpdateWithoutDeletedByUserInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDeletedByUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateManyWithoutDeletedByUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4842,6 +6644,7 @@ export type UserUncheckedUpdateManyWithoutDepartmentInput = {
 export type UserCountOutputType = {
   serverMemberships: number
   createdServers: number
+  deletedServers: number
   lockedChannels: number
   deletedChannels: number
   createdChannels: number
@@ -4857,6 +6660,8 @@ export type UserCountOutputType = {
   refreshTokens: number
   graduatedClasses: number
   auditLogs: number
+  deletedUsers: number
+  deletedSocieties: number
   societyMembershipRequests: number
   reviewedMembershipRequests: number
 }
@@ -4864,6 +6669,7 @@ export type UserCountOutputType = {
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   serverMemberships?: boolean | UserCountOutputTypeCountServerMembershipsArgs
   createdServers?: boolean | UserCountOutputTypeCountCreatedServersArgs
+  deletedServers?: boolean | UserCountOutputTypeCountDeletedServersArgs
   lockedChannels?: boolean | UserCountOutputTypeCountLockedChannelsArgs
   deletedChannels?: boolean | UserCountOutputTypeCountDeletedChannelsArgs
   createdChannels?: boolean | UserCountOutputTypeCountCreatedChannelsArgs
@@ -4879,6 +6685,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
   graduatedClasses?: boolean | UserCountOutputTypeCountGraduatedClassesArgs
   auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
+  deletedUsers?: boolean | UserCountOutputTypeCountDeletedUsersArgs
+  deletedSocieties?: boolean | UserCountOutputTypeCountDeletedSocietiesArgs
   societyMembershipRequests?: boolean | UserCountOutputTypeCountSocietyMembershipRequestsArgs
   reviewedMembershipRequests?: boolean | UserCountOutputTypeCountReviewedMembershipRequestsArgs
 }
@@ -4904,6 +6712,13 @@ export type UserCountOutputTypeCountServerMembershipsArgs<ExtArgs extends runtim
  * UserCountOutputType without action
  */
 export type UserCountOutputTypeCountCreatedServersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ServerWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDeletedServersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ServerWhereInput
 }
 
@@ -5015,6 +6830,20 @@ export type UserCountOutputTypeCountAuditLogsArgs<ExtArgs extends runtime.Types.
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountDeletedUsersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDeletedSocietiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SocietyWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountSocietyMembershipRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.SocietyMembershipRequestWhereInput
 }
@@ -5029,6 +6858,7 @@ export type UserCountOutputTypeCountReviewedMembershipRequestsArgs<ExtArgs exten
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   fullName?: boolean
   email?: boolean
   phone?: boolean
@@ -5038,16 +6868,22 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   bio?: boolean
   userType?: boolean
   departmentId?: boolean
+  status?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
   mustChangePassword?: boolean
   passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.User$deletedByUserArgs<ExtArgs>
   studentInfo?: boolean | Prisma.User$studentInfoArgs<ExtArgs>
   teacherInfo?: boolean | Prisma.User$teacherInfoArgs<ExtArgs>
   serverMemberships?: boolean | Prisma.User$serverMembershipsArgs<ExtArgs>
   createdServers?: boolean | Prisma.User$createdServersArgs<ExtArgs>
+  deletedServers?: boolean | Prisma.User$deletedServersArgs<ExtArgs>
   lockedChannels?: boolean | Prisma.User$lockedChannelsArgs<ExtArgs>
   deletedChannels?: boolean | Prisma.User$deletedChannelsArgs<ExtArgs>
   createdChannels?: boolean | Prisma.User$createdChannelsArgs<ExtArgs>
@@ -5063,6 +6899,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
   graduatedClasses?: boolean | Prisma.User$graduatedClassesArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
+  deletedUsers?: boolean | Prisma.User$deletedUsersArgs<ExtArgs>
+  deletedSocieties?: boolean | Prisma.User$deletedSocietiesArgs<ExtArgs>
   societyMembershipRequests?: boolean | Prisma.User$societyMembershipRequestsArgs<ExtArgs>
   reviewedMembershipRequests?: boolean | Prisma.User$reviewedMembershipRequestsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -5070,6 +6908,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 
 export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   fullName?: boolean
   email?: boolean
   phone?: boolean
@@ -5079,16 +6918,22 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   bio?: boolean
   userType?: boolean
   departmentId?: boolean
+  status?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
   mustChangePassword?: boolean
   passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.User$deletedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   fullName?: boolean
   email?: boolean
   phone?: boolean
@@ -5098,16 +6943,22 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   bio?: boolean
   userType?: boolean
   departmentId?: boolean
+  status?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
   mustChangePassword?: boolean
   passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.User$deletedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
   id?: boolean
+  publicId?: boolean
   fullName?: boolean
   email?: boolean
   phone?: boolean
@@ -5117,20 +6968,26 @@ export type UserSelectScalar = {
   bio?: boolean
   userType?: boolean
   departmentId?: boolean
+  status?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
   mustChangePassword?: boolean
   passwordResetTokenHash?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fullName" | "email" | "phone" | "passwordHash" | "gender" | "profilePictureUrl" | "bio" | "userType" | "departmentId" | "isActive" | "mustChangePassword" | "passwordResetTokenHash" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "fullName" | "email" | "phone" | "passwordHash" | "gender" | "profilePictureUrl" | "bio" | "userType" | "departmentId" | "status" | "isActive" | "isDeleted" | "deletedAt" | "deletedBy" | "mustChangePassword" | "passwordResetTokenHash" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.User$deletedByUserArgs<ExtArgs>
   studentInfo?: boolean | Prisma.User$studentInfoArgs<ExtArgs>
   teacherInfo?: boolean | Prisma.User$teacherInfoArgs<ExtArgs>
   serverMemberships?: boolean | Prisma.User$serverMembershipsArgs<ExtArgs>
   createdServers?: boolean | Prisma.User$createdServersArgs<ExtArgs>
+  deletedServers?: boolean | Prisma.User$deletedServersArgs<ExtArgs>
   lockedChannels?: boolean | Prisma.User$lockedChannelsArgs<ExtArgs>
   deletedChannels?: boolean | Prisma.User$deletedChannelsArgs<ExtArgs>
   createdChannels?: boolean | Prisma.User$createdChannelsArgs<ExtArgs>
@@ -5146,25 +7003,31 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
   graduatedClasses?: boolean | Prisma.User$graduatedClassesArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
+  deletedUsers?: boolean | Prisma.User$deletedUsersArgs<ExtArgs>
+  deletedSocieties?: boolean | Prisma.User$deletedSocietiesArgs<ExtArgs>
   societyMembershipRequests?: boolean | Prisma.User$societyMembershipRequestsArgs<ExtArgs>
   reviewedMembershipRequests?: boolean | Prisma.User$reviewedMembershipRequestsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.User$deletedByUserArgs<ExtArgs>
 }
 export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   department?: boolean | Prisma.User$departmentArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.User$deletedByUserArgs<ExtArgs>
 }
 
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
     department: Prisma.$DepartmentPayload<ExtArgs> | null
+    deletedByUser: Prisma.$UserPayload<ExtArgs> | null
     studentInfo: Prisma.$StudentInfoPayload<ExtArgs> | null
     teacherInfo: Prisma.$TeacherInfoPayload<ExtArgs> | null
     serverMemberships: Prisma.$ServerMembershipPayload<ExtArgs>[]
     createdServers: Prisma.$ServerPayload<ExtArgs>[]
+    deletedServers: Prisma.$ServerPayload<ExtArgs>[]
     lockedChannels: Prisma.$ChannelPayload<ExtArgs>[]
     deletedChannels: Prisma.$ChannelPayload<ExtArgs>[]
     createdChannels: Prisma.$ChannelPayload<ExtArgs>[]
@@ -5180,11 +7043,14 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
     graduatedClasses: Prisma.$ClassPayload<ExtArgs>[]
     auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
+    deletedUsers: Prisma.$UserPayload<ExtArgs>[]
+    deletedSocieties: Prisma.$SocietyPayload<ExtArgs>[]
     societyMembershipRequests: Prisma.$SocietyMembershipRequestPayload<ExtArgs>[]
     reviewedMembershipRequests: Prisma.$SocietyMembershipRequestPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    publicId: string
     fullName: string
     email: string
     phone: string
@@ -5194,7 +7060,11 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     bio: string | null
     userType: $Enums.UserType
     departmentId: number | null
+    status: $Enums.UserStatus
     isActive: boolean
+    isDeleted: boolean
+    deletedAt: Date | null
+    deletedBy: number | null
     mustChangePassword: boolean
     passwordResetTokenHash: string | null
     createdAt: Date
@@ -5594,10 +7464,12 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   department<T extends Prisma.User$departmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$departmentArgs<ExtArgs>>): Prisma.Prisma__DepartmentClient<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  deletedByUser<T extends Prisma.User$deletedByUserArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedByUserArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   studentInfo<T extends Prisma.User$studentInfoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$studentInfoArgs<ExtArgs>>): Prisma.Prisma__StudentInfoClient<runtime.Types.Result.GetResult<Prisma.$StudentInfoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   teacherInfo<T extends Prisma.User$teacherInfoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$teacherInfoArgs<ExtArgs>>): Prisma.Prisma__TeacherInfoClient<runtime.Types.Result.GetResult<Prisma.$TeacherInfoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   serverMemberships<T extends Prisma.User$serverMembershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$serverMembershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ServerMembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   createdServers<T extends Prisma.User$createdServersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdServersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deletedServers<T extends Prisma.User$deletedServersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedServersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   lockedChannels<T extends Prisma.User$lockedChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$lockedChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deletedChannels<T extends Prisma.User$deletedChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   createdChannels<T extends Prisma.User$createdChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -5613,6 +7485,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   refreshTokens<T extends Prisma.User$refreshTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   graduatedClasses<T extends Prisma.User$graduatedClassesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$graduatedClassesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClassPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deletedUsers<T extends Prisma.User$deletedUsersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedUsersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deletedSocieties<T extends Prisma.User$deletedSocietiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedSocietiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocietyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   societyMembershipRequests<T extends Prisma.User$societyMembershipRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$societyMembershipRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocietyMembershipRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviewedMembershipRequests<T extends Prisma.User$reviewedMembershipRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedMembershipRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocietyMembershipRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -5645,6 +7519,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
  */
 export interface UserFieldRefs {
   readonly id: Prisma.FieldRef<"User", 'Int'>
+  readonly publicId: Prisma.FieldRef<"User", 'String'>
   readonly fullName: Prisma.FieldRef<"User", 'String'>
   readonly email: Prisma.FieldRef<"User", 'String'>
   readonly phone: Prisma.FieldRef<"User", 'String'>
@@ -5654,7 +7529,11 @@ export interface UserFieldRefs {
   readonly bio: Prisma.FieldRef<"User", 'String'>
   readonly userType: Prisma.FieldRef<"User", 'UserType'>
   readonly departmentId: Prisma.FieldRef<"User", 'Int'>
+  readonly status: Prisma.FieldRef<"User", 'UserStatus'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
+  readonly isDeleted: Prisma.FieldRef<"User", 'Boolean'>
+  readonly deletedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly deletedBy: Prisma.FieldRef<"User", 'Int'>
   readonly mustChangePassword: Prisma.FieldRef<"User", 'Boolean'>
   readonly passwordResetTokenHash: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -6079,6 +7958,25 @@ export type User$departmentArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 /**
+ * User.deletedByUser
+ */
+export type User$deletedByUserArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
  * User.studentInfo
  */
 export type User$studentInfoArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -6144,6 +8042,30 @@ export type User$serverMembershipsArgs<ExtArgs extends runtime.Types.Extensions.
  * User.createdServers
  */
 export type User$createdServersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Server
+   */
+  select?: Prisma.ServerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Server
+   */
+  omit?: Prisma.ServerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ServerInclude<ExtArgs> | null
+  where?: Prisma.ServerWhereInput
+  orderBy?: Prisma.ServerOrderByWithRelationInput | Prisma.ServerOrderByWithRelationInput[]
+  cursor?: Prisma.ServerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ServerScalarFieldEnum | Prisma.ServerScalarFieldEnum[]
+}
+
+/**
+ * User.deletedServers
+ */
+export type User$deletedServersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the Server
    */
@@ -6522,6 +8444,54 @@ export type User$auditLogsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.AuditLogScalarFieldEnum | Prisma.AuditLogScalarFieldEnum[]
+}
+
+/**
+ * User.deletedUsers
+ */
+export type User$deletedUsersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+  orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.UserOrderByWithRelationInput[]
+  cursor?: Prisma.UserWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserScalarFieldEnum | Prisma.UserScalarFieldEnum[]
+}
+
+/**
+ * User.deletedSocieties
+ */
+export type User$deletedSocietiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Society
+   */
+  select?: Prisma.SocietySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Society
+   */
+  omit?: Prisma.SocietyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SocietyInclude<ExtArgs> | null
+  where?: Prisma.SocietyWhereInput
+  orderBy?: Prisma.SocietyOrderByWithRelationInput | Prisma.SocietyOrderByWithRelationInput[]
+  cursor?: Prisma.SocietyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SocietyScalarFieldEnum | Prisma.SocietyScalarFieldEnum[]
 }
 
 /**

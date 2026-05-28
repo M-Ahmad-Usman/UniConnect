@@ -28,43 +28,60 @@ export type AggregateServer = {
 
 export type ServerAvgAggregateOutputType = {
   id: number | null
+  deletedBy: number | null
   createdBy: number | null
 }
 
 export type ServerSumAggregateOutputType = {
   id: number | null
+  deletedBy: number | null
   createdBy: number | null
 }
 
 export type ServerMinAggregateOutputType = {
   id: number | null
+  publicId: string | null
   name: string | null
   description: string | null
   type: $Enums.ServerType | null
   iconUrl: string | null
   isActive: boolean | null
+  isDeleted: boolean | null
+  deletedAt: Date | null
+  deletedBy: number | null
+  deletedCascadeId: string | null
   createdBy: number | null
   createdAt: Date | null
 }
 
 export type ServerMaxAggregateOutputType = {
   id: number | null
+  publicId: string | null
   name: string | null
   description: string | null
   type: $Enums.ServerType | null
   iconUrl: string | null
   isActive: boolean | null
+  isDeleted: boolean | null
+  deletedAt: Date | null
+  deletedBy: number | null
+  deletedCascadeId: string | null
   createdBy: number | null
   createdAt: Date | null
 }
 
 export type ServerCountAggregateOutputType = {
   id: number
+  publicId: number
   name: number
   description: number
   type: number
   iconUrl: number
   isActive: number
+  isDeleted: number
+  deletedAt: number
+  deletedBy: number
+  deletedCascadeId: number
   createdBy: number
   createdAt: number
   _all: number
@@ -73,43 +90,60 @@ export type ServerCountAggregateOutputType = {
 
 export type ServerAvgAggregateInputType = {
   id?: true
+  deletedBy?: true
   createdBy?: true
 }
 
 export type ServerSumAggregateInputType = {
   id?: true
+  deletedBy?: true
   createdBy?: true
 }
 
 export type ServerMinAggregateInputType = {
   id?: true
+  publicId?: true
   name?: true
   description?: true
   type?: true
   iconUrl?: true
   isActive?: true
+  isDeleted?: true
+  deletedAt?: true
+  deletedBy?: true
+  deletedCascadeId?: true
   createdBy?: true
   createdAt?: true
 }
 
 export type ServerMaxAggregateInputType = {
   id?: true
+  publicId?: true
   name?: true
   description?: true
   type?: true
   iconUrl?: true
   isActive?: true
+  isDeleted?: true
+  deletedAt?: true
+  deletedBy?: true
+  deletedCascadeId?: true
   createdBy?: true
   createdAt?: true
 }
 
 export type ServerCountAggregateInputType = {
   id?: true
+  publicId?: true
   name?: true
   description?: true
   type?: true
   iconUrl?: true
   isActive?: true
+  isDeleted?: true
+  deletedAt?: true
+  deletedBy?: true
+  deletedCascadeId?: true
   createdBy?: true
   createdAt?: true
   _all?: true
@@ -203,12 +237,17 @@ export type ServerGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 
 export type ServerGroupByOutputType = {
   id: number
+  publicId: string
   name: string
   description: string | null
   type: $Enums.ServerType
   iconUrl: string | null
   isActive: boolean
-  createdBy: number
+  isDeleted: boolean
+  deletedAt: Date | null
+  deletedBy: number | null
+  deletedCascadeId: string | null
+  createdBy: number | null
   createdAt: Date
   _count: ServerCountAggregateOutputType | null
   _avg: ServerAvgAggregateOutputType | null
@@ -237,14 +276,20 @@ export type ServerWhereInput = {
   OR?: Prisma.ServerWhereInput[]
   NOT?: Prisma.ServerWhereInput | Prisma.ServerWhereInput[]
   id?: Prisma.IntFilter<"Server"> | number
+  publicId?: Prisma.UuidFilter<"Server"> | string
   name?: Prisma.StringFilter<"Server"> | string
   description?: Prisma.StringNullableFilter<"Server"> | string | null
   type?: Prisma.EnumServerTypeFilter<"Server"> | $Enums.ServerType
   iconUrl?: Prisma.StringNullableFilter<"Server"> | string | null
   isActive?: Prisma.BoolFilter<"Server"> | boolean
-  createdBy?: Prisma.IntFilter<"Server"> | number
+  isDeleted?: Prisma.BoolFilter<"Server"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"Server"> | Date | string | null
+  deletedBy?: Prisma.IntNullableFilter<"Server"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableFilter<"Server"> | string | null
+  createdBy?: Prisma.IntNullableFilter<"Server"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Server"> | Date | string
-  creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  deletedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
   class?: Prisma.XOR<Prisma.ClassNullableScalarRelationFilter, Prisma.ClassWhereInput> | null
   society?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
@@ -256,14 +301,20 @@ export type ServerWhereInput = {
 
 export type ServerOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   iconUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdBy?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   creator?: Prisma.UserOrderByWithRelationInput
+  deletedByUser?: Prisma.UserOrderByWithRelationInput
   department?: Prisma.DepartmentOrderByWithRelationInput
   class?: Prisma.ClassOrderByWithRelationInput
   society?: Prisma.SocietyOrderByWithRelationInput
@@ -275,6 +326,7 @@ export type ServerOrderByWithRelationInput = {
 
 export type ServerWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  publicId?: string
   AND?: Prisma.ServerWhereInput | Prisma.ServerWhereInput[]
   OR?: Prisma.ServerWhereInput[]
   NOT?: Prisma.ServerWhereInput | Prisma.ServerWhereInput[]
@@ -283,9 +335,14 @@ export type ServerWhereUniqueInput = Prisma.AtLeast<{
   type?: Prisma.EnumServerTypeFilter<"Server"> | $Enums.ServerType
   iconUrl?: Prisma.StringNullableFilter<"Server"> | string | null
   isActive?: Prisma.BoolFilter<"Server"> | boolean
-  createdBy?: Prisma.IntFilter<"Server"> | number
+  isDeleted?: Prisma.BoolFilter<"Server"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"Server"> | Date | string | null
+  deletedBy?: Prisma.IntNullableFilter<"Server"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableFilter<"Server"> | string | null
+  createdBy?: Prisma.IntNullableFilter<"Server"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Server"> | Date | string
-  creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  deletedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
   class?: Prisma.XOR<Prisma.ClassNullableScalarRelationFilter, Prisma.ClassWhereInput> | null
   society?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
@@ -293,16 +350,21 @@ export type ServerWhereUniqueInput = Prisma.AtLeast<{
   memberships?: Prisma.ServerMembershipListRelationFilter
   moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
-}, "id">
+}, "id" | "publicId">
 
 export type ServerOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   iconUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdBy?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.ServerCountOrderByAggregateInput
   _avg?: Prisma.ServerAvgOrderByAggregateInput
@@ -316,23 +378,33 @@ export type ServerScalarWhereWithAggregatesInput = {
   OR?: Prisma.ServerScalarWhereWithAggregatesInput[]
   NOT?: Prisma.ServerScalarWhereWithAggregatesInput | Prisma.ServerScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Server"> | number
+  publicId?: Prisma.UuidWithAggregatesFilter<"Server"> | string
   name?: Prisma.StringWithAggregatesFilter<"Server"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Server"> | string | null
   type?: Prisma.EnumServerTypeWithAggregatesFilter<"Server"> | $Enums.ServerType
   iconUrl?: Prisma.StringNullableWithAggregatesFilter<"Server"> | string | null
   isActive?: Prisma.BoolWithAggregatesFilter<"Server"> | boolean
-  createdBy?: Prisma.IntWithAggregatesFilter<"Server"> | number
+  isDeleted?: Prisma.BoolWithAggregatesFilter<"Server"> | boolean
+  deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Server"> | Date | string | null
+  deletedBy?: Prisma.IntNullableWithAggregatesFilter<"Server"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableWithAggregatesFilter<"Server"> | string | null
+  createdBy?: Prisma.IntNullableWithAggregatesFilter<"Server"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Server"> | Date | string
 }
 
 export type ServerCreateInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
@@ -344,12 +416,17 @@ export type ServerCreateInput = {
 
 export type ServerUncheckedCreateInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -361,13 +438,18 @@ export type ServerUncheckedCreateInput = {
 }
 
 export type ServerUpdateInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
@@ -379,12 +461,17 @@ export type ServerUpdateInput = {
 
 export type ServerUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -397,32 +484,46 @@ export type ServerUncheckedUpdateInput = {
 
 export type ServerCreateManyInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
 }
 
 export type ServerUpdateManyMutationInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ServerUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -443,44 +544,61 @@ export type ServerOrderByRelationAggregateInput = {
 
 export type ServerCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   type?: Prisma.SortOrder
   iconUrl?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
 export type ServerAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
 }
 
 export type ServerMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   type?: Prisma.SortOrder
   iconUrl?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
 export type ServerMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  publicId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   type?: Prisma.SortOrder
   iconUrl?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
+  deletedCascadeId?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
 export type ServerSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  deletedBy?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
 }
 
@@ -505,10 +623,24 @@ export type ServerCreateNestedManyWithoutCreatorInput = {
   connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
 }
 
+export type ServerCreateNestedManyWithoutDeletedByUserInput = {
+  create?: Prisma.XOR<Prisma.ServerCreateWithoutDeletedByUserInput, Prisma.ServerUncheckedCreateWithoutDeletedByUserInput> | Prisma.ServerCreateWithoutDeletedByUserInput[] | Prisma.ServerUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutDeletedByUserInput | Prisma.ServerCreateOrConnectWithoutDeletedByUserInput[]
+  createMany?: Prisma.ServerCreateManyDeletedByUserInputEnvelope
+  connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+}
+
 export type ServerUncheckedCreateNestedManyWithoutCreatorInput = {
   create?: Prisma.XOR<Prisma.ServerCreateWithoutCreatorInput, Prisma.ServerUncheckedCreateWithoutCreatorInput> | Prisma.ServerCreateWithoutCreatorInput[] | Prisma.ServerUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.ServerCreateOrConnectWithoutCreatorInput | Prisma.ServerCreateOrConnectWithoutCreatorInput[]
   createMany?: Prisma.ServerCreateManyCreatorInputEnvelope
+  connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+}
+
+export type ServerUncheckedCreateNestedManyWithoutDeletedByUserInput = {
+  create?: Prisma.XOR<Prisma.ServerCreateWithoutDeletedByUserInput, Prisma.ServerUncheckedCreateWithoutDeletedByUserInput> | Prisma.ServerCreateWithoutDeletedByUserInput[] | Prisma.ServerUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutDeletedByUserInput | Prisma.ServerCreateOrConnectWithoutDeletedByUserInput[]
+  createMany?: Prisma.ServerCreateManyDeletedByUserInputEnvelope
   connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
 }
 
@@ -526,6 +658,20 @@ export type ServerUpdateManyWithoutCreatorNestedInput = {
   deleteMany?: Prisma.ServerScalarWhereInput | Prisma.ServerScalarWhereInput[]
 }
 
+export type ServerUpdateManyWithoutDeletedByUserNestedInput = {
+  create?: Prisma.XOR<Prisma.ServerCreateWithoutDeletedByUserInput, Prisma.ServerUncheckedCreateWithoutDeletedByUserInput> | Prisma.ServerCreateWithoutDeletedByUserInput[] | Prisma.ServerUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutDeletedByUserInput | Prisma.ServerCreateOrConnectWithoutDeletedByUserInput[]
+  upsert?: Prisma.ServerUpsertWithWhereUniqueWithoutDeletedByUserInput | Prisma.ServerUpsertWithWhereUniqueWithoutDeletedByUserInput[]
+  createMany?: Prisma.ServerCreateManyDeletedByUserInputEnvelope
+  set?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  disconnect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  delete?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  update?: Prisma.ServerUpdateWithWhereUniqueWithoutDeletedByUserInput | Prisma.ServerUpdateWithWhereUniqueWithoutDeletedByUserInput[]
+  updateMany?: Prisma.ServerUpdateManyWithWhereWithoutDeletedByUserInput | Prisma.ServerUpdateManyWithWhereWithoutDeletedByUserInput[]
+  deleteMany?: Prisma.ServerScalarWhereInput | Prisma.ServerScalarWhereInput[]
+}
+
 export type ServerUncheckedUpdateManyWithoutCreatorNestedInput = {
   create?: Prisma.XOR<Prisma.ServerCreateWithoutCreatorInput, Prisma.ServerUncheckedCreateWithoutCreatorInput> | Prisma.ServerCreateWithoutCreatorInput[] | Prisma.ServerUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.ServerCreateOrConnectWithoutCreatorInput | Prisma.ServerCreateOrConnectWithoutCreatorInput[]
@@ -537,6 +683,20 @@ export type ServerUncheckedUpdateManyWithoutCreatorNestedInput = {
   connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
   update?: Prisma.ServerUpdateWithWhereUniqueWithoutCreatorInput | Prisma.ServerUpdateWithWhereUniqueWithoutCreatorInput[]
   updateMany?: Prisma.ServerUpdateManyWithWhereWithoutCreatorInput | Prisma.ServerUpdateManyWithWhereWithoutCreatorInput[]
+  deleteMany?: Prisma.ServerScalarWhereInput | Prisma.ServerScalarWhereInput[]
+}
+
+export type ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput = {
+  create?: Prisma.XOR<Prisma.ServerCreateWithoutDeletedByUserInput, Prisma.ServerUncheckedCreateWithoutDeletedByUserInput> | Prisma.ServerCreateWithoutDeletedByUserInput[] | Prisma.ServerUncheckedCreateWithoutDeletedByUserInput[]
+  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutDeletedByUserInput | Prisma.ServerCreateOrConnectWithoutDeletedByUserInput[]
+  upsert?: Prisma.ServerUpsertWithWhereUniqueWithoutDeletedByUserInput | Prisma.ServerUpsertWithWhereUniqueWithoutDeletedByUserInput[]
+  createMany?: Prisma.ServerCreateManyDeletedByUserInputEnvelope
+  set?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  disconnect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  delete?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  connect?: Prisma.ServerWhereUniqueInput | Prisma.ServerWhereUniqueInput[]
+  update?: Prisma.ServerUpdateWithWhereUniqueWithoutDeletedByUserInput | Prisma.ServerUpdateWithWhereUniqueWithoutDeletedByUserInput[]
+  updateMany?: Prisma.ServerUpdateManyWithWhereWithoutDeletedByUserInput | Prisma.ServerUpdateManyWithWhereWithoutDeletedByUserInput[]
   deleteMany?: Prisma.ServerScalarWhereInput | Prisma.ServerScalarWhereInput[]
 }
 
@@ -629,13 +789,18 @@ export type ServerUpdateOneRequiredWithoutNotificationPreferencesNestedInput = {
 }
 
 export type ServerCreateWithoutDepartmentInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
@@ -646,12 +811,17 @@ export type ServerCreateWithoutDepartmentInput = {
 
 export type ServerUncheckedCreateWithoutDepartmentInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
@@ -678,13 +848,18 @@ export type ServerUpdateToOneWithWhereWithoutDepartmentInput = {
 }
 
 export type ServerUpdateWithoutDepartmentInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
@@ -695,12 +870,17 @@ export type ServerUpdateWithoutDepartmentInput = {
 
 export type ServerUncheckedUpdateWithoutDepartmentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
@@ -711,12 +891,17 @@ export type ServerUncheckedUpdateWithoutDepartmentInput = {
 }
 
 export type ServerCreateWithoutCreatorInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
@@ -728,11 +913,16 @@ export type ServerCreateWithoutCreatorInput = {
 
 export type ServerUncheckedCreateWithoutCreatorInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -750,6 +940,59 @@ export type ServerCreateOrConnectWithoutCreatorInput = {
 
 export type ServerCreateManyCreatorInputEnvelope = {
   data: Prisma.ServerCreateManyCreatorInput | Prisma.ServerCreateManyCreatorInput[]
+  skipDuplicates?: boolean
+}
+
+export type ServerCreateWithoutDeletedByUserInput = {
+  publicId?: string
+  name: string
+  description?: string | null
+  type: $Enums.ServerType
+  iconUrl?: string | null
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
+  createdAt?: Date | string
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
+  class?: Prisma.ClassCreateNestedOneWithoutServerInput
+  society?: Prisma.SocietyCreateNestedOneWithoutServerInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
+  memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
+}
+
+export type ServerUncheckedCreateWithoutDeletedByUserInput = {
+  id?: number
+  publicId?: string
+  name: string
+  description?: string | null
+  type: $Enums.ServerType
+  iconUrl?: string | null
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
+  createdAt?: Date | string
+  department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
+  class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
+  society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
+  memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
+}
+
+export type ServerCreateOrConnectWithoutDeletedByUserInput = {
+  where: Prisma.ServerWhereUniqueInput
+  create: Prisma.XOR<Prisma.ServerCreateWithoutDeletedByUserInput, Prisma.ServerUncheckedCreateWithoutDeletedByUserInput>
+}
+
+export type ServerCreateManyDeletedByUserInputEnvelope = {
+  data: Prisma.ServerCreateManyDeletedByUserInput | Prisma.ServerCreateManyDeletedByUserInput[]
   skipDuplicates?: boolean
 }
 
@@ -774,23 +1017,49 @@ export type ServerScalarWhereInput = {
   OR?: Prisma.ServerScalarWhereInput[]
   NOT?: Prisma.ServerScalarWhereInput | Prisma.ServerScalarWhereInput[]
   id?: Prisma.IntFilter<"Server"> | number
+  publicId?: Prisma.UuidFilter<"Server"> | string
   name?: Prisma.StringFilter<"Server"> | string
   description?: Prisma.StringNullableFilter<"Server"> | string | null
   type?: Prisma.EnumServerTypeFilter<"Server"> | $Enums.ServerType
   iconUrl?: Prisma.StringNullableFilter<"Server"> | string | null
   isActive?: Prisma.BoolFilter<"Server"> | boolean
-  createdBy?: Prisma.IntFilter<"Server"> | number
+  isDeleted?: Prisma.BoolFilter<"Server"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"Server"> | Date | string | null
+  deletedBy?: Prisma.IntNullableFilter<"Server"> | number | null
+  deletedCascadeId?: Prisma.UuidNullableFilter<"Server"> | string | null
+  createdBy?: Prisma.IntNullableFilter<"Server"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Server"> | Date | string
 }
 
+export type ServerUpsertWithWhereUniqueWithoutDeletedByUserInput = {
+  where: Prisma.ServerWhereUniqueInput
+  update: Prisma.XOR<Prisma.ServerUpdateWithoutDeletedByUserInput, Prisma.ServerUncheckedUpdateWithoutDeletedByUserInput>
+  create: Prisma.XOR<Prisma.ServerCreateWithoutDeletedByUserInput, Prisma.ServerUncheckedCreateWithoutDeletedByUserInput>
+}
+
+export type ServerUpdateWithWhereUniqueWithoutDeletedByUserInput = {
+  where: Prisma.ServerWhereUniqueInput
+  data: Prisma.XOR<Prisma.ServerUpdateWithoutDeletedByUserInput, Prisma.ServerUncheckedUpdateWithoutDeletedByUserInput>
+}
+
+export type ServerUpdateManyWithWhereWithoutDeletedByUserInput = {
+  where: Prisma.ServerScalarWhereInput
+  data: Prisma.XOR<Prisma.ServerUpdateManyMutationInput, Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserInput>
+}
+
 export type ServerCreateWithoutClassInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
@@ -801,12 +1070,17 @@ export type ServerCreateWithoutClassInput = {
 
 export type ServerUncheckedCreateWithoutClassInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
@@ -833,13 +1107,18 @@ export type ServerUpdateToOneWithWhereWithoutClassInput = {
 }
 
 export type ServerUpdateWithoutClassInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
@@ -850,12 +1129,17 @@ export type ServerUpdateWithoutClassInput = {
 
 export type ServerUncheckedUpdateWithoutClassInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
@@ -866,13 +1150,18 @@ export type ServerUncheckedUpdateWithoutClassInput = {
 }
 
 export type ServerCreateWithoutSocietyInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
@@ -883,12 +1172,17 @@ export type ServerCreateWithoutSocietyInput = {
 
 export type ServerUncheckedCreateWithoutSocietyInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -915,13 +1209,18 @@ export type ServerUpdateToOneWithWhereWithoutSocietyInput = {
 }
 
 export type ServerUpdateWithoutSocietyInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
@@ -932,12 +1231,17 @@ export type ServerUpdateWithoutSocietyInput = {
 
 export type ServerUncheckedUpdateWithoutSocietyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -948,13 +1252,18 @@ export type ServerUncheckedUpdateWithoutSocietyInput = {
 }
 
 export type ServerCreateWithoutChannelsInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
@@ -965,12 +1274,17 @@ export type ServerCreateWithoutChannelsInput = {
 
 export type ServerUncheckedCreateWithoutChannelsInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -997,13 +1311,18 @@ export type ServerUpdateToOneWithWhereWithoutChannelsInput = {
 }
 
 export type ServerUpdateWithoutChannelsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
@@ -1014,12 +1333,17 @@ export type ServerUpdateWithoutChannelsInput = {
 
 export type ServerUncheckedUpdateWithoutChannelsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -1030,13 +1354,18 @@ export type ServerUncheckedUpdateWithoutChannelsInput = {
 }
 
 export type ServerCreateWithoutMembershipsInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
@@ -1047,12 +1376,17 @@ export type ServerCreateWithoutMembershipsInput = {
 
 export type ServerUncheckedCreateWithoutMembershipsInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -1079,13 +1413,18 @@ export type ServerUpdateToOneWithWhereWithoutMembershipsInput = {
 }
 
 export type ServerUpdateWithoutMembershipsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
@@ -1096,12 +1435,17 @@ export type ServerUpdateWithoutMembershipsInput = {
 
 export type ServerUncheckedUpdateWithoutMembershipsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -1112,13 +1456,18 @@ export type ServerUncheckedUpdateWithoutMembershipsInput = {
 }
 
 export type ServerCreateWithoutModeratorAssignmentsInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
@@ -1129,12 +1478,17 @@ export type ServerCreateWithoutModeratorAssignmentsInput = {
 
 export type ServerUncheckedCreateWithoutModeratorAssignmentsInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -1161,13 +1515,18 @@ export type ServerUpdateToOneWithWhereWithoutModeratorAssignmentsInput = {
 }
 
 export type ServerUpdateWithoutModeratorAssignmentsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
@@ -1178,12 +1537,17 @@ export type ServerUpdateWithoutModeratorAssignmentsInput = {
 
 export type ServerUncheckedUpdateWithoutModeratorAssignmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -1194,13 +1558,18 @@ export type ServerUncheckedUpdateWithoutModeratorAssignmentsInput = {
 }
 
 export type ServerCreateWithoutNotificationPreferencesInput = {
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
   createdAt?: Date | string
-  creator: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  creator?: Prisma.UserCreateNestedOneWithoutCreatedServersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedServersInput
   department?: Prisma.DepartmentCreateNestedOneWithoutServerInput
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
@@ -1211,12 +1580,17 @@ export type ServerCreateWithoutNotificationPreferencesInput = {
 
 export type ServerUncheckedCreateWithoutNotificationPreferencesInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
-  createdBy: number
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
   department?: Prisma.DepartmentUncheckedCreateNestedOneWithoutServerInput
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
@@ -1243,13 +1617,18 @@ export type ServerUpdateToOneWithWhereWithoutNotificationPreferencesInput = {
 }
 
 export type ServerUpdateWithoutNotificationPreferencesInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedServersNestedInput
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
@@ -1260,12 +1639,17 @@ export type ServerUpdateWithoutNotificationPreferencesInput = {
 
 export type ServerUncheckedUpdateWithoutNotificationPreferencesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdBy?: Prisma.IntFieldUpdateOperationsInput | number
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -1277,21 +1661,46 @@ export type ServerUncheckedUpdateWithoutNotificationPreferencesInput = {
 
 export type ServerCreateManyCreatorInput = {
   id?: number
+  publicId?: string
   name: string
   description?: string | null
   type: $Enums.ServerType
   iconUrl?: string | null
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdAt?: Date | string
+}
+
+export type ServerCreateManyDeletedByUserInput = {
+  id?: number
+  publicId?: string
+  name: string
+  description?: string | null
+  type: $Enums.ServerType
+  iconUrl?: string | null
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
+  createdBy?: number | null
   createdAt?: Date | string
 }
 
 export type ServerUpdateWithoutCreatorInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedServersNestedInput
   department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
@@ -1303,11 +1712,16 @@ export type ServerUpdateWithoutCreatorInput = {
 
 export type ServerUncheckedUpdateWithoutCreatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
@@ -1320,11 +1734,74 @@ export type ServerUncheckedUpdateWithoutCreatorInput = {
 
 export type ServerUncheckedUpdateManyWithoutCreatorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
   iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type ServerUpdateWithoutDeletedByUserInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
+  iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  creator?: Prisma.UserUpdateOneWithoutCreatedServersNestedInput
+  department?: Prisma.DepartmentUpdateOneWithoutServerNestedInput
+  class?: Prisma.ClassUpdateOneWithoutServerNestedInput
+  society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
+  memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
+}
+
+export type ServerUncheckedUpdateWithoutDeletedByUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
+  iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUncheckedUpdateOneWithoutServerNestedInput
+  class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
+  society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
+  memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
+  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
+}
+
+export type ServerUncheckedUpdateManyWithoutDeletedByUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumServerTypeFieldUpdateOperationsInput | $Enums.ServerType
+  iconUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1388,14 +1865,20 @@ export type ServerCountOutputTypeCountNotificationPreferencesArgs<ExtArgs extend
 
 export type ServerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   name?: boolean
   description?: boolean
   type?: boolean
   iconUrl?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
+  deletedCascadeId?: boolean
   createdBy?: boolean
   createdAt?: boolean
-  creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  creator?: boolean | Prisma.Server$creatorArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.Server$deletedByUserArgs<ExtArgs>
   department?: boolean | Prisma.Server$departmentArgs<ExtArgs>
   class?: boolean | Prisma.Server$classArgs<ExtArgs>
   society?: boolean | Prisma.Server$societyArgs<ExtArgs>
@@ -1408,42 +1891,60 @@ export type ServerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
 
 export type ServerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   name?: boolean
   description?: boolean
   type?: boolean
   iconUrl?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
+  deletedCascadeId?: boolean
   createdBy?: boolean
   createdAt?: boolean
-  creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  creator?: boolean | Prisma.Server$creatorArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.Server$deletedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["server"]>
 
 export type ServerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  publicId?: boolean
   name?: boolean
   description?: boolean
   type?: boolean
   iconUrl?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
+  deletedCascadeId?: boolean
   createdBy?: boolean
   createdAt?: boolean
-  creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  creator?: boolean | Prisma.Server$creatorArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.Server$deletedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["server"]>
 
 export type ServerSelectScalar = {
   id?: boolean
+  publicId?: boolean
   name?: boolean
   description?: boolean
   type?: boolean
   iconUrl?: boolean
   isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deletedBy?: boolean
+  deletedCascadeId?: boolean
   createdBy?: boolean
   createdAt?: boolean
 }
 
-export type ServerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "type" | "iconUrl" | "isActive" | "createdBy" | "createdAt", ExtArgs["result"]["server"]>
+export type ServerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "name" | "description" | "type" | "iconUrl" | "isActive" | "isDeleted" | "deletedAt" | "deletedBy" | "deletedCascadeId" | "createdBy" | "createdAt", ExtArgs["result"]["server"]>
 export type ServerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  creator?: boolean | Prisma.Server$creatorArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.Server$deletedByUserArgs<ExtArgs>
   department?: boolean | Prisma.Server$departmentArgs<ExtArgs>
   class?: boolean | Prisma.Server$classArgs<ExtArgs>
   society?: boolean | Prisma.Server$societyArgs<ExtArgs>
@@ -1454,16 +1955,19 @@ export type ServerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   _count?: boolean | Prisma.ServerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ServerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  creator?: boolean | Prisma.Server$creatorArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.Server$deletedByUserArgs<ExtArgs>
 }
 export type ServerIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  creator?: boolean | Prisma.Server$creatorArgs<ExtArgs>
+  deletedByUser?: boolean | Prisma.Server$deletedByUserArgs<ExtArgs>
 }
 
 export type $ServerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Server"
   objects: {
-    creator: Prisma.$UserPayload<ExtArgs>
+    creator: Prisma.$UserPayload<ExtArgs> | null
+    deletedByUser: Prisma.$UserPayload<ExtArgs> | null
     department: Prisma.$DepartmentPayload<ExtArgs> | null
     class: Prisma.$ClassPayload<ExtArgs> | null
     society: Prisma.$SocietyPayload<ExtArgs> | null
@@ -1474,12 +1978,17 @@ export type $ServerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    publicId: string
     name: string
     description: string | null
     type: $Enums.ServerType
     iconUrl: string | null
     isActive: boolean
-    createdBy: number
+    isDeleted: boolean
+    deletedAt: Date | null
+    deletedBy: number | null
+    deletedCascadeId: string | null
+    createdBy: number | null
     createdAt: Date
   }, ExtArgs["result"]["server"]>
   composites: {}
@@ -1875,7 +2384,8 @@ readonly fields: ServerFieldRefs;
  */
 export interface Prisma__ServerClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  creator<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  creator<T extends Prisma.Server$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$creatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  deletedByUser<T extends Prisma.Server$deletedByUserArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$deletedByUserArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   department<T extends Prisma.Server$departmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$departmentArgs<ExtArgs>>): Prisma.Prisma__DepartmentClient<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   class<T extends Prisma.Server$classArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$classArgs<ExtArgs>>): Prisma.Prisma__ClassClient<runtime.Types.Result.GetResult<Prisma.$ClassPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   society<T extends Prisma.Server$societyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$societyArgs<ExtArgs>>): Prisma.Prisma__SocietyClient<runtime.Types.Result.GetResult<Prisma.$SocietyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -1913,11 +2423,16 @@ export interface Prisma__ServerClient<T, Null = never, ExtArgs extends runtime.T
  */
 export interface ServerFieldRefs {
   readonly id: Prisma.FieldRef<"Server", 'Int'>
+  readonly publicId: Prisma.FieldRef<"Server", 'String'>
   readonly name: Prisma.FieldRef<"Server", 'String'>
   readonly description: Prisma.FieldRef<"Server", 'String'>
   readonly type: Prisma.FieldRef<"Server", 'ServerType'>
   readonly iconUrl: Prisma.FieldRef<"Server", 'String'>
   readonly isActive: Prisma.FieldRef<"Server", 'Boolean'>
+  readonly isDeleted: Prisma.FieldRef<"Server", 'Boolean'>
+  readonly deletedAt: Prisma.FieldRef<"Server", 'DateTime'>
+  readonly deletedBy: Prisma.FieldRef<"Server", 'Int'>
+  readonly deletedCascadeId: Prisma.FieldRef<"Server", 'String'>
   readonly createdBy: Prisma.FieldRef<"Server", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Server", 'DateTime'>
 }
@@ -2318,6 +2833,44 @@ export type ServerDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Limit how many Servers to delete.
    */
   limit?: number
+}
+
+/**
+ * Server.creator
+ */
+export type Server$creatorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * Server.deletedByUser
+ */
+export type Server$deletedByUserArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

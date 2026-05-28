@@ -111,10 +111,14 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
         select: { department: { select: { serverId: true } } },
       }),
       prisma.class.findMany({ where: { crId: userId }, select: { serverId: true } }),
-      prisma.society.findMany({ where: { presidentId: userId }, select: { serverId: true } }),
-      prisma.society.findMany({ where: { convenorId: userId }, select: { serverId: true } }),
+      prisma.society.findMany({ where: { presidentId: userId, isDeleted: false }, select: { serverId: true } }),
+      prisma.society.findMany({ where: { convenorId: userId, isDeleted: false }, select: { serverId: true } }),
       prisma.moderatorAssignment.findMany({
-        where: { userId },
+        where: {
+          userId,
+          server: { isDeleted: false },
+          OR: [{ channelId: null }, { channel: { isDeleted: false } }],
+        },
         select: { serverId: true, channelId: true, scopeType: true },
       }),
     ]);

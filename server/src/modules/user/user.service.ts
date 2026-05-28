@@ -154,16 +154,31 @@ async function parseCsvBuffer(fileBuffer: Buffer): Promise<Record<string, string
   });
 }
 
+async function assertDesignationExists(designation: string): Promise<void> {
+  const existing = await prisma.designation.findUnique({
+    where: { value: designation },
+    select: { value: true },
+  });
+
+  if (!existing) {
+    throw new ValidationError("Designation does not exist");
+  }
+}
+
 // ─── Create User ───────────────────────────────────────────────────────────
 
 export async function createUser(input: CreateUserInput, auditContext?: AuditContext) {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: input.email },
+  const existingUser = await prisma.user.findFirst({
+    where: { email: input.email, isDeleted: false },
     select: { id: true },
   });
 
   if (existingUser) {
     throw new ConflictError("A user with this email already exists", ApiErrorCode.DUPLICATE_EMAIL);
+  }
+
+  if (input.userType === "TEACHER") {
+    await assertDesignationExists(input.designation!);
   }
 
   const tempPassword = generateTempPassword();
@@ -214,6 +229,9 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
         gender: input.gender,
         userType: input.userType,
         departmentId: input.userType === "ADMIN" ? null : (input.departmentId ?? classDepartmentId ?? null),
+        status: "ACTIVE",
+        isActive: true,
+        isDeleted: false,
         mustChangePassword: true,
       },
       select: {
@@ -224,7 +242,9 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
         gender: true,
         userType: true,
         departmentId: true,
+        status: true,
         isActive: true,
+        isDeleted: true,
         mustChangePassword: true,
         createdAt: true,
       },
@@ -364,8 +384,8 @@ export async function bulkImportUsers(
 // ─── Profile ───────────────────────────────────────────────────────────────
 
 export async function getProfile(userId: number) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
+  const user = await prisma.user.findFirst({
+    where: { id: userId, isDeleted: false },
     select: {
       id: true,
       fullName: true,
@@ -376,7 +396,9 @@ export async function getProfile(userId: number) {
       profilePictureUrl: true,
       userType: true,
       departmentId: true,
+      status: true,
       isActive: true,
+      isDeleted: true,
       mustChangePassword: true,
       createdAt: true,
       studentInfo: {
@@ -464,8 +486,9 @@ export async function listUsers(
     userType?: "STUDENT" | "TEACHER" | "ADMIN";
     departmentId?: number;
     isActive?: boolean;
+    isDeleted: false;
     OR?: Array<{ fullName: { contains: string; mode: "insensitive" } } | { email: { contains: string; mode: "insensitive" } }>;
-  } = {};
+  } = { isDeleted: false };
 
   if (filters.userType) {
     where.userType = filters.userType;
@@ -522,8 +545,8 @@ export async function listUsers(
 
 export async function getUserById(userId: number, requestingUser: AuthUser) {
   if (requestingUser.userType === "ADMIN") {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const user = await prisma.user.findFirst({
+      where: { id: userId, isDeleted: false },
       select: {
         id: true,
         fullName: true,
@@ -534,7 +557,9 @@ export async function getUserById(userId: number, requestingUser: AuthUser) {
         profilePictureUrl: true,
         userType: true,
         departmentId: true,
+        status: true,
         isActive: true,
+        isDeleted: true,
         mustChangePassword: true,
         createdAt: true,
         studentInfo: {
@@ -568,6 +593,7 @@ export async function getUserById(userId: number, requestingUser: AuthUser) {
     where: {
       id: userId,
       departmentId,
+      isDeleted: false,
     },
     select: {
       id: true,
@@ -579,7 +605,9 @@ export async function getUserById(userId: number, requestingUser: AuthUser) {
       profilePictureUrl: true,
       userType: true,
       departmentId: true,
+      status: true,
       isActive: true,
+      isDeleted: true,
       mustChangePassword: true,
       createdAt: true,
       studentInfo: {
@@ -616,21 +644,21 @@ export async function deactivateUser(
 
   const user = await prisma.user.findUnique({
     where: { id: targetUserId },
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, isDeleted: true, status: true },
   });
 
-  if (!user) {
+  if (!user || user.isDeleted) {
     throw new NotFoundError("User not found");
   }
 
-  if (!user.isActive) {
+  if (!user.isActive || user.status === "SUSPENDED") {
     throw new ConflictError("User is already deactivated");
   }
 
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: targetUserId },
-      data: { isActive: false },
+      data: { isActive: false, status: "SUSPENDED" },
     });
     await tx.refreshToken.updateMany({
       where: { userId: targetUserId, revokedAt: null },
@@ -643,7 +671,10 @@ export async function deactivateUser(
           action: "user.deactivate",
           targetType: "user",
           targetId: targetUserId,
-          summary: { isActive: { before: true, after: false } },
+          summary: {
+            isActive: { before: true, after: false },
+            status: { before: user.status, after: "SUSPENDED" },
+          },
         },
         auditContext,
         tx
@@ -657,21 +688,21 @@ export async function deactivateUser(
 export async function reactivateUser(targetUserId: number, auditContext?: AuditContext) {
   const user = await prisma.user.findUnique({
     where: { id: targetUserId },
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, isDeleted: true, status: true },
   });
 
-  if (!user) {
+  if (!user || user.isDeleted) {
     throw new NotFoundError("User not found");
   }
 
-  if (user.isActive) {
+  if (user.isActive && user.status === "ACTIVE") {
     throw new ConflictError("User is already active");
   }
 
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: targetUserId },
-      data: { isActive: true },
+      data: { isActive: true, status: "ACTIVE" },
     });
 
     if (auditContext) {
@@ -680,7 +711,10 @@ export async function reactivateUser(targetUserId: number, auditContext?: AuditC
           action: "user.reactivate",
           targetType: "user",
           targetId: targetUserId,
-          summary: { isActive: { before: false, after: true } },
+          summary: {
+            isActive: { before: false, after: true },
+            status: { before: user.status, after: "ACTIVE" },
+          },
         },
         auditContext,
         tx

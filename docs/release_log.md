@@ -57,6 +57,29 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-05-28 - Schema/Lifecycle Refactor Module 1 Complete
+- Added schema foundations for the public-ID and lifecycle refactor:
+  UUIDv7 public IDs, user/society status enums, soft-delete metadata, lifecycle
+  cascade metadata, designation lookup constraints, and explicit FK deletion
+  policies.
+- Replaced old Prisma migrations with one Module 1 baseline migration and added
+  partial live-row indexes for reusable soft-deleted keys.
+- Updated transitional backend behavior so auth, user, society, server, class,
+  authorization, seed, and test-helper paths respect live rows and lifecycle
+  status where needed.
+- Added focused Module 1 integration coverage for UUID defaults, lifecycle
+  defaults, status dual-write behavior, live-row uniqueness, and designation FK
+  enforcement.
+- Verification passed:
+  - Prisma generate
+  - Prisma validate
+  - dev DB reset to the new baseline
+  - test DB reset to the new baseline
+  - focused Module 1 schema suite
+  - auth lifecycle regression suite, 28/28
+  - full backend Jest suite, 498/498
+  - backend build
+
 ### 2026-05-28 - Schema/Lifecycle Refactor Module 0 Complete
 - Added canonical planning and tracking docs for the schema, lifecycle,
   public-ID, platform-role, and deletion-policy refactor.

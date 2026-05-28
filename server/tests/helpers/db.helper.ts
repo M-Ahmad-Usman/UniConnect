@@ -29,6 +29,7 @@ export async function resetDB(): Promise<void> {
     "departments",
     "disciplines",
     "degree_levels",
+    "designations",
     "servers",
     "users",
   ];
@@ -37,4 +38,14 @@ export async function resetDB(): Promise<void> {
   await prisma.$executeRawUnsafe(
     `TRUNCATE TABLE ${tableNames.join(", ")} RESTART IDENTITY CASCADE`
   );
+
+  await prisma.designation.createMany({
+    data: [
+      { value: "Professor", label: "Professor" },
+      { value: "Associate Professor", label: "Associate Professor" },
+      { value: "Assistant Professor", label: "Assistant Professor" },
+      { value: "Lecturer", label: "Lecturer" },
+    ],
+    skipDuplicates: true,
+  });
 }

@@ -386,6 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   DegreeLevel: 'DegreeLevel',
   Discipline: 'Discipline',
+  Designation: 'Designation',
   Department: 'Department',
   Program: 'Program',
   User: 'User',
@@ -425,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "degreeLevel" | "discipline" | "department" | "program" | "user" | "studentInfo" | "teacherInfo" | "class" | "society" | "server" | "channel" | "serverMembership" | "societyMembershipRequest" | "course" | "teaches" | "post" | "postAttachment" | "role" | "permission" | "rolePermission" | "moderatorAssignment" | "notification" | "notificationPreference" | "refreshToken" | "auditLog" | "programCurriculum"
+    modelProps: "degreeLevel" | "discipline" | "designation" | "department" | "program" | "user" | "studentInfo" | "teacherInfo" | "class" | "society" | "server" | "channel" | "serverMembership" | "societyMembershipRequest" | "course" | "teaches" | "post" | "postAttachment" | "role" | "permission" | "rolePermission" | "moderatorAssignment" | "notification" | "notificationPreference" | "refreshToken" | "auditLog" | "programCurriculum"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -574,6 +575,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.DisciplineCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.DisciplineCountAggregateOutputType> | number
+        }
+      }
+    }
+    Designation: {
+      payload: Prisma.$DesignationPayload<ExtArgs>
+      fields: Prisma.DesignationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DesignationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DesignationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>
+        }
+        findFirst: {
+          args: Prisma.DesignationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DesignationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>
+        }
+        findMany: {
+          args: Prisma.DesignationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>[]
+        }
+        create: {
+          args: Prisma.DesignationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>
+        }
+        createMany: {
+          args: Prisma.DesignationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DesignationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>[]
+        }
+        delete: {
+          args: Prisma.DesignationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>
+        }
+        update: {
+          args: Prisma.DesignationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>
+        }
+        deleteMany: {
+          args: Prisma.DesignationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DesignationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DesignationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>[]
+        }
+        upsert: {
+          args: Prisma.DesignationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DesignationPayload>
+        }
+        aggregate: {
+          args: Prisma.DesignationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDesignation>
+        }
+        groupBy: {
+          args: Prisma.DesignationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DesignationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DesignationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DesignationCountAggregateOutputType> | number
         }
       }
     }
@@ -2408,6 +2483,15 @@ export const DisciplineScalarFieldEnum = {
 export type DisciplineScalarFieldEnum = (typeof DisciplineScalarFieldEnum)[keyof typeof DisciplineScalarFieldEnum]
 
 
+export const DesignationScalarFieldEnum = {
+  value: 'value',
+  label: 'label',
+  description: 'description'
+} as const
+
+export type DesignationScalarFieldEnum = (typeof DesignationScalarFieldEnum)[keyof typeof DesignationScalarFieldEnum]
+
+
 export const DepartmentScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -2434,6 +2518,7 @@ export type ProgramScalarFieldEnum = (typeof ProgramScalarFieldEnum)[keyof typeo
 
 export const UserScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   fullName: 'fullName',
   email: 'email',
   phone: 'phone',
@@ -2443,7 +2528,11 @@ export const UserScalarFieldEnum = {
   bio: 'bio',
   userType: 'userType',
   departmentId: 'departmentId',
+  status: 'status',
   isActive: 'isActive',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
   mustChangePassword: 'mustChangePassword',
   passwordResetTokenHash: 'passwordResetTokenHash',
   createdAt: 'createdAt',
@@ -2472,6 +2561,7 @@ export type TeacherInfoScalarFieldEnum = (typeof TeacherInfoScalarFieldEnum)[key
 
 export const ClassScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   programId: 'programId',
   currentSemester: 'currentSemester',
   academicYear: 'academicYear',
@@ -2489,13 +2579,19 @@ export type ClassScalarFieldEnum = (typeof ClassScalarFieldEnum)[keyof typeof Cl
 
 export const SocietyScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   name: 'name',
   description: 'description',
   departmentId: 'departmentId',
   presidentId: 'presidentId',
   convenorId: 'convenorId',
   serverId: 'serverId',
+  status: 'status',
   isActive: 'isActive',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
+  deletedCascadeId: 'deletedCascadeId',
   createdAt: 'createdAt'
 } as const
 
@@ -2504,11 +2600,16 @@ export type SocietyScalarFieldEnum = (typeof SocietyScalarFieldEnum)[keyof typeo
 
 export const ServerScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   name: 'name',
   description: 'description',
   type: 'type',
   iconUrl: 'iconUrl',
   isActive: 'isActive',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
+  deletedCascadeId: 'deletedCascadeId',
   createdBy: 'createdBy',
   createdAt: 'createdAt'
 } as const
@@ -2518,6 +2619,7 @@ export type ServerScalarFieldEnum = (typeof ServerScalarFieldEnum)[keyof typeof 
 
 export const ChannelScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   serverId: 'serverId',
   name: 'name',
   description: 'description',
@@ -2530,6 +2632,7 @@ export const ChannelScalarFieldEnum = {
   isDeleted: 'isDeleted',
   deletedAt: 'deletedAt',
   deletedBy: 'deletedBy',
+  deletedCascadeId: 'deletedCascadeId',
   isAutoCreated: 'isAutoCreated',
   createdAt: 'createdAt',
   createdBy: 'createdBy',
@@ -2586,6 +2689,7 @@ export type TeachesScalarFieldEnum = (typeof TeachesScalarFieldEnum)[keyof typeo
 
 export const PostScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   authorId: 'authorId',
   channelId: 'channelId',
   title: 'title',
@@ -2824,6 +2928,20 @@ export type ListEnumUserTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'UserStatus'
+ */
+export type EnumUserStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'UserStatus[]'
+ */
+export type ListEnumUserStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'Boolean'
  */
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -2869,6 +2987,20 @@ export type EnumClassStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'ClassStatus[]'
  */
 export type ListEnumClassStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClassStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'SocietyStatus'
+ */
+export type EnumSocietyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SocietyStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'SocietyStatus[]'
+ */
+export type ListEnumSocietyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SocietyStatus[]'>
     
 
 
@@ -3109,6 +3241,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   degreeLevel?: Prisma.DegreeLevelOmit
   discipline?: Prisma.DisciplineOmit
+  designation?: Prisma.DesignationOmit
   department?: Prisma.DepartmentOmit
   program?: Prisma.ProgramOmit
   user?: Prisma.UserOmit

@@ -10,6 +10,7 @@
  */
 export type * from './models/DegreeLevel'
 export type * from './models/Discipline'
+export type * from './models/Designation'
 export type * from './models/Department'
 export type * from './models/Program'
 export type * from './models/User'

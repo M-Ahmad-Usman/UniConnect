@@ -193,6 +193,7 @@ export type TeacherInfoWhereInput = {
   teacherId?: Prisma.IntFilter<"TeacherInfo"> | number
   designation?: Prisma.StringFilter<"TeacherInfo"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  designationRecord?: Prisma.XOR<Prisma.DesignationScalarRelationFilter, Prisma.DesignationWhereInput>
   hodOfDepartment?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
   programDirectorOfProgram?: Prisma.XOR<Prisma.ProgramNullableScalarRelationFilter, Prisma.ProgramWhereInput> | null
   convenorOfSociety?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
@@ -203,6 +204,7 @@ export type TeacherInfoOrderByWithRelationInput = {
   teacherId?: Prisma.SortOrder
   designation?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
+  designationRecord?: Prisma.DesignationOrderByWithRelationInput
   hodOfDepartment?: Prisma.DepartmentOrderByWithRelationInput
   programDirectorOfProgram?: Prisma.ProgramOrderByWithRelationInput
   convenorOfSociety?: Prisma.SocietyOrderByWithRelationInput
@@ -216,6 +218,7 @@ export type TeacherInfoWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.TeacherInfoWhereInput | Prisma.TeacherInfoWhereInput[]
   designation?: Prisma.StringFilter<"TeacherInfo"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  designationRecord?: Prisma.XOR<Prisma.DesignationScalarRelationFilter, Prisma.DesignationWhereInput>
   hodOfDepartment?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
   programDirectorOfProgram?: Prisma.XOR<Prisma.ProgramNullableScalarRelationFilter, Prisma.ProgramWhereInput> | null
   convenorOfSociety?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
@@ -241,8 +244,8 @@ export type TeacherInfoScalarWhereWithAggregatesInput = {
 }
 
 export type TeacherInfoCreateInput = {
-  designation: string
   user: Prisma.UserCreateNestedOneWithoutTeacherInfoInput
+  designationRecord: Prisma.DesignationCreateNestedOneWithoutTeachersInput
   hodOfDepartment?: Prisma.DepartmentCreateNestedOneWithoutHodInput
   programDirectorOfProgram?: Prisma.ProgramCreateNestedOneWithoutProgramDirectorInput
   convenorOfSociety?: Prisma.SocietyCreateNestedOneWithoutConvenorInput
@@ -259,8 +262,8 @@ export type TeacherInfoUncheckedCreateInput = {
 }
 
 export type TeacherInfoUpdateInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutTeacherInfoNestedInput
+  designationRecord?: Prisma.DesignationUpdateOneRequiredWithoutTeachersNestedInput
   hodOfDepartment?: Prisma.DepartmentUpdateOneWithoutHodNestedInput
   programDirectorOfProgram?: Prisma.ProgramUpdateOneWithoutProgramDirectorNestedInput
   convenorOfSociety?: Prisma.SocietyUpdateOneWithoutConvenorNestedInput
@@ -282,12 +285,22 @@ export type TeacherInfoCreateManyInput = {
 }
 
 export type TeacherInfoUpdateManyMutationInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
+
 }
 
 export type TeacherInfoUncheckedUpdateManyInput = {
   teacherId?: Prisma.IntFieldUpdateOperationsInput | number
   designation?: Prisma.StringFieldUpdateOperationsInput | string
+}
+
+export type TeacherInfoListRelationFilter = {
+  every?: Prisma.TeacherInfoWhereInput
+  some?: Prisma.TeacherInfoWhereInput
+  none?: Prisma.TeacherInfoWhereInput
+}
+
+export type TeacherInfoOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type TeacherInfoNullableScalarRelationFilter = {
@@ -321,6 +334,48 @@ export type TeacherInfoSumOrderByAggregateInput = {
 export type TeacherInfoScalarRelationFilter = {
   is?: Prisma.TeacherInfoWhereInput
   isNot?: Prisma.TeacherInfoWhereInput
+}
+
+export type TeacherInfoCreateNestedManyWithoutDesignationRecordInput = {
+  create?: Prisma.XOR<Prisma.TeacherInfoCreateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput> | Prisma.TeacherInfoCreateWithoutDesignationRecordInput[] | Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput[]
+  connectOrCreate?: Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput | Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput[]
+  createMany?: Prisma.TeacherInfoCreateManyDesignationRecordInputEnvelope
+  connect?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+}
+
+export type TeacherInfoUncheckedCreateNestedManyWithoutDesignationRecordInput = {
+  create?: Prisma.XOR<Prisma.TeacherInfoCreateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput> | Prisma.TeacherInfoCreateWithoutDesignationRecordInput[] | Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput[]
+  connectOrCreate?: Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput | Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput[]
+  createMany?: Prisma.TeacherInfoCreateManyDesignationRecordInputEnvelope
+  connect?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+}
+
+export type TeacherInfoUpdateManyWithoutDesignationRecordNestedInput = {
+  create?: Prisma.XOR<Prisma.TeacherInfoCreateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput> | Prisma.TeacherInfoCreateWithoutDesignationRecordInput[] | Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput[]
+  connectOrCreate?: Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput | Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput[]
+  upsert?: Prisma.TeacherInfoUpsertWithWhereUniqueWithoutDesignationRecordInput | Prisma.TeacherInfoUpsertWithWhereUniqueWithoutDesignationRecordInput[]
+  createMany?: Prisma.TeacherInfoCreateManyDesignationRecordInputEnvelope
+  set?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  disconnect?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  delete?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  connect?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  update?: Prisma.TeacherInfoUpdateWithWhereUniqueWithoutDesignationRecordInput | Prisma.TeacherInfoUpdateWithWhereUniqueWithoutDesignationRecordInput[]
+  updateMany?: Prisma.TeacherInfoUpdateManyWithWhereWithoutDesignationRecordInput | Prisma.TeacherInfoUpdateManyWithWhereWithoutDesignationRecordInput[]
+  deleteMany?: Prisma.TeacherInfoScalarWhereInput | Prisma.TeacherInfoScalarWhereInput[]
+}
+
+export type TeacherInfoUncheckedUpdateManyWithoutDesignationRecordNestedInput = {
+  create?: Prisma.XOR<Prisma.TeacherInfoCreateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput> | Prisma.TeacherInfoCreateWithoutDesignationRecordInput[] | Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput[]
+  connectOrCreate?: Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput | Prisma.TeacherInfoCreateOrConnectWithoutDesignationRecordInput[]
+  upsert?: Prisma.TeacherInfoUpsertWithWhereUniqueWithoutDesignationRecordInput | Prisma.TeacherInfoUpsertWithWhereUniqueWithoutDesignationRecordInput[]
+  createMany?: Prisma.TeacherInfoCreateManyDesignationRecordInputEnvelope
+  set?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  disconnect?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  delete?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  connect?: Prisma.TeacherInfoWhereUniqueInput | Prisma.TeacherInfoWhereUniqueInput[]
+  update?: Prisma.TeacherInfoUpdateWithWhereUniqueWithoutDesignationRecordInput | Prisma.TeacherInfoUpdateWithWhereUniqueWithoutDesignationRecordInput[]
+  updateMany?: Prisma.TeacherInfoUpdateManyWithWhereWithoutDesignationRecordInput | Prisma.TeacherInfoUpdateManyWithWhereWithoutDesignationRecordInput[]
+  deleteMany?: Prisma.TeacherInfoScalarWhereInput | Prisma.TeacherInfoScalarWhereInput[]
 }
 
 export type TeacherInfoCreateNestedOneWithoutHodOfDepartmentInput = {
@@ -415,9 +470,59 @@ export type TeacherInfoUpdateOneRequiredWithoutTeachesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TeacherInfoUpdateToOneWithWhereWithoutTeachesInput, Prisma.TeacherInfoUpdateWithoutTeachesInput>, Prisma.TeacherInfoUncheckedUpdateWithoutTeachesInput>
 }
 
-export type TeacherInfoCreateWithoutHodOfDepartmentInput = {
-  designation: string
+export type TeacherInfoCreateWithoutDesignationRecordInput = {
   user: Prisma.UserCreateNestedOneWithoutTeacherInfoInput
+  hodOfDepartment?: Prisma.DepartmentCreateNestedOneWithoutHodInput
+  programDirectorOfProgram?: Prisma.ProgramCreateNestedOneWithoutProgramDirectorInput
+  convenorOfSociety?: Prisma.SocietyCreateNestedOneWithoutConvenorInput
+  teaches?: Prisma.TeachesCreateNestedManyWithoutTeacherInput
+}
+
+export type TeacherInfoUncheckedCreateWithoutDesignationRecordInput = {
+  teacherId: number
+  hodOfDepartment?: Prisma.DepartmentUncheckedCreateNestedOneWithoutHodInput
+  programDirectorOfProgram?: Prisma.ProgramUncheckedCreateNestedOneWithoutProgramDirectorInput
+  convenorOfSociety?: Prisma.SocietyUncheckedCreateNestedOneWithoutConvenorInput
+  teaches?: Prisma.TeachesUncheckedCreateNestedManyWithoutTeacherInput
+}
+
+export type TeacherInfoCreateOrConnectWithoutDesignationRecordInput = {
+  where: Prisma.TeacherInfoWhereUniqueInput
+  create: Prisma.XOR<Prisma.TeacherInfoCreateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput>
+}
+
+export type TeacherInfoCreateManyDesignationRecordInputEnvelope = {
+  data: Prisma.TeacherInfoCreateManyDesignationRecordInput | Prisma.TeacherInfoCreateManyDesignationRecordInput[]
+  skipDuplicates?: boolean
+}
+
+export type TeacherInfoUpsertWithWhereUniqueWithoutDesignationRecordInput = {
+  where: Prisma.TeacherInfoWhereUniqueInput
+  update: Prisma.XOR<Prisma.TeacherInfoUpdateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedUpdateWithoutDesignationRecordInput>
+  create: Prisma.XOR<Prisma.TeacherInfoCreateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedCreateWithoutDesignationRecordInput>
+}
+
+export type TeacherInfoUpdateWithWhereUniqueWithoutDesignationRecordInput = {
+  where: Prisma.TeacherInfoWhereUniqueInput
+  data: Prisma.XOR<Prisma.TeacherInfoUpdateWithoutDesignationRecordInput, Prisma.TeacherInfoUncheckedUpdateWithoutDesignationRecordInput>
+}
+
+export type TeacherInfoUpdateManyWithWhereWithoutDesignationRecordInput = {
+  where: Prisma.TeacherInfoScalarWhereInput
+  data: Prisma.XOR<Prisma.TeacherInfoUpdateManyMutationInput, Prisma.TeacherInfoUncheckedUpdateManyWithoutDesignationRecordInput>
+}
+
+export type TeacherInfoScalarWhereInput = {
+  AND?: Prisma.TeacherInfoScalarWhereInput | Prisma.TeacherInfoScalarWhereInput[]
+  OR?: Prisma.TeacherInfoScalarWhereInput[]
+  NOT?: Prisma.TeacherInfoScalarWhereInput | Prisma.TeacherInfoScalarWhereInput[]
+  teacherId?: Prisma.IntFilter<"TeacherInfo"> | number
+  designation?: Prisma.StringFilter<"TeacherInfo"> | string
+}
+
+export type TeacherInfoCreateWithoutHodOfDepartmentInput = {
+  user: Prisma.UserCreateNestedOneWithoutTeacherInfoInput
+  designationRecord: Prisma.DesignationCreateNestedOneWithoutTeachersInput
   programDirectorOfProgram?: Prisma.ProgramCreateNestedOneWithoutProgramDirectorInput
   convenorOfSociety?: Prisma.SocietyCreateNestedOneWithoutConvenorInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutTeacherInput
@@ -448,8 +553,8 @@ export type TeacherInfoUpdateToOneWithWhereWithoutHodOfDepartmentInput = {
 }
 
 export type TeacherInfoUpdateWithoutHodOfDepartmentInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutTeacherInfoNestedInput
+  designationRecord?: Prisma.DesignationUpdateOneRequiredWithoutTeachersNestedInput
   programDirectorOfProgram?: Prisma.ProgramUpdateOneWithoutProgramDirectorNestedInput
   convenorOfSociety?: Prisma.SocietyUpdateOneWithoutConvenorNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutTeacherNestedInput
@@ -464,8 +569,8 @@ export type TeacherInfoUncheckedUpdateWithoutHodOfDepartmentInput = {
 }
 
 export type TeacherInfoCreateWithoutProgramDirectorOfProgramInput = {
-  designation: string
   user: Prisma.UserCreateNestedOneWithoutTeacherInfoInput
+  designationRecord: Prisma.DesignationCreateNestedOneWithoutTeachersInput
   hodOfDepartment?: Prisma.DepartmentCreateNestedOneWithoutHodInput
   convenorOfSociety?: Prisma.SocietyCreateNestedOneWithoutConvenorInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutTeacherInput
@@ -496,8 +601,8 @@ export type TeacherInfoUpdateToOneWithWhereWithoutProgramDirectorOfProgramInput 
 }
 
 export type TeacherInfoUpdateWithoutProgramDirectorOfProgramInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutTeacherInfoNestedInput
+  designationRecord?: Prisma.DesignationUpdateOneRequiredWithoutTeachersNestedInput
   hodOfDepartment?: Prisma.DepartmentUpdateOneWithoutHodNestedInput
   convenorOfSociety?: Prisma.SocietyUpdateOneWithoutConvenorNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutTeacherNestedInput
@@ -512,7 +617,7 @@ export type TeacherInfoUncheckedUpdateWithoutProgramDirectorOfProgramInput = {
 }
 
 export type TeacherInfoCreateWithoutUserInput = {
-  designation: string
+  designationRecord: Prisma.DesignationCreateNestedOneWithoutTeachersInput
   hodOfDepartment?: Prisma.DepartmentCreateNestedOneWithoutHodInput
   programDirectorOfProgram?: Prisma.ProgramCreateNestedOneWithoutProgramDirectorInput
   convenorOfSociety?: Prisma.SocietyCreateNestedOneWithoutConvenorInput
@@ -544,7 +649,7 @@ export type TeacherInfoUpdateToOneWithWhereWithoutUserInput = {
 }
 
 export type TeacherInfoUpdateWithoutUserInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
+  designationRecord?: Prisma.DesignationUpdateOneRequiredWithoutTeachersNestedInput
   hodOfDepartment?: Prisma.DepartmentUpdateOneWithoutHodNestedInput
   programDirectorOfProgram?: Prisma.ProgramUpdateOneWithoutProgramDirectorNestedInput
   convenorOfSociety?: Prisma.SocietyUpdateOneWithoutConvenorNestedInput
@@ -560,8 +665,8 @@ export type TeacherInfoUncheckedUpdateWithoutUserInput = {
 }
 
 export type TeacherInfoCreateWithoutConvenorOfSocietyInput = {
-  designation: string
   user: Prisma.UserCreateNestedOneWithoutTeacherInfoInput
+  designationRecord: Prisma.DesignationCreateNestedOneWithoutTeachersInput
   hodOfDepartment?: Prisma.DepartmentCreateNestedOneWithoutHodInput
   programDirectorOfProgram?: Prisma.ProgramCreateNestedOneWithoutProgramDirectorInput
   teaches?: Prisma.TeachesCreateNestedManyWithoutTeacherInput
@@ -592,8 +697,8 @@ export type TeacherInfoUpdateToOneWithWhereWithoutConvenorOfSocietyInput = {
 }
 
 export type TeacherInfoUpdateWithoutConvenorOfSocietyInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutTeacherInfoNestedInput
+  designationRecord?: Prisma.DesignationUpdateOneRequiredWithoutTeachersNestedInput
   hodOfDepartment?: Prisma.DepartmentUpdateOneWithoutHodNestedInput
   programDirectorOfProgram?: Prisma.ProgramUpdateOneWithoutProgramDirectorNestedInput
   teaches?: Prisma.TeachesUpdateManyWithoutTeacherNestedInput
@@ -608,8 +713,8 @@ export type TeacherInfoUncheckedUpdateWithoutConvenorOfSocietyInput = {
 }
 
 export type TeacherInfoCreateWithoutTeachesInput = {
-  designation: string
   user: Prisma.UserCreateNestedOneWithoutTeacherInfoInput
+  designationRecord: Prisma.DesignationCreateNestedOneWithoutTeachersInput
   hodOfDepartment?: Prisma.DepartmentCreateNestedOneWithoutHodInput
   programDirectorOfProgram?: Prisma.ProgramCreateNestedOneWithoutProgramDirectorInput
   convenorOfSociety?: Prisma.SocietyCreateNestedOneWithoutConvenorInput
@@ -640,8 +745,8 @@ export type TeacherInfoUpdateToOneWithWhereWithoutTeachesInput = {
 }
 
 export type TeacherInfoUpdateWithoutTeachesInput = {
-  designation?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutTeacherInfoNestedInput
+  designationRecord?: Prisma.DesignationUpdateOneRequiredWithoutTeachersNestedInput
   hodOfDepartment?: Prisma.DepartmentUpdateOneWithoutHodNestedInput
   programDirectorOfProgram?: Prisma.ProgramUpdateOneWithoutProgramDirectorNestedInput
   convenorOfSociety?: Prisma.SocietyUpdateOneWithoutConvenorNestedInput
@@ -653,6 +758,30 @@ export type TeacherInfoUncheckedUpdateWithoutTeachesInput = {
   hodOfDepartment?: Prisma.DepartmentUncheckedUpdateOneWithoutHodNestedInput
   programDirectorOfProgram?: Prisma.ProgramUncheckedUpdateOneWithoutProgramDirectorNestedInput
   convenorOfSociety?: Prisma.SocietyUncheckedUpdateOneWithoutConvenorNestedInput
+}
+
+export type TeacherInfoCreateManyDesignationRecordInput = {
+  teacherId: number
+}
+
+export type TeacherInfoUpdateWithoutDesignationRecordInput = {
+  user?: Prisma.UserUpdateOneRequiredWithoutTeacherInfoNestedInput
+  hodOfDepartment?: Prisma.DepartmentUpdateOneWithoutHodNestedInput
+  programDirectorOfProgram?: Prisma.ProgramUpdateOneWithoutProgramDirectorNestedInput
+  convenorOfSociety?: Prisma.SocietyUpdateOneWithoutConvenorNestedInput
+  teaches?: Prisma.TeachesUpdateManyWithoutTeacherNestedInput
+}
+
+export type TeacherInfoUncheckedUpdateWithoutDesignationRecordInput = {
+  teacherId?: Prisma.IntFieldUpdateOperationsInput | number
+  hodOfDepartment?: Prisma.DepartmentUncheckedUpdateOneWithoutHodNestedInput
+  programDirectorOfProgram?: Prisma.ProgramUncheckedUpdateOneWithoutProgramDirectorNestedInput
+  convenorOfSociety?: Prisma.SocietyUncheckedUpdateOneWithoutConvenorNestedInput
+  teaches?: Prisma.TeachesUncheckedUpdateManyWithoutTeacherNestedInput
+}
+
+export type TeacherInfoUncheckedUpdateManyWithoutDesignationRecordInput = {
+  teacherId?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 
@@ -690,6 +819,7 @@ export type TeacherInfoSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   teacherId?: boolean
   designation?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  designationRecord?: boolean | Prisma.DesignationDefaultArgs<ExtArgs>
   hodOfDepartment?: boolean | Prisma.TeacherInfo$hodOfDepartmentArgs<ExtArgs>
   programDirectorOfProgram?: boolean | Prisma.TeacherInfo$programDirectorOfProgramArgs<ExtArgs>
   convenorOfSociety?: boolean | Prisma.TeacherInfo$convenorOfSocietyArgs<ExtArgs>
@@ -701,12 +831,14 @@ export type TeacherInfoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   teacherId?: boolean
   designation?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  designationRecord?: boolean | Prisma.DesignationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["teacherInfo"]>
 
 export type TeacherInfoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   teacherId?: boolean
   designation?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  designationRecord?: boolean | Prisma.DesignationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["teacherInfo"]>
 
 export type TeacherInfoSelectScalar = {
@@ -717,6 +849,7 @@ export type TeacherInfoSelectScalar = {
 export type TeacherInfoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"teacherId" | "designation", ExtArgs["result"]["teacherInfo"]>
 export type TeacherInfoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  designationRecord?: boolean | Prisma.DesignationDefaultArgs<ExtArgs>
   hodOfDepartment?: boolean | Prisma.TeacherInfo$hodOfDepartmentArgs<ExtArgs>
   programDirectorOfProgram?: boolean | Prisma.TeacherInfo$programDirectorOfProgramArgs<ExtArgs>
   convenorOfSociety?: boolean | Prisma.TeacherInfo$convenorOfSocietyArgs<ExtArgs>
@@ -725,15 +858,18 @@ export type TeacherInfoInclude<ExtArgs extends runtime.Types.Extensions.Internal
 }
 export type TeacherInfoIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  designationRecord?: boolean | Prisma.DesignationDefaultArgs<ExtArgs>
 }
 export type TeacherInfoIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  designationRecord?: boolean | Prisma.DesignationDefaultArgs<ExtArgs>
 }
 
 export type $TeacherInfoPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "TeacherInfo"
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
+    designationRecord: Prisma.$DesignationPayload<ExtArgs>
     hodOfDepartment: Prisma.$DepartmentPayload<ExtArgs> | null
     programDirectorOfProgram: Prisma.$ProgramPayload<ExtArgs> | null
     convenorOfSociety: Prisma.$SocietyPayload<ExtArgs> | null
@@ -1137,6 +1273,7 @@ readonly fields: TeacherInfoFieldRefs;
 export interface Prisma__TeacherInfoClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  designationRecord<T extends Prisma.DesignationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DesignationDefaultArgs<ExtArgs>>): Prisma.Prisma__DesignationClient<runtime.Types.Result.GetResult<Prisma.$DesignationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   hodOfDepartment<T extends Prisma.TeacherInfo$hodOfDepartmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TeacherInfo$hodOfDepartmentArgs<ExtArgs>>): Prisma.Prisma__DepartmentClient<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   programDirectorOfProgram<T extends Prisma.TeacherInfo$programDirectorOfProgramArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TeacherInfo$programDirectorOfProgramArgs<ExtArgs>>): Prisma.Prisma__ProgramClient<runtime.Types.Result.GetResult<Prisma.$ProgramPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   convenorOfSociety<T extends Prisma.TeacherInfo$convenorOfSocietyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TeacherInfo$convenorOfSocietyArgs<ExtArgs>>): Prisma.Prisma__SocietyClient<runtime.Types.Result.GetResult<Prisma.$SocietyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>

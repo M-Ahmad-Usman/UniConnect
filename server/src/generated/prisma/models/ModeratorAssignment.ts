@@ -213,7 +213,7 @@ export type ModeratorAssignmentGroupByOutputType = {
   scopeType: $Enums.ModeratorScopeType
   serverId: number
   channelId: number | null
-  assignedBy: number
+  assignedBy: number | null
   assignedAt: Date
   _count: ModeratorAssignmentCountAggregateOutputType | null
   _avg: ModeratorAssignmentAvgAggregateOutputType | null
@@ -246,12 +246,12 @@ export type ModeratorAssignmentWhereInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeFilter<"ModeratorAssignment"> | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFilter<"ModeratorAssignment"> | number
   channelId?: Prisma.IntNullableFilter<"ModeratorAssignment"> | number | null
-  assignedBy?: Prisma.IntFilter<"ModeratorAssignment"> | number
+  assignedBy?: Prisma.IntNullableFilter<"ModeratorAssignment"> | number | null
   assignedAt?: Prisma.DateTimeFilter<"ModeratorAssignment"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   channel?: Prisma.XOR<Prisma.ChannelNullableScalarRelationFilter, Prisma.ChannelWhereInput> | null
-  assigner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  assigner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type ModeratorAssignmentOrderByWithRelationInput = {
@@ -260,7 +260,7 @@ export type ModeratorAssignmentOrderByWithRelationInput = {
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrderInput | Prisma.SortOrder
-  assignedBy?: Prisma.SortOrder
+  assignedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   assignedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   server?: Prisma.ServerOrderByWithRelationInput
@@ -278,12 +278,12 @@ export type ModeratorAssignmentWhereUniqueInput = Prisma.AtLeast<{
   scopeType?: Prisma.EnumModeratorScopeTypeFilter<"ModeratorAssignment"> | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFilter<"ModeratorAssignment"> | number
   channelId?: Prisma.IntNullableFilter<"ModeratorAssignment"> | number | null
-  assignedBy?: Prisma.IntFilter<"ModeratorAssignment"> | number
+  assignedBy?: Prisma.IntNullableFilter<"ModeratorAssignment"> | number | null
   assignedAt?: Prisma.DateTimeFilter<"ModeratorAssignment"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   channel?: Prisma.XOR<Prisma.ChannelNullableScalarRelationFilter, Prisma.ChannelWhereInput> | null
-  assigner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  assigner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id" | "userId_serverId_channelId">
 
 export type ModeratorAssignmentOrderByWithAggregationInput = {
@@ -292,7 +292,7 @@ export type ModeratorAssignmentOrderByWithAggregationInput = {
   scopeType?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   channelId?: Prisma.SortOrderInput | Prisma.SortOrder
-  assignedBy?: Prisma.SortOrder
+  assignedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   assignedAt?: Prisma.SortOrder
   _count?: Prisma.ModeratorAssignmentCountOrderByAggregateInput
   _avg?: Prisma.ModeratorAssignmentAvgOrderByAggregateInput
@@ -310,7 +310,7 @@ export type ModeratorAssignmentScalarWhereWithAggregatesInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeWithAggregatesFilter<"ModeratorAssignment"> | $Enums.ModeratorScopeType
   serverId?: Prisma.IntWithAggregatesFilter<"ModeratorAssignment"> | number
   channelId?: Prisma.IntNullableWithAggregatesFilter<"ModeratorAssignment"> | number | null
-  assignedBy?: Prisma.IntWithAggregatesFilter<"ModeratorAssignment"> | number
+  assignedBy?: Prisma.IntNullableWithAggregatesFilter<"ModeratorAssignment"> | number | null
   assignedAt?: Prisma.DateTimeWithAggregatesFilter<"ModeratorAssignment"> | Date | string
 }
 
@@ -320,7 +320,7 @@ export type ModeratorAssignmentCreateInput = {
   user: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsInput
   server: Prisma.ServerCreateNestedOneWithoutModeratorAssignmentsInput
   channel?: Prisma.ChannelCreateNestedOneWithoutModeratorAssignmentsInput
-  assigner: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
+  assigner?: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
 }
 
 export type ModeratorAssignmentUncheckedCreateInput = {
@@ -329,7 +329,7 @@ export type ModeratorAssignmentUncheckedCreateInput = {
   scopeType: $Enums.ModeratorScopeType
   serverId: number
   channelId?: number | null
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -339,7 +339,7 @@ export type ModeratorAssignmentUpdateInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutModeratorAssignmentsNestedInput
   channel?: Prisma.ChannelUpdateOneWithoutModeratorAssignmentsNestedInput
-  assigner?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsCreatedNestedInput
+  assigner?: Prisma.UserUpdateOneWithoutModeratorAssignmentsCreatedNestedInput
 }
 
 export type ModeratorAssignmentUncheckedUpdateInput = {
@@ -348,7 +348,7 @@ export type ModeratorAssignmentUncheckedUpdateInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -358,7 +358,7 @@ export type ModeratorAssignmentCreateManyInput = {
   scopeType: $Enums.ModeratorScopeType
   serverId: number
   channelId?: number | null
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -373,7 +373,7 @@ export type ModeratorAssignmentUncheckedUpdateManyInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -616,7 +616,7 @@ export type ModeratorAssignmentCreateWithoutUserInput = {
   assignedAt?: Date | string
   server: Prisma.ServerCreateNestedOneWithoutModeratorAssignmentsInput
   channel?: Prisma.ChannelCreateNestedOneWithoutModeratorAssignmentsInput
-  assigner: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
+  assigner?: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
 }
 
 export type ModeratorAssignmentUncheckedCreateWithoutUserInput = {
@@ -624,7 +624,7 @@ export type ModeratorAssignmentUncheckedCreateWithoutUserInput = {
   scopeType: $Enums.ModeratorScopeType
   serverId: number
   channelId?: number | null
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -690,7 +690,7 @@ export type ModeratorAssignmentScalarWhereInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeFilter<"ModeratorAssignment"> | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFilter<"ModeratorAssignment"> | number
   channelId?: Prisma.IntNullableFilter<"ModeratorAssignment"> | number | null
-  assignedBy?: Prisma.IntFilter<"ModeratorAssignment"> | number
+  assignedBy?: Prisma.IntNullableFilter<"ModeratorAssignment"> | number | null
   assignedAt?: Prisma.DateTimeFilter<"ModeratorAssignment"> | Date | string
 }
 
@@ -715,7 +715,7 @@ export type ModeratorAssignmentCreateWithoutServerInput = {
   assignedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsInput
   channel?: Prisma.ChannelCreateNestedOneWithoutModeratorAssignmentsInput
-  assigner: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
+  assigner?: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
 }
 
 export type ModeratorAssignmentUncheckedCreateWithoutServerInput = {
@@ -723,7 +723,7 @@ export type ModeratorAssignmentUncheckedCreateWithoutServerInput = {
   userId: number
   scopeType: $Enums.ModeratorScopeType
   channelId?: number | null
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -758,7 +758,7 @@ export type ModeratorAssignmentCreateWithoutChannelInput = {
   assignedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsInput
   server: Prisma.ServerCreateNestedOneWithoutModeratorAssignmentsInput
-  assigner: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
+  assigner?: Prisma.UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput
 }
 
 export type ModeratorAssignmentUncheckedCreateWithoutChannelInput = {
@@ -766,7 +766,7 @@ export type ModeratorAssignmentUncheckedCreateWithoutChannelInput = {
   userId: number
   scopeType: $Enums.ModeratorScopeType
   serverId: number
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -801,7 +801,7 @@ export type ModeratorAssignmentCreateManyUserInput = {
   scopeType: $Enums.ModeratorScopeType
   serverId: number
   channelId?: number | null
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -819,7 +819,7 @@ export type ModeratorAssignmentUpdateWithoutUserInput = {
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   server?: Prisma.ServerUpdateOneRequiredWithoutModeratorAssignmentsNestedInput
   channel?: Prisma.ChannelUpdateOneWithoutModeratorAssignmentsNestedInput
-  assigner?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsCreatedNestedInput
+  assigner?: Prisma.UserUpdateOneWithoutModeratorAssignmentsCreatedNestedInput
 }
 
 export type ModeratorAssignmentUncheckedUpdateWithoutUserInput = {
@@ -827,7 +827,7 @@ export type ModeratorAssignmentUncheckedUpdateWithoutUserInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -836,7 +836,7 @@ export type ModeratorAssignmentUncheckedUpdateManyWithoutUserInput = {
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -871,7 +871,7 @@ export type ModeratorAssignmentCreateManyServerInput = {
   userId: number
   scopeType: $Enums.ModeratorScopeType
   channelId?: number | null
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -880,7 +880,7 @@ export type ModeratorAssignmentUpdateWithoutServerInput = {
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsNestedInput
   channel?: Prisma.ChannelUpdateOneWithoutModeratorAssignmentsNestedInput
-  assigner?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsCreatedNestedInput
+  assigner?: Prisma.UserUpdateOneWithoutModeratorAssignmentsCreatedNestedInput
 }
 
 export type ModeratorAssignmentUncheckedUpdateWithoutServerInput = {
@@ -888,7 +888,7 @@ export type ModeratorAssignmentUncheckedUpdateWithoutServerInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -897,7 +897,7 @@ export type ModeratorAssignmentUncheckedUpdateManyWithoutServerInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   channelId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -906,7 +906,7 @@ export type ModeratorAssignmentCreateManyChannelInput = {
   userId: number
   scopeType: $Enums.ModeratorScopeType
   serverId: number
-  assignedBy: number
+  assignedBy?: number | null
   assignedAt?: Date | string
 }
 
@@ -915,7 +915,7 @@ export type ModeratorAssignmentUpdateWithoutChannelInput = {
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutModeratorAssignmentsNestedInput
-  assigner?: Prisma.UserUpdateOneRequiredWithoutModeratorAssignmentsCreatedNestedInput
+  assigner?: Prisma.UserUpdateOneWithoutModeratorAssignmentsCreatedNestedInput
 }
 
 export type ModeratorAssignmentUncheckedUpdateWithoutChannelInput = {
@@ -923,7 +923,7 @@ export type ModeratorAssignmentUncheckedUpdateWithoutChannelInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -932,7 +932,7 @@ export type ModeratorAssignmentUncheckedUpdateManyWithoutChannelInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   scopeType?: Prisma.EnumModeratorScopeTypeFieldUpdateOperationsInput | $Enums.ModeratorScopeType
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
-  assignedBy?: Prisma.IntFieldUpdateOperationsInput | number
+  assignedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -949,7 +949,7 @@ export type ModeratorAssignmentSelect<ExtArgs extends runtime.Types.Extensions.I
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ModeratorAssignment$channelArgs<ExtArgs>
-  assigner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assigner?: boolean | Prisma.ModeratorAssignment$assignerArgs<ExtArgs>
 }, ExtArgs["result"]["moderatorAssignment"]>
 
 export type ModeratorAssignmentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -963,7 +963,7 @@ export type ModeratorAssignmentSelectCreateManyAndReturn<ExtArgs extends runtime
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ModeratorAssignment$channelArgs<ExtArgs>
-  assigner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assigner?: boolean | Prisma.ModeratorAssignment$assignerArgs<ExtArgs>
 }, ExtArgs["result"]["moderatorAssignment"]>
 
 export type ModeratorAssignmentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -977,7 +977,7 @@ export type ModeratorAssignmentSelectUpdateManyAndReturn<ExtArgs extends runtime
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ModeratorAssignment$channelArgs<ExtArgs>
-  assigner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assigner?: boolean | Prisma.ModeratorAssignment$assignerArgs<ExtArgs>
 }, ExtArgs["result"]["moderatorAssignment"]>
 
 export type ModeratorAssignmentSelectScalar = {
@@ -995,19 +995,19 @@ export type ModeratorAssignmentInclude<ExtArgs extends runtime.Types.Extensions.
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ModeratorAssignment$channelArgs<ExtArgs>
-  assigner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assigner?: boolean | Prisma.ModeratorAssignment$assignerArgs<ExtArgs>
 }
 export type ModeratorAssignmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ModeratorAssignment$channelArgs<ExtArgs>
-  assigner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assigner?: boolean | Prisma.ModeratorAssignment$assignerArgs<ExtArgs>
 }
 export type ModeratorAssignmentIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ModeratorAssignment$channelArgs<ExtArgs>
-  assigner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assigner?: boolean | Prisma.ModeratorAssignment$assignerArgs<ExtArgs>
 }
 
 export type $ModeratorAssignmentPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1016,7 +1016,7 @@ export type $ModeratorAssignmentPayload<ExtArgs extends runtime.Types.Extensions
     user: Prisma.$UserPayload<ExtArgs>
     server: Prisma.$ServerPayload<ExtArgs>
     channel: Prisma.$ChannelPayload<ExtArgs> | null
-    assigner: Prisma.$UserPayload<ExtArgs>
+    assigner: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1024,7 +1024,7 @@ export type $ModeratorAssignmentPayload<ExtArgs extends runtime.Types.Extensions
     scopeType: $Enums.ModeratorScopeType
     serverId: number
     channelId: number | null
-    assignedBy: number
+    assignedBy: number | null
     assignedAt: Date
   }, ExtArgs["result"]["moderatorAssignment"]>
   composites: {}
@@ -1423,7 +1423,7 @@ export interface Prisma__ModeratorAssignmentClient<T, Null = never, ExtArgs exte
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   server<T extends Prisma.ServerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ServerDefaultArgs<ExtArgs>>): Prisma.Prisma__ServerClient<runtime.Types.Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   channel<T extends Prisma.ModeratorAssignment$channelArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ModeratorAssignment$channelArgs<ExtArgs>>): Prisma.Prisma__ChannelClient<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  assigner<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  assigner<T extends Prisma.ModeratorAssignment$assignerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ModeratorAssignment$assignerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1877,6 +1877,25 @@ export type ModeratorAssignment$channelArgs<ExtArgs extends runtime.Types.Extens
    */
   include?: Prisma.ChannelInclude<ExtArgs> | null
   where?: Prisma.ChannelWhereInput
+}
+
+/**
+ * ModeratorAssignment.assigner
+ */
+export type ModeratorAssignment$assignerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

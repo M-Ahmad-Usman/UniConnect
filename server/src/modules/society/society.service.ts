@@ -71,7 +71,9 @@ const societyListSelect = {
   name: true,
   description: true,
   departmentId: true,
+  status: true,
   isActive: true,
+  isDeleted: true,
   createdAt: true,
   department: {
     select: { id: true, name: true, serverId: true },
@@ -145,8 +147,8 @@ const memberSelect = {
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
 async function findSocietyOrThrow(id: number) {
-  const society = await prisma.society.findUnique({
-    where: { id },
+  const society = await prisma.society.findFirst({
+    where: { id, isDeleted: false },
     select: {
       id: true,
       name: true,
@@ -172,7 +174,9 @@ async function assertStudentForSocietyOrThrow(userId: number, departmentId: numb
     where: {
       id: userId,
       userType: "STUDENT",
+      status: "ACTIVE",
       isActive: true,
+      isDeleted: false,
     },
     select: { id: true, departmentId: true, studentInfo: { select: { studentId: true } } },
   });
@@ -193,7 +197,9 @@ async function assertTeacherForSocietyOrThrow(userId: number, departmentId: numb
     where: {
       id: userId,
       userType: "TEACHER",
+      status: "ACTIVE",
       isActive: true,
+      isDeleted: false,
     },
     select: { id: true, departmentId: true, teacherInfo: { select: { teacherId: true } } },
   });
@@ -315,6 +321,15 @@ export async function createSociety(data: CreateSocietyInput, caller: CallerInfo
     assertTeacherForSocietyOrThrow(data.convenorId, data.departmentId),
   ]);
 
+  const existingSociety = await prisma.society.findFirst({
+    where: { name: data.name, isDeleted: false },
+    select: { id: true },
+  });
+
+  if (existingSociety) {
+    throw new ConflictError("A society with this name already exists");
+  }
+
   // 5. Create everything in a transaction
   return prisma.$transaction(async (tx) => {
     const server = await tx.server.create({
@@ -322,6 +337,7 @@ export async function createSociety(data: CreateSocietyInput, caller: CallerInfo
         name: data.name,
         type: "SOCIETY",
         createdBy: caller.id,
+        isDeleted: false,
         isActive: true,
       },
     });
@@ -353,6 +369,9 @@ export async function createSociety(data: CreateSocietyInput, caller: CallerInfo
         presidentId: data.presidentId,
         convenorId: data.convenorId,
         serverId: server.id,
+        status: "ACTIVE",
+        isActive: true,
+        isDeleted: false,
       },
       select: societyListSelect,
     });
@@ -372,7 +391,7 @@ export async function createSociety(data: CreateSocietyInput, caller: CallerInfo
 export async function listSocieties(query: ListSocietiesQuery) {
   const { page, limit, skip, take } = parsePagination(query);
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { isDeleted: false };
   if (query.departmentId) where.departmentId = query.departmentId;
 
   const [societies, total] = await Promise.all([
@@ -394,12 +413,12 @@ export async function listSocieties(query: ListSocietiesQuery) {
 
 export async function getSocietyById(id: number, callerUserId: number) {
   const [society, target] = await Promise.all([
-    prisma.society.findUnique({
-    where: { id },
-    select: societyDetailSelect,
+    prisma.society.findFirst({
+      where: { id, isDeleted: false },
+      select: societyDetailSelect,
     }),
-    prisma.society.findUnique({
-      where: { id },
+    prisma.society.findFirst({
+      where: { id, isDeleted: false },
       select: {
         id: true,
         serverId: true,
@@ -470,6 +489,17 @@ export async function updateSociety(id: number, data: UpdateSocietyInput, caller
         "You do not have permission to update this society",
         ApiErrorCode.SCOPE_FORBIDDEN
       );
+    }
+  }
+
+  if (data.name !== undefined && data.name !== society.name) {
+    const existingSociety = await prisma.society.findFirst({
+      where: { name: data.name, isDeleted: false, id: { not: id } },
+      select: { id: true },
+    });
+
+    if (existingSociety) {
+      throw new ConflictError("A society with this name already exists");
     }
   }
 

@@ -26,6 +26,22 @@ export const UserType = {
 export type UserType = (typeof UserType)[keyof typeof UserType]
 
 
+export const UserStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED'
+} as const
+
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
+
+
+export const SocietyStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED'
+} as const
+
+export type SocietyStatus = (typeof SocietyStatus)[keyof typeof SocietyStatus]
+
+
 export const ServerType = {
   DEPARTMENT: 'DEPARTMENT',
   CLASS: 'CLASS',

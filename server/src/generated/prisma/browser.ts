@@ -28,6 +28,11 @@ export type DegreeLevel = Prisma.DegreeLevelModel
  */
 export type Discipline = Prisma.DisciplineModel
 /**
+ * Model Designation
+ * 
+ */
+export type Designation = Prisma.DesignationModel
+/**
  * Model Department
  * 
  */
