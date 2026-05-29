@@ -14,7 +14,7 @@ export function useProfile() {
   });
 
   useEffect(() => {
-    if (!query.data || !user || query.data.id !== user.id) {
+    if (!query.data || !user || query.data.publicId !== user.publicId) {
       return;
     }
 

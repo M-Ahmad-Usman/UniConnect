@@ -1,10 +1,10 @@
-import type { Gender, UserType } from './enums';
+import type { Gender, UserStatus, UserType } from './enums';
 import type { ScopedRoleAssignment } from './role.types';
 
 // ─── User Profile (from GET /users/me) ──────────────────────────────────────
 
 export interface UserProfile {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   phone: string;
@@ -13,7 +13,7 @@ export interface UserProfile {
   profilePictureUrl: string | null;
   userType: UserType;
   departmentId: number | null;
-  isActive: boolean;
+  status: UserStatus;
   mustChangePassword: boolean;
   createdAt: string;
   studentInfo: StudentInfo | null;
@@ -38,13 +38,15 @@ export interface TeacherInfo {
 // ─── User List Item (admin list) ────────────────────────────────────────────
 
 export interface UserListItem {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   phone: string;
   userType: UserType;
   departmentId: number | null;
-  isActive: boolean;
+  status: UserStatus;
+  isDeleted: boolean;
+  deletedAt: string | null;
   createdAt: string;
   profilePictureUrl?: string | null;
 }
@@ -52,7 +54,7 @@ export interface UserListItem {
 // ─── User Detail (from GET /users/:id) ──────────────────────────────────────
 
 export interface UserDetail {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   phone: string;
@@ -61,7 +63,10 @@ export interface UserDetail {
   profilePictureUrl: string | null;
   userType: UserType;
   departmentId: number | null;
-  isActive: boolean;
+  status: UserStatus;
+  isDeleted: boolean;
+  deletedAt: string | null;
+  deletedByUser: { publicId: string; fullName: string; email: string } | null;
   mustChangePassword: boolean;
   createdAt: string;
   studentInfo: { classId: number; rollNumber: string } | null;
@@ -75,7 +80,7 @@ export interface UpdateProfileRequest {
 }
 
 export interface UpdateProfileResponse {
-  id: number;
+  publicId: string;
   bio: string | null;
   updatedAt: string;
 }
@@ -95,14 +100,14 @@ export interface CreateUserRequest {
 }
 
 export interface CreateUserResponse {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   phone: string;
   gender: Gender;
   userType: UserType;
   departmentId: number | null;
-  isActive: boolean;
+  status: UserStatus;
   mustChangePassword: boolean;
   createdAt: string;
   warning?: string;
@@ -113,8 +118,56 @@ export interface UserListParams {
   limit?: number;
   userType?: UserType;
   departmentId?: number;
-  isActive?: boolean;
+  status?: UserStatus;
+  lifecycle?: 'live' | 'deleted' | 'all';
   search?: string;
+}
+
+export interface UserDeletionImpact {
+  user: {
+    publicId: string;
+    fullName: string;
+    email: string;
+    userType: UserType;
+    status: UserStatus;
+    isDeleted: boolean;
+  };
+  canDelete: boolean;
+  blockers: {
+    hodDepartments: Array<{ id: number; name: string; code: string }>;
+    directedPrograms: Array<{
+      id: number;
+      code: string;
+      disciplineName: string;
+      degreeLevel: string;
+    }>;
+    crClasses: Array<{
+      publicId: string;
+      programCode: string;
+      section: string;
+      currentSemester: number;
+      admissionYear: number;
+    }>;
+    presidentSocieties: Array<{ publicId: string; name: string }>;
+    convenorSocieties: Array<{ publicId: string; name: string }>;
+    teachingAssignments: Array<{
+      classPublicId: string;
+      courseId: number;
+      courseCode: string;
+      courseTitle: string;
+      programCode: string;
+      section: string;
+      currentSemester: number;
+    }>;
+  };
+}
+
+export interface UserLifecycleReasonRequest {
+  reason?: string;
+}
+
+export interface UpdateUserStatusRequest extends UserLifecycleReasonRequest {
+  status: UserStatus;
 }
 
 export interface BulkImportError {

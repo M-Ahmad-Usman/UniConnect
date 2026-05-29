@@ -13,6 +13,10 @@ function auditContextFromRequest(req: Request) {
   });
 }
 
+function userPublicIdFromRequest(req: Request): string {
+  return String(req.params.publicId);
+}
+
 export async function handleCreateUser(req: Request, res: Response): Promise<void> {
   const user = await userService.createUser(req.body, auditContextFromRequest(req));
 
@@ -92,8 +96,8 @@ export async function handleListUsers(req: Request, res: Response): Promise<void
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleGetUserById(req: Request, res: Response): Promise<void> {
-  const user = await userService.getUserById(Number(req.params.id), req.user!);
+export async function handleGetUserByPublicId(req: Request, res: Response): Promise<void> {
+  const user = await userService.getUserByPublicId(userPublicIdFromRequest(req), req.user!);
 
   const response: ApiResponse<typeof user> = {
     success: true,
@@ -103,25 +107,63 @@ export async function handleGetUserById(req: Request, res: Response): Promise<vo
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleDeactivateUser(req: Request, res: Response): Promise<void> {
-  await userService.deactivateUser(Number(req.params.id), req.user!.id, auditContextFromRequest(req));
+export async function handleGetUserDeletionImpact(req: Request, res: Response): Promise<void> {
+  const impact = await userService.getUserDeletionImpact(userPublicIdFromRequest(req));
 
-  const response: ApiResponse<null> = {
+  const response: ApiResponse<typeof impact> = {
     success: true,
-    data: null,
-    message: "User deactivated successfully",
+    data: impact,
   };
 
   res.status(StatusCodes.OK).json(response);
 }
 
-export async function handleReactivateUser(req: Request, res: Response): Promise<void> {
-  await userService.reactivateUser(Number(req.params.id), auditContextFromRequest(req));
+export async function handleUpdateUserStatus(req: Request, res: Response): Promise<void> {
+  const user = await userService.updateUserStatus(
+    userPublicIdFromRequest(req),
+    req.body.status,
+    req.user!.id,
+    auditContextFromRequest(req),
+    req.body.reason
+  );
 
-  const response: ApiResponse<null> = {
+  const response: ApiResponse<typeof user> = {
     success: true,
-    data: null,
-    message: "User reactivated successfully",
+    data: user,
+    message: "User status updated successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleDeleteUser(req: Request, res: Response): Promise<void> {
+  const user = await userService.deleteUser(
+    userPublicIdFromRequest(req),
+    req.user!.id,
+    auditContextFromRequest(req),
+    req.body.reason
+  );
+
+  const response: ApiResponse<typeof user> = {
+    success: true,
+    data: user,
+    message: "User deleted successfully",
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleRestoreUser(req: Request, res: Response): Promise<void> {
+  const user = await userService.restoreUser(
+    userPublicIdFromRequest(req),
+    auditContextFromRequest(req),
+    req.body.reason
+  );
+
+  const response: ApiResponse<typeof user> = {
+    success: true,
+    data: user,
+    message: "User restored successfully",
   };
 
   res.status(StatusCodes.OK).json(response);

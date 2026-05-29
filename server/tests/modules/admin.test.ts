@@ -207,7 +207,7 @@ describe("Module 12 - Admin Dashboard", () => {
       ).toBe(true);
     });
 
-    it("should filter by isActive=false", async () => {
+    it("should filter by status=SUSPENDED", async () => {
       const admin = await createUser({
         email: "admin-filter-active@test.com",
         password: "Pass@1234",
@@ -224,13 +224,13 @@ describe("Module 12 - Admin Dashboard", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/admin/users?isActive=false")
+        .get("/api/admin/users?status=SUSPENDED")
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(
-        res.body.data.every((u: { isActive: boolean }) => u.isActive === false)
+        res.body.data.every((u: { status: string }) => u.status === "SUSPENDED")
       ).toBe(true);
     });
 

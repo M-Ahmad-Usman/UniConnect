@@ -288,14 +288,14 @@ export function canEditPostClient(
   user: AuthUser | null | undefined,
   now = new Date(),
 ) {
-  return user?.id === post.author.id && getEditWindowState(post.createdAt, now).canEditNow;
+  return user?.email === post.author.email && getEditWindowState(post.createdAt, now).canEditNow;
 }
 
 export function canDeletePostClient(
   post: Pick<PostListItem | PostDetail, 'author'>,
   user: AuthUser | null | undefined,
 ) {
-  return user?.id === post.author.id || user?.userType === UserType.ADMIN;
+  return user?.email === post.author.email || user?.userType === UserType.ADMIN;
 }
 
 export function detailToListItem(post: PostDetail): PostListItem {

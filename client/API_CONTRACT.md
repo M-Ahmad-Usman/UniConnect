@@ -1,8 +1,8 @@
 # UniConnect API Contract Reference
 
-**Version:** 1.2
+**Version:** 1.3
 **Backend API Version:** 1.0.0
-**Last Updated:** 2026-05-18
+**Last Updated:** 2026-05-29
 
 This document provides a complete reference for all API endpoints available to the UniConnect frontend. It includes request/response examples, error handling patterns, and integration notes.
 
@@ -733,7 +733,7 @@ POST /api/auth/login
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     fullName: string;
     email: string;
     userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
@@ -927,7 +927,7 @@ GET /api/users/me
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     fullName: string;
     email: string;
     phone: string;
@@ -936,7 +936,7 @@ GET /api/users/me
     profilePictureUrl: string | null;
     userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
     departmentId: number | null;
-    isActive: boolean;
+    status: 'ACTIVE' | 'SUSPENDED';
     mustChangePassword: boolean;
     createdAt: string;  // ISO 8601
     roles: Array<{
@@ -1055,11 +1055,17 @@ POST /api/users
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     email: string;
     fullName: string;
+    phone: string;
+    gender: 'MALE' | 'FEMALE';
     userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    departmentId: number | null;
+    status: 'ACTIVE' | 'SUSPENDED';
     mustChangePassword: true;
+    createdAt: string;
+    warning?: string;
   }
   message: 'User created successfully';
 }
@@ -1123,57 +1129,161 @@ GET /api/users
   limit?: number;       // Default: 20, Max: 50
   userType?: 'ADMIN' | 'TEACHER' | 'STUDENT';
   departmentId?: number;
-  isActive?: boolean;
+  status?: 'ACTIVE' | 'SUSPENDED';
+  lifecycle?: 'live' | 'deleted' | 'all'; // Admin only. Teachers always see live users.
+  search?: string;
 }
 ```
 
-**Response:** Paginated list of users (same shape as GET /me)
+**Response:**
 
-#### Get User by ID (Admin/Teacher)
+```typescript
+{
+  success: true;
+  data: Array<{
+    publicId: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    departmentId: number | null;
+    status: 'ACTIVE' | 'SUSPENDED';
+    isDeleted: boolean;
+    deletedAt: string | null;
+    createdAt: string;
+  }>;
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+```
+
+#### Get User by Public ID (Admin/Teacher)
 
 ```
-GET /api/users/:id
+GET /api/users/:publicId
 ```
 
 **Auth:** Admin or Teacher
 
-**Response:** Same as GET /me
+**Response:** User detail with `publicId`, `status`, `isDeleted`, `deletedAt`, and optional `deletedByUser`. Admins can read deleted users; teachers can only read live users in their HOD department scope.
 
-#### Deactivate User (Admin)
-
-```
-PATCH /api/users/:id/deactivate
-```
-
-**Auth:** Admin only
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {},
-  "message": "User deactivated successfully"
-}
-```
-
-#### Reactivate User (Admin)
+#### Get User Deletion Impact (Admin)
 
 ```
-PATCH /api/users/:id/reactivate
+GET /api/users/:publicId/deletion-impact
 ```
 
 **Auth:** Admin only
 
 **Response:**
 
-```json
+```typescript
 {
-  "success": true,
-  "data": {},
-  "message": "User reactivated successfully"
+  success: true;
+  data: {
+    user: {
+      publicId: string;
+      fullName: string;
+      email: string;
+      userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+      status: 'ACTIVE' | 'SUSPENDED';
+      isDeleted: boolean;
+    };
+    canDelete: boolean;
+    blockers: {
+      hodDepartments: Array<{ id: number; name: string; code: string }>;
+      directedPrograms: Array<{ id: number; code: string; disciplineName: string; degreeLevel: string }>;
+      crClasses: Array<{ publicId: string; programCode: string; section: string; currentSemester: number; admissionYear: number }>;
+      presidentSocieties: Array<{ publicId: string; name: string }>;
+      convenorSocieties: Array<{ publicId: string; name: string }>;
+      teachingAssignments: Array<{ classPublicId: string; courseId: number; courseCode: string; courseTitle: string; programCode: string; section: string; currentSemester: number }>;
+    };
+  };
 }
 ```
+
+#### Update User Status (Admin)
+
+```
+PATCH /api/users/:publicId/status
+```
+
+**Auth:** Admin only
+
+**Request Body:**
+
+```typescript
+{
+  status: 'ACTIVE' | 'SUSPENDED';
+  reason?: string; // Max 500 chars
+}
+```
+
+**Response:**
+
+```typescript
+{
+  success: true;
+  data: UserDetail & { revokedRefreshTokens: number };
+  message: 'User status updated successfully';
+}
+```
+
+**Notes:**
+
+- Admins cannot change their own lifecycle status.
+- Suspending a user revokes active refresh tokens, clears reset-token state, and disconnects active sockets.
+
+#### Delete User (Admin)
+
+```
+DELETE /api/users/:publicId
+```
+
+**Auth:** Admin only
+
+**Request Body:**
+
+```typescript
+{
+  reason?: string; // Max 500 chars
+}
+```
+
+**Response:** Soft-deleted `UserDetail` plus:
+
+```typescript
+{
+  sideEffects: {
+    deletedNotifications: number;
+    deletedPendingSocietyRequests: number;
+    revokedRefreshTokens: number;
+  };
+}
+```
+
+**Notes:**
+
+- Admins cannot delete their own account.
+- Deletion is blocked when the impact report has blockers.
+- Deletion revokes sessions, deletes notifications and pending society requests, clears reset-token state, and disconnects active sockets.
+
+#### Restore User (Admin)
+
+```
+PATCH /api/users/:publicId/restore
+```
+
+**Auth:** Admin only
+
+**Request Body:**
+
+```typescript
+{
+  reason?: string; // Max 500 chars
+}
+```
+
+**Response:** Restored `UserDetail`. Restore preserves the user's `status`; a restored suspended user remains unable to authenticate.
 
 ---
 
@@ -3350,7 +3460,8 @@ GET /api/admin/users
   limit?: number;
   userType?: 'ADMIN' | 'TEACHER' | 'STUDENT';
   departmentId?: number;
-  isActive?: boolean;
+  status?: 'ACTIVE' | 'SUSPENDED';
+  lifecycle?: 'live' | 'deleted' | 'all';
   search?: string;  // Search by fullName or email
 }
 ```

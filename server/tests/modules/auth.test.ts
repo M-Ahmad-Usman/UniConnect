@@ -73,7 +73,8 @@ describe("POST /api/auth/login", () => {
       email: activeUserEmail,
       mustChangePassword: false,
     });
-    expect(res.body.data).toHaveProperty("id");
+    expect(res.body.data).toHaveProperty("publicId");
+    expect(res.body.data).not.toHaveProperty("id");
     expect(res.body.data).toHaveProperty("fullName");
     expect(res.body.data).toHaveProperty("userType");
     expect(res.body.data).not.toHaveProperty("passwordHash");
@@ -81,6 +82,13 @@ describe("POST /api/auth/login", () => {
     const cookies = extractCookies(res);
     expect(cookies).toHaveProperty("access_token");
     expect(cookies).toHaveProperty("refresh_token");
+
+    const accessPayload = jwt.verify(cookies.access_token, env.JWT_ACCESS_SECRET) as jwt.JwtPayload;
+    const refreshPayload = jwt.verify(cookies.refresh_token, env.JWT_REFRESH_SECRET) as jwt.JwtPayload;
+    expect(accessPayload.sub).toEqual(expect.any(String));
+    expect(refreshPayload.sub).toEqual(expect.any(String));
+    expect(accessPayload).not.toHaveProperty("id");
+    expect(refreshPayload).not.toHaveProperty("id");
   });
 
   it("should return 401 for non-existent email", async () => {
@@ -107,6 +115,42 @@ describe("POST /api/auth/login", () => {
     const res = await request(app)
       .post("/api/auth/login")
       .send({ email: inactiveUserEmail, password: PASSWORD });
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
+
+  it("should reject an existing access token after the user is suspended", async () => {
+    const user = await createUser({
+      email: "access-suspended@test.com",
+      password: PASSWORD,
+    });
+    const cookies = await loginAs(user.email, PASSWORD);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { status: "SUSPENDED", isActive: false },
+    });
+
+    const res = await request(app).get("/api/users/me").set("Cookie", cookies);
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
+
+  it("should reject an existing access token after the user is soft-deleted", async () => {
+    const user = await createUser({
+      email: "access-deleted@test.com",
+      password: PASSWORD,
+    });
+    const cookies = await loginAs(user.email, PASSWORD);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isDeleted: true, deletedAt: new Date(), isActive: false },
+    });
+
+    const res = await request(app).get("/api/users/me").set("Cookie", cookies);
 
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);

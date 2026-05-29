@@ -1,8 +1,11 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 const userTypeEnum = z.enum(["STUDENT", "TEACHER", "ADMIN"]);
 const genderEnum = z.enum(["MALE", "FEMALE"]);
+const userStatusEnum = z.enum(["ACTIVE", "SUSPENDED"]);
+const lifecycleReasonSchema = z.string().trim().min(1).max(500).optional();
 const rollNumberSchema = z
   .string()
   .trim()
@@ -60,15 +63,34 @@ export const listUsersSchema = {
   query: paginationQuerySchema.extend({
     userType: userTypeEnum.optional(),
     departmentId: z.coerce.number().int().positive().optional(),
-    isActive: z.enum(["true", "false"]).optional(),
+    status: userStatusEnum.optional(),
+    lifecycle: z.enum(["live", "deleted", "all"]).optional(),
     search: z.string().trim().max(100).optional(),
   }),
 };
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
-export const userIdParamSchema = {
+export const userPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "User ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
+};
+
+export const updateUserStatusSchema = {
+  params: userPublicIdParamSchema.params,
+  body: z.object({
+    status: userStatusEnum,
+    reason: lifecycleReasonSchema,
+  }),
+};
+
+export const userLifecycleReasonSchema = {
+  params: userPublicIdParamSchema.params,
+  body: z.preprocess(
+    (value) => value ?? {},
+    z.object({
+      reason: lifecycleReasonSchema,
+    }),
+  ),
 };

@@ -64,7 +64,7 @@ describe("Module 1 - Schema Foundation", () => {
     expect(server.isDeleted).toBe(false);
   });
 
-  it("dual-writes existing user activation endpoints to UserStatus", async () => {
+  it("dual-writes user lifecycle status endpoint to transitional isActive", async () => {
     const admin = await createUser({
       email: "schema-status-admin@test.com",
       password: "Pass@1234",
@@ -77,8 +77,9 @@ describe("Module 1 - Schema Foundation", () => {
     const cookies = await loginAs(admin.email, "Pass@1234");
 
     const deactivateRes = await request(app)
-      .patch(`/api/users/${target.id}/deactivate`)
-      .set("Cookie", cookies);
+      .patch(`/api/users/${target.publicId}/status`)
+      .set("Cookie", cookies)
+      .send({ status: "SUSPENDED" });
 
     expect(deactivateRes.status).toBe(200);
     const deactivated = await prisma.user.findUniqueOrThrow({ where: { id: target.id } });
@@ -86,8 +87,9 @@ describe("Module 1 - Schema Foundation", () => {
     expect(deactivated.status).toBe("SUSPENDED");
 
     const reactivateRes = await request(app)
-      .patch(`/api/users/${target.id}/reactivate`)
-      .set("Cookie", cookies);
+      .patch(`/api/users/${target.publicId}/status`)
+      .set("Cookie", cookies)
+      .send({ status: "ACTIVE" });
 
     expect(reactivateRes.status).toBe(200);
     const reactivated = await prisma.user.findUniqueOrThrow({ where: { id: target.id } });

@@ -1,4 +1,4 @@
-import { ClassStatus, UserType, type BulkImportError, type ClassDetail } from '@/types';
+import { ClassStatus, UserStatus, UserType, type BulkImportError, type ClassDetail } from '@/types';
 
 export const USER_PAGE_SIZE = 20;
 
@@ -19,13 +19,17 @@ export function parseUserType(value: string | null) {
   return undefined;
 }
 
-export function parseIsActive(value: string | null) {
-  if (value === 'true') {
-    return true;
+export function parseUserStatus(value: string | null) {
+  if (value === UserStatus.ACTIVE || value === UserStatus.SUSPENDED) {
+    return value;
   }
 
-  if (value === 'false') {
-    return false;
+  return undefined;
+}
+
+export function parseUserLifecycle(value: string | null) {
+  if (value === 'live' || value === 'deleted' || value === 'all') {
+    return value;
   }
 
   return undefined;

@@ -2,6 +2,8 @@ import { prisma } from "../../config/prisma.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import type { PaginatedResponse } from "../../shared/types/index.js";
 import type { Prisma } from "../../generated/prisma/client.js";
+import type { UserStatus } from "../../generated/prisma/enums.js";
+import { mapUserPublicDto } from "../../shared/ids/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -29,18 +31,21 @@ interface AdminListUsersQuery {
   limit?: unknown;
   userType?: unknown;
   departmentId?: unknown;
-  isActive?: unknown;
+  status?: unknown;
+  lifecycle?: unknown;
   search?: unknown;
 }
 
 interface UserListItem {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   phone: string;
   userType: string;
   departmentId: number | null;
-  isActive: boolean;
+  status: UserStatus;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
 }
 
@@ -50,9 +55,10 @@ function parseAdminUserFilters(query: AdminListUsersQuery) {
   const filters: {
     userType?: "STUDENT" | "TEACHER" | "ADMIN";
     departmentId?: number;
-    isActive?: boolean;
+    status?: UserStatus;
+    lifecycle: "live" | "deleted" | "all";
     search?: string;
-  } = {};
+  } = { lifecycle: "live" };
 
   if (query.userType && typeof query.userType === "string") {
     const userType = query.userType.toUpperCase();
@@ -68,12 +74,17 @@ function parseAdminUserFilters(query: AdminListUsersQuery) {
     }
   }
 
-  if (query.isActive !== undefined) {
-    const value = query.isActive;
-    if (value === true || value === "true") {
-      filters.isActive = true;
-    } else if (value === false || value === "false") {
-      filters.isActive = false;
+  if (query.status && typeof query.status === "string") {
+    const status = query.status.toUpperCase();
+    if (status === "ACTIVE" || status === "SUSPENDED") {
+      filters.status = status;
+    }
+  }
+
+  if (query.lifecycle && typeof query.lifecycle === "string") {
+    const lifecycle = query.lifecycle.toLowerCase();
+    if (lifecycle === "live" || lifecycle === "deleted" || lifecycle === "all") {
+      filters.lifecycle = lifecycle;
     }
   }
 
@@ -117,9 +128,10 @@ export async function getSystemStats(): Promise<SystemStats> {
   const [usersByType, activeUsers, serversByType, totalPosts] = await Promise.all([
     prisma.user.groupBy({
       by: ["userType"],
+      where: { isDeleted: false },
       _count: { _all: true },
     }),
-    prisma.user.count({ where: { isActive: true } }),
+    prisma.user.count({ where: { status: "ACTIVE", isDeleted: false } }),
     prisma.server.groupBy({
       by: ["type"],
       _count: { _all: true },
@@ -181,8 +193,14 @@ export async function listAllUsers(
     where.departmentId = filters.departmentId;
   }
 
-  if (filters.isActive !== undefined) {
-    where.isActive = filters.isActive;
+  if (filters.status !== undefined) {
+    where.status = filters.status;
+  }
+
+  if (filters.lifecycle === "live") {
+    where.isDeleted = false;
+  } else if (filters.lifecycle === "deleted") {
+    where.isDeleted = true;
   }
 
   if (filters.search) {
@@ -200,12 +218,15 @@ export async function listAllUsers(
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: {
         id: true,
+        publicId: true,
         fullName: true,
         email: true,
         phone: true,
         userType: true,
         departmentId: true,
-        isActive: true,
+        status: true,
+        isDeleted: true,
+        deletedAt: true,
         createdAt: true,
       },
     }),
@@ -214,7 +235,7 @@ export async function listAllUsers(
 
   return {
     success: true,
-    data: users,
+    data: users.map((user) => mapUserPublicDto(user)),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }

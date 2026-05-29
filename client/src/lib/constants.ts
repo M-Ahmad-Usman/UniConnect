@@ -62,8 +62,9 @@ export const queryKeys = {
   },
   users: {
     me: () => ['users', 'me'] as const,
-    detail: (userId: number) => ['users', userId] as const,
+    detail: (userPublicId: string) => ['users', userPublicId] as const,
     list: (params?: Record<string, unknown>) => ['users', params] as const,
+    deletionImpact: (userPublicId: string) => ['users', userPublicId, 'deletion-impact'] as const,
   },
   permissions: {
     me: () => ['permissions', 'me'] as const,

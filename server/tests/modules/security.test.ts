@@ -87,7 +87,7 @@ describe("Module 5 security hardening", () => {
     });
   });
 
-  it("creates redacted audit logs for privileged user activation changes", async () => {
+  it("creates redacted audit logs for privileged user lifecycle status changes", async () => {
     const admin = await createUser({
       email: `audit-admin-${suffix()}@test.com`,
       userType: "ADMIN",
@@ -102,17 +102,18 @@ describe("Module 5 security hardening", () => {
     const cookies = await loginAs(admin.email, PASSWORD);
 
     const res = await request(app)
-      .patch(`/api/users/${target.id}/deactivate`)
-      .set("Cookie", cookies);
+      .patch(`/api/users/${target.publicId}/status`)
+      .set("Cookie", cookies)
+      .send({ status: "SUSPENDED", reason: "Security review" });
 
     expect(res.status).toBe(200);
 
     const auditLog = await prisma.auditLog.findFirst({
       where: {
         actorUserId: admin.id,
-        action: "user.deactivate",
+        action: "user.status_update",
         targetType: "user",
-        targetId: String(target.id),
+        targetId: target.publicId,
       },
     });
 

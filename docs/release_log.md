@@ -57,6 +57,29 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-05-29 - Schema/Lifecycle Refactor Module 3 Complete
+- Migrated user/auth/admin user surfaces to public user IDs while leaving
+  role-management numeric user-ID contracts for Module 4.
+- Switched access and refresh JWT payloads to standard `sub` and added DB-backed
+  access-token and Socket.IO authentication checks for deleted, inactive,
+  suspended, and missing users.
+- Added admin user lifecycle APIs for deletion impact, status changes, soft
+  delete, and restore; removed old deactivate/reactivate user routes.
+- Added grouped deletion blockers for HOD departments, directed programs, CR
+  classes, live society leadership, and active teaching assignments.
+- Implemented lifecycle side effects for session revocation, socket disconnect,
+  reset-token clearing, notification cleanup, pending society-request cleanup,
+  audit logging, and preserved-status restore.
+- Updated frontend auth/profile/admin user management contracts, API clients,
+  query keys, filters, dialogs, and tests for user `publicId`, status, lifecycle
+  filters, and deletion-impact confirmation.
+- Verification passed:
+  - backend build
+  - focused backend user/auth/admin/security suites
+  - backend schema-foundation regression suite
+  - full backend Jest suite
+  - frontend type-check, lint, Vitest, and production build
+
 ### 2026-05-28 - Schema/Lifecycle Refactor Module 2 Complete
 - Added backend-only public-ID foundation utilities in `server/src/shared/ids/`:
   strict UUIDv7 validation, core entity resolvers, temporary dual-resolution

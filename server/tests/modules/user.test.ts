@@ -6,9 +6,15 @@ import { resetDB } from "../helpers/db.helper.js";
 import {
   createClass,
   createChannel,
+  createCourse,
   createDepartment,
+  createNotification,
   createProgram,
+  createSociety,
+  createSocietyMembershipRequest,
+  createStudentWithInfo,
   createTeacherWithInfo,
+  createTeachesRecord,
   createUser,
   generateCSV,
   loginAs,
@@ -58,9 +64,16 @@ describe("Module 2 - User Management", () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.userType).toBe("STUDENT");
+      expect(res.body.data.publicId).toEqual(expect.any(String));
+      expect(res.body.data).not.toHaveProperty("id");
       expect(res.body.data).not.toHaveProperty("tempPassword");
 
-      const createdUserId = res.body.data.id as number;
+      const createdUser = await prisma.user.findUnique({
+        where: { publicId: res.body.data.publicId },
+        select: { id: true },
+      });
+      expect(createdUser).not.toBeNull();
+      const createdUserId = createdUser!.id;
       const [studentInfo, memberships] = await Promise.all([
         prisma.studentInfo.findUnique({ where: { studentId: createdUserId } }),
         prisma.serverMembership.findMany({ where: { userId: createdUserId } }),
@@ -123,8 +136,15 @@ describe("Module 2 - User Management", () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.userType).toBe("TEACHER");
+      expect(res.body.data.publicId).toEqual(expect.any(String));
+      expect(res.body.data).not.toHaveProperty("id");
 
-      const createdUserId = res.body.data.id as number;
+      const createdUser = await prisma.user.findUnique({
+        where: { publicId: res.body.data.publicId },
+        select: { id: true },
+      });
+      expect(createdUser).not.toBeNull();
+      const createdUserId = createdUser!.id;
       const [teacherInfo, memberships] = await Promise.all([
         prisma.teacherInfo.findUnique({ where: { teacherId: createdUserId } }),
         prisma.serverMembership.findMany({ where: { userId: createdUserId } }),
@@ -385,6 +405,8 @@ describe("Module 2 - User Management", () => {
       expect(profileRes.status).toBe(200);
       expect(profileRes.body.success).toBe(true);
       expect(profileRes.body.data.email).toBe(user.email);
+      expect(profileRes.body.data.publicId).toBe(user.publicId);
+      expect(profileRes.body.data).not.toHaveProperty("id");
       expect(profileRes.body.data).not.toHaveProperty("passwordHash");
 
       const updateRes = await request(app)
@@ -526,6 +548,8 @@ describe("Module 2 - User Management", () => {
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data.every((u: { userType: string }) => u.userType === "STUDENT")).toBe(true);
+      expect(res.body.data.every((u: Record<string, unknown>) => typeof u.publicId === "string")).toBe(true);
+      expect(res.body.data.every((u: Record<string, unknown>) => !("id" in u))).toBe(true);
       expect(res.body.pagination).toBeDefined();
     });
 
@@ -601,8 +625,8 @@ describe("Module 2 - User Management", () => {
     });
   });
 
-  describe("GET /api/users/:id", () => {
-    it("should allow admin to fetch a user by id", async () => {
+  describe("GET /api/users/:publicId", () => {
+    it("should allow admin to fetch a user by public ID", async () => {
       const admin = await createUser({
         email: "admin-getbyid@test.com",
         password: "Pass@1234",
@@ -615,11 +639,12 @@ describe("Module 2 - User Management", () => {
       });
 
       const cookies = await loginAs(admin.email, "Pass@1234");
-      const res = await request(app).get(`/api/users/${target.id}`).set("Cookie", cookies);
+      const res = await request(app).get(`/api/users/${target.publicId}`).set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.id).toBe(target.id);
+      expect(res.body.data.publicId).toBe(target.publicId);
+      expect(res.body.data).not.toHaveProperty("id");
       expect(res.body.data).not.toHaveProperty("passwordHash");
     });
 
@@ -655,15 +680,15 @@ describe("Module 2 - User Management", () => {
       const hodCookies = await loginAs(hod.email, "Pass@1234");
 
       const ownRes = await request(app)
-        .get(`/api/users/${inDeptUser.id}`)
+        .get(`/api/users/${inDeptUser.publicId}`)
         .set("Cookie", hodCookies);
 
       expect(ownRes.status).toBe(200);
       expect(ownRes.body.success).toBe(true);
-      expect(ownRes.body.data.id).toBe(inDeptUser.id);
+      expect(ownRes.body.data.publicId).toBe(inDeptUser.publicId);
 
       const outRes = await request(app)
-        .get(`/api/users/${outDeptUser.id}`)
+        .get(`/api/users/${outDeptUser.publicId}`)
         .set("Cookie", hodCookies);
 
       expect(outRes.status).toBe(404);
@@ -686,17 +711,37 @@ describe("Module 2 - User Management", () => {
 
       const cookies = await loginAs(teacher.email, "Pass@1234");
       const res = await request(app)
-        .get(`/api/users/${target.id}`)
+        .get(`/api/users/${target.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("FORBIDDEN");
     });
+
+    it("should reject numeric user route identifiers", async () => {
+      const admin = await createUser({
+        email: "admin-reject-numeric@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const target = await createUser({
+        email: "target-reject-numeric@test.com",
+        password: "Pass@1234",
+        userType: "STUDENT",
+      });
+
+      const cookies = await loginAs(admin.email, "Pass@1234");
+      const res = await request(app).get(`/api/users/${target.id}`).set("Cookie", cookies);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    });
   });
 
-  describe("PATCH /api/users/:id/deactivate & reactivate", () => {
-    it("should deactivate and reactivate user with admin access", async () => {
+  describe("User lifecycle APIs", () => {
+    it("should suspend and activate user with admin access", async () => {
       const admin = await createUser({
         email: "admin-deactivate@test.com",
         password: "Pass@1234",
@@ -711,11 +756,14 @@ describe("Module 2 - User Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const deactivateRes = await request(app)
-        .patch(`/api/users/${target.id}/deactivate`)
-        .set("Cookie", cookies);
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED", reason: "Policy violation" });
 
       expect(deactivateRes.status).toBe(200);
       expect(deactivateRes.body.success).toBe(true);
+      expect(deactivateRes.body.data.status).toBe("SUSPENDED");
+      expect(deactivateRes.body.data.publicId).toBe(target.publicId);
 
       const loginAfterDeactivate = await request(app)
         .post("/api/auth/login")
@@ -724,11 +772,13 @@ describe("Module 2 - User Management", () => {
       expect(loginAfterDeactivate.status).toBe(401);
 
       const reactivateRes = await request(app)
-        .patch(`/api/users/${target.id}/reactivate`)
-        .set("Cookie", cookies);
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "ACTIVE", reason: "Resolved" });
 
       expect(reactivateRes.status).toBe(200);
       expect(reactivateRes.body.success).toBe(true);
+      expect(reactivateRes.body.data.status).toBe("ACTIVE");
 
       const loginAfterReactivate = await request(app)
         .post("/api/auth/login")
@@ -742,7 +792,7 @@ describe("Module 2 - User Management", () => {
       expect(activeTokenCount).toBeGreaterThan(0);
     });
 
-    it("should revoke all refresh tokens when deactivated", async () => {
+    it("should revoke all refresh tokens when suspended", async () => {
       const admin = await createUser({
         email: "admin-revoke@test.com",
         password: "Pass@1234",
@@ -764,8 +814,9 @@ describe("Module 2 - User Management", () => {
 
       const adminCookies = await loginAs(admin.email, "Pass@1234");
       const deactivateRes = await request(app)
-        .patch(`/api/users/${target.id}/deactivate`)
-        .set("Cookie", adminCookies);
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", adminCookies)
+        .send({ status: "SUSPENDED" });
 
       expect(deactivateRes.status).toBe(200);
       expect(deactivateRes.body.success).toBe(true);
@@ -776,7 +827,7 @@ describe("Module 2 - User Management", () => {
       expect(after).toBe(0);
     });
 
-    it("should return 403 when non-admin tries to deactivate", async () => {
+    it("should return 403 when non-admin tries to update status", async () => {
       const actor = await createUser({
         email: "non-admin-deactivate@test.com",
         password: "Pass@1234",
@@ -790,15 +841,16 @@ describe("Module 2 - User Management", () => {
 
       const cookies = await loginAs(actor.email, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/users/${target.id}/deactivate`)
-        .set("Cookie", cookies);
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED" });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("FORBIDDEN");
     });
 
-    it("should return 403 when admin tries to deactivate self", async () => {
+    it("should return 403 when admin tries to suspend self", async () => {
       const admin = await createUser({
         email: "admin-self-deactivate@test.com",
         password: "Pass@1234",
@@ -807,15 +859,16 @@ describe("Module 2 - User Management", () => {
 
       const cookies = await loginAs(admin.email, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/users/${admin.id}/deactivate`)
-        .set("Cookie", cookies);
+        .patch(`/api/users/${admin.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED" });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("FORBIDDEN");
     });
 
-    it("should return 409 when deactivating an already deactivated user", async () => {
+    it("should return 409 when suspending an already suspended user", async () => {
       const admin = await createUser({
         email: "admin-double-deactivate@test.com",
         password: "Pass@1234",
@@ -828,18 +881,22 @@ describe("Module 2 - User Management", () => {
       });
 
       const cookies = await loginAs(admin.email, "Pass@1234");
-      await request(app).patch(`/api/users/${target.id}/deactivate`).set("Cookie", cookies);
+      await request(app)
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED" });
 
       const res = await request(app)
-        .patch(`/api/users/${target.id}/deactivate`)
-        .set("Cookie", cookies);
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED" });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("CONFLICT");
     });
 
-    it("should return 409 when reactivating an already active user", async () => {
+    it("should return 409 when activating an already active user", async () => {
       const admin = await createUser({
         email: "admin-reactivate-active@test.com",
         password: "Pass@1234",
@@ -853,12 +910,215 @@ describe("Module 2 - User Management", () => {
 
       const cookies = await loginAs(admin.email, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/users/${target.id}/reactivate`)
-        .set("Cookie", cookies);
+        .patch(`/api/users/${target.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "ACTIVE" });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("CONFLICT");
+    });
+
+    it("should list grouped deletion blockers for teacher lifecycle impact", async () => {
+      const admin = await createUser({
+        email: "admin-impact-teacher@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-M3-IMPACT", creatorId: admin.id });
+      const target = await createTeacherWithInfo(dept.id, {
+        email: "teacher-impact@test.com",
+        password: "Pass@1234",
+      });
+      const program = await createProgram(dept.id, { code: "BSCS-M3-IMPACT" });
+      const klass = await createClass(program.id, { creatorId: admin.id });
+      const course = await createCourse(dept.id, { code: "CSE-M3-IMPACT" });
+      const president = await createStudentWithInfo(klass.id, dept.id, {
+        email: "president-impact@test.com",
+        password: "Pass@1234",
+      });
+
+      await prisma.department.update({ where: { id: dept.id }, data: { hodId: target.id } });
+      await prisma.program.update({
+        where: { id: program.id },
+        data: { programDirectorId: target.id },
+      });
+      await createTeachesRecord(target.id, course.id, klass.id);
+      const { society } = await createSociety(dept.id, president.id, target.id, {
+        name: "Impact Teacher Society",
+        creatorId: admin.id,
+      });
+
+      const cookies = await loginAs(admin.email, "Pass@1234");
+      const res = await request(app)
+        .get(`/api/users/${target.publicId}/deletion-impact`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.canDelete).toBe(false);
+      expect(res.body.data.blockers.hodDepartments).toHaveLength(1);
+      expect(res.body.data.blockers.directedPrograms).toHaveLength(1);
+      expect(res.body.data.blockers.convenorSocieties).toEqual([
+        expect.objectContaining({ publicId: society.publicId, name: society.name }),
+      ]);
+      expect(res.body.data.blockers.teachingAssignments).toEqual([
+        expect.objectContaining({
+          classPublicId: klass.publicId,
+          courseId: course.id,
+          courseCode: course.code,
+        }),
+      ]);
+    });
+
+    it("should list grouped deletion blockers for student lifecycle impact", async () => {
+      const admin = await createUser({
+        email: "admin-impact-student@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-M3-STUIMP", creatorId: admin.id });
+      const program = await createProgram(dept.id, { code: "BSCS-M3-STUIMP" });
+      const klass = await createClass(program.id, { creatorId: admin.id });
+      const target = await createStudentWithInfo(klass.id, dept.id, {
+        email: "student-impact@test.com",
+        password: "Pass@1234",
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: "convenor-impact@test.com",
+        password: "Pass@1234",
+      });
+
+      await prisma.class.update({ where: { id: klass.id }, data: { crId: target.id } });
+      const { society } = await createSociety(dept.id, target.id, convenor.id, {
+        name: "Impact Student Society",
+        creatorId: admin.id,
+      });
+
+      const cookies = await loginAs(admin.email, "Pass@1234");
+      const res = await request(app)
+        .get(`/api/users/${target.publicId}/deletion-impact`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.canDelete).toBe(false);
+      expect(res.body.data.blockers.crClasses).toEqual([
+        expect.objectContaining({ publicId: klass.publicId }),
+      ]);
+      expect(res.body.data.blockers.presidentSocieties).toEqual([
+        expect.objectContaining({ publicId: society.publicId, name: society.name }),
+      ]);
+    });
+
+    it("should soft-delete user side effects and restore while preserving status", async () => {
+      const admin = await createUser({
+        email: "admin-delete-restore@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-M3-DELRES", creatorId: admin.id });
+      const program = await createProgram(dept.id, { code: "BSCS-M3-DELRES" });
+      const klass = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(klass.id, dept.id, {
+        email: "president-delres@test.com",
+        password: "Pass@1234",
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: "convenor-delres@test.com",
+        password: "Pass@1234",
+      });
+      const { society } = await createSociety(dept.id, president.id, convenor.id, {
+        name: "Delete Restore Society",
+        creatorId: admin.id,
+      });
+      const target = await createUser({
+        email: "delete-restore-target@test.com",
+        password: "Pass@1234",
+        userType: "STUDENT",
+        departmentId: dept.id,
+      });
+
+      await createNotification(target.id);
+      await createSocietyMembershipRequest(society.id, target.id, "PENDING");
+      await loginAs(target.email, "Pass@1234");
+
+      const adminCookies = await loginAs(admin.email, "Pass@1234");
+      const deleteRes = await request(app)
+        .delete(`/api/users/${target.publicId}`)
+        .set("Cookie", adminCookies)
+        .send({ reason: "No longer enrolled" });
+
+      expect(deleteRes.status).toBe(200);
+      expect(deleteRes.body.data.publicId).toBe(target.publicId);
+      expect(deleteRes.body.data.isDeleted).toBe(true);
+      expect(deleteRes.body.data.sideEffects).toMatchObject({
+        deletedNotifications: 1,
+        deletedPendingSocietyRequests: 1,
+        revokedRefreshTokens: 1,
+      });
+
+      await expect(
+        prisma.user.findUniqueOrThrow({ where: { id: target.id } })
+      ).resolves.toMatchObject({
+        isDeleted: true,
+        isActive: false,
+        status: "ACTIVE",
+      });
+      await expect(prisma.notification.count({ where: { userId: target.id } })).resolves.toBe(0);
+      await expect(
+        prisma.societyMembershipRequest.count({
+          where: { societyId: society.id, userId: target.id, status: "PENDING" },
+        })
+      ).resolves.toBe(0);
+
+      const restoreRes = await request(app)
+        .patch(`/api/users/${target.publicId}/restore`)
+        .set("Cookie", adminCookies)
+        .send({ reason: "Enrollment restored" });
+
+      expect(restoreRes.status).toBe(200);
+      expect(restoreRes.body.data.publicId).toBe(target.publicId);
+      expect(restoreRes.body.data.status).toBe("ACTIVE");
+      expect(restoreRes.body.data.isDeleted).toBe(false);
+      await expect(
+        prisma.user.findUniqueOrThrow({ where: { id: target.id } })
+      ).resolves.toMatchObject({
+        isDeleted: false,
+        isActive: true,
+        status: "ACTIVE",
+      });
+    });
+
+    it("should fail restore if deleted user email was reused", async () => {
+      const admin = await createUser({
+        email: "admin-restore-conflict@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const target = await createUser({
+        email: "restore-conflict-target@test.com",
+        password: "Pass@1234",
+        userType: "STUDENT",
+      });
+      const adminCookies = await loginAs(admin.email, "Pass@1234");
+
+      await request(app)
+        .delete(`/api/users/${target.publicId}`)
+        .set("Cookie", adminCookies)
+        .send({ reason: "Archive account" });
+
+      await createUser({
+        email: target.email,
+        password: "Pass@1234",
+        userType: "STUDENT",
+      });
+
+      const restoreRes = await request(app)
+        .patch(`/api/users/${target.publicId}/restore`)
+        .set("Cookie", adminCookies);
+
+      expect(restoreRes.status).toBe(409);
+      expect(restoreRes.body.error.code).toBe("DUPLICATE_EMAIL");
     });
   });
 });

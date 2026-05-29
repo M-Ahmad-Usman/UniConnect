@@ -161,7 +161,7 @@ describe('edit and permission helpers', () => {
 
   it('allows authors to edit only inside the edit window', () => {
     const user = {
-      id: 1,
+      publicId: '0198f1f0-0000-7000-8000-000000000010',
       fullName: 'Author One',
       email: 'author@example.com',
       userType: UserType.STUDENT,
@@ -176,7 +176,7 @@ describe('edit and permission helpers', () => {
   it('allows admins or authors to delete', () => {
     expect(
       canDeletePostClient(post, {
-        id: 2,
+        publicId: '0198f1f0-0000-7000-8000-000000000011',
         fullName: 'Admin',
         email: 'admin@example.com',
         userType: UserType.ADMIN,
@@ -218,7 +218,7 @@ describe('edit and permission helpers', () => {
         server,
         channel,
         user: {
-          id: 1,
+          publicId: '0198f1f0-0000-7000-8000-000000000012',
           fullName: 'CR',
           email: 'cr@example.com',
           userType: UserType.STUDENT,
@@ -233,7 +233,7 @@ describe('edit and permission helpers', () => {
         server,
         channel: { ...channel, isLocked: true },
         user: {
-          id: 1,
+          publicId: '0198f1f0-0000-7000-8000-000000000013',
           fullName: 'CR',
           email: 'cr@example.com',
           userType: UserType.STUDENT,

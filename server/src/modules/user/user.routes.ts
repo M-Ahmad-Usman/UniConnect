@@ -8,7 +8,9 @@ import {
   createUserSchema,
   listUsersSchema,
   updateProfileSchema,
-  userIdParamSchema,
+  updateUserStatusSchema,
+  userLifecycleReasonSchema,
+  userPublicIdParamSchema,
 } from "./user.schema.js";
 import {
   handleCreateUser,
@@ -17,9 +19,11 @@ import {
   handleUpdateProfile,
   handleUpdateProfilePicture,
   handleListUsers,
-  handleGetUserById,
-  handleDeactivateUser,
-  handleReactivateUser,
+  handleGetUserByPublicId,
+  handleGetUserDeletionImpact,
+  handleUpdateUserStatus,
+  handleDeleteUser,
+  handleRestoreUser,
 } from "./user.controller.js";
 
 const router = Router();
@@ -64,27 +68,43 @@ router.get(
 );
 
 router.get(
-  "/:id",
+  "/:publicId",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
-  validate(userIdParamSchema),
-  handleGetUserById
+  validate(userPublicIdParamSchema),
+  handleGetUserByPublicId
+);
+
+router.get(
+  "/:publicId/deletion-impact",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(userPublicIdParamSchema),
+  handleGetUserDeletionImpact
 );
 
 router.patch(
-  "/:id/deactivate",
+  "/:publicId/status",
   authenticate,
   authorize({ userTypes: ["ADMIN"] }),
-  validate(userIdParamSchema),
-  handleDeactivateUser
+  validate(updateUserStatusSchema),
+  handleUpdateUserStatus
+);
+
+router.delete(
+  "/:publicId",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(userLifecycleReasonSchema),
+  handleDeleteUser
 );
 
 router.patch(
-  "/:id/reactivate",
+  "/:publicId/restore",
   authenticate,
   authorize({ userTypes: ["ADMIN"] }),
-  validate(userIdParamSchema),
-  handleReactivateUser
+  validate(userLifecycleReasonSchema),
+  handleRestoreUser
 );
 
 export default router;

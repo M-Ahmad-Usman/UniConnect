@@ -2,7 +2,7 @@ import type { AuthUser, UserProfile } from '@/types';
 
 export function mapProfileToAuthUser(profile: UserProfile): AuthUser {
   return {
-    id: profile.id,
+    publicId: profile.publicId,
     fullName: profile.fullName,
     email: profile.email,
     userType: profile.userType,
@@ -14,7 +14,7 @@ export function mapProfileToAuthUser(profile: UserProfile): AuthUser {
 
 export function isAuthUserSyncedWithProfile(user: AuthUser, profile: UserProfile) {
   return (
-    user.id === profile.id &&
+    user.publicId === profile.publicId &&
     user.fullName === profile.fullName &&
     user.email === profile.email &&
     user.userType === profile.userType &&

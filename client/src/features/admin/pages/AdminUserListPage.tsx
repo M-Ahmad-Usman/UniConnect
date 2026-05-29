@@ -21,22 +21,29 @@ import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/lib/constants';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { formatDate } from '@/features/profile/utils';
-import { UserType } from '@/types';
+import { UserStatus, UserType } from '@/types';
 import type { UserListParams } from '@/types';
 import { UserDetailDialog } from '../components/UserDetailDialog';
 import { useAdminUsers } from '../hooks/useAdminUsers';
 import { useDepartments } from '../hooks/useDepartments';
-import { USER_PAGE_SIZE, parseIsActive, parsePositiveInt, parseUserType } from '../utils';
+import {
+  USER_PAGE_SIZE,
+  parsePositiveInt,
+  parseUserLifecycle,
+  parseUserStatus,
+  parseUserType,
+} from '../utils';
 
 export function AdminUserListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserPublicId, setSelectedUserPublicId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(searchParams.get('search') ?? '');
   const debouncedSearch = useDebouncedValue(searchValue.trim(), 300);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const userType = parseUserType(searchParams.get('userType'));
   const departmentId = parsePositiveInt(searchParams.get('departmentId'));
-  const isActive = parseIsActive(searchParams.get('isActive'));
+  const status = parseUserStatus(searchParams.get('status'));
+  const lifecycle = parseUserLifecycle(searchParams.get('lifecycle'));
 
   useEffect(() => {
     const currentSearch = searchParams.get('search') ?? '';
@@ -60,10 +67,11 @@ export function AdminUserListPage() {
       limit: USER_PAGE_SIZE,
       userType,
       departmentId,
-      isActive,
+      status,
+      lifecycle,
       search: searchParams.get('search')?.trim() || undefined,
     }),
-    [departmentId, isActive, page, searchParams, userType],
+    [departmentId, lifecycle, page, searchParams, status, userType],
   );
   const usersQuery = useAdminUsers(params);
   const departmentsQuery = useDepartments();
@@ -79,7 +87,8 @@ export function AdminUserListPage() {
     page?: number;
     userType?: string;
     departmentId?: string;
-    isActive?: string;
+    status?: string;
+    lifecycle?: string;
   }) {
     const next = new URLSearchParams(searchParams);
 
@@ -101,11 +110,20 @@ export function AdminUserListPage() {
       next.delete('page');
     }
 
-    if ('isActive' in updates) {
-      if (updates.isActive) {
-        next.set('isActive', updates.isActive);
+    if ('status' in updates) {
+      if (updates.status) {
+        next.set('status', updates.status);
       } else {
-        next.delete('isActive');
+        next.delete('status');
+      }
+      next.delete('page');
+    }
+
+    if ('lifecycle' in updates) {
+      if (updates.lifecycle) {
+        next.set('lifecycle', updates.lifecycle);
+      } else {
+        next.delete('lifecycle');
       }
       next.delete('page');
     }
@@ -143,7 +161,7 @@ export function AdminUserListPage() {
       </div>
 
       <div className="rounded-lg border bg-background p-3">
-        <div className="grid gap-3 lg:grid-cols-[minmax(16rem,1fr)_repeat(3,minmax(10rem,14rem))] lg:items-end">
+        <div className="grid gap-3 lg:grid-cols-[minmax(16rem,1fr)_repeat(4,minmax(10rem,14rem))] lg:items-end">
           <div className="space-y-1.5">
             <Label htmlFor="user-search">Search</Label>
             <div className="relative">
@@ -194,13 +212,27 @@ export function AdminUserListPage() {
             <Label htmlFor="status-filter">Status</Label>
             <select
               id="status-filter"
-              value={isActive === undefined ? '' : String(isActive)}
-              onChange={(event) => updateFilter({ isActive: event.target.value })}
+              value={status ?? ''}
+              onChange={(event) => updateFilter({ status: event.target.value })}
               className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">All statuses</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value={UserStatus.ACTIVE}>Active</option>
+              <option value={UserStatus.SUSPENDED}>Suspended</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="lifecycle-filter">Lifecycle</Label>
+            <select
+              id="lifecycle-filter"
+              value={lifecycle ?? ''}
+              onChange={(event) => updateFilter({ lifecycle: event.target.value })}
+              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="">Live users</option>
+              <option value="deleted">Deleted users</option>
+              <option value="all">All users</option>
             </select>
           </div>
         </div>
@@ -241,7 +273,7 @@ export function AdminUserListPage() {
               </thead>
               <tbody className="divide-y">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-muted/30">
+                  <tr key={user.publicId} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <div className="flex min-w-0 items-center gap-3">
                         <UserAvatar
@@ -263,8 +295,12 @@ export function AdminUserListPage() {
                         : 'None'}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                        {user.isActive ? 'Active' : 'Inactive'}
+                      <Badge variant={user.status === UserStatus.ACTIVE ? 'default' : 'destructive'}>
+                        {user.isDeleted
+                          ? 'Deleted'
+                          : user.status === UserStatus.ACTIVE
+                            ? 'Active'
+                            : 'Suspended'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
@@ -274,7 +310,7 @@ export function AdminUserListPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedUserId(user.id)}
+                        onClick={() => setSelectedUserPublicId(user.publicId)}
                       >
                         <Eye className="size-4" />
                         View
@@ -319,10 +355,10 @@ export function AdminUserListPage() {
       ) : null}
 
       <UserDetailDialog
-        userId={selectedUserId}
+        userPublicId={selectedUserPublicId}
         departments={departments}
-        open={selectedUserId !== null}
-        onOpenChange={(nextOpen) => !nextOpen && setSelectedUserId(null)}
+        open={selectedUserPublicId !== null}
+        onOpenChange={(nextOpen) => !nextOpen && setSelectedUserPublicId(null)}
       />
     </section>
   );

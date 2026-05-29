@@ -4,7 +4,7 @@ import type { ScopedRoleAssignment } from './role.types';
 // ─── Auth User (from POST /auth/login response) ────────────────────────────
 
 export interface AuthUser {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   userType: UserType;

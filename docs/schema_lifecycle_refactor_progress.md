@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 2 complete
+- Status: Module 3 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -22,7 +22,7 @@
 | 0 | Canonical Planning and Tracking | Complete | 2026-05-28 | 2026-05-28 | Canonical docs and pulled-doc archive policy established |
 | 1 | Schema Foundation and Transitional State | Complete | 2026-05-28 | 2026-05-28 | Public IDs, status enums, soft-delete metadata, designation lookup, FK policies, and baseline migration added |
 | 2 | Public-ID Resolver and Test Foundation | Complete | 2026-05-28 | 2026-05-28 | Strict UUIDv7 validation, resolvers, DTO mappers, dual helper, and API-ID test helper support added |
-| 3 | User Lifecycle and Auth | Not started | - | - | Adds user delete/restore/status/impact and auth enforcement |
+| 3 | User Lifecycle and Auth | Complete | 2026-05-29 | 2026-05-29 | User public-ID routes, deletion impact, status/delete/restore, auth/session invalidation, and frontend admin lifecycle UI added |
 | 4 | Platform RBAC Refactor | Not started | - | - | Replaces moderator assignments with platform role assignments |
 | 5 | Society Lifecycle and Notifications | Not started | - | - | Adds society status/delete/restore cascade and lifecycle notifications |
 | 6 | Server, Channel, and Post Public-ID Migration | Not started | - | - | Migrates communication routes and URLs to public IDs |
@@ -121,3 +121,56 @@
 - Use public DTO mappers when user lifecycle responses expose core user data.
 - Do not use `mode: "dual"` for final public user lifecycle endpoints unless a
   temporary compatibility route is explicitly needed and covered by tests.
+
+## Module 3 Checklist
+
+### Implementation
+
+- [x] Migrated user/auth/admin user surfaces to expose `publicId` instead of
+  top-level internal numeric user IDs.
+- [x] Switched access and refresh JWT payloads to standard `sub` for the signed
+  internal authenticated user key.
+- [x] Added DB-backed access-token authentication and Socket.IO authentication
+  so deleted, inactive, suspended, or missing users are rejected even if they
+  still hold an otherwise valid access token.
+- [x] Added admin user lifecycle endpoints:
+  `GET /api/users/:publicId/deletion-impact`,
+  `PATCH /api/users/:publicId/status`, `DELETE /api/users/:publicId`, and
+  `PATCH /api/users/:publicId/restore`.
+- [x] Removed old public user `/:id/deactivate` and `/:id/reactivate` API
+  routes.
+- [x] Added grouped deletion-impact blockers for HOD departments, directed
+  programs, CR classes, live society leadership, and active teaching
+  assignments.
+- [x] Implemented soft delete and restore side effects: refresh-token
+  revocation, Socket.IO disconnect, reset-token clearing, notification cleanup,
+  pending society-request cleanup, audit logs, and preserved status restore.
+- [x] Updated admin/user list filters from transitional `isActive` to
+  `status` plus `lifecycle`.
+- [x] Updated frontend auth/profile/admin user management contracts, query keys,
+  API endpoints, dialogs, filters, and tests for public user IDs and lifecycle
+  actions.
+
+### Verification
+
+- [x] Backend build.
+- [x] Focused backend user/auth/admin/security suites.
+- [x] Backend schema-foundation regression suite.
+- [x] Full backend Jest suite.
+- [x] Frontend type-check.
+- [x] Frontend lint.
+- [x] Frontend Vitest suite.
+- [x] Frontend production build.
+
+### Follow-Up for Module 4
+
+- Keep `/api/roles/*` numeric user IDs and existing role-assignment contracts
+  scoped to Module 4. Do not retroactively mix Module 3 public-ID route behavior
+  into role-management endpoints without the platform RBAC migration.
+- Reuse the Module 2 public-ID resolver/DTO helpers and the Module 3
+  authenticated-user DB reload pattern where Module 4 changes authorization or
+  session-sensitive behavior.
+- Continue treating catalog/admin support entities such as departments,
+  programs, courses, disciplines, degree levels, curriculum entries, and
+  notification IDs as numeric until their owning module explicitly migrates
+  them.

@@ -35,6 +35,9 @@ export type {
   CreateUserRequest,
   CreateUserResponse,
   UserListParams,
+  UserDeletionImpact,
+  UserLifecycleReasonRequest,
+  UpdateUserStatusRequest,
   BulkImportError,
   BulkImportResult,
 } from './user.types';

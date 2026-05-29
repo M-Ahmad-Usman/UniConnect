@@ -6,7 +6,10 @@ import type {
   PaginatedResponse,
   UpdateProfileRequest,
   UpdateProfileResponse,
+  UpdateUserStatusRequest,
   UserDetail,
+  UserDeletionImpact,
+  UserLifecycleReasonRequest,
   UserListItem,
   UserListParams,
   UserProfile,
@@ -63,18 +66,30 @@ export const usersApi = {
     return response.data;
   },
 
-  async getById(userId: number) {
-    const response = await apiClient.get<UserDetail>(`/users/${userId}`);
+  async getByPublicId(userPublicId: string) {
+    const response = await apiClient.get<UserDetail>(`/users/${userPublicId}`);
     return response.data;
   },
 
-  async deactivate(userId: number) {
-    const response = await apiClient.patch<null>(`/users/${userId}/deactivate`);
+  async getDeletionImpact(userPublicId: string) {
+    const response = await apiClient.get<UserDeletionImpact>(
+      `/users/${userPublicId}/deletion-impact`,
+    );
     return response.data;
   },
 
-  async reactivate(userId: number) {
-    const response = await apiClient.patch<null>(`/users/${userId}/reactivate`);
+  async updateStatus(userPublicId: string, payload: UpdateUserStatusRequest) {
+    const response = await apiClient.patch<UserDetail>(`/users/${userPublicId}/status`, payload);
+    return response.data;
+  },
+
+  async delete(userPublicId: string, payload: UserLifecycleReasonRequest) {
+    const response = await apiClient.delete<UserDetail>(`/users/${userPublicId}`, { data: payload });
+    return response.data;
+  },
+
+  async restore(userPublicId: string, payload: UserLifecycleReasonRequest) {
+    const response = await apiClient.patch<UserDetail>(`/users/${userPublicId}/restore`, payload);
     return response.data;
   },
 };

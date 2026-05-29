@@ -6,7 +6,7 @@ import { prisma } from "../config/prisma.js";
 import type { AuthUser } from "../shared/types/index.js";
 
 interface AccessTokenPayload {
-  id: number;
+  sub: string;
   email: string;
   userType: string;
   departmentId: number | null;
@@ -74,7 +74,7 @@ export function initializeSocket(server: http.Server): SocketIOServer {
   });
 
   // ─── Authentication Middleware ──────────────────────────────────────────
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const cookieHeader = socket.handshake.headers.cookie;
       if (!cookieHeader) {
@@ -88,18 +88,45 @@ export function initializeSocket(server: http.Server): SocketIOServer {
       }
 
       const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload;
+      const userId = Number(payload.sub);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return next(new Error("Authentication required"));
+      }
 
       if (payload.mustChangePassword) {
         return next(new Error("Password change required"));
       }
 
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          userType: true,
+          departmentId: true,
+          mustChangePassword: true,
+          status: true,
+          isActive: true,
+          isDeleted: true,
+        },
+      });
+
+      if (!user || user.isDeleted || !user.isActive || user.status !== "ACTIVE") {
+        return next(new Error("Authentication required"));
+      }
+
+      if (user.mustChangePassword) {
+        return next(new Error("Password change required"));
+      }
+
       // Attach user data to the socket
       socket.data.user = {
-        id: payload.id,
-        email: payload.email,
-        userType: payload.userType,
-        departmentId: payload.departmentId,
-        mustChangePassword: payload.mustChangePassword,
+        id: user.id,
+        email: user.email,
+        userType: user.userType,
+        departmentId: user.departmentId,
+        mustChangePassword: user.mustChangePassword,
       } satisfies AuthUser;
 
       // Store token expiry for auto-disconnect
@@ -198,6 +225,16 @@ export function emitToUser(userId: number, event: string, data: unknown): void {
   if (io) {
     io.to(`user:${userId}`).emit(event, data);
   }
+}
+
+export function disconnectUserSockets(userId: number): void {
+  if (!io) {
+    return;
+  }
+
+  const room = `user:${userId}`;
+  io.to(room).emit("auth:expired");
+  io.in(room).disconnectSockets(true);
 }
 
 /**

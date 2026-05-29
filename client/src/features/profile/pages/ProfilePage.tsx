@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { Badge } from '@/components/ui/badge';
+import { UserStatus } from '@/types';
 import { ProfilePictureUpload } from '../components/ProfilePictureUpload';
 import { BioEditor } from '../components/BioEditor';
 import { useProfile } from '../hooks/useProfile';
@@ -51,8 +52,8 @@ export function ProfilePage() {
             </h1>
             <div className="flex flex-wrap justify-center gap-2">
               <RoleBadge role={profile.userType} />
-              <Badge variant={profile.isActive ? 'default' : 'destructive'}>
-                {profile.isActive ? 'Active' : 'Inactive'}
+              <Badge variant={profile.status === UserStatus.ACTIVE ? 'default' : 'destructive'}>
+                {profile.status === UserStatus.ACTIVE ? 'Active' : 'Suspended'}
               </Badge>
             </div>
           </div>

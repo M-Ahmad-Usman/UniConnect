@@ -23,13 +23,14 @@ function generateAccessToken(payload: {
   departmentId: number | null;
   mustChangePassword: boolean;
 }): string {
-  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, env.JWT_ACCESS_SECRET, {
+  const { id, ...claims } = payload;
+  return jwt.sign({ ...claims, sub: String(id), jti: crypto.randomUUID() }, env.JWT_ACCESS_SECRET, {
     expiresIn: env.JWT_ACCESS_EXPIRY as StringValue,
   });
 }
 
 function generateRefreshToken(userId: number): string {
-  return jwt.sign({ id: userId, jti: crypto.randomUUID() }, env.JWT_REFRESH_SECRET, {
+  return jwt.sign({ sub: String(userId), jti: crypto.randomUUID() }, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRY as StringValue,
   });
 }
@@ -80,7 +81,7 @@ export async function login(email: string, password: string) {
     accessToken,
     refreshToken,
     user: {
-      id: user.id,
+      publicId: user.publicId,
       fullName: user.fullName,
       email: user.email,
       userType: user.userType,
@@ -99,7 +100,7 @@ export async function refresh(refreshTokenCookie: string) {
     throw new UnauthorizedError("Invalid refresh token");
   }
 
-  const tokenUserId = Number(payload.id);
+  const tokenUserId = Number(payload.sub);
   if (!Number.isInteger(tokenUserId) || tokenUserId <= 0) {
     throw new UnauthorizedError("Invalid refresh token");
   }

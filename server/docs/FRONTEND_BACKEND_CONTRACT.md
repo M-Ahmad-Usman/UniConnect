@@ -16,6 +16,8 @@ This document is the frontend integration contract for the UniConnect backend. I
 - Cookies set by backend:
   - `access_token` (path `/api`)
   - `refresh_token` (path `/api/auth/refresh`)
+- JWTs use standard `sub` for the internal authenticated user key. Public API
+  responses and routes expose user `publicId`, not numeric user IDs.
 - CSRF token cookie:
   - `XSRF-TOKEN` (path `/`, readable by frontend, not an auth token)
 - Public endpoints: `/api/health`, `/api/auth/csrf`, `/api/auth/login`, `/api/auth/forgot-password`, `/api/auth/reset-password`.
@@ -93,7 +95,7 @@ available.
 ## Audit Logging
 
 - Privileged successful writes create persistent `AuditLog` records.
-- Covered areas include user activation, role changes, academic/class/catalog changes, society management, and channel management.
+- Covered areas include user lifecycle status/delete/restore, role changes, academic/class/catalog changes, society management, and channel management.
 - Auth-sensitive successful events include password reset completion, password
   change, logout refresh-token revocation, and refresh-token revocation caused
   by password reset/change.
@@ -124,6 +126,8 @@ available.
 
 - Auth source: `access_token` cookie
 - User room: `user:{userId}`
+- User status suspension and soft deletion emit `auth:expired` to active sockets
+  before disconnecting them.
 - Server events:
   - `notification:new`
   - `notification:unread-count`
@@ -165,10 +169,22 @@ available.
 - `PATCH /me/profile-picture`
   - Multipart field: `profilePicture`
 - `GET /`
-  - Query: `page, limit, userType?, departmentId?, isActive?`
-- `GET /:id`
-- `PATCH /:id/deactivate`
-- `PATCH /:id/reactivate`
+  - Query: `page, limit, userType?, departmentId?, status?, lifecycle?, search?`
+  - `status`: `ACTIVE` or `SUSPENDED`
+  - `lifecycle`: `live`, `deleted`, or `all`; admin only, teachers always see live users in their HOD department scope
+- `GET /:publicId`
+  - Admins can read deleted users; teachers can read live users in their HOD department scope.
+- `GET /:publicId/deletion-impact`
+  - Returns `{ user, canDelete, blockers }` with blocker groups for HOD departments, directed programs, CR classes, live society leadership, and active teaching assignments.
+- `PATCH /:publicId/status`
+  - Body: `{ status: "ACTIVE" | "SUSPENDED", reason? }`
+  - Suspending revokes active refresh tokens, clears reset-token state, and disconnects active sockets.
+- `DELETE /:publicId`
+  - Body: `{ reason? }`
+  - Soft-deletes the user after blocker checks; deletes notifications and pending society requests, revokes refresh tokens, clears reset-token state, and disconnects active sockets.
+- `PATCH /:publicId/restore`
+  - Body: `{ reason? }`
+  - Restores the user with the preserved status. A restored suspended user remains unable to authenticate.
 
 ### Disciplines (`/api/disciplines`)
 
@@ -399,7 +415,7 @@ available.
 
 - `GET /stats`
 - `GET /users`
-  - Query: `page, limit, userType?, departmentId?, isActive?, search?`
+  - Query: `page, limit, userType?, departmentId?, status?, lifecycle?, search?`
 
 ## References
 

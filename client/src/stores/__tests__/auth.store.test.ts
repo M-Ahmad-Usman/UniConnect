@@ -4,7 +4,7 @@ import type { AuthUser } from '@/types/auth.types';
 import { UserType } from '@/types/enums';
 
 const testUser: AuthUser = {
-  id: 1,
+  publicId: '0198f1f0-0000-7000-8000-000000000001',
   fullName: 'Ahmad Ali',
   email: 'ahmad@ntu.edu.pk',
   userType: UserType.STUDENT,

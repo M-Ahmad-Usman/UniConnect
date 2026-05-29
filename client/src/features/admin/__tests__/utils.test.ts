@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   buildBulkImportErrorCsv,
   getClassDetailActionState,
-  parseIsActive,
   parsePositiveInt,
+  parseUserLifecycle,
+  parseUserStatus,
   parseUserType,
   userListParamsToRecord,
 } from '../utils';
-import { ClassStatus, UserType, type ClassDetail, type ClassPermissions } from '@/types';
+import { ClassStatus, UserStatus, UserType, type ClassDetail, type ClassPermissions } from '@/types';
 
 describe('admin user filter helpers', () => {
   it('parses positive integer URL values', () => {
@@ -19,9 +20,10 @@ describe('admin user filter helpers', () => {
   it('parses supported enum filters only', () => {
     expect(parseUserType(UserType.STUDENT)).toBe(UserType.STUDENT);
     expect(parseUserType('OTHER')).toBeUndefined();
-    expect(parseIsActive('true')).toBe(true);
-    expect(parseIsActive('false')).toBe(false);
-    expect(parseIsActive('all')).toBeUndefined();
+    expect(parseUserStatus(UserStatus.ACTIVE)).toBe(UserStatus.ACTIVE);
+    expect(parseUserStatus('OTHER')).toBeUndefined();
+    expect(parseUserLifecycle('deleted')).toBe('deleted');
+    expect(parseUserLifecycle('invalid')).toBeUndefined();
   });
 
   it('drops undefined and empty query values', () => {
