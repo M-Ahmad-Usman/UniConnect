@@ -72,7 +72,7 @@ export const ModelName = {
   Role: 'Role',
   Permission: 'Permission',
   RolePermission: 'RolePermission',
-  ModeratorAssignment: 'ModeratorAssignment',
+  UserRoleAssignment: 'UserRoleAssignment',
   Notification: 'Notification',
   NotificationPreference: 'NotificationPreference',
   RefreshToken: 'RefreshToken',
@@ -352,7 +352,8 @@ export type PostAttachmentScalarFieldEnum = (typeof PostAttachmentScalarFieldEnu
 
 export const RoleScalarFieldEnum = {
   id: 'id',
-  name: 'name'
+  name: 'name',
+  scopeType: 'scopeType'
 } as const
 
 export type RoleScalarFieldEnum = (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum]
@@ -374,17 +375,22 @@ export const RolePermissionScalarFieldEnum = {
 export type RolePermissionScalarFieldEnum = (typeof RolePermissionScalarFieldEnum)[keyof typeof RolePermissionScalarFieldEnum]
 
 
-export const ModeratorAssignmentScalarFieldEnum = {
+export const UserRoleAssignmentScalarFieldEnum = {
   id: 'id',
+  publicId: 'publicId',
   userId: 'userId',
+  roleId: 'roleId',
   scopeType: 'scopeType',
   serverId: 'serverId',
   channelId: 'channelId',
   assignedBy: 'assignedBy',
-  assignedAt: 'assignedAt'
+  assignedAt: 'assignedAt',
+  expiresAt: 'expiresAt',
+  revokedBy: 'revokedBy',
+  revokedAt: 'revokedAt'
 } as const
 
-export type ModeratorAssignmentScalarFieldEnum = (typeof ModeratorAssignmentScalarFieldEnum)[keyof typeof ModeratorAssignmentScalarFieldEnum]
+export type UserRoleAssignmentScalarFieldEnum = (typeof UserRoleAssignmentScalarFieldEnum)[keyof typeof UserRoleAssignmentScalarFieldEnum]
 
 
 export const NotificationScalarFieldEnum = {

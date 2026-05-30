@@ -1,6 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma.js";
 import { ForbiddenError, UnauthorizedError } from "../shared/errors/index.js";
+import {
+  ACADEMIC_ROLE_PERMISSIONS,
+  activePlatformRoleAssignmentWhere,
+} from "../shared/roles/index.js";
 import type { UserRole } from "../shared/types/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -43,12 +47,19 @@ async function getRolePermissionMap(): Promise<Map<string, Set<string>>> {
     },
   });
 
-  rolePermissionMap = new Map(
-    roles.map((role) => [
+  rolePermissionMap = new Map<string, Set<string>>(
+    Object.entries(ACADEMIC_ROLE_PERMISSIONS).map(([role, permissions]) => [
+      role,
+      new Set(permissions),
+    ]),
+  );
+
+  for (const role of roles) {
+    rolePermissionMap.set(
       role.name,
       new Set(role.permissions.map((relation) => relation.permission.name)),
-    ])
-  );
+    );
+  }
   rolePermissionCachedAt = Date.now();
 
   return rolePermissionMap;
@@ -103,23 +114,56 @@ function checkScopedPermission(
 // ─── Role Resolver ─────────────────────────────────────────────────────────
 
 export async function getUserRoles(userId: number): Promise<UserRole[]> {
-  const [hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, moderatorAssignments] =
+  const now = new Date();
+  const [hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, platformAssignments] =
     await Promise.all([
-      prisma.department.findMany({ where: { hodId: userId }, select: { serverId: true } }),
+      prisma.department.findMany({
+        where: { hodId: userId, server: { isDeleted: false, isActive: true } },
+        select: { serverId: true },
+      }),
       prisma.program.findMany({
-        where: { programDirectorId: userId },
+        where: {
+          programDirectorId: userId,
+          department: { server: { isDeleted: false, isActive: true } },
+        },
         select: { department: { select: { serverId: true } } },
       }),
-      prisma.class.findMany({ where: { crId: userId }, select: { serverId: true } }),
-      prisma.society.findMany({ where: { presidentId: userId, isDeleted: false }, select: { serverId: true } }),
-      prisma.society.findMany({ where: { convenorId: userId, isDeleted: false }, select: { serverId: true } }),
-      prisma.moderatorAssignment.findMany({
+      prisma.class.findMany({
+        where: { crId: userId, status: "ACTIVE", server: { isDeleted: false, isActive: true } },
+        select: { serverId: true },
+      }),
+      prisma.society.findMany({
         where: {
-          userId,
-          server: { isDeleted: false },
-          OR: [{ channelId: null }, { channel: { isDeleted: false } }],
+          presidentId: userId,
+          status: "ACTIVE",
+          isActive: true,
+          isDeleted: false,
+          server: { isDeleted: false, isActive: true },
         },
-        select: { serverId: true, channelId: true, scopeType: true },
+        select: { serverId: true },
+      }),
+      prisma.society.findMany({
+        where: {
+          convenorId: userId,
+          status: "ACTIVE",
+          isActive: true,
+          isDeleted: false,
+          server: { isDeleted: false, isActive: true },
+        },
+        select: { serverId: true },
+      }),
+      prisma.userRoleAssignment.findMany({
+        where: {
+          AND: [activePlatformRoleAssignmentWhere(now), { userId }],
+        },
+        select: {
+          publicId: true,
+          serverId: true,
+          channelId: true,
+          scopeType: true,
+          expiresAt: true,
+          role: { select: { name: true } },
+        },
       }),
     ]);
 
@@ -145,12 +189,14 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
     roles.push({ role: "society_convenor", serverId: society.serverId, scopeType: "server" });
   }
 
-  for (const assignment of moderatorAssignments) {
+  for (const assignment of platformAssignments) {
     roles.push({
-      role: assignment.scopeType === "CHANNEL" ? "channel_moderator" : "server_moderator",
+      role: assignment.role.name,
       serverId: assignment.serverId,
       channelId: assignment.channelId,
       scopeType: assignment.scopeType === "CHANNEL" ? "channel" : "server",
+      assignmentPublicId: assignment.publicId,
+      expiresAt: assignment.expiresAt,
     });
   }
 

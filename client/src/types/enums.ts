@@ -53,11 +53,12 @@ export const ClassStatus = {
 } as const;
 export type ClassStatus = (typeof ClassStatus)[keyof typeof ClassStatus];
 
-export const ModeratorScopeType = {
+export const PlatformRoleScopeType = {
   SERVER: 'server',
   CHANNEL: 'channel',
 } as const;
-export type ModeratorScopeType = (typeof ModeratorScopeType)[keyof typeof ModeratorScopeType];
+export type PlatformRoleScopeType =
+  (typeof PlatformRoleScopeType)[keyof typeof PlatformRoleScopeType];
 
 export const NotificationType = {
   NEW_POST: 'NEW_POST',

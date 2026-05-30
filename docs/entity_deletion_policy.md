@@ -271,11 +271,17 @@ Platform roles:
 Rules:
 - Stored in `user_role_assignments`.
 - Academic roles are not stored in this table.
+- Assignments are append-only periods. Revocation sets `revokedAt` and
+  `revokedBy`; reassignment creates a new row.
 - Expired assignments are ignored by authorization.
 - Expired assignments remain stored for history and are hidden from normal role
   lists.
 - Soft-deleted users do not receive active permissions from preserved role rows.
 - Soft-deleted servers/channels do not grant platform role authority.
+- Suspended, deleted, or inactive society scopes and graduated class scopes do
+  not grant platform role authority.
+- A database exclusion constraint prevents overlapping periods for the same
+  user, platform role, server, and optional channel scope.
 
 ## Rare Entity Impact Policy
 
@@ -327,4 +333,3 @@ Blockers:
 `pulled-docs/` remains imported source material only. This document is the
 canonical policy for this branch. When source material and this document differ,
 this document wins.
-

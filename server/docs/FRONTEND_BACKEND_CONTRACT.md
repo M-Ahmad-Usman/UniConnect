@@ -161,7 +161,7 @@ available.
   - Multipart field: `file` (CSV)
 - `GET /me`
   - Returns profile plus scoped current-user roles for UI authorization:
-    - `roles: Array<{ role, serverId, channelId?, scopeType }>`
+    - `roles: Array<{ role, serverId, channelId?, scopeType, assignmentPublicId?, expiresAt? }>`
     - Role values currently include `hod`, `program_director`, `cr`, `society_president`, `society_convenor`, `server_moderator`, `channel_moderator`
     - `scopeType` is `"server"` or `"channel"`
 - `PATCH /me`
@@ -306,33 +306,32 @@ available.
   - Returns paginated caller-authorized department/program/class/server options.
   - Filled unique scopes are returned disabled with `currentAssignee`.
 - `GET /assignable-channels`
-  - Query: `serverId, page, limit, search?`
+  - Query: `serverPublicId, page, limit, search?`
   - Returns non-deleted and non-archived channels for a caller-assignable server. Locked channels are still selectable.
 - `GET /assignable-users`
-  - Query: `role, scopeId?, serverId?, channelId?, page, limit, search?`
+  - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns paginated active users valid for the selected role/scope.
   - Moderator candidates are active server members and exclude users already assigned for the same moderator scope.
 - `GET /revokable`
-  - Query: `role, scopeId?, serverId?, channelId?, page, limit, search?`
+  - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns only caller-revokable assignments with a server-provided `revokePayload`.
-- `POST /assign`
-  - Body for scoped organizational roles: `{ userId, role, scopeId }`
-    - `role` in `hod | program_director | cr`
-  - Body for moderation roles:
-    - `{ userId, role: "server_moderator", serverId }`
-    - `{ userId, role: "channel_moderator", serverId, channelId }`
-  - Success data echoes the assigned role context (`role`, `userId`, and relevant scope ids)
-  - `society_president` and `society_convenor` are rejected here; use `PATCH /api/societies/:id`
-- `POST /revoke`
-  - Body for revokable scoped roles: `{ userId, role, scopeId }`
-    - `role` in `hod | program_director | cr`
-  - Body for moderation roles:
-    - `{ userId, role: "server_moderator", serverId }`
-    - `{ userId, role: "channel_moderator", serverId, channelId }`
-  - Society leadership roles are changed via society update endpoints, not revoke
-- `GET /users/:id`
+- `POST /platform-assignments`
+  - Body: `{ userPublicId, role, serverPublicId, channelPublicId?, expiresAt? }`
+  - `role` is `server_moderator | channel_moderator`; omitted/null expiry means permanent.
+- `DELETE /platform-assignments/:assignmentPublicId`
+  - Revokes an active assignment while retaining its historical row.
+- `PATCH /platform-assignments/:assignmentPublicId/expiry`
+  - Body: `{ expiresAt: string | null }`
+- `GET /platform-assignments/history`
+  - Admin-only paginated history. Query: `state?, role?, userPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
+- `GET /users/:userPublicId`
   - Returns contextual role assignments for the target user, including department/program/class/society metadata and explicit moderation roles
   - Role changes emit `auth:roles-updated` to affected users so clients can refetch `/api/users/me`
+
+Academic role writes use their owning modules:
+- `PUT|DELETE /api/departments/:id/hod`
+- `PUT|DELETE /api/programs/:id/program-director`
+- `PUT|DELETE /api/classes/:classPublicId/cr`
 
 ### Permissions (`/api/permissions`)
 

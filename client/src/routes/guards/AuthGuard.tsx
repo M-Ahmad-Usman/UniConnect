@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
 import { ApiError } from '@/types';
 import type { UserProfile } from '@/types/user.types';
+import { useRoleExpiryRefresh } from '@/hooks/useRoleExpiryRefresh';
 
 export function AuthGuard() {
   const location = useLocation();
@@ -22,6 +23,7 @@ export function AuthGuard() {
   } = useAuthStore();
 
   const isForceChangePasswordRoute = location.pathname === ROUTES.CHANGE_PASSWORD;
+  useRoleExpiryRefresh(user?.roles, isAuthenticated && !requiresPasswordChange);
 
   useEffect(() => {
     if (isAuthenticated || requiresPasswordChange) return;

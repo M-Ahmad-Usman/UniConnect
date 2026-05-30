@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
@@ -6,6 +7,19 @@ export const classIdParamSchema = {
   params: z.object({
     id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
   }),
+};
+
+export const assignClassCrSchema = {
+  params: z.object({
+    classPublicId: publicIdSchema,
+  }),
+  body: z.object({
+    userPublicId: publicIdSchema,
+  }),
+};
+
+export const classCrParamSchema = {
+  params: assignClassCrSchema.params,
 };
 
 // ─── Create Class ──────────────────────────────────────────────────────────

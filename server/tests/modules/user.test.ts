@@ -10,6 +10,7 @@ import {
   createDepartment,
   createNotification,
   createProgram,
+  createPlatformRoleAssignment,
   createSociety,
   createSocietyMembershipRequest,
   createStudentWithInfo,
@@ -438,14 +439,12 @@ describe("Module 2 - User Management", () => {
         data: { hodId: teacher.id },
       });
 
-      await prisma.moderatorAssignment.create({
-        data: {
-          userId: teacher.id,
-          serverId: department.serverId,
-          channelId: channel.id,
-          scopeType: "CHANNEL",
-          assignedBy: teacher.id,
-        },
+      await createPlatformRoleAssignment({
+        userId: teacher.id,
+        role: "channel_moderator",
+        serverId: department.serverId,
+        channelId: channel.id,
+        assignedBy: teacher.id,
       });
 
       const cookies = await loginAs(teacher.email, "Pass@1234");
@@ -461,10 +460,12 @@ describe("Module 2 - User Management", () => {
             scopeType: "server",
           },
           {
+            assignmentPublicId: expect.any(String),
             role: "channel_moderator",
             serverId: department.serverId,
             channelId: channel.id,
             scopeType: "channel",
+            expiresAt: null,
           },
         ])
       );

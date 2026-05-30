@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldPlus, Trash2 } from 'lucide-react';
+import { Clock3, History, ShieldPlus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
@@ -8,6 +8,7 @@ import { RoleBadge } from '@/components/shared/RoleBadge';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
+import { useAuthStore } from '@/stores/auth.store';
 import {
   AdminPageHeader,
   DataState,
@@ -22,30 +23,46 @@ import {
   useAssignRole,
   useRevokableRoleAssignments,
   useRevokeRole,
+  usePlatformAssignmentHistory,
+  useUpdatePlatformAssignmentExpiry,
 } from '../hooks/useRoles';
-import { buildAssignPayload, chooseInitialRole, isModeratorRole } from '../utils';
+import { buildAssignPayload, chooseInitialRole, isModeratorRole, toExpiryIso } from '../utils';
 
-function parseId(value: string) {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+function scopeValue(scope: RoleScopeOption) {
+  return String(scope.id ?? scope.publicId ?? '');
 }
 
-function getScopeServerId(scope: RoleScopeOption | undefined, role: AssignableRoleName | null) {
+function toLocalDateTimeInput(value: string | null | undefined) {
+  if (!value) return '';
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
+function getPlatformAssignmentPublicId(payload: RevokeRoleRequest) {
+  return 'assignmentPublicId' in payload ? payload.assignmentPublicId : null;
+}
+
+function getScopeServerPublicId(
+  scope: RoleScopeOption | undefined,
+  role: AssignableRoleName | null,
+) {
   if (!scope || !role || !isModeratorRole(role)) {
     return null;
   }
 
-  return scope.serverId ?? scope.id;
+  return scope.serverPublicId ?? scope.publicId ?? null;
 }
 
 export function RoleManagementPage() {
   const permissionsQuery = useMyPermissions();
+  const user = useAuthStore((state) => state.user);
   const canOpenRoleManagement = permissionsQuery.data?.roleWorkspace.canOpenRoleManagement ?? false;
   const assignableRolesQuery = useAssignableRoles(canOpenRoleManagement);
   const [role, setRole] = useState<AssignableRoleName | null>(null);
   const [scopeId, setScopeId] = useState('');
-  const [channelId, setChannelId] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [channelPublicId, setChannelPublicId] = useState('');
+  const [selectedUserPublicId, setSelectedUserPublicId] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState('');
   const [scopeSearch, setScopeSearch] = useState('');
   const [channelSearch, setChannelSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
@@ -54,12 +71,19 @@ export function RoleManagementPage() {
     label: string;
     payload: RevokeRoleRequest;
   } | null>(null);
+  const [editingExpiry, setEditingExpiry] = useState<{
+    assignmentPublicId: string;
+    expiresAt: string;
+  } | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const debouncedScopeSearch = useDebouncedValue(scopeSearch.trim(), 300);
   const debouncedChannelSearch = useDebouncedValue(channelSearch.trim(), 300);
   const debouncedUserSearch = useDebouncedValue(userSearch.trim(), 300);
   const debouncedRevokableSearch = useDebouncedValue(revokableSearch.trim(), 300);
   const assignRole = useAssignRole();
   const revokeRole = useRevokeRole();
+  const updateExpiry = useUpdatePlatformAssignmentExpiry();
+  const historyQuery = usePlatformAssignmentHistory({}, showHistory && user?.userType === 'ADMIN');
 
   const roleOptions = assignableRolesQuery.data ?? [];
   const effectiveRole =
@@ -80,19 +104,18 @@ export function RoleManagementPage() {
       : null,
   );
   const scopes = scopesQuery.data?.data ?? [];
-  const selectedScope = scopes.find((scope) => String(scope.id) === scopeId);
-  const selectedServerId = getScopeServerId(selectedScope, effectiveRole);
-  const selectedChannelId = parseId(channelId);
+  const selectedScope = scopes.find((scope) => scopeValue(scope) === scopeId);
+  const selectedServerPublicId = getScopeServerPublicId(selectedScope, effectiveRole);
   const usersEnabled = Boolean(
     effectiveRole &&
     selectedRole &&
-    selectedUserQueryReady(effectiveRole, parseId(scopeId), selectedServerId, selectedChannelId),
+    selectedUserQueryReady(effectiveRole, selectedScope, selectedServerPublicId, channelPublicId),
   );
 
   const channelsQuery = useAssignableChannels(
-    effectiveRole === 'channel_moderator' && selectedServerId
+    effectiveRole === 'channel_moderator' && selectedServerPublicId
       ? {
-          serverId: selectedServerId,
+          serverPublicId: selectedServerPublicId,
           page: 1,
           limit: DEFAULT_PAGE_SIZE,
           search: debouncedChannelSearch || undefined,
@@ -104,10 +127,14 @@ export function RoleManagementPage() {
     effectiveRole && selectedRole && usersEnabled
       ? {
           role: effectiveRole,
-          scopeId: roleIsModerator ? undefined : (parseId(scopeId) ?? undefined),
-          serverId: roleIsModerator ? (selectedServerId ?? undefined) : undefined,
-          channelId:
-            effectiveRole === 'channel_moderator' ? (selectedChannelId ?? undefined) : undefined,
+          scopeId:
+            !roleIsModerator && effectiveRole !== 'cr'
+              ? (selectedScope?.id ?? undefined)
+              : undefined,
+          classPublicId: effectiveRole === 'cr' ? selectedScope?.publicId : undefined,
+          serverPublicId: roleIsModerator ? (selectedServerPublicId ?? undefined) : undefined,
+          channelPublicId:
+            effectiveRole === 'channel_moderator' ? channelPublicId || undefined : undefined,
           page: 1,
           limit: DEFAULT_PAGE_SIZE,
           search: debouncedUserSearch || undefined,
@@ -119,10 +146,14 @@ export function RoleManagementPage() {
     effectiveRole
       ? {
           role: effectiveRole,
-          scopeId: !roleIsModerator ? (parseId(scopeId) ?? undefined) : undefined,
-          serverId: roleIsModerator ? (selectedServerId ?? undefined) : undefined,
-          channelId:
-            effectiveRole === 'channel_moderator' ? (selectedChannelId ?? undefined) : undefined,
+          scopeId:
+            !roleIsModerator && effectiveRole !== 'cr'
+              ? (selectedScope?.id ?? undefined)
+              : undefined,
+          classPublicId: effectiveRole === 'cr' ? selectedScope?.publicId : undefined,
+          serverPublicId: roleIsModerator ? (selectedServerPublicId ?? undefined) : undefined,
+          channelPublicId:
+            effectiveRole === 'channel_moderator' ? channelPublicId || undefined : undefined,
           page: 1,
           limit: DEFAULT_PAGE_SIZE,
           search: debouncedRevokableSearch || undefined,
@@ -133,10 +164,12 @@ export function RoleManagementPage() {
   const assignPayload = effectiveRole
     ? buildAssignPayload({
         role: effectiveRole,
-        userId: selectedUserId,
-        scopeId: parseId(scopeId),
-        serverId: selectedServerId,
-        channelId: selectedChannelId,
+        userPublicId: selectedUserPublicId,
+        scopeId: selectedScope?.id ?? null,
+        classPublicId: selectedScope?.publicId ?? null,
+        serverPublicId: selectedServerPublicId,
+        channelPublicId: channelPublicId || null,
+        expiresAt: toExpiryIso(expiresAt),
       })
     : null;
   const roleNeedsScope = effectiveRole !== null && !roleIsModerator;
@@ -144,16 +177,17 @@ export function RoleManagementPage() {
     ? 'Choose a role before searching users.'
     : roleNeedsScope && !scopeId
       ? 'Choose a scope before searching users.'
-      : effectiveRole === 'server_moderator' && !selectedServerId
+      : effectiveRole === 'server_moderator' && !selectedServerPublicId
         ? 'Choose a server before searching users.'
-        : effectiveRole === 'channel_moderator' && !selectedChannelId
+        : effectiveRole === 'channel_moderator' && !channelPublicId
           ? 'Choose a channel before searching users.'
           : null;
 
   function resetDependents() {
     setScopeId('');
-    setChannelId('');
-    setSelectedUserId(null);
+    setChannelPublicId('');
+    setSelectedUserPublicId(null);
+    setExpiresAt('');
     setScopeSearch('');
     setChannelSearch('');
     setUserSearch('');
@@ -234,13 +268,17 @@ export function RoleManagementPage() {
                 value={scopeId}
                 onChange={(event) => {
                   setScopeId(event.target.value);
-                  setChannelId('');
-                  setSelectedUserId(null);
+                  setChannelPublicId('');
+                  setSelectedUserPublicId(null);
                 }}
               >
                 <option value="">{scopesQuery.isLoading ? 'Loading...' : 'Select scope'}</option>
                 {scopes.map((scope) => (
-                  <option key={scope.id} value={scope.id} disabled={scope.disabled}>
+                  <option
+                    key={scopeValue(scope)}
+                    value={scopeValue(scope)}
+                    disabled={scope.disabled}
+                  >
                     {scope.label}
                     {scope.disabled && scope.disabledReason ? ` (${scope.disabledReason})` : ''}
                   </option>
@@ -255,30 +293,30 @@ export function RoleManagementPage() {
                   placeholder="Search channels"
                   value={channelSearch}
                   onChange={(event) => setChannelSearch(event.target.value)}
-                  disabled={!selectedServerId}
-                  aria-describedby={!selectedServerId ? 'role-channel-help' : undefined}
+                  disabled={!selectedServerPublicId}
+                  aria-describedby={!selectedServerPublicId ? 'role-channel-help' : undefined}
                 />
                 <select
                   className={inputClassName}
-                  value={channelId}
+                  value={channelPublicId}
                   onChange={(event) => {
-                    setChannelId(event.target.value);
-                    setSelectedUserId(null);
+                    setChannelPublicId(event.target.value);
+                    setSelectedUserPublicId(null);
                   }}
-                  disabled={!selectedServerId}
-                  aria-describedby={!selectedServerId ? 'role-channel-help' : undefined}
+                  disabled={!selectedServerPublicId}
+                  aria-describedby={!selectedServerPublicId ? 'role-channel-help' : undefined}
                 >
                   <option value="">
                     {channelsQuery.isLoading ? 'Loading...' : 'Select channel'}
                   </option>
                   {(channelsQuery.data?.data ?? []).map((channel) => (
-                    <option key={channel.id} value={channel.id}>
+                    <option key={channel.publicId} value={channel.publicId}>
                       {channel.label}
                       {channel.isLocked ? ' · locked' : ''}
                     </option>
                   ))}
                 </select>
-                {!selectedServerId ? (
+                {!selectedServerPublicId ? (
                   <span id="role-channel-help" className="block text-xs text-muted-foreground">
                     Choose a server before selecting a channel.
                   </span>
@@ -297,16 +335,14 @@ export function RoleManagementPage() {
               />
               <select
                 className={inputClassName}
-                value={selectedUserId ?? ''}
-                onChange={(event) =>
-                  setSelectedUserId(event.target.value ? Number(event.target.value) : null)
-                }
+                value={selectedUserPublicId ?? ''}
+                onChange={(event) => setSelectedUserPublicId(event.target.value || null)}
                 disabled={!usersEnabled}
                 aria-describedby={userDisabledReason ? 'role-user-help' : undefined}
               >
                 <option value="">{usersQuery.isLoading ? 'Loading...' : 'Select user'}</option>
                 {(usersQuery.data?.data ?? []).map((option) => (
-                  <option key={option.id} value={option.id}>
+                  <option key={option.publicId} value={option.publicId}>
                     {option.fullName} · {option.email}
                   </option>
                 ))}
@@ -317,6 +353,20 @@ export function RoleManagementPage() {
                 </span>
               ) : null}
             </label>
+            {roleIsModerator ? (
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Expiry</span>
+                <input
+                  className={inputClassName}
+                  type="datetime-local"
+                  value={expiresAt}
+                  onChange={(event) => setExpiresAt(event.target.value)}
+                />
+                <span className="block text-xs text-muted-foreground">
+                  Permanent when no expiry is selected.
+                </span>
+              </label>
+            ) : null}
             <Button
               type="button"
               className="w-full"
@@ -354,46 +404,142 @@ export function RoleManagementPage() {
           >
             <div className="divide-y">
               {(revokableQuery.data?.data ?? []).map((assignment) => (
-                <div
-                  key={assignment.assignmentKey}
-                  className="flex items-center justify-between gap-3 py-3"
-                >
-                  <div className="min-w-0">
-                    <RoleBadge role={assignment.role} />
-                    <p className="mt-1 truncate text-sm text-muted-foreground">
-                      {assignment.user.fullName} ·{' '}
-                      {assignment.scope?.label ??
-                        assignment.channel?.label ??
-                        assignment.server?.label ??
-                        'Scoped role'}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={revokeRole.isPending}
-                    onClick={() =>
-                      setRevokingAssignment({
-                        label: `${assignment.user.fullName} · ${
-                          assignment.scope?.label ??
+                <div key={assignment.assignmentKey} className="py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <RoleBadge role={assignment.role} />
+                      <p className="mt-1 truncate text-sm text-muted-foreground">
+                        {assignment.user.fullName} ·{' '}
+                        {assignment.scope?.label ??
                           assignment.channel?.label ??
                           assignment.server?.label ??
-                          'Scoped role'
-                        }`,
-                        payload: assignment.revokePayload,
-                      })
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                    Revoke
-                  </Button>
+                          'Scoped role'}
+                      </p>
+                      {'assignmentPublicId' in assignment.revokePayload ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {assignment.expiresAt
+                            ? `Expires ${new Date(assignment.expiresAt).toLocaleString()}`
+                            : 'Permanent'}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex gap-2">
+                      {'assignmentPublicId' in assignment.revokePayload ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setEditingExpiry({
+                              assignmentPublicId:
+                                getPlatformAssignmentPublicId(assignment.revokePayload) ?? '',
+                              expiresAt: toLocalDateTimeInput(assignment.expiresAt),
+                            })
+                          }
+                        >
+                          <Clock3 className="size-4" />
+                          Expiry
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={revokeRole.isPending}
+                        onClick={() =>
+                          setRevokingAssignment({
+                            label: `${assignment.user.fullName} · ${
+                              assignment.scope?.label ??
+                              assignment.channel?.label ??
+                              assignment.server?.label ??
+                              'Scoped role'
+                            }`,
+                            payload: assignment.revokePayload,
+                          })
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                        Revoke
+                      </Button>
+                    </div>
+                  </div>
+                  {editingExpiry &&
+                  'assignmentPublicId' in assignment.revokePayload &&
+                  editingExpiry.assignmentPublicId ===
+                    assignment.revokePayload.assignmentPublicId ? (
+                    <div className="mt-3 flex flex-wrap items-end gap-2">
+                      <label className="space-y-1">
+                        <span className="block text-xs font-medium">New expiry</span>
+                        <input
+                          className={inputClassName}
+                          type="datetime-local"
+                          value={editingExpiry.expiresAt}
+                          onChange={(event) =>
+                            setEditingExpiry({ ...editingExpiry, expiresAt: event.target.value })
+                          }
+                        />
+                      </label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={updateExpiry.isPending}
+                        onClick={async () => {
+                          await updateExpiry.mutateAsync({
+                            assignmentPublicId: editingExpiry.assignmentPublicId,
+                            expiresAt: toExpiryIso(editingExpiry.expiresAt),
+                          });
+                          setEditingExpiry(null);
+                        }}
+                      >
+                        Save expiry
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={updateExpiry.isPending}
+                        onClick={() => setEditingExpiry(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
           </DataState>
         </section>
       </div>
+      {user?.userType === 'ADMIN' ? (
+        <section className="rounded-lg border bg-background p-4">
+          <Button type="button" variant="outline" onClick={() => setShowHistory((value) => !value)}>
+            <History className="size-4" />
+            {showHistory ? 'Hide assignment history' : 'Load assignment history'}
+          </Button>
+          {showHistory ? (
+            <DataState
+              isLoading={historyQuery.isLoading}
+              isError={historyQuery.isError}
+              onRetry={() => void historyQuery.refetch()}
+              empty={(historyQuery.data?.data ?? []).length === 0}
+              emptyTitle="No platform assignment history"
+            >
+              <div className="mt-3 divide-y">
+                {(historyQuery.data?.data ?? []).map((assignment) => (
+                  <div key={assignment.assignmentPublicId} className="py-3 text-sm">
+                    <RoleBadge role={assignment.role} />
+                    <p className="mt-1 text-muted-foreground">
+                      {assignment.user.fullName} ·{' '}
+                      {assignment.channel?.name ?? assignment.server.name} ·{' '}
+                      {assignment.state.toLowerCase()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </DataState>
+          ) : null}
+        </section>
+      ) : null}
       <ConfirmDialog
         open={revokingAssignment !== null}
         onOpenChange={(open) => !open && setRevokingAssignment(null)}
@@ -416,15 +562,15 @@ export function RoleManagementPage() {
 
 function selectedUserQueryReady(
   role: AssignableRoleName,
-  scopeId: number | null,
-  serverId: number | null,
-  channelId: number | null,
+  scope: RoleScopeOption | undefined,
+  serverPublicId: string | null,
+  channelPublicId: string,
 ) {
   if (role === 'server_moderator') {
-    return serverId !== null;
+    return serverPublicId !== null;
   }
   if (role === 'channel_moderator') {
-    return serverId !== null && channelId !== null;
+    return serverPublicId !== null && channelPublicId !== '';
   }
-  return scopeId !== null;
+  return scope !== undefined;
 }

@@ -78,12 +78,12 @@ export const Section = {
 export type Section = (typeof Section)[keyof typeof Section]
 
 
-export const ModeratorScopeType = {
+export const PlatformRoleScopeType = {
   SERVER: 'SERVER',
   CHANNEL: 'CHANNEL'
 } as const
 
-export type ModeratorScopeType = (typeof ModeratorScopeType)[keyof typeof ModeratorScopeType]
+export type PlatformRoleScopeType = (typeof PlatformRoleScopeType)[keyof typeof PlatformRoleScopeType]
 
 
 export const NotificationType = {

@@ -13,6 +13,7 @@ import {
 } from "../../shared/permissions/index.js";
 import { emitToUser } from "../../socket/index.js";
 import * as notificationService from "../notification/notification.service.js";
+import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -235,7 +236,7 @@ function isCallerHODOrAdmin(
 }
 
 function emitRolesUpdated(userId: number): void {
-  emitToUser(userId, "auth:roles-updated", { userId });
+  emitToUser(userId, "auth:roles-updated", {});
 }
 
 async function createSocietyRequestReviewedNotification(input: {
@@ -272,9 +273,11 @@ async function resolveSocietyMemberBadges(
         convenor: { select: { user: { select: { id: true } } } },
       },
     }),
-    prisma.moderatorAssignment.findMany({
-      where: { serverId, userId: { in: memberUserIds } },
-      select: { userId: true, scopeType: true },
+    prisma.userRoleAssignment.findMany({
+      where: {
+        AND: [activePlatformRoleAssignmentWhere(), { serverId, userId: { in: memberUserIds } }],
+      },
+      select: { userId: true, role: { select: { name: true } } },
     }),
   ]);
 
@@ -288,7 +291,7 @@ async function resolveSocietyMemberBadges(
   for (const moderator of moderators) {
     addBadge(
       moderator.userId,
-      moderator.scopeType === "SERVER" ? "server_moderator" : "channel_moderator"
+      moderator.role.name
     );
   }
 

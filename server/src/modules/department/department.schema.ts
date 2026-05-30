@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,13 @@ export const updateDepartmentSchema = {
       error: "At least one field (name or code) must be provided",
       path: ["name"],
     }),
+};
+
+export const assignDepartmentHodSchema = {
+  params: departmentIdParamSchema.params,
+  body: z.object({
+    userPublicId: publicIdSchema,
+  }),
 };
 
 // ─── Create Program ────────────────────────────────────────────────────────

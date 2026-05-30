@@ -3,90 +3,42 @@ import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
 import { validate } from "../../middleware/validate.js";
 import {
-  assignRoleSchema,
   assignableChannelsSchema,
   assignableScopesSchema,
   assignableUsersSchema,
-  revokeRoleSchema,
+  createPlatformAssignmentSchema,
   getUserRolesSchema,
+  listPlatformAssignmentHistorySchema,
+  platformAssignmentParamSchema,
   revokableRolesSchema,
+  updatePlatformAssignmentExpirySchema,
 } from "./role.schema.js";
 import {
-  handleAssignRole,
+  handleCreatePlatformAssignment,
   handleGetAssignableRoles,
+  handleGetUserRoles,
   handleListAssignableChannels,
   handleListAssignableScopes,
   handleListAssignableUsers,
+  handleListPlatformAssignmentHistory,
   handleListRevokableRoles,
-  handleRevokeRole,
-  handleGetUserRoles,
+  handleRevokePlatformAssignment,
+  handleUpdatePlatformAssignmentExpiry,
 } from "./role.controller.js";
 
 const router = Router();
+const workspaceUserTypes = ["ADMIN", "TEACHER", "STUDENT"];
 
-// ─── Role Management ───────────────────────────────────────────────────────
+router.get("/assignable", authenticate, authorize({ userTypes: workspaceUserTypes }), handleGetAssignableRoles);
+router.get("/assignable-scopes", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(assignableScopesSchema), handleListAssignableScopes);
+router.get("/assignable-channels", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(assignableChannelsSchema), handleListAssignableChannels);
+router.get("/assignable-users", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(assignableUsersSchema), handleListAssignableUsers);
+router.get("/revokable", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(revokableRolesSchema), handleListRevokableRoles);
+router.get("/users/:userPublicId", authenticate, authorize({ userTypes: ["ADMIN", "TEACHER"] }), validate(getUserRolesSchema), handleGetUserRoles);
 
-router.get(
-  "/assignable",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  handleGetAssignableRoles
-);
-
-router.get(
-  "/assignable-scopes",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  validate(assignableScopesSchema),
-  handleListAssignableScopes
-);
-
-router.get(
-  "/assignable-channels",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  validate(assignableChannelsSchema),
-  handleListAssignableChannels
-);
-
-router.get(
-  "/assignable-users",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  validate(assignableUsersSchema),
-  handleListAssignableUsers
-);
-
-router.get(
-  "/revokable",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  validate(revokableRolesSchema),
-  handleListRevokableRoles
-);
-
-router.post(
-  "/assign",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  validate(assignRoleSchema),
-  handleAssignRole
-);
-
-router.post(
-  "/revoke",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
-  validate(revokeRoleSchema),
-  handleRevokeRole
-);
-
-router.get(
-  "/users/:id",
-  authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
-  validate(getUserRolesSchema),
-  handleGetUserRoles
-);
+router.get("/platform-assignments/history", authenticate, authorize({ userTypes: ["ADMIN"] }), validate(listPlatformAssignmentHistorySchema), handleListPlatformAssignmentHistory);
+router.post("/platform-assignments", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(createPlatformAssignmentSchema), handleCreatePlatformAssignment);
+router.patch("/platform-assignments/:assignmentPublicId/expiry", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(updatePlatformAssignmentExpirySchema), handleUpdatePlatformAssignmentExpiry);
+router.delete("/platform-assignments/:assignmentPublicId", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(platformAssignmentParamSchema), handleRevokePlatformAssignment);
 
 export default router;

@@ -281,19 +281,19 @@ in `src/lib/api-error.ts`.
 
 ### Error Codes
 
-| Code                  | HTTP Status | Description               | Frontend Action                                          |
-| --------------------- | ----------- | ------------------------- | -------------------------------------------------------- |
-| `VALIDATION_ERROR`    | 400         | Request validation failed | Show field-level errors                                  |
-| `UNAUTHORIZED`        | 401         | Missing or invalid token  | Attempt refresh, redirect to login                       |
-| `FORBIDDEN`           | 403         | Insufficient permissions  | Show "Access denied" message                             |
-| `NOT_FOUND`           | 404         | Resource not found        | Show empty state or 404 page                             |
-| `CONFLICT`            | 409         | Resource already exists   | Show conflict message (e.g., "Email already registered") |
-| `RATE_LIMIT_EXCEEDED` | 429         | Too many requests         | Show cooldown message, retry after delay                 |
-| `REQUEST_TIMEOUT`     | 408         | Server request timeout    | Retry if the action is safe                              |
-| `INTERNAL_ERROR`      | 500         | Server error              | Show generic error, log to error tracking                |
-| `SCOPE_FORBIDDEN`     | 403         | Role exists but not for this scope | Hide/disable scoped action                         |
-| `PASSWORD_CHANGE_REQUIRED` | 403    | Temporary password must be changed | Redirect to change-password flow                   |
-| Domain-specific codes | 400/403/409 | Duplicate, upload, class, society, post state errors | Use `src/lib/api-error.ts` mapping |
+| Code                       | HTTP Status | Description                                          | Frontend Action                                          |
+| -------------------------- | ----------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| `VALIDATION_ERROR`         | 400         | Request validation failed                            | Show field-level errors                                  |
+| `UNAUTHORIZED`             | 401         | Missing or invalid token                             | Attempt refresh, redirect to login                       |
+| `FORBIDDEN`                | 403         | Insufficient permissions                             | Show "Access denied" message                             |
+| `NOT_FOUND`                | 404         | Resource not found                                   | Show empty state or 404 page                             |
+| `CONFLICT`                 | 409         | Resource already exists                              | Show conflict message (e.g., "Email already registered") |
+| `RATE_LIMIT_EXCEEDED`      | 429         | Too many requests                                    | Show cooldown message, retry after delay                 |
+| `REQUEST_TIMEOUT`          | 408         | Server request timeout                               | Retry if the action is safe                              |
+| `INTERNAL_ERROR`           | 500         | Server error                                         | Show generic error, log to error tracking                |
+| `SCOPE_FORBIDDEN`          | 403         | Role exists but not for this scope                   | Hide/disable scoped action                               |
+| `PASSWORD_CHANGE_REQUIRED` | 403         | Temporary password must be changed                   | Redirect to change-password flow                         |
+| Domain-specific codes      | 400/403/409 | Duplicate, upload, class, society, post state errors | Use `src/lib/api-error.ts` mapping                       |
 
 ### Validation Error Example
 
@@ -1152,7 +1152,12 @@ GET /api/users
     deletedAt: string | null;
     createdAt: string;
   }>;
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  }
 }
 ```
 
@@ -1187,17 +1192,36 @@ GET /api/users/:publicId/deletion-impact
       userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
       status: 'ACTIVE' | 'SUSPENDED';
       isDeleted: boolean;
-    };
+    }
     canDelete: boolean;
     blockers: {
       hodDepartments: Array<{ id: number; name: string; code: string }>;
-      directedPrograms: Array<{ id: number; code: string; disciplineName: string; degreeLevel: string }>;
-      crClasses: Array<{ publicId: string; programCode: string; section: string; currentSemester: number; admissionYear: number }>;
+      directedPrograms: Array<{
+        id: number;
+        code: string;
+        disciplineName: string;
+        degreeLevel: string;
+      }>;
+      crClasses: Array<{
+        publicId: string;
+        programCode: string;
+        section: string;
+        currentSemester: number;
+        admissionYear: number;
+      }>;
       presidentSocieties: Array<{ publicId: string; name: string }>;
       convenorSocieties: Array<{ publicId: string; name: string }>;
-      teachingAssignments: Array<{ classPublicId: string; courseId: number; courseCode: string; courseTitle: string; programCode: string; section: string; currentSemester: number }>;
-    };
-  };
+      teachingAssignments: Array<{
+        classPublicId: string;
+        courseId: number;
+        courseCode: string;
+        courseTitle: string;
+        programCode: string;
+        section: string;
+        currentSemester: number;
+      }>;
+    }
+  }
 }
 ```
 
@@ -1257,7 +1281,7 @@ DELETE /api/users/:publicId
     deletedNotifications: number;
     deletedPendingSocietyRequests: number;
     revokedRefreshTokens: number;
-  };
+  }
 }
 ```
 
@@ -2488,7 +2512,7 @@ Returns paginated caller-authorized department/program/class/server scope option
 #### Get Assignable Channels
 
 ```
-GET /api/roles/assignable-channels?serverId=&page=&limit=&search=
+GET /api/roles/assignable-channels?serverPublicId=&page=&limit=&search=
 ```
 
 Returns non-deleted, non-archived channels for a caller-assignable server. Locked channels remain selectable.
@@ -2496,7 +2520,7 @@ Returns non-deleted, non-archived channels for a caller-assignable server. Locke
 #### Get Assignable Users
 
 ```
-GET /api/roles/assignable-users?role=&scopeId=&serverId=&channelId=&page=&limit=&search=
+GET /api/roles/assignable-users?role=&scopeId=&classPublicId=&serverPublicId=&channelPublicId=&page=&limit=&search=
 ```
 
 Returns paginated active users valid for the selected role/scope. Moderator candidates are active members of the selected server and exclude users already assigned for the same moderator scope.
@@ -2504,131 +2528,57 @@ Returns paginated active users valid for the selected role/scope. Moderator cand
 #### Get Revokable Assignments
 
 ```
-GET /api/roles/revokable?role=&scopeId=&serverId=&channelId=&page=&limit=&search=
+GET /api/roles/revokable?role=&scopeId=&classPublicId=&serverPublicId=&channelPublicId=&page=&limit=&search=
 ```
 
 Returns only assignments the caller may revoke. The frontend must use the returned `revokePayload` instead of constructing revocation from arbitrary user-role inspection.
 
-#### Assign Role
+#### Academic Role Writes
 
+Academic roles use canonical owner endpoints:
+
+```text
+PUT|DELETE /api/departments/:id/hod
+PUT|DELETE /api/programs/:id/program-director
+PUT|DELETE /api/classes/:classPublicId/cr
 ```
-POST /api/roles/assign
+
+Assignment bodies use `{ userPublicId: string }`. Society president and
+convenor changes continue to use society endpoints.
+
+#### Platform Assignment Resources
+
+```text
+POST   /api/roles/platform-assignments
+DELETE /api/roles/platform-assignments/:assignmentPublicId
+PATCH  /api/roles/platform-assignments/:assignmentPublicId/expiry
+GET    /api/roles/platform-assignments/history
 ```
 
-**Auth:** Required (permission logic varies by role)
-
-**Request Body (for non-moderator roles):**
+Create body:
 
 ```typescript
 {
-  userId: number;
-  role: 'hod' | 'program_director' | 'cr';
-  scopeId: number; // departmentId, programId, or classId
+  userPublicId: string;
+  role: 'server_moderator' | 'channel_moderator';
+  serverPublicId: string;
+  channelPublicId?: string;
+  expiresAt?: string | null; // omitted/null means permanent
 }
 ```
 
-**Request Body (for server-level moderator):**
+Expiry update body: `{ expiresAt: string | null }`.
 
-```typescript
-{
-  userId: number;
-  role: 'server_moderator';
-  serverId: number;
-}
-```
+Assignments are append-only periods. Revocation retains history. The history
+endpoint is admin-only and paginated.
 
-**Request Body (for channel-level moderator):**
-
-```typescript
-{
-  userId: number;
-  role: 'channel_moderator';
-  serverId: number;
-  channelId: number;
-}
-```
-
-**Response:**
-
-```typescript
-{
-  success: true;
-  data:
-    | {
-        role: 'hod';
-        userId: number;
-        departmentId: number;
-        departmentName: string;
-      }
-    | {
-        role: 'program_director';
-        userId: number;
-        programId: number;
-        programCode: string;
-      }
-    | {
-        role: 'cr';
-        userId: number;
-        classId: number;
-      }
-    | {
-        role: 'server_moderator' | 'channel_moderator';
-        userId: number;
-        serverId: number;
-        channelId: number | null;
-        scopeType: 'server' | 'channel';
-        assignmentId?: number;
-      };
-  message: 'Role assigned successfully';
-}
-```
-
-**Note:** `society_president` and `society_convenor` are rejected by this endpoint. Use `PATCH /api/societies/:id` for society leadership changes.
-
-#### Revoke Role
-
-```
-POST /api/roles/revoke
-```
-
-**Auth:** Required (permission logic varies by role)
-
-**Request Body:** Same shape as assign, except only these roles are revokable here:
-
-- `hod`
-- `program_director`
-- `cr`
-- `server_moderator`
-- `channel_moderator`
-
-**Response:**
-
-```typescript
-{
-  success: true;
-  data:
-    | { role: 'hod'; userId: number; departmentId: number }
-    | { role: 'program_director'; userId: number; programId: number }
-    | { role: 'cr'; userId: number; classId: number }
-    | {
-        role: 'server_moderator' | 'channel_moderator';
-        userId: number;
-        serverId: number;
-        channelId: number | null;
-        scopeType: 'server' | 'channel';
-      };
-  message: 'Role revoked successfully';
-}
-```
-
-**Note:** Society president and convenor cannot be revoked via this endpoint (must update society)
-
-**Realtime:** Successful assignment/revocation emits `auth:roles-updated` to the affected user.
+**Realtime:** Successful assignment, revocation, and expiry editing emit
+`auth:roles-updated` to the affected user.
 
 #### Get User Roles
 
 ```
-GET /api/roles/users/:id
+GET /api/roles/users/:userPublicId
 ```
 
 **Auth:** Admin or Teacher
@@ -2651,15 +2601,16 @@ GET /api/roles/users/:id
     departmentName?: string;
     programId?: number;
     programCode?: string;
-    classId?: number;
-    societyId?: number;
+    classPublicId?: string;
+    societyPublicId?: string;
     societyName?: string;
-    scopeId?: number;
-    serverId?: number;
+    assignmentPublicId?: string;
+    serverPublicId?: string;
     serverName?: string;
-    channelId?: number;
+    channelPublicId?: string | null;
     channelName?: string | null;
     scopeType?: 'server' | 'channel';
+    expiresAt?: string | null;
     scopeContext?: string; // e.g., "HOD of Computer Science Department"
   }>;
 }

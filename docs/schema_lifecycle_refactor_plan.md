@@ -359,7 +359,8 @@ Goal: remove transitional compatibility and lock the final API/schema contract.
 
 Changes:
 - Remove `isActive`.
-- Remove `moderator_assignments`.
+- Confirm the Module 4 removal of `moderator_assignments` remains reflected in
+  the squashed baseline.
 - Remove old deactivate/reactivate endpoints and frontend calls.
 - Remove temporary dual numeric/public ID support.
 - Squash migrations into a final baseline.

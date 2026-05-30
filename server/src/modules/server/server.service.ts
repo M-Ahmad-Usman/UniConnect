@@ -6,6 +6,7 @@ import {
   parsePagination,
   buildPaginationResponse,
 } from "../../shared/utils/pagination.js";
+import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -216,9 +217,9 @@ async function resolveMemberBadges(
         where: { department: { serverId } },
         select: { programDirectorId: true },
       }),
-      prisma.moderatorAssignment.findMany({
-        where: { serverId },
-        select: { userId: true, scopeType: true },
+      prisma.userRoleAssignment.findMany({
+        where: { AND: [activePlatformRoleAssignmentWhere(), { serverId }] },
+        select: { userId: true, role: { select: { name: true } } },
       }),
     ]);
 
@@ -237,7 +238,7 @@ async function resolveMemberBadges(
       if (memberUserIds.includes(mod.userId)) {
         addBadge(
           mod.userId,
-          mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+          mod.role.name,
         );
       }
     }
@@ -247,9 +248,9 @@ async function resolveMemberBadges(
         where: { serverId },
         select: { crId: true },
       }),
-      prisma.moderatorAssignment.findMany({
-        where: { serverId },
-        select: { userId: true, scopeType: true },
+      prisma.userRoleAssignment.findMany({
+        where: { AND: [activePlatformRoleAssignmentWhere(), { serverId }] },
+        select: { userId: true, role: { select: { name: true } } },
       }),
     ]);
 
@@ -260,7 +261,7 @@ async function resolveMemberBadges(
       if (memberUserIds.includes(mod.userId)) {
         addBadge(
           mod.userId,
-          mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+          mod.role.name,
         );
       }
     }
@@ -275,9 +276,9 @@ async function resolveMemberBadges(
           convenor: { select: { user: { select: { id: true } } } },
         },
       }),
-      prisma.moderatorAssignment.findMany({
-        where: { serverId },
-        select: { userId: true, scopeType: true },
+      prisma.userRoleAssignment.findMany({
+        where: { AND: [activePlatformRoleAssignmentWhere(), { serverId }] },
+        select: { userId: true, role: { select: { name: true } } },
       }),
     ]);
 
@@ -296,7 +297,7 @@ async function resolveMemberBadges(
       if (memberUserIds.includes(mod.userId)) {
         addBadge(
           mod.userId,
-          mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+          mod.role.name,
         );
       }
     }

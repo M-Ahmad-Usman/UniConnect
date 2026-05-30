@@ -78,24 +78,43 @@ async function createUser(pool: Pool, user: SeedUser) {
   );
 }
 
+async function seedDesignations(pool: Pool) {
+  const designations = [
+    'Assistant Professor',
+    'Society Convenor',
+    'Other Department Teacher',
+    'Professor',
+    'Program Director',
+    'Lecturer',
+    'Visiting Lecturer',
+    'Senior Lecturer',
+  ];
+  await pool.query(
+    `
+      INSERT INTO designations (value, label)
+      SELECT designation, designation
+      FROM UNNEST($1::text[]) designation
+    `,
+    [designations],
+  );
+}
+
 async function seedModule3Permissions(pool: Pool) {
   await pool.query(
     `
-      INSERT INTO roles (name)
-      VALUES ($1)
+      INSERT INTO roles (name, scope_type)
+      VALUES
+        ('server_moderator', 'server'::platform_role_scope_type),
+        ('channel_moderator', 'channel'::platform_role_scope_type)
     `,
-    ['hod'],
   );
 
   await pool.query(
     `
       INSERT INTO permissions (name)
-      VALUES
-        ($1),
-        ($2),
-        ($3)
+      VALUES ($1)
     `,
-    ['create:channel', 'lock:channel', 'delete:channel'],
+    ['post:channel'],
   );
 
   await pool.query(
@@ -104,9 +123,9 @@ async function seedModule3Permissions(pool: Pool) {
       SELECT r.id, p.id
       FROM roles r
       CROSS JOIN permissions p
-      WHERE r.name = $1
+      WHERE p.name = $1
     `,
-    ['hod'],
+    ['post:channel'],
   );
 }
 
@@ -550,9 +569,10 @@ async function seedModule4Data(pool: Pool) {
 }
 
 async function findUserIdByEmail(pool: Pool, email: string) {
-  const result = await pool.query<SeededUserRow>('SELECT id, email FROM users WHERE email = $1 LIMIT 1', [
-    email,
-  ]);
+  const result = await pool.query<SeededUserRow>(
+    'SELECT id, email FROM users WHERE email = $1 LIMIT 1',
+    [email],
+  );
 
   return result.rows[0]?.id ?? null;
 }
@@ -571,7 +591,12 @@ async function seedModule2Data(pool: Pool) {
       VALUES ($1, $2, $3::server_type, $4, NOW())
       RETURNING id
     `,
-    ['Computer Science Hub', 'Department-wide communication and announcements.', 'Department', shellUserId],
+    [
+      'Computer Science Hub',
+      'Department-wide communication and announcements.',
+      'Department',
+      shellUserId,
+    ],
   );
   const shellServerId = shellServerResult.rows[0]?.id;
 
@@ -581,7 +606,12 @@ async function seedModule2Data(pool: Pool) {
       VALUES ($1, $2, $3::server_type, $4, NOW())
       RETURNING id
     `,
-    ['Realtime Updates Hub', 'Notifications-focused runtime workspace.', 'Department', notificationUserId],
+    [
+      'Realtime Updates Hub',
+      'Notifications-focused runtime workspace.',
+      'Department',
+      notificationUserId,
+    ],
   );
   const notificationServerId = notificationServerResult.rows[0]?.id;
 
@@ -1069,6 +1099,7 @@ export default async function globalSetup() {
 
   try {
     await applyMigrations(pool);
+    await seedDesignations(pool);
 
     for (const user of Object.values(e2eUsers)) {
       await createUser(pool, user);

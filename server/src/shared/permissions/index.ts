@@ -1,4 +1,5 @@
 import { prisma } from "../../config/prisma.js";
+import { activePlatformRoleAssignmentWhere } from "../roles/index.js";
 
 export interface GlobalPermissions {
   canAccessAdminDashboard: boolean;
@@ -150,7 +151,8 @@ export function emptyRoleWorkspacePermissions(): RoleWorkspacePermissions {
 }
 
 export async function getPermissionContext(userId: number): Promise<PermissionContext> {
-  const [user, hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, moderatorAssignments] =
+  const now = new Date();
+  const [user, hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, platformAssignments] =
     await Promise.all([
       prisma.user.findFirst({
         where: { id: userId, isDeleted: false },
@@ -180,11 +182,9 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
         where: { convenorId: userId, isDeleted: false },
         select: { id: true, serverId: true },
       }),
-      prisma.moderatorAssignment.findMany({
+      prisma.userRoleAssignment.findMany({
         where: {
-          userId,
-          server: { isDeleted: false },
-          OR: [{ channelId: null }, { channel: { isDeleted: false } }],
+          AND: [activePlatformRoleAssignmentWhere(now), { userId }],
         },
         select: { serverId: true, channelId: true, scopeType: true },
       }),
@@ -199,10 +199,10 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
     ...convenorSocieties.map((society) => society.serverId),
   ]);
   const moderatorServerIds = uniqueNumbers(
-    moderatorAssignments.map((assignment) => assignment.serverId)
+    platformAssignments.map((assignment) => assignment.serverId)
   );
   const moderatorChannelIds = uniqueNumbers(
-    moderatorAssignments
+    platformAssignments
       .filter((assignment) => assignment.scopeType === "CHANNEL" && assignment.channelId !== null)
       .map((assignment) => assignment.channelId)
   );

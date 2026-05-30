@@ -235,7 +235,7 @@ Make the role-management workspace safe for scoped managers by loading only assi
 - Add or refine endpoints as needed, for example:
   - `GET /api/roles/assignable`
   - `GET /api/roles/assignable-scopes?role=...`
-  - `GET /api/roles/assignable-channels?serverId=...`
+  - `GET /api/roles/assignable-channels?serverPublicId=...`
   - `GET /api/roles/assignable-users?role=...&scopeId=...`
   - `GET /api/roles/revokable?role=...`
 - Enforce role-management access:

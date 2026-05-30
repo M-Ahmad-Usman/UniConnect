@@ -8,6 +8,7 @@ import {
   updateDepartmentSchema,
   createProgramSchema,
   listProgramsSchema,
+  assignDepartmentHodSchema,
 } from "./department.schema.js";
 import {
   handleCreateDepartment,
@@ -17,6 +18,8 @@ import {
   handleCreateProgram,
   handleListPrograms,
   handleGetDepartmentStats,
+  handleAssignDepartmentHod,
+  handleRevokeDepartmentHod,
 } from "./department.controller.js";
 
 const router = Router();
@@ -52,6 +55,22 @@ router.patch(
   authorize({ userTypes: ["ADMIN"] }),
   validate(updateDepartmentSchema),
   handleUpdateDepartment
+);
+
+router.put(
+  "/:id/hod",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(assignDepartmentHodSchema),
+  handleAssignDepartmentHod
+);
+
+router.delete(
+  "/:id/hod",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(departmentIdParamSchema),
+  handleRevokeDepartmentHod
 );
 
 router.post(

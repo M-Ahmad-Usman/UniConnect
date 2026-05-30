@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as programService from "./program.service.js";
+import * as roleService from "../role/role.service.js";
 import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
 
 function auditContextFromRequest(req: Request) {
@@ -10,6 +11,14 @@ function auditContextFromRequest(req: Request) {
     ipAddress: req.ip,
     userAgent: req.get("user-agent"),
   });
+}
+
+function callerFromRequest(req: Request) {
+  return {
+    id: req.user!.id,
+    userType: req.user!.userType,
+    departmentId: req.user!.departmentId,
+  };
 }
 
 export async function handleListPrograms(req: Request, res: Response): Promise<void> {
@@ -61,6 +70,35 @@ export async function handleUpdateProgram(req: Request, res: Response): Promise<
     message: "Program updated successfully",
   };
 
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleAssignProgramDirector(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.assignProgramDirectorRole(
+    Number(req.params.id),
+    req.body.userPublicId,
+    callerFromRequest(req),
+    auditContextFromRequest(req)
+  );
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Program Director assigned successfully",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleRevokeProgramDirector(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.revokeProgramDirectorRole(
+    Number(req.params.id),
+    callerFromRequest(req),
+    auditContextFromRequest(req)
+  );
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Program Director revoked successfully",
+  };
   res.status(StatusCodes.OK).json(response);
 }
 

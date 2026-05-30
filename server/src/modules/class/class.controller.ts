@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
 import * as classService from "./class.service.js";
+import * as roleService from "../role/role.service.js";
 import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
 
 function auditContextFromRequest(req: Request) {
@@ -10,6 +11,14 @@ function auditContextFromRequest(req: Request) {
     ipAddress: req.ip,
     userAgent: req.get("user-agent"),
   });
+}
+
+function callerFromRequest(req: Request) {
+  return {
+    id: req.user!.id,
+    userType: req.user!.userType,
+    departmentId: req.user!.departmentId,
+  };
 }
 
 // ─── Class Handlers ────────────────────────────────────────────────────────
@@ -76,6 +85,35 @@ export async function handleGetClass(req: Request, res: Response): Promise<void>
     data: classRecord,
   };
 
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleAssignClassCr(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.assignClassCr(
+    String(req.params.classPublicId),
+    req.body.userPublicId,
+    callerFromRequest(req),
+    auditContextFromRequest(req)
+  );
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Class CR assigned successfully",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleRevokeClassCr(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.revokeClassCr(
+    String(req.params.classPublicId),
+    callerFromRequest(req),
+    auditContextFromRequest(req)
+  );
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Class CR revoked successfully",
+  };
   res.status(StatusCodes.OK).json(response);
 }
 

@@ -295,7 +295,7 @@ export type ServerWhereInput = {
   society?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
   channels?: Prisma.ChannelListRelationFilter
   memberships?: Prisma.ServerMembershipListRelationFilter
-  moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
+  platformRoleAssignments?: Prisma.UserRoleAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
 }
 
@@ -320,7 +320,7 @@ export type ServerOrderByWithRelationInput = {
   society?: Prisma.SocietyOrderByWithRelationInput
   channels?: Prisma.ChannelOrderByRelationAggregateInput
   memberships?: Prisma.ServerMembershipOrderByRelationAggregateInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentOrderByRelationAggregateInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
 }
 
@@ -348,7 +348,7 @@ export type ServerWhereUniqueInput = Prisma.AtLeast<{
   society?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
   channels?: Prisma.ChannelListRelationFilter
   memberships?: Prisma.ServerMembershipListRelationFilter
-  moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
+  platformRoleAssignments?: Prisma.UserRoleAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
 }, "id" | "publicId">
 
@@ -410,7 +410,7 @@ export type ServerCreateInput = {
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -433,7 +433,7 @@ export type ServerUncheckedCreateInput = {
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -455,7 +455,7 @@ export type ServerUpdateInput = {
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -478,7 +478,7 @@ export type ServerUncheckedUpdateInput = {
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -760,18 +760,18 @@ export type ServerUpdateOneRequiredWithoutMembershipsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ServerUpdateToOneWithWhereWithoutMembershipsInput, Prisma.ServerUpdateWithoutMembershipsInput>, Prisma.ServerUncheckedUpdateWithoutMembershipsInput>
 }
 
-export type ServerCreateNestedOneWithoutModeratorAssignmentsInput = {
-  create?: Prisma.XOR<Prisma.ServerCreateWithoutModeratorAssignmentsInput, Prisma.ServerUncheckedCreateWithoutModeratorAssignmentsInput>
-  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutModeratorAssignmentsInput
+export type ServerCreateNestedOneWithoutPlatformRoleAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.ServerCreateWithoutPlatformRoleAssignmentsInput, Prisma.ServerUncheckedCreateWithoutPlatformRoleAssignmentsInput>
+  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutPlatformRoleAssignmentsInput
   connect?: Prisma.ServerWhereUniqueInput
 }
 
-export type ServerUpdateOneRequiredWithoutModeratorAssignmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.ServerCreateWithoutModeratorAssignmentsInput, Prisma.ServerUncheckedCreateWithoutModeratorAssignmentsInput>
-  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutModeratorAssignmentsInput
-  upsert?: Prisma.ServerUpsertWithoutModeratorAssignmentsInput
+export type ServerUpdateOneRequiredWithoutPlatformRoleAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.ServerCreateWithoutPlatformRoleAssignmentsInput, Prisma.ServerUncheckedCreateWithoutPlatformRoleAssignmentsInput>
+  connectOrCreate?: Prisma.ServerCreateOrConnectWithoutPlatformRoleAssignmentsInput
+  upsert?: Prisma.ServerUpsertWithoutPlatformRoleAssignmentsInput
   connect?: Prisma.ServerWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ServerUpdateToOneWithWhereWithoutModeratorAssignmentsInput, Prisma.ServerUpdateWithoutModeratorAssignmentsInput>, Prisma.ServerUncheckedUpdateWithoutModeratorAssignmentsInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ServerUpdateToOneWithWhereWithoutPlatformRoleAssignmentsInput, Prisma.ServerUpdateWithoutPlatformRoleAssignmentsInput>, Prisma.ServerUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
 }
 
 export type ServerCreateNestedOneWithoutNotificationPreferencesInput = {
@@ -805,7 +805,7 @@ export type ServerCreateWithoutDepartmentInput = {
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -827,7 +827,7 @@ export type ServerUncheckedCreateWithoutDepartmentInput = {
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -864,7 +864,7 @@ export type ServerUpdateWithoutDepartmentInput = {
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -886,7 +886,7 @@ export type ServerUncheckedUpdateWithoutDepartmentInput = {
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -907,7 +907,7 @@ export type ServerCreateWithoutCreatorInput = {
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -929,7 +929,7 @@ export type ServerUncheckedCreateWithoutCreatorInput = {
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -960,7 +960,7 @@ export type ServerCreateWithoutDeletedByUserInput = {
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -982,7 +982,7 @@ export type ServerUncheckedCreateWithoutDeletedByUserInput = {
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -1064,7 +1064,7 @@ export type ServerCreateWithoutClassInput = {
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -1086,7 +1086,7 @@ export type ServerUncheckedCreateWithoutClassInput = {
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -1123,7 +1123,7 @@ export type ServerUpdateWithoutClassInput = {
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -1145,7 +1145,7 @@ export type ServerUncheckedUpdateWithoutClassInput = {
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -1166,7 +1166,7 @@ export type ServerCreateWithoutSocietyInput = {
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -1188,7 +1188,7 @@ export type ServerUncheckedCreateWithoutSocietyInput = {
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -1225,7 +1225,7 @@ export type ServerUpdateWithoutSocietyInput = {
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -1247,7 +1247,7 @@ export type ServerUncheckedUpdateWithoutSocietyInput = {
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -1268,7 +1268,7 @@ export type ServerCreateWithoutChannelsInput = {
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -1290,7 +1290,7 @@ export type ServerUncheckedCreateWithoutChannelsInput = {
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -1327,7 +1327,7 @@ export type ServerUpdateWithoutChannelsInput = {
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -1349,7 +1349,7 @@ export type ServerUncheckedUpdateWithoutChannelsInput = {
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -1370,7 +1370,7 @@ export type ServerCreateWithoutMembershipsInput = {
   class?: Prisma.ClassCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
@@ -1392,7 +1392,7 @@ export type ServerUncheckedCreateWithoutMembershipsInput = {
   class?: Prisma.ClassUncheckedCreateNestedOneWithoutServerInput
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
@@ -1429,7 +1429,7 @@ export type ServerUpdateWithoutMembershipsInput = {
   class?: Prisma.ClassUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -1451,11 +1451,11 @@ export type ServerUncheckedUpdateWithoutMembershipsInput = {
   class?: Prisma.ClassUncheckedUpdateOneWithoutServerNestedInput
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
-export type ServerCreateWithoutModeratorAssignmentsInput = {
+export type ServerCreateWithoutPlatformRoleAssignmentsInput = {
   publicId?: string
   name: string
   description?: string | null
@@ -1476,7 +1476,7 @@ export type ServerCreateWithoutModeratorAssignmentsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutServerInput
 }
 
-export type ServerUncheckedCreateWithoutModeratorAssignmentsInput = {
+export type ServerUncheckedCreateWithoutPlatformRoleAssignmentsInput = {
   id?: number
   publicId?: string
   name: string
@@ -1498,23 +1498,23 @@ export type ServerUncheckedCreateWithoutModeratorAssignmentsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutServerInput
 }
 
-export type ServerCreateOrConnectWithoutModeratorAssignmentsInput = {
+export type ServerCreateOrConnectWithoutPlatformRoleAssignmentsInput = {
   where: Prisma.ServerWhereUniqueInput
-  create: Prisma.XOR<Prisma.ServerCreateWithoutModeratorAssignmentsInput, Prisma.ServerUncheckedCreateWithoutModeratorAssignmentsInput>
+  create: Prisma.XOR<Prisma.ServerCreateWithoutPlatformRoleAssignmentsInput, Prisma.ServerUncheckedCreateWithoutPlatformRoleAssignmentsInput>
 }
 
-export type ServerUpsertWithoutModeratorAssignmentsInput = {
-  update: Prisma.XOR<Prisma.ServerUpdateWithoutModeratorAssignmentsInput, Prisma.ServerUncheckedUpdateWithoutModeratorAssignmentsInput>
-  create: Prisma.XOR<Prisma.ServerCreateWithoutModeratorAssignmentsInput, Prisma.ServerUncheckedCreateWithoutModeratorAssignmentsInput>
+export type ServerUpsertWithoutPlatformRoleAssignmentsInput = {
+  update: Prisma.XOR<Prisma.ServerUpdateWithoutPlatformRoleAssignmentsInput, Prisma.ServerUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
+  create: Prisma.XOR<Prisma.ServerCreateWithoutPlatformRoleAssignmentsInput, Prisma.ServerUncheckedCreateWithoutPlatformRoleAssignmentsInput>
   where?: Prisma.ServerWhereInput
 }
 
-export type ServerUpdateToOneWithWhereWithoutModeratorAssignmentsInput = {
+export type ServerUpdateToOneWithWhereWithoutPlatformRoleAssignmentsInput = {
   where?: Prisma.ServerWhereInput
-  data: Prisma.XOR<Prisma.ServerUpdateWithoutModeratorAssignmentsInput, Prisma.ServerUncheckedUpdateWithoutModeratorAssignmentsInput>
+  data: Prisma.XOR<Prisma.ServerUpdateWithoutPlatformRoleAssignmentsInput, Prisma.ServerUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
 }
 
-export type ServerUpdateWithoutModeratorAssignmentsInput = {
+export type ServerUpdateWithoutPlatformRoleAssignmentsInput = {
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1535,7 +1535,7 @@ export type ServerUpdateWithoutModeratorAssignmentsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
-export type ServerUncheckedUpdateWithoutModeratorAssignmentsInput = {
+export type ServerUncheckedUpdateWithoutPlatformRoleAssignmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1575,7 +1575,7 @@ export type ServerCreateWithoutNotificationPreferencesInput = {
   society?: Prisma.SocietyCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutServerInput
 }
 
 export type ServerUncheckedCreateWithoutNotificationPreferencesInput = {
@@ -1597,7 +1597,7 @@ export type ServerUncheckedCreateWithoutNotificationPreferencesInput = {
   society?: Prisma.SocietyUncheckedCreateNestedOneWithoutServerInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutServerInput
   memberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutServerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutServerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutServerInput
 }
 
 export type ServerCreateOrConnectWithoutNotificationPreferencesInput = {
@@ -1634,7 +1634,7 @@ export type ServerUpdateWithoutNotificationPreferencesInput = {
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
 }
 
 export type ServerUncheckedUpdateWithoutNotificationPreferencesInput = {
@@ -1656,7 +1656,7 @@ export type ServerUncheckedUpdateWithoutNotificationPreferencesInput = {
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
 }
 
 export type ServerCreateManyCreatorInput = {
@@ -1706,7 +1706,7 @@ export type ServerUpdateWithoutCreatorInput = {
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -1728,7 +1728,7 @@ export type ServerUncheckedUpdateWithoutCreatorInput = {
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -1764,7 +1764,7 @@ export type ServerUpdateWithoutDeletedByUserInput = {
   society?: Prisma.SocietyUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutServerNestedInput
 }
 
@@ -1786,7 +1786,7 @@ export type ServerUncheckedUpdateWithoutDeletedByUserInput = {
   society?: Prisma.SocietyUncheckedUpdateOneWithoutServerNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutServerNestedInput
   memberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutServerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutServerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutServerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutServerNestedInput
 }
 
@@ -1813,14 +1813,14 @@ export type ServerUncheckedUpdateManyWithoutDeletedByUserInput = {
 export type ServerCountOutputType = {
   channels: number
   memberships: number
-  moderatorAssignments: number
+  platformRoleAssignments: number
   notificationPreferences: number
 }
 
 export type ServerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   channels?: boolean | ServerCountOutputTypeCountChannelsArgs
   memberships?: boolean | ServerCountOutputTypeCountMembershipsArgs
-  moderatorAssignments?: boolean | ServerCountOutputTypeCountModeratorAssignmentsArgs
+  platformRoleAssignments?: boolean | ServerCountOutputTypeCountPlatformRoleAssignmentsArgs
   notificationPreferences?: boolean | ServerCountOutputTypeCountNotificationPreferencesArgs
 }
 
@@ -1851,8 +1851,8 @@ export type ServerCountOutputTypeCountMembershipsArgs<ExtArgs extends runtime.Ty
 /**
  * ServerCountOutputType without action
  */
-export type ServerCountOutputTypeCountModeratorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ModeratorAssignmentWhereInput
+export type ServerCountOutputTypeCountPlatformRoleAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserRoleAssignmentWhereInput
 }
 
 /**
@@ -1884,7 +1884,7 @@ export type ServerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   society?: boolean | Prisma.Server$societyArgs<ExtArgs>
   channels?: boolean | Prisma.Server$channelsArgs<ExtArgs>
   memberships?: boolean | Prisma.Server$membershipsArgs<ExtArgs>
-  moderatorAssignments?: boolean | Prisma.Server$moderatorAssignmentsArgs<ExtArgs>
+  platformRoleAssignments?: boolean | Prisma.Server$platformRoleAssignmentsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Server$notificationPreferencesArgs<ExtArgs>
   _count?: boolean | Prisma.ServerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["server"]>
@@ -1950,7 +1950,7 @@ export type ServerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   society?: boolean | Prisma.Server$societyArgs<ExtArgs>
   channels?: boolean | Prisma.Server$channelsArgs<ExtArgs>
   memberships?: boolean | Prisma.Server$membershipsArgs<ExtArgs>
-  moderatorAssignments?: boolean | Prisma.Server$moderatorAssignmentsArgs<ExtArgs>
+  platformRoleAssignments?: boolean | Prisma.Server$platformRoleAssignmentsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Server$notificationPreferencesArgs<ExtArgs>
   _count?: boolean | Prisma.ServerCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -1973,7 +1973,7 @@ export type $ServerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     society: Prisma.$SocietyPayload<ExtArgs> | null
     channels: Prisma.$ChannelPayload<ExtArgs>[]
     memberships: Prisma.$ServerMembershipPayload<ExtArgs>[]
-    moderatorAssignments: Prisma.$ModeratorAssignmentPayload<ExtArgs>[]
+    platformRoleAssignments: Prisma.$UserRoleAssignmentPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -2391,7 +2391,7 @@ export interface Prisma__ServerClient<T, Null = never, ExtArgs extends runtime.T
   society<T extends Prisma.Server$societyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$societyArgs<ExtArgs>>): Prisma.Prisma__SocietyClient<runtime.Types.Result.GetResult<Prisma.$SocietyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   channels<T extends Prisma.Server$channelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   memberships<T extends Prisma.Server$membershipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ServerMembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  moderatorAssignments<T extends Prisma.Server$moderatorAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$moderatorAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ModeratorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  platformRoleAssignments<T extends Prisma.Server$platformRoleAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$platformRoleAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserRoleAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.Server$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Server$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -2979,27 +2979,27 @@ export type Server$membershipsArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
- * Server.moderatorAssignments
+ * Server.platformRoleAssignments
  */
-export type Server$moderatorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Server$platformRoleAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ModeratorAssignment
+   * Select specific fields to fetch from the UserRoleAssignment
    */
-  select?: Prisma.ModeratorAssignmentSelect<ExtArgs> | null
+  select?: Prisma.UserRoleAssignmentSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ModeratorAssignment
+   * Omit specific fields from the UserRoleAssignment
    */
-  omit?: Prisma.ModeratorAssignmentOmit<ExtArgs> | null
+  omit?: Prisma.UserRoleAssignmentOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ModeratorAssignmentInclude<ExtArgs> | null
-  where?: Prisma.ModeratorAssignmentWhereInput
-  orderBy?: Prisma.ModeratorAssignmentOrderByWithRelationInput | Prisma.ModeratorAssignmentOrderByWithRelationInput[]
-  cursor?: Prisma.ModeratorAssignmentWhereUniqueInput
+  include?: Prisma.UserRoleAssignmentInclude<ExtArgs> | null
+  where?: Prisma.UserRoleAssignmentWhereInput
+  orderBy?: Prisma.UserRoleAssignmentOrderByWithRelationInput | Prisma.UserRoleAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.UserRoleAssignmentWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.ModeratorAssignmentScalarFieldEnum | Prisma.ModeratorAssignmentScalarFieldEnum[]
+  distinct?: Prisma.UserRoleAssignmentScalarFieldEnum | Prisma.UserRoleAssignmentScalarFieldEnum[]
 }
 
 /**

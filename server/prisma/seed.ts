@@ -11,13 +11,8 @@ const DEMO_PASSWORD = "Demo@1234";
 const ADMIN_PASSWORD = `${TEMP_PASSWORD_PREFIX}Admin@123`;
 
 const ROLES = [
-  "hod",
-  "program_director",
-  "society_president",
-  "society_convenor",
-  "cr",
-  "server_moderator",
-  "channel_moderator",
+  { name: "server_moderator", scopeType: "SERVER" },
+  { name: "channel_moderator", scopeType: "CHANNEL" },
 ] as const;
 
 const PERMISSIONS = [
@@ -38,46 +33,6 @@ const PERMISSIONS = [
 ] as const;
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  hod: [
-    "post:channel",
-    "create:channel",
-    "delete:channel",
-    "lock:channel",
-    "create:society",
-    "create:class",
-    "assign:program_director",
-    "assign:cr",
-    "assign:society_president",
-    "assign:society_convenor",
-    "assign:server_moderator",
-    "assign:channel_moderator",
-  ],
-  program_director: ["post:channel", "assign:cr"],
-  society_president: [
-    "post:channel",
-    "create:channel",
-    "delete:channel",
-    "lock:channel",
-    "assign:server_moderator",
-    "assign:channel_moderator",
-  ],
-  society_convenor: [
-    "post:channel",
-    "create:channel",
-    "delete:channel",
-    "lock:channel",
-    "assign:server_moderator",
-    "assign:channel_moderator",
-    "assign:society_president",
-  ],
-  cr: [
-    "post:channel",
-    "create:channel",
-    "delete:channel",
-    "lock:channel",
-    "assign:server_moderator",
-    "assign:channel_moderator",
-  ],
   server_moderator: ["post:channel"],
   channel_moderator: ["post:channel"],
 };
@@ -120,11 +75,11 @@ async function seedRolesAndPermissions() {
     skipDuplicates: true,
   });
 
-  for (const roleName of ROLES) {
+  for (const role of ROLES) {
     await prisma.role.upsert({
-      where: { name: roleName },
-      update: {},
-      create: { name: roleName },
+      where: { name: role.name },
+      update: { scopeType: role.scopeType },
+      create: role,
     });
   }
 
@@ -339,16 +294,21 @@ async function ensureModeratorAssignment(input: {
   scopeType: "SERVER" | "CHANNEL";
   channelId?: number | null;
 }) {
-  const existing = await prisma.moderatorAssignment.findFirst({
+  const roleName = input.scopeType === "SERVER" ? "server_moderator" : "channel_moderator";
+  const role = await prisma.role.findUniqueOrThrow({ where: { name: roleName } });
+  const existing = await prisma.userRoleAssignment.findFirst({
     where: {
       userId: input.userId,
+      roleId: role.id,
       serverId: input.serverId,
       channelId: input.channelId ?? null,
+      revokedAt: null,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },
   });
 
   if (existing) {
-    return prisma.moderatorAssignment.update({
+    return prisma.userRoleAssignment.update({
       where: { id: existing.id },
       data: {
         assignedBy: input.assignedBy,
@@ -358,9 +318,10 @@ async function ensureModeratorAssignment(input: {
     });
   }
 
-  return prisma.moderatorAssignment.create({
+  return prisma.userRoleAssignment.create({
     data: {
       userId: input.userId,
+      roleId: role.id,
       serverId: input.serverId,
       assignedBy: input.assignedBy,
       scopeType: input.scopeType,

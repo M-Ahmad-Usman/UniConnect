@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 3 complete
+- Status: Module 4 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -23,7 +23,7 @@
 | 1 | Schema Foundation and Transitional State | Complete | 2026-05-28 | 2026-05-28 | Public IDs, status enums, soft-delete metadata, designation lookup, FK policies, and baseline migration added |
 | 2 | Public-ID Resolver and Test Foundation | Complete | 2026-05-28 | 2026-05-28 | Strict UUIDv7 validation, resolvers, DTO mappers, dual helper, and API-ID test helper support added |
 | 3 | User Lifecycle and Auth | Complete | 2026-05-29 | 2026-05-29 | User public-ID routes, deletion impact, status/delete/restore, auth/session invalidation, and frontend admin lifecycle UI added |
-| 4 | Platform RBAC Refactor | Not started | - | - | Replaces moderator assignments with platform role assignments |
+| 4 | Platform RBAC Refactor | Complete | 2026-05-30 | 2026-05-30 | Append-only platform role assignments, expiry, public role-workspace IDs, canonical academic writes, and admin history added |
 | 5 | Society Lifecycle and Notifications | Not started | - | - | Adds society status/delete/restore cascade and lifecycle notifications |
 | 6 | Server, Channel, and Post Public-ID Migration | Not started | - | - | Migrates communication routes and URLs to public IDs |
 | 7 | Class and Academic Public-ID Migration | Not started | - | - | Migrates class routes and academic workflows to public IDs |
@@ -164,9 +164,8 @@
 
 ### Follow-Up for Module 4
 
-- Keep `/api/roles/*` numeric user IDs and existing role-assignment contracts
-  scoped to Module 4. Do not retroactively mix Module 3 public-ID route behavior
-  into role-management endpoints without the platform RBAC migration.
+- Migrate `/api/roles/*` core user, class, server, channel, and assignment
+  identifiers to UUIDv7 public IDs as part of the platform RBAC migration.
 - Reuse the Module 2 public-ID resolver/DTO helpers and the Module 3
   authenticated-user DB reload pattern where Module 4 changes authorization or
   session-sensitive behavior.
@@ -174,3 +173,62 @@
   programs, courses, disciplines, degree levels, curriculum entries, and
   notification IDs as numeric until their owning module explicitly migrates
   them.
+
+## Module 4 Checklist
+
+### Implementation
+
+- [x] Replaced `moderator_assignments` and `moderator_scope_type` with
+  append-only `user_role_assignments` and `platform_role_scope_type`.
+- [x] Added UUIDv7 assignment public IDs, nullable expiry, revocation metadata,
+  actor metadata, indexes, scope-integrity foreign keys, and a PostgreSQL
+  `btree_gist` exclusion constraint preventing overlapping periods.
+- [x] Backfilled legacy moderator rows and dropped the legacy table in the same
+  migration because the project has no production data.
+- [x] Kept academic roles on owning entities and moved fixed academic
+  capability bundles into TypeScript.
+- [x] Added canonical academic role writes:
+  `PUT|DELETE /api/departments/:id/hod`,
+  `PUT|DELETE /api/programs/:id/program-director`, and
+  `PUT|DELETE /api/classes/:classPublicId/cr`.
+- [x] Replaced generic platform writes with assignment resources:
+  `POST /api/roles/platform-assignments`,
+  `DELETE /api/roles/platform-assignments/:assignmentPublicId`, and
+  `PATCH /api/roles/platform-assignments/:assignmentPublicId/expiry`.
+- [x] Added admin-only paginated assignment history and lazy frontend history
+  loading.
+- [x] Migrated `/api/roles/*` core references to public IDs while retaining
+  transitional numeric profile scope references until Modules 6 and 7.
+- [x] Updated authorization, permission context, badges, class cleanup, seed
+  data, fixtures, Socket.IO invalidation, client role workspace, expiry editor,
+  and AuthGuard nearest-expiry refresh scheduling.
+- [x] Kept platform-assignment transactions short: state mutation and audit
+  insert commit together, then response DTO hydration happens after commit.
+- [x] Documented SQL-only composite foreign keys and the exclusion constraint
+  so future Prisma migration generation does not drop those safeguards.
+
+### Verification
+
+- [x] `npx prisma validate`
+- [x] `npx prisma generate`
+- [x] `npm run db:migrate:test`
+- [x] Backend build
+- [x] Focused backend role suite, 7/7
+- [x] Adjacent backend channel suite, 34/34
+- [x] Adjacent backend user suite, 31/31
+- [x] Adjacent backend notification suite, 32/32
+- [x] Full backend Jest suite, 479/479
+- [x] Frontend type-check
+- [x] Frontend lint
+- [x] Focused frontend Vitest suites, 8/8
+- [x] Full frontend Vitest suite, 131/131
+- [x] Frontend production build
+- [x] Focused Module 4 Playwright suite, 4/4
+- [x] Full Playwright suite, 36/36
+
+### Follow-Up for Module 5
+
+- Preserve platform assignment history when societies are suspended, deleted,
+  or restored.
+- Continue using `activePlatformRoleAssignmentWhere()` for operational role
+  reads so suspended/deleted society scopes never authorize.

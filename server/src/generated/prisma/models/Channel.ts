@@ -380,7 +380,7 @@ export type ChannelWhereInput = {
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   archiver?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   posts?: Prisma.PostListRelationFilter
-  moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
+  platformRoleAssignments?: Prisma.UserRoleAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
 }
 
@@ -414,13 +414,14 @@ export type ChannelOrderByWithRelationInput = {
   creator?: Prisma.UserOrderByWithRelationInput
   archiver?: Prisma.UserOrderByWithRelationInput
   posts?: Prisma.PostOrderByRelationAggregateInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentOrderByRelationAggregateInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
 }
 
 export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   id?: number
   publicId?: string
+  id_serverId?: Prisma.ChannelIdServerIdCompoundUniqueInput
   AND?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
   OR?: Prisma.ChannelWhereInput[]
   NOT?: Prisma.ChannelWhereInput | Prisma.ChannelWhereInput[]
@@ -451,9 +452,9 @@ export type ChannelWhereUniqueInput = Prisma.AtLeast<{
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   archiver?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   posts?: Prisma.PostListRelationFilter
-  moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
+  platformRoleAssignments?: Prisma.UserRoleAssignmentListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
-}, "id" | "publicId">
+}, "id" | "publicId" | "id_serverId">
 
 export type ChannelOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -533,7 +534,7 @@ export type ChannelCreateInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -560,7 +561,7 @@ export type ChannelUncheckedCreateInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -586,7 +587,7 @@ export type ChannelUpdateInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -613,7 +614,7 @@ export type ChannelUncheckedUpdateInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -689,6 +690,11 @@ export type ChannelListRelationFilter = {
 
 export type ChannelOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type ChannelIdServerIdCompoundUniqueInput = {
+  id: number
+  serverId: number
 }
 
 export type ChannelCountOrderByAggregateInput = {
@@ -1107,20 +1113,20 @@ export type ChannelUpdateOneRequiredWithoutPostsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelUpdateToOneWithWhereWithoutPostsInput, Prisma.ChannelUpdateWithoutPostsInput>, Prisma.ChannelUncheckedUpdateWithoutPostsInput>
 }
 
-export type ChannelCreateNestedOneWithoutModeratorAssignmentsInput = {
-  create?: Prisma.XOR<Prisma.ChannelCreateWithoutModeratorAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutModeratorAssignmentsInput>
-  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutModeratorAssignmentsInput
+export type ChannelCreateNestedOneWithoutPlatformRoleAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutPlatformRoleAssignmentsInput>
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutPlatformRoleAssignmentsInput
   connect?: Prisma.ChannelWhereUniqueInput
 }
 
-export type ChannelUpdateOneWithoutModeratorAssignmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.ChannelCreateWithoutModeratorAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutModeratorAssignmentsInput>
-  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutModeratorAssignmentsInput
-  upsert?: Prisma.ChannelUpsertWithoutModeratorAssignmentsInput
+export type ChannelUpdateOneWithoutPlatformRoleAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelCreateWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutPlatformRoleAssignmentsInput>
+  connectOrCreate?: Prisma.ChannelCreateOrConnectWithoutPlatformRoleAssignmentsInput
+  upsert?: Prisma.ChannelUpsertWithoutPlatformRoleAssignmentsInput
   disconnect?: Prisma.ChannelWhereInput | boolean
   delete?: Prisma.ChannelWhereInput | boolean
   connect?: Prisma.ChannelWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelUpdateToOneWithWhereWithoutModeratorAssignmentsInput, Prisma.ChannelUpdateWithoutModeratorAssignmentsInput>, Prisma.ChannelUncheckedUpdateWithoutModeratorAssignmentsInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelUpdateToOneWithWhereWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUpdateWithoutPlatformRoleAssignmentsInput>, Prisma.ChannelUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
 }
 
 export type ChannelCreateNestedOneWithoutNotificationPreferencesInput = {
@@ -1160,7 +1166,7 @@ export type ChannelCreateWithoutProgramInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1186,7 +1192,7 @@ export type ChannelUncheckedCreateWithoutProgramInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1264,7 +1270,7 @@ export type ChannelCreateWithoutLockerInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1290,7 +1296,7 @@ export type ChannelUncheckedCreateWithoutLockerInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1325,7 +1331,7 @@ export type ChannelCreateWithoutDeleterInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1351,7 +1357,7 @@ export type ChannelUncheckedCreateWithoutDeleterInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1386,7 +1392,7 @@ export type ChannelCreateWithoutCreatorInput = {
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1412,7 +1418,7 @@ export type ChannelUncheckedCreateWithoutCreatorInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1447,7 +1453,7 @@ export type ChannelCreateWithoutArchiverInput = {
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1473,7 +1479,7 @@ export type ChannelUncheckedCreateWithoutArchiverInput = {
   isArchived?: boolean
   archivedAt?: Date | string | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1572,7 +1578,7 @@ export type ChannelCreateWithoutServerInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1598,7 +1604,7 @@ export type ChannelUncheckedCreateWithoutServerInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1649,7 +1655,7 @@ export type ChannelCreateWithoutCourseInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1675,7 +1681,7 @@ export type ChannelUncheckedCreateWithoutCourseInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1726,7 +1732,7 @@ export type ChannelCreateWithoutPostsInput = {
   deleter?: Prisma.UserCreateNestedOneWithoutDeletedChannelsInput
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
@@ -1752,7 +1758,7 @@ export type ChannelUncheckedCreateWithoutPostsInput = {
   isArchived?: boolean
   archivedAt?: Date | string | null
   archivedBy?: number | null
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
@@ -1793,7 +1799,7 @@ export type ChannelUpdateWithoutPostsInput = {
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -1819,11 +1825,11 @@ export type ChannelUncheckedUpdateWithoutPostsInput = {
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
-export type ChannelCreateWithoutModeratorAssignmentsInput = {
+export type ChannelCreateWithoutPlatformRoleAssignmentsInput = {
   publicId?: string
   name: string
   description?: string | null
@@ -1848,7 +1854,7 @@ export type ChannelCreateWithoutModeratorAssignmentsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutChannelInput
 }
 
-export type ChannelUncheckedCreateWithoutModeratorAssignmentsInput = {
+export type ChannelUncheckedCreateWithoutPlatformRoleAssignmentsInput = {
   id?: number
   publicId?: string
   serverId: number
@@ -1874,23 +1880,23 @@ export type ChannelUncheckedCreateWithoutModeratorAssignmentsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutChannelInput
 }
 
-export type ChannelCreateOrConnectWithoutModeratorAssignmentsInput = {
+export type ChannelCreateOrConnectWithoutPlatformRoleAssignmentsInput = {
   where: Prisma.ChannelWhereUniqueInput
-  create: Prisma.XOR<Prisma.ChannelCreateWithoutModeratorAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutModeratorAssignmentsInput>
+  create: Prisma.XOR<Prisma.ChannelCreateWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutPlatformRoleAssignmentsInput>
 }
 
-export type ChannelUpsertWithoutModeratorAssignmentsInput = {
-  update: Prisma.XOR<Prisma.ChannelUpdateWithoutModeratorAssignmentsInput, Prisma.ChannelUncheckedUpdateWithoutModeratorAssignmentsInput>
-  create: Prisma.XOR<Prisma.ChannelCreateWithoutModeratorAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutModeratorAssignmentsInput>
+export type ChannelUpsertWithoutPlatformRoleAssignmentsInput = {
+  update: Prisma.XOR<Prisma.ChannelUpdateWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
+  create: Prisma.XOR<Prisma.ChannelCreateWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUncheckedCreateWithoutPlatformRoleAssignmentsInput>
   where?: Prisma.ChannelWhereInput
 }
 
-export type ChannelUpdateToOneWithWhereWithoutModeratorAssignmentsInput = {
+export type ChannelUpdateToOneWithWhereWithoutPlatformRoleAssignmentsInput = {
   where?: Prisma.ChannelWhereInput
-  data: Prisma.XOR<Prisma.ChannelUpdateWithoutModeratorAssignmentsInput, Prisma.ChannelUncheckedUpdateWithoutModeratorAssignmentsInput>
+  data: Prisma.XOR<Prisma.ChannelUpdateWithoutPlatformRoleAssignmentsInput, Prisma.ChannelUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
 }
 
-export type ChannelUpdateWithoutModeratorAssignmentsInput = {
+export type ChannelUpdateWithoutPlatformRoleAssignmentsInput = {
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1915,7 +1921,7 @@ export type ChannelUpdateWithoutModeratorAssignmentsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
-export type ChannelUncheckedUpdateWithoutModeratorAssignmentsInput = {
+export type ChannelUncheckedUpdateWithoutPlatformRoleAssignmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1963,7 +1969,7 @@ export type ChannelCreateWithoutNotificationPreferencesInput = {
   creator?: Prisma.UserCreateNestedOneWithoutCreatedChannelsInput
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedChannelsInput
   posts?: Prisma.PostCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutChannelInput
 }
 
 export type ChannelUncheckedCreateWithoutNotificationPreferencesInput = {
@@ -1989,7 +1995,7 @@ export type ChannelUncheckedCreateWithoutNotificationPreferencesInput = {
   archivedAt?: Date | string | null
   archivedBy?: number | null
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutChannelInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutChannelInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutChannelInput
 }
 
 export type ChannelCreateOrConnectWithoutNotificationPreferencesInput = {
@@ -2030,7 +2036,7 @@ export type ChannelUpdateWithoutNotificationPreferencesInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
 }
 
 export type ChannelUncheckedUpdateWithoutNotificationPreferencesInput = {
@@ -2056,7 +2062,7 @@ export type ChannelUncheckedUpdateWithoutNotificationPreferencesInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
 }
 
 export type ChannelCreateManyProgramInput = {
@@ -2103,7 +2109,7 @@ export type ChannelUpdateWithoutProgramInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2129,7 +2135,7 @@ export type ChannelUncheckedUpdateWithoutProgramInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2269,7 +2275,7 @@ export type ChannelUpdateWithoutLockerInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2295,7 +2301,7 @@ export type ChannelUncheckedUpdateWithoutLockerInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2343,7 +2349,7 @@ export type ChannelUpdateWithoutDeleterInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2369,7 +2375,7 @@ export type ChannelUncheckedUpdateWithoutDeleterInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2417,7 +2423,7 @@ export type ChannelUpdateWithoutCreatorInput = {
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2443,7 +2449,7 @@ export type ChannelUncheckedUpdateWithoutCreatorInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2491,7 +2497,7 @@ export type ChannelUpdateWithoutArchiverInput = {
   deleter?: Prisma.UserUpdateOneWithoutDeletedChannelsNestedInput
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2517,7 +2523,7 @@ export type ChannelUncheckedUpdateWithoutArchiverInput = {
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2588,7 +2594,7 @@ export type ChannelUpdateWithoutServerInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2614,7 +2620,7 @@ export type ChannelUncheckedUpdateWithoutServerInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2685,7 +2691,7 @@ export type ChannelUpdateWithoutCourseInput = {
   creator?: Prisma.UserUpdateOneWithoutCreatedChannelsNestedInput
   archiver?: Prisma.UserUpdateOneWithoutArchivedChannelsNestedInput
   posts?: Prisma.PostUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutChannelNestedInput
 }
 
@@ -2711,7 +2717,7 @@ export type ChannelUncheckedUpdateWithoutCourseInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   archivedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   posts?: Prisma.PostUncheckedUpdateManyWithoutChannelNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutChannelNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutChannelNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutChannelNestedInput
 }
 
@@ -2745,13 +2751,13 @@ export type ChannelUncheckedUpdateManyWithoutCourseInput = {
 
 export type ChannelCountOutputType = {
   posts: number
-  moderatorAssignments: number
+  platformRoleAssignments: number
   notificationPreferences: number
 }
 
 export type ChannelCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   posts?: boolean | ChannelCountOutputTypeCountPostsArgs
-  moderatorAssignments?: boolean | ChannelCountOutputTypeCountModeratorAssignmentsArgs
+  platformRoleAssignments?: boolean | ChannelCountOutputTypeCountPlatformRoleAssignmentsArgs
   notificationPreferences?: boolean | ChannelCountOutputTypeCountNotificationPreferencesArgs
 }
 
@@ -2775,8 +2781,8 @@ export type ChannelCountOutputTypeCountPostsArgs<ExtArgs extends runtime.Types.E
 /**
  * ChannelCountOutputType without action
  */
-export type ChannelCountOutputTypeCountModeratorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ModeratorAssignmentWhereInput
+export type ChannelCountOutputTypeCountPlatformRoleAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserRoleAssignmentWhereInput
 }
 
 /**
@@ -2817,7 +2823,7 @@ export type ChannelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
   archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
   posts?: boolean | Prisma.Channel$postsArgs<ExtArgs>
-  moderatorAssignments?: boolean | Prisma.Channel$moderatorAssignmentsArgs<ExtArgs>
+  platformRoleAssignments?: boolean | Prisma.Channel$platformRoleAssignmentsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Channel$notificationPreferencesArgs<ExtArgs>
   _count?: boolean | Prisma.ChannelCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["channel"]>
@@ -2918,7 +2924,7 @@ export type ChannelInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   creator?: boolean | Prisma.Channel$creatorArgs<ExtArgs>
   archiver?: boolean | Prisma.Channel$archiverArgs<ExtArgs>
   posts?: boolean | Prisma.Channel$postsArgs<ExtArgs>
-  moderatorAssignments?: boolean | Prisma.Channel$moderatorAssignmentsArgs<ExtArgs>
+  platformRoleAssignments?: boolean | Prisma.Channel$platformRoleAssignmentsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Channel$notificationPreferencesArgs<ExtArgs>
   _count?: boolean | Prisma.ChannelCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -2952,7 +2958,7 @@ export type $ChannelPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     creator: Prisma.$UserPayload<ExtArgs> | null
     archiver: Prisma.$UserPayload<ExtArgs> | null
     posts: Prisma.$PostPayload<ExtArgs>[]
-    moderatorAssignments: Prisma.$ModeratorAssignmentPayload<ExtArgs>[]
+    platformRoleAssignments: Prisma.$UserRoleAssignmentPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -3379,7 +3385,7 @@ export interface Prisma__ChannelClient<T, Null = never, ExtArgs extends runtime.
   creator<T extends Prisma.Channel$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$creatorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   archiver<T extends Prisma.Channel$archiverArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$archiverArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   posts<T extends Prisma.Channel$postsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$postsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  moderatorAssignments<T extends Prisma.Channel$moderatorAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$moderatorAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ModeratorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  platformRoleAssignments<T extends Prisma.Channel$platformRoleAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$platformRoleAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserRoleAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.Channel$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Channel$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -3970,27 +3976,27 @@ export type Channel$postsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 }
 
 /**
- * Channel.moderatorAssignments
+ * Channel.platformRoleAssignments
  */
-export type Channel$moderatorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Channel$platformRoleAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ModeratorAssignment
+   * Select specific fields to fetch from the UserRoleAssignment
    */
-  select?: Prisma.ModeratorAssignmentSelect<ExtArgs> | null
+  select?: Prisma.UserRoleAssignmentSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ModeratorAssignment
+   * Omit specific fields from the UserRoleAssignment
    */
-  omit?: Prisma.ModeratorAssignmentOmit<ExtArgs> | null
+  omit?: Prisma.UserRoleAssignmentOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ModeratorAssignmentInclude<ExtArgs> | null
-  where?: Prisma.ModeratorAssignmentWhereInput
-  orderBy?: Prisma.ModeratorAssignmentOrderByWithRelationInput | Prisma.ModeratorAssignmentOrderByWithRelationInput[]
-  cursor?: Prisma.ModeratorAssignmentWhereUniqueInput
+  include?: Prisma.UserRoleAssignmentInclude<ExtArgs> | null
+  where?: Prisma.UserRoleAssignmentWhereInput
+  orderBy?: Prisma.UserRoleAssignmentOrderByWithRelationInput | Prisma.UserRoleAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.UserRoleAssignmentWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.ModeratorAssignmentScalarFieldEnum | Prisma.ModeratorAssignmentScalarFieldEnum[]
+  distinct?: Prisma.UserRoleAssignmentScalarFieldEnum | Prisma.UserRoleAssignmentScalarFieldEnum[]
 }
 
 /**

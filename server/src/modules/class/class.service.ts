@@ -8,6 +8,7 @@ import {
 } from "../../shared/errors/index.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import { buildClassPermissions, getPermissionContext } from "../../shared/permissions/index.js";
+import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
@@ -356,7 +357,9 @@ async function cleanupAutoClassMembershipIfUnused(
       select: { isAutoJoined: true },
     }),
     tx.teaches.count({ where: { classId, teacherId: userId } }),
-    tx.moderatorAssignment.count({ where: { userId, serverId } }),
+    tx.userRoleAssignment.count({
+      where: { AND: [activePlatformRoleAssignmentWhere(), { userId, serverId }] },
+    }),
   ]);
 
   if (membership?.isAutoJoined && teachesCount === 0 && moderatorCount === 0) {

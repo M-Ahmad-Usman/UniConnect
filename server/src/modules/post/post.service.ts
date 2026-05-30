@@ -19,6 +19,7 @@ import type { Prisma } from "../../generated/prisma/client.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
 import { emitToChannel } from "../../socket/index.js";
 import type { UserRole } from "../../shared/types/index.js";
+import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -223,9 +224,11 @@ async function resolveAuthorBadges(
         where: { department: { serverId } },
         select: { programDirectorId: true },
       }),
-      prisma.moderatorAssignment.findMany({
-        where: { serverId, userId: { in: uniqueIds } },
-        select: { userId: true, scopeType: true },
+      prisma.userRoleAssignment.findMany({
+        where: {
+          AND: [activePlatformRoleAssignmentWhere(), { serverId, userId: { in: uniqueIds } }],
+        },
+        select: { userId: true, role: { select: { name: true } } },
       }),
     ]);
 
@@ -243,7 +246,7 @@ async function resolveAuthorBadges(
     for (const mod of moderators) {
       addBadge(
         mod.userId,
-        mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+        mod.role.name,
       );
     }
   } else if (serverType === "CLASS") {
@@ -252,9 +255,11 @@ async function resolveAuthorBadges(
         where: { serverId },
         select: { crId: true },
       }),
-      prisma.moderatorAssignment.findMany({
-        where: { serverId, userId: { in: uniqueIds } },
-        select: { userId: true, scopeType: true },
+      prisma.userRoleAssignment.findMany({
+        where: {
+          AND: [activePlatformRoleAssignmentWhere(), { serverId, userId: { in: uniqueIds } }],
+        },
+        select: { userId: true, role: { select: { name: true } } },
       }),
     ]);
 
@@ -264,7 +269,7 @@ async function resolveAuthorBadges(
     for (const mod of moderators) {
       addBadge(
         mod.userId,
-        mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+        mod.role.name,
       );
     }
   } else if (serverType === "SOCIETY") {
@@ -276,9 +281,11 @@ async function resolveAuthorBadges(
           convenor: { select: { user: { select: { id: true } } } },
         },
       }),
-      prisma.moderatorAssignment.findMany({
-        where: { serverId, userId: { in: uniqueIds } },
-        select: { userId: true, scopeType: true },
+      prisma.userRoleAssignment.findMany({
+        where: {
+          AND: [activePlatformRoleAssignmentWhere(), { serverId, userId: { in: uniqueIds } }],
+        },
+        select: { userId: true, role: { select: { name: true } } },
       }),
     ]);
 
@@ -296,7 +303,7 @@ async function resolveAuthorBadges(
     for (const mod of moderators) {
       addBadge(
         mod.userId,
-        mod.scopeType === "SERVER" ? "server_moderator" : "channel_moderator",
+        mod.role.name,
       );
     }
   }

@@ -43,22 +43,6 @@ export function entityIds(entity: CoreFixtureRecord): {
 // ─── Seed Helpers ──────────────────────────────────────────────────────────
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  hod: [
-    "post:channel", "create:channel", "delete:channel", "lock:channel",
-    "create:society", "create:class", "assign:program_director", "assign:cr",
-    "assign:society_president", "assign:society_convenor", "assign:server_moderator", "assign:channel_moderator",
-  ],
-  program_director: ["post:channel", "assign:cr"],
-  society_president: [
-    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:server_moderator", "assign:channel_moderator",
-  ],
-  society_convenor: [
-    "post:channel", "create:channel", "delete:channel", "lock:channel",
-    "assign:server_moderator", "assign:channel_moderator", "assign:society_president",
-  ],
-  cr: [
-    "post:channel", "create:channel", "delete:channel", "lock:channel", "assign:server_moderator", "assign:channel_moderator",
-  ],
   server_moderator: ["post:channel"],
   channel_moderator: ["post:channel"],
 };
@@ -86,7 +70,10 @@ export async function seedRolesAndPermissions() {
   // Batch-create roles and permissions (skipDuplicates avoids upsert overhead)
   await Promise.all([
     prisma.role.createMany({
-      data: roleNames.map((name) => ({ name })),
+      data: roleNames.map((name) => ({
+        name,
+        scopeType: name === "server_moderator" ? "SERVER" as const : "CHANNEL" as const,
+      })),
       skipDuplicates: true,
     }),
     prisma.permission.createMany({
@@ -558,6 +545,35 @@ export async function addServerMembership(userId: number, serverId: number) {
     where: { userId_serverId: { userId, serverId } },
     create: { userId, serverId, isAutoJoined: false },
     update: {},
+  });
+}
+
+export async function createPlatformRoleAssignment(input: {
+  userId: number;
+  role: "server_moderator" | "channel_moderator";
+  serverId: number;
+  channelId?: number | null;
+  assignedBy?: number;
+  assignedAt?: Date;
+  expiresAt?: Date | null;
+}) {
+  const scopeType = input.role === "server_moderator" ? "SERVER" as const : "CHANNEL" as const;
+  const role = await prisma.role.upsert({
+    where: { name: input.role },
+    update: { scopeType },
+    create: { name: input.role, scopeType },
+  });
+  return prisma.userRoleAssignment.create({
+    data: {
+      userId: input.userId,
+      roleId: role.id,
+      scopeType,
+      serverId: input.serverId,
+      channelId: input.channelId ?? null,
+      assignedBy: input.assignedBy ?? null,
+      assignedAt: input.assignedAt,
+      expiresAt: input.expiresAt ?? null,
+    },
   });
 }
 

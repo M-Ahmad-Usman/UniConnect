@@ -2,9 +2,15 @@ import { withDb } from './db';
 
 export async function findClassByServerName(serverName: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number; server_id: number; department_id: number }>(
+    const result = await pool.query<{
+      id: number;
+      public_id: string;
+      server_id: number;
+      server_public_id: string;
+      department_id: number;
+    }>(
       `
-        SELECT c.id, c.server_id, p.department_id
+        SELECT c.id, c.public_id, c.server_id, s.public_id AS server_public_id, p.department_id
         FROM classes c
         INNER JOIN programs p ON p.id = c.program_id
         INNER JOIN servers s ON s.id = c.server_id
@@ -20,8 +26,14 @@ export async function findClassByServerName(serverName: string) {
 
 export async function findSocietyServerByName(societyName: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number; server_id: number }>(
-      'SELECT id, server_id FROM societies WHERE name = $1 LIMIT 1',
+    const result = await pool.query<{ id: number; server_id: number; server_public_id: string }>(
+      `
+        SELECT society.id, society.server_id, server.public_id AS server_public_id
+        FROM societies society
+        INNER JOIN servers server ON server.id = society.server_id
+        WHERE society.name = $1
+        LIMIT 1
+      `,
       [societyName],
     );
 
@@ -29,7 +41,11 @@ export async function findSocietyServerByName(societyName: string) {
   });
 }
 
-export async function prepareStudentForClass(userId: number, classId: number, departmentId: number) {
+export async function prepareStudentForClass(
+  userId: number,
+  classId: number,
+  departmentId: number,
+) {
   await withDb(async (pool) => {
     const classResult = await pool.query<{ server_id: number }>(
       'SELECT server_id FROM classes WHERE id = $1 LIMIT 1',
@@ -98,7 +114,15 @@ export async function ensureServerMembership(userId: number, serverId: number) {
 export async function clearServerModerator(userId: number, serverId: number) {
   await withDb(async (pool) => {
     await pool.query(
-      'DELETE FROM moderator_assignments WHERE user_id = $1 AND server_id = $2 AND channel_id IS NULL',
+      `
+        UPDATE user_role_assignments
+        SET revoked_at = NOW()
+        WHERE user_id = $1
+          AND server_id = $2
+          AND channel_id IS NULL
+          AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > NOW())
+      `,
       [userId, serverId],
     );
   });
@@ -108,9 +132,15 @@ export async function hasServerModerator(userId: number, serverId: number) {
   return withDb(async (pool) => {
     const result = await pool.query<{ id: number }>(
       `
-        SELECT id
-        FROM moderator_assignments
-        WHERE user_id = $1 AND server_id = $2 AND channel_id IS NULL
+        SELECT assignment.id
+        FROM user_role_assignments assignment
+        INNER JOIN roles role ON role.id = assignment.role_id
+        WHERE assignment.user_id = $1
+          AND assignment.server_id = $2
+          AND assignment.channel_id IS NULL
+          AND assignment.revoked_at IS NULL
+          AND (assignment.expires_at IS NULL OR assignment.expires_at > NOW())
+          AND role.name = 'server_moderator'
         LIMIT 1
       `,
       [userId, serverId],

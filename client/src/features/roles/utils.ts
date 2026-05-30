@@ -12,41 +12,59 @@ export function isModeratorRole(role: AssignableRoleName) {
 
 export function buildAssignPayload(input: {
   role: AssignableRoleName;
-  userId: number | null;
+  userPublicId: string | null;
   scopeId: number | null;
-  serverId: number | null;
-  channelId: number | null;
+  classPublicId: string | null;
+  serverPublicId: string | null;
+  channelPublicId: string | null;
+  expiresAt: string | null;
 }): AssignRoleRequest | null {
-  if (!input.userId) {
+  if (!input.userPublicId) {
     return null;
   }
 
   if (input.role === 'server_moderator') {
-    return input.serverId
-      ? { userId: input.userId, role: 'server_moderator', serverId: input.serverId }
-      : null;
-  }
-
-  if (input.role === 'channel_moderator') {
-    return input.serverId && input.channelId
+    return input.serverPublicId
       ? {
-          userId: input.userId,
-          role: 'channel_moderator',
-          serverId: input.serverId,
-          channelId: input.channelId,
+          userPublicId: input.userPublicId,
+          role: 'server_moderator',
+          serverPublicId: input.serverPublicId,
+          expiresAt: input.expiresAt,
         }
       : null;
   }
 
-  return input.scopeId ? { userId: input.userId, role: input.role, scopeId: input.scopeId } : null;
+  if (input.role === 'channel_moderator') {
+    return input.serverPublicId && input.channelPublicId
+      ? {
+          userPublicId: input.userPublicId,
+          role: 'channel_moderator',
+          serverPublicId: input.serverPublicId,
+          channelPublicId: input.channelPublicId,
+          expiresAt: input.expiresAt,
+        }
+      : null;
+  }
+
+  if (input.role === 'cr') {
+    return input.classPublicId
+      ? { userPublicId: input.userPublicId, role: 'cr', classPublicId: input.classPublicId }
+      : null;
+  }
+
+  return input.scopeId
+    ? { userPublicId: input.userPublicId, role: input.role, scopeId: input.scopeId }
+    : null;
 }
 
-export function normalizeRevokablePayload(
-  assignment: RevokableRoleAssignment,
-): RevokeRoleRequest {
+export function normalizeRevokablePayload(assignment: RevokableRoleAssignment): RevokeRoleRequest {
   return assignment.revokePayload;
 }
 
 export function chooseInitialRole(options: RoleOption[]): AssignableRoleName | null {
   return options[0]?.role ?? null;
+}
+
+export function toExpiryIso(value: string): string | null {
+  return value ? new Date(value).toISOString() : null;
 }

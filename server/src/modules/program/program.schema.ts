@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
+import { publicIdSchema } from "../../shared/ids/index.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,13 @@ export const updateProgramSchema = {
       error: "At least one field (semesters or code) must be provided",
       path: ["semesters"],
     }),
+};
+
+export const assignProgramDirectorSchema = {
+  params: programIdParamSchema.params,
+  body: z.object({
+    userPublicId: publicIdSchema,
+  }),
 };
 
 // ─── Get Curriculum ────────────────────────────────────────────────────────

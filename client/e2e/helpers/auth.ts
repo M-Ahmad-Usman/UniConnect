@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken';
 import { withDb } from './db';
 
 export const RESET_PASSWORD_SECRET =
-  process.env.E2E_RESET_PASSWORD_SECRET ??
-  'test-reset-secret-at-least-32-characters-long';
+  process.env.E2E_RESET_PASSWORD_SECRET ?? 'test-reset-secret-at-least-32-characters-long';
 
 export const e2eUsers = {
   student: {
@@ -173,8 +172,8 @@ export function hashToken(token: string) {
 
 export async function findUserByEmail(email: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number; email: string }>(
-      'SELECT id, email FROM users WHERE email = $1 LIMIT 1',
+    const result = await pool.query<{ id: number; public_id: string; email: string }>(
+      'SELECT id, public_id, email FROM users WHERE email = $1 LIMIT 1',
       [email],
     );
 

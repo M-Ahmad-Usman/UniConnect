@@ -19,6 +19,7 @@ import {
   addServerMembership,
   loginAs,
   seedRolesAndPermissions,
+  createPlatformRoleAssignment,
 } from "../helpers/factory.js";
 import { canPostInChannel } from "../../src/modules/channel/channel.service.js";
 
@@ -726,13 +727,11 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       });
 
       // Assign as server moderator
-      await prisma.moderatorAssignment.create({
-        data: {
-          userId: teacher.id,
-          scopeType: "SERVER",
-          serverId: dept.serverId,
-          assignedBy: teacher.id,
-        },
+      await createPlatformRoleAssignment({
+        userId: teacher.id,
+        role: "server_moderator",
+        serverId: dept.serverId,
+        assignedBy: teacher.id,
       });
 
       const channel = await createChannel(dept.serverId, {
@@ -764,14 +763,12 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       });
 
       // Assign as channel moderator for channel1 only
-      await prisma.moderatorAssignment.create({
-        data: {
-          userId: teacher.id,
-          scopeType: "CHANNEL",
-          serverId: dept.serverId,
-          channelId: channel1.id,
-          assignedBy: teacher.id,
-        },
+      await createPlatformRoleAssignment({
+        userId: teacher.id,
+        role: "channel_moderator",
+        serverId: dept.serverId,
+        channelId: channel1.id,
+        assignedBy: teacher.id,
       });
 
       const result1 = await canPostInChannel(teacher.id, "TEACHER", channel1.id);

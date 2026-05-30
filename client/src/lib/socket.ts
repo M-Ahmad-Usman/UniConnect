@@ -4,8 +4,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useNotificationStore } from '@/stores/notification.store';
 import { queryClient } from '@/lib/query-client';
 import { queryKeys, ROUTES } from '@/lib/constants';
-import { usersApi } from '@/api/endpoints/users.api';
-import { mapProfileToAuthUser } from '@/lib/auth-user';
+import { invalidateRoleSensitiveQueries, refreshRoleSensitiveSession } from '@/lib/role-session';
 import { PostPriority } from '@/types';
 import { removeNotificationsFromCache } from '@/features/notifications/cache';
 import type {
@@ -87,10 +86,8 @@ export function connectSocket(): void {
   });
 
   socket.on('auth:roles-updated', () => {
-    void usersApi.getMe().then((profile) => {
-      useAuthStore.getState().setUser(mapProfileToAuthUser(profile));
-      queryClient.setQueryData(queryKeys.users.me(), profile);
-      invalidateRoleSensitiveQueries();
+    void refreshRoleSensitiveSession().catch((error: unknown) => {
+      console.warn('[AUTH] Failed to refresh role-sensitive session', { error });
     });
   });
 
@@ -114,11 +111,4 @@ export function getSocket(): Socket | null {
   return socket;
 }
 
-export function invalidateRoleSensitiveQueries(): void {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.permissions.me() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.societies.all() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.roles.all() });
-}
+export { invalidateRoleSensitiveQueries };

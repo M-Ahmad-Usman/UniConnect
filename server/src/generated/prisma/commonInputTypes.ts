@@ -426,21 +426,21 @@ export type EnumPostPriorityWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumPostPriorityFilter<$PrismaModel>
 }
 
-export type EnumModeratorScopeTypeFilter<$PrismaModel = never> = {
-  equals?: $Enums.ModeratorScopeType | Prisma.EnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumModeratorScopeTypeFilter<$PrismaModel> | $Enums.ModeratorScopeType
+export type EnumPlatformRoleScopeTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlatformRoleScopeType | Prisma.EnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel> | $Enums.PlatformRoleScopeType
 }
 
-export type EnumModeratorScopeTypeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.ModeratorScopeType | Prisma.EnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumModeratorScopeTypeWithAggregatesFilter<$PrismaModel> | $Enums.ModeratorScopeType
+export type EnumPlatformRoleScopeTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlatformRoleScopeType | Prisma.EnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlatformRoleScopeTypeWithAggregatesFilter<$PrismaModel> | $Enums.PlatformRoleScopeType
   _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumModeratorScopeTypeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumModeratorScopeTypeFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel>
 }
 
 export type EnumNotificationTypeFilter<$PrismaModel = never> = {
@@ -949,21 +949,21 @@ export type NestedEnumPostPriorityWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumPostPriorityFilter<$PrismaModel>
 }
 
-export type NestedEnumModeratorScopeTypeFilter<$PrismaModel = never> = {
-  equals?: $Enums.ModeratorScopeType | Prisma.EnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumModeratorScopeTypeFilter<$PrismaModel> | $Enums.ModeratorScopeType
+export type NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlatformRoleScopeType | Prisma.EnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel> | $Enums.PlatformRoleScopeType
 }
 
-export type NestedEnumModeratorScopeTypeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.ModeratorScopeType | Prisma.EnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.ModeratorScopeType[] | Prisma.ListEnumModeratorScopeTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumModeratorScopeTypeWithAggregatesFilter<$PrismaModel> | $Enums.ModeratorScopeType
+export type NestedEnumPlatformRoleScopeTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlatformRoleScopeType | Prisma.EnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlatformRoleScopeType[] | Prisma.ListEnumPlatformRoleScopeTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlatformRoleScopeTypeWithAggregatesFilter<$PrismaModel> | $Enums.PlatformRoleScopeType
   _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumModeratorScopeTypeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumModeratorScopeTypeFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlatformRoleScopeTypeFilter<$PrismaModel>
 }
 
 export type NestedEnumNotificationTypeFilter<$PrismaModel = never> = {

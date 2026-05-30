@@ -356,15 +356,15 @@ describe("Module 10 - Notifications", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post("/api/roles/assign")
+        .post("/api/roles/platform-assignments")
         .set("Cookie", cookies)
         .send({
-          userId: student.id,
+          userPublicId: student.publicId,
           role: "server_moderator",
-          serverId: dept.serverId,
+          serverPublicId: (await prisma.server.findUniqueOrThrow({ where: { id: dept.serverId } })).publicId,
         });
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(201);
 
       const notification = await prisma.notification.findFirst({
         where: { userId: student.id, type: "ROLE_ASSIGNED" },
@@ -399,15 +399,15 @@ describe("Module 10 - Notifications", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post("/api/roles/assign")
+        .post("/api/roles/platform-assignments")
         .set("Cookie", cookies)
         .send({
-          userId: student.id,
+          userPublicId: student.publicId,
           role: "server_moderator",
-          serverId: dept.serverId,
+          serverPublicId: (await prisma.server.findUniqueOrThrow({ where: { id: dept.serverId } })).publicId,
         });
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(201);
 
       const count = await prisma.notification.count({
         where: { userId: student.id, type: "ROLE_ASSIGNED" },

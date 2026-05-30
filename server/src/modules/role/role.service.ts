@@ -7,7 +7,21 @@ import {
   NotFoundError,
   ValidationError,
 } from "../../shared/errors/index.js";
-import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
+import {
+  buildPaginationResponse,
+  parsePagination,
+} from "../../shared/utils/pagination.js";
+import {
+  resolveChannelPublicId,
+  resolveClassPublicId,
+  resolveServerPublicId,
+  resolveUserPublicId,
+} from "../../shared/ids/index.js";
+import {
+  activePlatformRoleAssignmentWhere,
+  activePlatformRoleServerWhere,
+  type PlatformRoleName,
+} from "../../shared/roles/index.js";
 import * as notificationService from "../notification/notification.service.js";
 import { emitToUser } from "../../socket/index.js";
 import type { AuditContext } from "../audit/audit.service.js";
@@ -15,25 +29,9 @@ import { recordAuditLog } from "../audit/audit.service.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
-type AssignRoleInput = {
-  userId: number;
-  role: string;
-  scopeId?: number;
-  serverId?: number;
-  channelId?: number;
-};
-
 type ModeratorRole = "server_moderator" | "channel_moderator";
 type AssignableRole = "hod" | "program_director" | "cr" | ModeratorRole;
 type NonModeratorAssignableRole = Exclude<AssignableRole, ModeratorRole>;
-
-type RevokeRoleInput = {
-  userId: number;
-  role: string;
-  scopeId?: number;
-  serverId?: number;
-  channelId?: number;
-};
 
 type CallerInfo = {
   id: number;
@@ -52,21 +50,23 @@ type AssignableScopesQuery = OptionQuery & {
 };
 
 type AssignableChannelsQuery = OptionQuery & {
-  serverId: number;
+  serverPublicId: string;
 };
 
 type AssignableUsersQuery = OptionQuery & {
   role: AssignableRole;
   scopeId?: number;
-  serverId?: number;
-  channelId?: number;
+  classPublicId?: string;
+  serverPublicId?: string;
+  channelPublicId?: string;
 };
 
 type RevokableRolesQuery = OptionQuery & {
   role: AssignableRole;
   scopeId?: number;
-  serverId?: number;
-  channelId?: number;
+  classPublicId?: string;
+  serverPublicId?: string;
+  channelPublicId?: string;
 };
 
 type RoleOption = {
@@ -79,29 +79,30 @@ type RoleOption = {
 };
 
 type ScopeOption = {
-  id: number;
+  id?: number;
+  publicId?: string;
   label: string;
   kind: "department" | "program" | "class" | "server";
-  serverId?: number;
+  serverPublicId?: string;
   disabled: boolean;
   disabledReason?: string;
   currentAssignee?: {
-    id: number;
+    publicId: string;
     fullName: string;
     email: string;
   };
 };
 
 type ChannelOption = {
-  id: number;
-  serverId: number;
+  publicId: string;
+  serverPublicId: string;
   label: string;
   type: string;
   isLocked: boolean;
 };
 
 type UserOption = {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   userType: string;
@@ -111,25 +112,27 @@ type UserOption = {
 type RevokableAssignment = {
   assignmentKey: string;
   role: AssignableRole;
+  expiresAt?: Date | null;
   user: UserOption;
   scope?: {
-    id: number;
+    id?: number;
+    publicId?: string;
     label: string;
     kind: "department" | "program" | "class";
   };
   server?: {
-    id: number;
+    publicId: string;
     label: string;
     type: string;
   };
   channel?: {
-    id: number;
+    publicId: string;
     label: string;
   };
   revokePayload:
-    | { userId: number; role: NonModeratorAssignableRole; scopeId: number }
-    | { userId: number; role: "server_moderator"; serverId: number }
-    | { userId: number; role: "channel_moderator"; serverId: number; channelId: number };
+    | { role: NonModeratorAssignableRole; scopeId: number }
+    | { role: "cr"; classPublicId: string }
+    | { assignmentPublicId: string };
 };
 
 const ROLE_OPTIONS: Record<AssignableRole, RoleOption> = {
@@ -179,7 +182,7 @@ async function notifyRoleAssigned(
   userId: number,
   role: string,
   serverId: number,
-  channelId?: number | null
+  channelId?: number | null,
 ): Promise<void> {
   try {
     await notificationService.createRoleAssignedNotification({
@@ -189,43 +192,54 @@ async function notifyRoleAssigned(
       channelId,
     });
   } catch (error) {
-    console.error("[RoleService] Failed to create role assignment notification:", error);
+    console.error(
+      "[RoleService] Failed to create role assignment notification:",
+      error,
+    );
   }
 }
 
 function emitRolesUpdated(userId: number): void {
-  emitToUser(userId, "auth:roles-updated", { userId });
+  emitToUser(userId, "auth:roles-updated", {});
 }
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
-async function findActiveUserOrThrow(userId: number) {
+async function findActiveUserOrThrow(userPublicId: string) {
+  const resolved = await resolveUserPublicId(userPublicId);
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: resolved.id },
     select: {
       id: true,
+      publicId: true,
       userType: true,
+      status: true,
       isActive: true,
+      isDeleted: true,
       departmentId: true,
       studentInfo: { select: { studentId: true, classId: true } },
       teacherInfo: { select: { teacherId: true } },
     },
   });
 
-  if (!user || !user.isActive) {
+  if (!user || user.status !== "ACTIVE" || !user.isActive || user.isDeleted) {
     throw new NotFoundError("User not found or inactive");
   }
 
   return user;
 }
 
-function assertTeacher(user: Awaited<ReturnType<typeof findActiveUserOrThrow>>) {
+function assertTeacher(
+  user: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
+) {
   if (user.userType !== "TEACHER" || !user.teacherInfo) {
     throw new ValidationError("Target user must be a teacher for this role");
   }
 }
 
-function assertStudent(user: Awaited<ReturnType<typeof findActiveUserOrThrow>>) {
+function assertStudent(
+  user: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
+) {
   if (user.userType !== "STUDENT" || !user.studentInfo) {
     throw new ValidationError("Target user must be a student for this role");
   }
@@ -237,9 +251,15 @@ function assertStudent(user: Awaited<ReturnType<typeof findActiveUserOrThrow>>) 
  * Resolve the department ID that the caller (HOD) heads.
  * Returns null if caller is not HOD of any department.
  */
-async function getCallerHODDepartmentId(callerId: number): Promise<number | null> {
+async function getCallerHODDepartmentId(
+  callerId: number,
+): Promise<number | null> {
   const dept = await prisma.department.findFirst({
-    where: { hodId: callerId },
+    where: {
+      hodId: callerId,
+      hod: { user: { status: "ACTIVE", isActive: true, isDeleted: false } },
+      server: activePlatformRoleServerWhere(),
+    },
     select: { id: true },
   });
   return dept?.id ?? null;
@@ -251,7 +271,13 @@ async function getCallerHODDepartmentId(callerId: number): Promise<number | null
  */
 async function getCallerPDProgram(callerId: number) {
   return prisma.program.findFirst({
-    where: { programDirectorId: callerId },
+    where: {
+      programDirectorId: callerId,
+      programDirector: {
+        user: { status: "ACTIVE", isActive: true, isDeleted: false },
+      },
+      department: { server: activePlatformRoleServerWhere() },
+    },
     select: { id: true, departmentId: true },
   });
 }
@@ -261,7 +287,12 @@ async function getCallerPDProgram(callerId: number) {
  */
 async function getCallerCRClass(callerId: number) {
   return prisma.class.findFirst({
-    where: { crId: callerId },
+    where: {
+      crId: callerId,
+      status: "ACTIVE",
+      cr: { user: { status: "ACTIVE", isActive: true, isDeleted: false } },
+      server: activePlatformRoleServerWhere(),
+    },
     select: { id: true, serverId: true },
   });
 }
@@ -272,16 +303,25 @@ async function getCallerCRClass(callerId: number) {
 async function getCallerSocietyLeadership(callerId: number) {
   return prisma.society.findFirst({
     where: {
+      status: "ACTIVE",
+      isActive: true,
+      isDeleted: false,
+      server: activePlatformRoleServerWhere(),
       OR: [{ presidentId: callerId }, { convenorId: callerId }],
     },
     select: { id: true, serverId: true },
   });
 }
 
-async function getCallerSocietyLeadershipIds(callerId: number): Promise<number[]> {
+async function getCallerSocietyLeadershipIds(
+  callerId: number,
+): Promise<number[]> {
   const societies = await prisma.society.findMany({
     where: {
+      status: "ACTIVE",
       isActive: true,
+      isDeleted: false,
+      server: activePlatformRoleServerWhere(),
       OR: [{ presidentId: callerId }, { convenorId: callerId }],
     },
     select: { id: true },
@@ -292,7 +332,11 @@ async function getCallerSocietyLeadershipIds(callerId: number): Promise<number[]
 
 async function getCallerCRClassIds(callerId: number): Promise<number[]> {
   const classes = await prisma.class.findMany({
-    where: { crId: callerId, status: "ACTIVE" },
+    where: {
+      crId: callerId,
+      status: "ACTIVE",
+      server: activePlatformRoleServerWhere(),
+    },
     select: { id: true },
   });
 
@@ -317,7 +361,9 @@ function emptyPaginated<T>(query: OptionQuery) {
   };
 }
 
-function buildUserSearch(search: string | undefined): Prisma.UserWhereInput | undefined {
+function buildUserSearch(
+  search: string | undefined,
+): Prisma.UserWhereInput | undefined {
   if (!search) {
     return undefined;
   }
@@ -330,19 +376,23 @@ function buildUserSearch(search: string | undefined): Prisma.UserWhereInput | un
   };
 }
 
-async function assertCallerCanOpenRoleManagement(caller: CallerInfo): Promise<void> {
+async function assertCallerCanOpenRoleManagement(
+  caller: CallerInfo,
+): Promise<void> {
   const options = await getAssignableRoles(caller);
   if (options.length === 0) {
     throw new ForbiddenError(
       "You do not have permission to manage roles in this scope",
-      ApiErrorCode.SCOPE_FORBIDDEN
+      ApiErrorCode.SCOPE_FORBIDDEN,
     );
   }
 }
 
-async function getCallerModeratorServerWhere(caller: CallerInfo): Promise<Prisma.ServerWhereInput | null> {
+async function getCallerModeratorServerWhere(
+  caller: CallerInfo,
+): Promise<Prisma.ServerWhereInput | null> {
   if (caller.userType === "ADMIN") {
-    return { isActive: true };
+    return activePlatformRoleServerWhere();
   }
 
   const conditions: Prisma.ServerWhereInput[] = [];
@@ -350,19 +400,43 @@ async function getCallerModeratorServerWhere(caller: CallerInfo): Promise<Prisma
   if (hodDeptId) {
     conditions.push(
       { department: { is: { id: hodDeptId } } },
-      { class: { is: { status: "ACTIVE", program: { departmentId: hodDeptId } } } },
-      { society: { is: { isActive: true, departmentId: hodDeptId } } },
+      {
+        class: {
+          is: { status: "ACTIVE", program: { departmentId: hodDeptId } },
+        },
+      },
+      {
+        society: {
+          is: {
+            status: "ACTIVE",
+            isActive: true,
+            isDeleted: false,
+            departmentId: hodDeptId,
+          },
+        },
+      },
     );
   }
 
   const crClassIds = await getCallerCRClassIds(caller.id);
   if (crClassIds.length > 0) {
-    conditions.push({ class: { is: { id: { in: crClassIds }, status: "ACTIVE" } } });
+    conditions.push({
+      class: { is: { id: { in: crClassIds }, status: "ACTIVE" } },
+    });
   }
 
   const societyLeadershipIds = await getCallerSocietyLeadershipIds(caller.id);
   if (societyLeadershipIds.length > 0) {
-    conditions.push({ society: { is: { id: { in: societyLeadershipIds }, isActive: true } } });
+    conditions.push({
+      society: {
+        is: {
+          id: { in: societyLeadershipIds },
+          status: "ACTIVE",
+          isActive: true,
+          isDeleted: false,
+        },
+      },
+    });
   }
 
   if (conditions.length === 0) {
@@ -370,20 +444,20 @@ async function getCallerModeratorServerWhere(caller: CallerInfo): Promise<Prisma
   }
 
   return {
-    isActive: true,
+    ...activePlatformRoleServerWhere(),
     OR: conditions,
   };
 }
 
 async function assertCallerCanUseModeratorServer(
   caller: CallerInfo,
-  serverId: number
+  serverId: number,
 ): Promise<void> {
   const where = await getCallerModeratorServerWhere(caller);
   if (!where) {
     throw new ForbiddenError(
       "You do not have permission to manage moderators for this server",
-      ApiErrorCode.SCOPE_FORBIDDEN
+      ApiErrorCode.SCOPE_FORBIDDEN,
     );
   }
 
@@ -395,7 +469,7 @@ async function assertCallerCanUseModeratorServer(
   if (!server) {
     throw new ForbiddenError(
       "You do not have permission to manage moderators for this server",
-      ApiErrorCode.SCOPE_FORBIDDEN
+      ApiErrorCode.SCOPE_FORBIDDEN,
     );
   }
 }
@@ -403,7 +477,7 @@ async function assertCallerCanUseModeratorServer(
 async function assertAssignableChannel(
   caller: CallerInfo,
   serverId: number,
-  channelId: number
+  channelId: number,
 ): Promise<void> {
   await assertCallerCanUseModeratorServer(caller, serverId);
 
@@ -433,7 +507,9 @@ function positiveInt(value: number | string | undefined): number | undefined {
 
 // ─── Scoped Option APIs ────────────────────────────────────────────────────
 
-export async function getAssignableRoles(caller: CallerInfo): Promise<RoleOption[]> {
+export async function getAssignableRoles(
+  caller: CallerInfo,
+): Promise<RoleOption[]> {
   if (caller.userType === "ADMIN") {
     return [
       ROLE_OPTIONS.hod,
@@ -444,12 +520,13 @@ export async function getAssignableRoles(caller: CallerInfo): Promise<RoleOption
     ];
   }
 
-  const [hodDeptId, pdProgram, crClassIds, societyLeadershipIds] = await Promise.all([
-    getCallerHODDepartmentId(caller.id),
-    getCallerPDProgram(caller.id),
-    getCallerCRClassIds(caller.id),
-    getCallerSocietyLeadershipIds(caller.id),
-  ]);
+  const [hodDeptId, pdProgram, crClassIds, societyLeadershipIds] =
+    await Promise.all([
+      getCallerHODDepartmentId(caller.id),
+      getCallerPDProgram(caller.id),
+      getCallerCRClassIds(caller.id),
+      getCallerSocietyLeadershipIds(caller.id),
+    ]);
 
   const roles: RoleOption[] = [];
   if (hodDeptId) {
@@ -465,7 +542,10 @@ export async function getAssignableRoles(caller: CallerInfo): Promise<RoleOption
   return [...new Map(roles.map((role) => [role.role, role])).values()];
 }
 
-export async function listAssignableScopes(query: AssignableScopesQuery, caller: CallerInfo) {
+export async function listAssignableScopes(
+  query: AssignableScopesQuery,
+  caller: CallerInfo,
+) {
   await assertCallerCanOpenRoleManagement(caller);
 
   switch (query.role) {
@@ -483,7 +563,10 @@ export async function listAssignableScopes(query: AssignableScopesQuery, caller:
   }
 }
 
-async function listAssignableDepartmentScopes(query: OptionQuery, caller: CallerInfo) {
+async function listAssignableDepartmentScopes(
+  query: OptionQuery,
+  caller: CallerInfo,
+) {
   if (caller.userType !== "ADMIN") {
     return emptyPaginated<ScopeOption>(query);
   }
@@ -492,11 +575,11 @@ async function listAssignableDepartmentScopes(query: OptionQuery, caller: Caller
   const search = normalizeSearch(query.search);
   const where: Prisma.DepartmentWhereInput = search
     ? {
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { code: { contains: search, mode: "insensitive" } },
-      ],
-    }
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { code: { contains: search, mode: "insensitive" } },
+        ],
+      }
     : {};
 
   const [departments, total] = await prisma.$transaction([
@@ -511,7 +594,7 @@ async function listAssignableDepartmentScopes(query: OptionQuery, caller: Caller
         code: true,
         hod: {
           select: {
-            user: { select: { id: true, fullName: true, email: true } },
+            user: { select: { publicId: true, fullName: true, email: true } },
           },
         },
       },
@@ -521,19 +604,26 @@ async function listAssignableDepartmentScopes(query: OptionQuery, caller: Caller
 
   return {
     success: true as const,
-    data: departments.map((department): ScopeOption => ({
-      id: department.id,
-      label: `${department.code} · ${department.name}`,
-      kind: "department",
-      disabled: department.hod !== null,
-      disabledReason: department.hod ? `Already assigned to ${labelUser(department.hod.user)}` : undefined,
-      currentAssignee: department.hod?.user,
-    })),
+    data: departments.map(
+      (department): ScopeOption => ({
+        id: department.id,
+        label: `${department.code} · ${department.name}`,
+        kind: "department",
+        disabled: department.hod !== null,
+        disabledReason: department.hod
+          ? `Already assigned to ${labelUser(department.hod.user)}`
+          : undefined,
+        currentAssignee: department.hod?.user,
+      }),
+    ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-async function listAssignableProgramScopes(query: OptionQuery, caller: CallerInfo) {
+async function listAssignableProgramScopes(
+  query: OptionQuery,
+  caller: CallerInfo,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const where: Prisma.ProgramWhereInput = {};
@@ -566,7 +656,7 @@ async function listAssignableProgramScopes(query: OptionQuery, caller: CallerInf
         department: { select: { name: true, code: true } },
         programDirector: {
           select: {
-            user: { select: { id: true, fullName: true, email: true } },
+            user: { select: { publicId: true, fullName: true, email: true } },
           },
         },
       },
@@ -576,21 +666,26 @@ async function listAssignableProgramScopes(query: OptionQuery, caller: CallerInf
 
   return {
     success: true as const,
-    data: programs.map((program): ScopeOption => ({
-      id: program.id,
-      label: `${program.code} · ${program.department.code}`,
-      kind: "program",
-      disabled: program.programDirector !== null,
-      disabledReason: program.programDirector
-        ? `Already assigned to ${labelUser(program.programDirector.user)}`
-        : undefined,
-      currentAssignee: program.programDirector?.user,
-    })),
+    data: programs.map(
+      (program): ScopeOption => ({
+        id: program.id,
+        label: `${program.code} · ${program.department.code}`,
+        kind: "program",
+        disabled: program.programDirector !== null,
+        disabledReason: program.programDirector
+          ? `Already assigned to ${labelUser(program.programDirector.user)}`
+          : undefined,
+        currentAssignee: program.programDirector?.user,
+      }),
+    ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-async function listAssignableClassScopes(query: OptionQuery, caller: CallerInfo) {
+async function listAssignableClassScopes(
+  query: OptionQuery,
+  caller: CallerInfo,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const where: Prisma.ClassWhereInput = { status: "ACTIVE" };
@@ -616,9 +711,15 @@ async function listAssignableClassScopes(query: OptionQuery, caller: CallerInfo)
   if (search) {
     const searchOr: Prisma.ClassWhereInput[] = [
       { program: { code: { contains: search, mode: "insensitive" } } },
-      { program: { department: { code: { contains: search, mode: "insensitive" } } } },
+      {
+        program: {
+          department: { code: { contains: search, mode: "insensitive" } },
+        },
+      },
     ];
-    where.AND = [{ OR: where.OR }, { OR: searchOr }].filter((item) => item.OR !== undefined);
+    where.AND = [{ OR: where.OR }, { OR: searchOr }].filter(
+      (item) => item.OR !== undefined,
+    );
     delete where.OR;
   }
 
@@ -634,15 +735,17 @@ async function listAssignableClassScopes(query: OptionQuery, caller: CallerInfo)
         { admissionYear: "desc" },
       ],
       select: {
-        id: true,
-        serverId: true,
+        publicId: true,
+        server: { select: { publicId: true } },
         currentSemester: true,
         section: true,
         admissionYear: true,
-        program: { select: { code: true, department: { select: { code: true } } } },
+        program: {
+          select: { code: true, department: { select: { code: true } } },
+        },
         cr: {
           select: {
-            user: { select: { id: true, fullName: true, email: true } },
+            user: { select: { publicId: true, fullName: true, email: true } },
           },
         },
       },
@@ -652,20 +755,27 @@ async function listAssignableClassScopes(query: OptionQuery, caller: CallerInfo)
 
   return {
     success: true as const,
-    data: classes.map((classRecord): ScopeOption => ({
-      id: classRecord.id,
-      label: `${classRecord.program.code}-${classRecord.currentSemester}${classRecord.section} · ${classRecord.admissionYear}`,
-      kind: "class",
-      serverId: classRecord.serverId,
-      disabled: classRecord.cr !== null,
-      disabledReason: classRecord.cr ? `Already assigned to ${labelUser(classRecord.cr.user)}` : undefined,
-      currentAssignee: classRecord.cr?.user,
-    })),
+    data: classes.map(
+      (classRecord): ScopeOption => ({
+        publicId: classRecord.publicId,
+        label: `${classRecord.program.code}-${classRecord.currentSemester}${classRecord.section} · ${classRecord.admissionYear}`,
+        kind: "class",
+        serverPublicId: classRecord.server.publicId,
+        disabled: classRecord.cr !== null,
+        disabledReason: classRecord.cr
+          ? `Already assigned to ${labelUser(classRecord.cr.user)}`
+          : undefined,
+        currentAssignee: classRecord.cr?.user,
+      }),
+    ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-async function listAssignableModeratorServerScopes(query: OptionQuery, caller: CallerInfo) {
+async function listAssignableModeratorServerScopes(
+  query: OptionQuery,
+  caller: CallerInfo,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const where = await getCallerModeratorServerWhere(caller);
   if (!where) {
@@ -683,26 +793,32 @@ async function listAssignableModeratorServerScopes(query: OptionQuery, caller: C
       skip,
       take,
       orderBy: [{ type: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, type: true },
+      select: { publicId: true, name: true, type: true },
     }),
     prisma.server.count({ where: scopedWhere }),
   ]);
 
   return {
     success: true as const,
-    data: servers.map((server): ScopeOption => ({
-      id: server.id,
-      label: `${server.name} · ${server.type}`,
-      kind: "server",
-      serverId: server.id,
-      disabled: false,
-    })),
+    data: servers.map(
+      (server): ScopeOption => ({
+        publicId: server.publicId,
+        label: `${server.name} · ${server.type}`,
+        kind: "server",
+        serverPublicId: server.publicId,
+        disabled: false,
+      }),
+    ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-export async function listAssignableChannels(query: AssignableChannelsQuery, caller: CallerInfo) {
-  const serverId = positiveInt(query.serverId)!;
+export async function listAssignableChannels(
+  query: AssignableChannelsQuery,
+  caller: CallerInfo,
+) {
+  const { id: serverId, publicId: serverPublicId } =
+    await resolveServerPublicId(query.serverPublicId);
   await assertCallerCanUseModeratorServer(caller, serverId);
 
   const { page, limit, skip, take } = parsePagination(query);
@@ -720,25 +836,30 @@ export async function listAssignableChannels(query: AssignableChannelsQuery, cal
       skip,
       take,
       orderBy: [{ name: "asc" }],
-      select: { id: true, serverId: true, name: true, type: true, isLocked: true },
+      select: { publicId: true, name: true, type: true, isLocked: true },
     }),
     prisma.channel.count({ where }),
   ]);
 
   return {
     success: true as const,
-    data: channels.map((channel): ChannelOption => ({
-      id: channel.id,
-      serverId: channel.serverId,
-      label: `#${channel.name}`,
-      type: channel.type,
-      isLocked: channel.isLocked,
-    })),
+    data: channels.map(
+      (channel): ChannelOption => ({
+        publicId: channel.publicId,
+        serverPublicId,
+        label: `#${channel.name}`,
+        type: channel.type,
+        isLocked: channel.isLocked,
+      }),
+    ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-export async function listAssignableUsers(query: AssignableUsersQuery, caller: CallerInfo) {
+export async function listAssignableUsers(
+  query: AssignableUsersQuery,
+  caller: CallerInfo,
+) {
   await assertCallerCanOpenRoleManagement(caller);
 
   switch (query.role) {
@@ -756,7 +877,10 @@ export async function listAssignableUsers(query: AssignableUsersQuery, caller: C
   }
 }
 
-async function listHodCandidateUsers(query: AssignableUsersQuery, caller: CallerInfo) {
+async function listHodCandidateUsers(
+  query: AssignableUsersQuery,
+  caller: CallerInfo,
+) {
   const scopeId = positiveInt(query.scopeId);
   if (caller.userType !== "ADMIN" || !scopeId) {
     return emptyPaginated<UserOption>(query);
@@ -773,7 +897,10 @@ async function listHodCandidateUsers(query: AssignableUsersQuery, caller: Caller
   return listTeacherUsersByWhere(query, { departmentId: scopeId });
 }
 
-async function listProgramDirectorCandidateUsers(query: AssignableUsersQuery, caller: CallerInfo) {
+async function listProgramDirectorCandidateUsers(
+  query: AssignableUsersQuery,
+  caller: CallerInfo,
+) {
   const scopeId = positiveInt(query.scopeId);
   if (!scopeId) {
     return emptyPaginated<UserOption>(query);
@@ -791,30 +918,50 @@ async function listProgramDirectorCandidateUsers(query: AssignableUsersQuery, ca
   return listTeacherUsersByWhere(query, { departmentId: program.departmentId });
 }
 
-async function listCrCandidateUsers(query: AssignableUsersQuery, caller: CallerInfo) {
-  const scopeId = positiveInt(query.scopeId);
-  if (!scopeId) {
+async function listCrCandidateUsers(
+  query: AssignableUsersQuery,
+  caller: CallerInfo,
+) {
+  if (!query.classPublicId) {
     return emptyPaginated<UserOption>(query);
   }
+  const { id: classId } = await resolveClassPublicId(query.classPublicId);
 
   const classRecord = await prisma.class.findUnique({
-    where: { id: scopeId },
-    select: { id: true, status: true, programId: true, program: { select: { departmentId: true } } },
+    where: { id: classId },
+    select: {
+      id: true,
+      status: true,
+      programId: true,
+      program: { select: { departmentId: true } },
+    },
   });
   if (!classRecord || classRecord.status !== "ACTIVE") {
     throw new NotFoundError("Class not found");
   }
 
-  await assertCallerCanAssignCR(caller, classRecord.program.departmentId, classRecord.programId);
-  return listStudentUsersByWhere(query, { studentInfo: { is: { classId: classRecord.id } } });
+  await assertCallerCanAssignCR(
+    caller,
+    classRecord.program.departmentId,
+    classRecord.programId,
+  );
+  return listStudentUsersByWhere(query, {
+    studentInfo: { is: { classId: classRecord.id } },
+  });
 }
 
-async function listModeratorCandidateUsers(query: AssignableUsersQuery, caller: CallerInfo) {
-  const serverId = positiveInt(query.serverId);
-  const channelId = positiveInt(query.channelId);
-  if (!serverId) {
+async function listModeratorCandidateUsers(
+  query: AssignableUsersQuery,
+  caller: CallerInfo,
+) {
+  if (!query.serverPublicId) {
     return emptyPaginated<UserOption>(query);
   }
+  const { id: serverId } = await resolveServerPublicId(query.serverPublicId);
+  const channelResolution = query.channelPublicId
+    ? await resolveChannelPublicId(query.channelPublicId)
+    : undefined;
+  const channelId = channelResolution?.id;
 
   if (query.role === "channel_moderator") {
     if (!channelId) {
@@ -828,17 +975,20 @@ async function listModeratorCandidateUsers(query: AssignableUsersQuery, caller: 
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const userSearch = buildUserSearch(search);
-  const moderatorWhere =
-    query.role === "channel_moderator"
-      ? { serverId, channelId: channelId! }
-      : { serverId, channelId: null };
   const where: Prisma.ServerMembershipWhereInput = {
     serverId,
     user: {
+      status: "ACTIVE",
       isActive: true,
+      isDeleted: false,
       ...(userSearch ?? {}),
-      moderatorAssignments: {
-        none: moderatorWhere,
+      platformRoleAssignments: {
+        none: {
+          ...activePlatformRoleAssignmentWhere(),
+          serverId,
+          channelId: query.role === "channel_moderator" ? channelId! : null,
+          role: { name: query.role },
+        },
       },
     },
   };
@@ -852,7 +1002,7 @@ async function listModeratorCandidateUsers(query: AssignableUsersQuery, caller: 
       select: {
         user: {
           select: {
-            id: true,
+            publicId: true,
             fullName: true,
             email: true,
             userType: true,
@@ -871,7 +1021,10 @@ async function listModeratorCandidateUsers(query: AssignableUsersQuery, caller: 
   };
 }
 
-async function listTeacherUsersByWhere(query: OptionQuery, where: Prisma.UserWhereInput) {
+async function listTeacherUsersByWhere(
+  query: OptionQuery,
+  where: Prisma.UserWhereInput,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const userSearch = buildUserSearch(search);
@@ -879,7 +1032,9 @@ async function listTeacherUsersByWhere(query: OptionQuery, where: Prisma.UserWhe
     ...where,
     ...(userSearch ?? {}),
     userType: "TEACHER",
+    status: "ACTIVE",
     isActive: true,
+    isDeleted: false,
     teacherInfo: { isNot: null },
   };
 
@@ -889,7 +1044,13 @@ async function listTeacherUsersByWhere(query: OptionQuery, where: Prisma.UserWhe
       skip,
       take,
       orderBy: { fullName: "asc" },
-      select: { id: true, fullName: true, email: true, userType: true, departmentId: true },
+      select: {
+        publicId: true,
+        fullName: true,
+        email: true,
+        userType: true,
+        departmentId: true,
+      },
     }),
     prisma.user.count({ where: scopedWhere }),
   ]);
@@ -901,7 +1062,10 @@ async function listTeacherUsersByWhere(query: OptionQuery, where: Prisma.UserWhe
   };
 }
 
-async function listStudentUsersByWhere(query: OptionQuery, where: Prisma.UserWhereInput) {
+async function listStudentUsersByWhere(
+  query: OptionQuery,
+  where: Prisma.UserWhereInput,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const userSearch = buildUserSearch(search);
@@ -909,7 +1073,9 @@ async function listStudentUsersByWhere(query: OptionQuery, where: Prisma.UserWhe
     ...where,
     ...(userSearch ?? {}),
     userType: "STUDENT",
+    status: "ACTIVE",
     isActive: true,
+    isDeleted: false,
     studentInfo: where.studentInfo ?? { isNot: null },
   };
 
@@ -919,7 +1085,13 @@ async function listStudentUsersByWhere(query: OptionQuery, where: Prisma.UserWhe
       skip,
       take,
       orderBy: { fullName: "asc" },
-      select: { id: true, fullName: true, email: true, userType: true, departmentId: true },
+      select: {
+        publicId: true,
+        fullName: true,
+        email: true,
+        userType: true,
+        departmentId: true,
+      },
     }),
     prisma.user.count({ where: scopedWhere }),
   ]);
@@ -931,7 +1103,10 @@ async function listStudentUsersByWhere(query: OptionQuery, where: Prisma.UserWhe
   };
 }
 
-export async function listRevokableRoles(query: RevokableRolesQuery, caller: CallerInfo) {
+export async function listRevokableRoles(
+  query: RevokableRolesQuery,
+  caller: CallerInfo,
+) {
   await assertCallerCanOpenRoleManagement(caller);
 
   switch (query.role) {
@@ -949,7 +1124,10 @@ export async function listRevokableRoles(query: RevokableRolesQuery, caller: Cal
   }
 }
 
-async function listRevokableHodAssignments(query: RevokableRolesQuery, caller: CallerInfo) {
+async function listRevokableHodAssignments(
+  query: RevokableRolesQuery,
+  caller: CallerInfo,
+) {
   if (caller.userType !== "ADMIN") {
     return emptyPaginated<RevokableAssignment>(query);
   }
@@ -962,13 +1140,21 @@ async function listRevokableHodAssignments(query: RevokableRolesQuery, caller: C
     ...(scopeId ? { id: scopeId } : {}),
     ...(search
       ? {
-        OR: [
-          { code: { contains: search, mode: "insensitive" } },
-          { name: { contains: search, mode: "insensitive" } },
-          { hod: { user: { fullName: { contains: search, mode: "insensitive" } } } },
-          { hod: { user: { email: { contains: search, mode: "insensitive" } } } },
-        ],
-      }
+          OR: [
+            { code: { contains: search, mode: "insensitive" } },
+            { name: { contains: search, mode: "insensitive" } },
+            {
+              hod: {
+                user: { fullName: { contains: search, mode: "insensitive" } },
+              },
+            },
+            {
+              hod: {
+                user: { email: { contains: search, mode: "insensitive" } },
+              },
+            },
+          ],
+        }
       : {}),
   };
 
@@ -982,7 +1168,19 @@ async function listRevokableHodAssignments(query: RevokableRolesQuery, caller: C
         id: true,
         code: true,
         name: true,
-        hod: { select: { user: { select: { id: true, fullName: true, email: true, userType: true, departmentId: true } } } },
+        hod: {
+          select: {
+            user: {
+              select: {
+                publicId: true,
+                fullName: true,
+                email: true,
+                userType: true,
+                departmentId: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.department.count({ where }),
@@ -992,18 +1190,27 @@ async function listRevokableHodAssignments(query: RevokableRolesQuery, caller: C
     success: true as const,
     data: departments
       .filter((department) => department.hod !== null)
-      .map((department): RevokableAssignment => ({
-        assignmentKey: `hod:${department.id}:${department.hod!.user.id}`,
-        role: "hod",
-        user: department.hod!.user,
-        scope: { id: department.id, kind: "department", label: `${department.code} · ${department.name}` },
-        revokePayload: { userId: department.hod!.user.id, role: "hod", scopeId: department.id },
-      })),
+      .map(
+        (department): RevokableAssignment => ({
+          assignmentKey: `hod:${department.id}:${department.hod!.user.publicId}`,
+          role: "hod",
+          user: department.hod!.user,
+          scope: {
+            id: department.id,
+            kind: "department",
+            label: `${department.code} · ${department.name}`,
+          },
+          revokePayload: { role: "hod", scopeId: department.id },
+        }),
+      ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-async function listRevokableProgramDirectorAssignments(query: RevokableRolesQuery, caller: CallerInfo) {
+async function listRevokableProgramDirectorAssignments(
+  query: RevokableRolesQuery,
+  caller: CallerInfo,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const scopeId = positiveInt(query.scopeId);
@@ -1024,8 +1231,16 @@ async function listRevokableProgramDirectorAssignments(query: RevokableRolesQuer
     where.OR = [
       { code: { contains: search, mode: "insensitive" } },
       { department: { code: { contains: search, mode: "insensitive" } } },
-      { programDirector: { user: { fullName: { contains: search, mode: "insensitive" } } } },
-      { programDirector: { user: { email: { contains: search, mode: "insensitive" } } } },
+      {
+        programDirector: {
+          user: { fullName: { contains: search, mode: "insensitive" } },
+        },
+      },
+      {
+        programDirector: {
+          user: { email: { contains: search, mode: "insensitive" } },
+        },
+      },
     ];
   }
 
@@ -1039,7 +1254,19 @@ async function listRevokableProgramDirectorAssignments(query: RevokableRolesQuer
         id: true,
         code: true,
         department: { select: { code: true } },
-        programDirector: { select: { user: { select: { id: true, fullName: true, email: true, userType: true, departmentId: true } } } },
+        programDirector: {
+          select: {
+            user: {
+              select: {
+                publicId: true,
+                fullName: true,
+                email: true,
+                userType: true,
+                departmentId: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.program.count({ where }),
@@ -1049,29 +1276,39 @@ async function listRevokableProgramDirectorAssignments(query: RevokableRolesQuer
     success: true as const,
     data: programs
       .filter((program) => program.programDirector !== null)
-      .map((program): RevokableAssignment => ({
-        assignmentKey: `program_director:${program.id}:${program.programDirector!.user.id}`,
-        role: "program_director",
-        user: program.programDirector!.user,
-        scope: { id: program.id, kind: "program", label: `${program.code} · ${program.department.code}` },
-        revokePayload: {
-          userId: program.programDirector!.user.id,
+      .map(
+        (program): RevokableAssignment => ({
+          assignmentKey: `program_director:${program.id}:${program.programDirector!.user.publicId}`,
           role: "program_director",
-          scopeId: program.id,
-        },
-      })),
+          user: program.programDirector!.user,
+          scope: {
+            id: program.id,
+            kind: "program",
+            label: `${program.code} · ${program.department.code}`,
+          },
+          revokePayload: {
+            role: "program_director",
+            scopeId: program.id,
+          },
+        }),
+      ),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-async function listRevokableCrAssignments(query: RevokableRolesQuery, caller: CallerInfo) {
+async function listRevokableCrAssignments(
+  query: RevokableRolesQuery,
+  caller: CallerInfo,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
-  const scopeId = positiveInt(query.scopeId);
+  const classResolution = query.classPublicId
+    ? await resolveClassPublicId(query.classPublicId)
+    : undefined;
   const where: Prisma.ClassWhereInput = {
     status: "ACTIVE",
     crId: { not: null },
-    ...(scopeId ? { id: scopeId } : {}),
+    ...(classResolution ? { id: classResolution.id } : {}),
   };
 
   if (caller.userType !== "ADMIN") {
@@ -1098,7 +1335,9 @@ async function listRevokableCrAssignments(query: RevokableRolesQuery, caller: Ca
       { cr: { user: { fullName: { contains: search, mode: "insensitive" } } } },
       { cr: { user: { email: { contains: search, mode: "insensitive" } } } },
     ];
-    where.AND = [{ OR: where.OR }, { OR: searchOr }].filter((item) => item.OR !== undefined);
+    where.AND = [{ OR: where.OR }, { OR: searchOr }].filter(
+      (item) => item.OR !== undefined,
+    );
     delete where.OR;
   }
 
@@ -1107,14 +1346,30 @@ async function listRevokableCrAssignments(query: RevokableRolesQuery, caller: Ca
       where,
       skip,
       take,
-      orderBy: [{ program: { code: "asc" } }, { currentSemester: "asc" }, { section: "asc" }],
+      orderBy: [
+        { program: { code: "asc" } },
+        { currentSemester: "asc" },
+        { section: "asc" },
+      ],
       select: {
-        id: true,
+        publicId: true,
         currentSemester: true,
         section: true,
         admissionYear: true,
         program: { select: { code: true } },
-        cr: { select: { user: { select: { id: true, fullName: true, email: true, userType: true, departmentId: true } } } },
+        cr: {
+          select: {
+            user: {
+              select: {
+                publicId: true,
+                fullName: true,
+                email: true,
+                userType: true,
+                departmentId: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.class.count({ where }),
@@ -1127,26 +1382,35 @@ async function listRevokableCrAssignments(query: RevokableRolesQuery, caller: Ca
       .map((classRecord): RevokableAssignment => {
         const label = `${classRecord.program.code}-${classRecord.currentSemester}${classRecord.section} · ${classRecord.admissionYear}`;
         return {
-          assignmentKey: `cr:${classRecord.id}:${classRecord.cr!.user.id}`,
+          assignmentKey: `cr:${classRecord.publicId}:${classRecord.cr!.user.publicId}`,
           role: "cr",
           user: classRecord.cr!.user,
-          scope: { id: classRecord.id, kind: "class", label },
-          revokePayload: { userId: classRecord.cr!.user.id, role: "cr", scopeId: classRecord.id },
+          scope: { publicId: classRecord.publicId, kind: "class", label },
+          revokePayload: { role: "cr", classPublicId: classRecord.publicId },
         };
       }),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-async function listRevokableModeratorAssignments(query: RevokableRolesQuery, caller: CallerInfo) {
+async function listRevokableModeratorAssignments(
+  query: RevokableRolesQuery,
+  caller: CallerInfo,
+) {
   const { page, limit, skip, take } = parsePagination(query);
   const serverWhere = await getCallerModeratorServerWhere(caller);
   if (!serverWhere) {
     return emptyPaginated<RevokableAssignment>(query);
   }
 
-  const serverId = positiveInt(query.serverId);
-  const channelId = positiveInt(query.channelId);
+  const serverResolution = query.serverPublicId
+    ? await resolveServerPublicId(query.serverPublicId)
+    : undefined;
+  const channelResolution = query.channelPublicId
+    ? await resolveChannelPublicId(query.channelPublicId)
+    : undefined;
+  const serverId = serverResolution?.id;
+  const channelId = channelResolution?.id;
 
   if (serverId) {
     await assertCallerCanUseModeratorServer(caller, serverId);
@@ -1156,9 +1420,11 @@ async function listRevokableModeratorAssignments(query: RevokableRolesQuery, cal
   }
 
   const search = normalizeSearch(query.search);
-  const where: Prisma.ModeratorAssignmentWhereInput = {
+  const where: Prisma.UserRoleAssignmentWhereInput = {
+    ...activePlatformRoleAssignmentWhere(),
     scopeType: query.role === "channel_moderator" ? "CHANNEL" : "SERVER",
     server: serverWhere,
+    role: { name: query.role },
     ...(serverId ? { serverId } : {}),
     ...(query.role === "channel_moderator" && channelId ? { channelId } : {}),
     ...(query.role === "server_moderator" ? { channelId: null } : {}),
@@ -1178,60 +1444,68 @@ async function listRevokableModeratorAssignments(query: RevokableRolesQuery, cal
   }
 
   const [assignments, total] = await prisma.$transaction([
-    prisma.moderatorAssignment.findMany({
+    prisma.userRoleAssignment.findMany({
       where,
       skip,
       take,
       orderBy: [{ assignedAt: "desc" }],
       select: {
-        id: true,
-        serverId: true,
+        publicId: true,
         channelId: true,
-        user: { select: { id: true, fullName: true, email: true, userType: true, departmentId: true } },
-        server: { select: { id: true, name: true, type: true } },
-        channel: { select: { id: true, name: true } },
+        expiresAt: true,
+        user: {
+          select: {
+            publicId: true,
+            fullName: true,
+            email: true,
+            userType: true,
+            departmentId: true,
+          },
+        },
+        server: { select: { publicId: true, name: true, type: true } },
+        channel: { select: { publicId: true, name: true } },
       },
     }),
-    prisma.moderatorAssignment.count({ where }),
+    prisma.userRoleAssignment.count({ where }),
   ]);
 
   return {
     success: true as const,
     data: assignments.map((assignment): RevokableAssignment => {
-      if (query.role === "channel_moderator" && assignment.channelId && assignment.channel) {
+      if (
+        query.role === "channel_moderator" &&
+        assignment.channelId &&
+        assignment.channel
+      ) {
         return {
-          assignmentKey: `channel_moderator:${assignment.id}`,
+          assignmentKey: `channel_moderator:${assignment.publicId}`,
           role: "channel_moderator",
+          expiresAt: assignment.expiresAt,
           user: assignment.user,
           server: {
-            id: assignment.server.id,
+            publicId: assignment.server.publicId,
             label: assignment.server.name,
             type: assignment.server.type,
           },
-          channel: { id: assignment.channel.id, label: `#${assignment.channel.name}` },
-          revokePayload: {
-            userId: assignment.user.id,
-            role: "channel_moderator",
-            serverId: assignment.serverId,
-            channelId: assignment.channelId,
+          channel: {
+            publicId: assignment.channel.publicId,
+            label: `#${assignment.channel.name}`,
           },
+          revokePayload: { assignmentPublicId: assignment.publicId },
         };
       }
 
       return {
-        assignmentKey: `server_moderator:${assignment.id}`,
+        assignmentKey: `server_moderator:${assignment.publicId}`,
         role: "server_moderator",
+        expiresAt: assignment.expiresAt,
         user: assignment.user,
         server: {
-          id: assignment.server.id,
+          publicId: assignment.server.publicId,
           label: assignment.server.name,
           type: assignment.server.type,
         },
-        revokePayload: {
-          userId: assignment.user.id,
-          role: "server_moderator",
-          serverId: assignment.serverId,
-        },
+        revokePayload: { assignmentPublicId: assignment.publicId },
       };
     }),
     pagination: buildPaginationResponse(page, limit, total),
@@ -1247,7 +1521,7 @@ async function assertCallerCanAssignHOD(caller: CallerInfo): Promise<void> {
 
 async function assertCallerCanAssignPD(
   caller: CallerInfo,
-  targetDepartmentId: number
+  targetDepartmentId: number,
 ): Promise<void> {
   if (caller.userType === "ADMIN") return;
 
@@ -1257,14 +1531,14 @@ async function assertCallerCanAssignPD(
 
   throw new ForbiddenError(
     "You do not have permission to assign a program director for this scope",
-    ApiErrorCode.SCOPE_FORBIDDEN
+    ApiErrorCode.SCOPE_FORBIDDEN,
   );
 }
 
 async function assertCallerCanAssignCR(
   caller: CallerInfo,
   targetClassDepartmentId: number,
-  targetClassProgramId: number
+  targetClassProgramId: number,
 ): Promise<void> {
   if (caller.userType === "ADMIN") return;
 
@@ -1278,137 +1552,23 @@ async function assertCallerCanAssignCR(
 
   throw new ForbiddenError(
     "You do not have permission to assign a class representative for this scope",
-    ApiErrorCode.SCOPE_FORBIDDEN
+    ApiErrorCode.SCOPE_FORBIDDEN,
   );
 }
 
 async function assertCallerCanAssignModerator(
   caller: CallerInfo,
-  targetServerId: number
+  targetServerId: number,
 ): Promise<void> {
-  if (caller.userType === "ADMIN") return;
-
-  // HOD can assign moderator in servers within their department
-  const hodDeptId = await getCallerHODDepartmentId(caller.id);
-  if (hodDeptId) {
-    // Check if the target server belongs to their department (dept server, class server, or society server)
-    const deptServer = await prisma.department.findFirst({
-      where: { id: hodDeptId, serverId: targetServerId },
-    });
-    if (deptServer) return;
-
-    const classServer = await prisma.class.findFirst({
-      where: {
-        serverId: targetServerId,
-        program: { departmentId: hodDeptId },
-      },
-    });
-    if (classServer) return;
-
-    const societyServer = await prisma.society.findFirst({
-      where: { serverId: targetServerId, departmentId: hodDeptId },
-    });
-    if (societyServer) return;
-  }
-
-  // CR can assign moderator in their class server
-  const crClass = await getCallerCRClass(caller.id);
-  if (crClass && crClass.serverId === targetServerId) return;
-
-  // Society convenor/president can assign moderator in their society server
-  const societyLeadership = await getCallerSocietyLeadership(caller.id);
-  if (societyLeadership && societyLeadership.serverId === targetServerId) return;
-
-  throw new ForbiddenError(
-    "You do not have permission to assign a moderator for this scope",
-    ApiErrorCode.SCOPE_FORBIDDEN
-  );
+  await assertCallerCanUseModeratorServer(caller, targetServerId);
 }
 
-// ─── Assign Role ───────────────────────────────────────────────────────────
-
-export async function assignRole(
-  input: AssignRoleInput,
-  caller: CallerInfo,
-  auditContext?: AuditContext
-) {
-  const targetUser = await findActiveUserOrThrow(input.userId);
-
-  let result:
-    | Awaited<ReturnType<typeof assignHOD>>
-    | Awaited<ReturnType<typeof assignProgramDirector>>
-    | Awaited<ReturnType<typeof assignCR>>
-    | Awaited<ReturnType<typeof assignModerator>>;
-
-  switch (input.role) {
-    case "hod": {
-      result = await assignHOD(input.scopeId!, targetUser, caller);
-      await notifyRoleAssigned(result.userId, result.role, result.serverId);
-      emitRolesUpdated(result.userId);
-      break;
-    }
-    case "program_director": {
-      result = await assignProgramDirector(input.scopeId!, targetUser, caller);
-      await notifyRoleAssigned(result.userId, result.role, result.serverId);
-      emitRolesUpdated(result.userId);
-      break;
-    }
-    case "cr": {
-      result = await assignCR(input.scopeId!, targetUser, caller);
-      await notifyRoleAssigned(result.userId, result.role, result.serverId);
-      emitRolesUpdated(result.userId);
-      break;
-    }
-    case "society_president": {
-      throw new ValidationError(
-        "Society president changes must use PATCH /api/societies/:id"
-      );
-    }
-    case "society_convenor": {
-      throw new ValidationError(
-        "Society convenor changes must use PATCH /api/societies/:id"
-      );
-    }
-    case "server_moderator": {
-      result = await assignModerator("server_moderator", input.serverId!, undefined, targetUser, caller);
-      await notifyRoleAssigned(result.userId, result.role, result.serverId);
-      emitRolesUpdated(result.userId);
-      break;
-    }
-    case "channel_moderator": {
-      result = await assignModerator("channel_moderator", input.serverId!, input.channelId!, targetUser, caller);
-      await notifyRoleAssigned(result.userId, result.role, result.serverId, result.channelId);
-      emitRolesUpdated(result.userId);
-      break;
-    }
-    default:
-      throw new ValidationError("Unknown role");
-  }
-
-  if (auditContext) {
-    await recordAuditLog(
-      {
-        action: "role.assign",
-        targetType: "role",
-        targetId: result.userId,
-        summary: {
-          role: result.role,
-          scopeId: input.scopeId ?? null,
-          serverId: "serverId" in result ? result.serverId : null,
-          channelId: "channelId" in result ? result.channelId : null,
-        },
-      },
-      auditContext
-    );
-  }
-
-  return result;
-}
+// ─── Academic Role Owner Operations ───────────────────────────────────────
 
 async function assignHOD(
   departmentId: number,
   targetUser: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   assertTeacher(targetUser);
   await assertCallerCanAssignHOD(caller);
@@ -1423,7 +1583,9 @@ async function assignHOD(
   }
 
   if (department.hodId) {
-    throw new ConflictError("Department already has an HOD assigned. Revoke the current HOD first");
+    throw new ConflictError(
+      "Department already has an HOD assigned. Revoke the current HOD first",
+    );
   }
 
   // Verify teacher belongs to this department
@@ -1448,7 +1610,7 @@ async function assignHOD(
 async function assignProgramDirector(
   programId: number,
   targetUser: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   assertTeacher(targetUser);
 
@@ -1470,12 +1632,16 @@ async function assignProgramDirector(
   await assertCallerCanAssignPD(caller, program.departmentId);
 
   if (program.programDirectorId) {
-    throw new ConflictError("Program already has a Program Director assigned. Revoke the current PD first");
+    throw new ConflictError(
+      "Program already has a Program Director assigned. Revoke the current PD first",
+    );
   }
 
   // Verify teacher belongs to the program's department
   if (targetUser.departmentId !== program.departmentId) {
-    throw new ValidationError("Teacher must belong to the program's department");
+    throw new ValidationError(
+      "Teacher must belong to the program's department",
+    );
   }
 
   await prisma.program.update({
@@ -1495,7 +1661,7 @@ async function assignProgramDirector(
 async function assignCR(
   classId: number,
   targetUser: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
-  caller: CallerInfo
+  caller: CallerInfo,
 ) {
   assertStudent(targetUser);
 
@@ -1513,10 +1679,16 @@ async function assignCR(
     throw new NotFoundError("Class not found");
   }
 
-  await assertCallerCanAssignCR(caller, classRecord.program.departmentId, classRecord.program.id);
+  await assertCallerCanAssignCR(
+    caller,
+    classRecord.program.departmentId,
+    classRecord.program.id,
+  );
 
   if (classRecord.crId) {
-    throw new ConflictError("Class already has a CR assigned. Revoke the current CR first");
+    throw new ConflictError(
+      "Class already has a CR assigned. Revoke the current CR first",
+    );
   }
 
   // Verify student belongs to this class
@@ -1529,130 +1701,19 @@ async function assignCR(
     data: { crId: targetUser.id },
   });
 
-  return { role: "cr", userId: targetUser.id, classId, serverId: classRecord.serverId };
-}
-
-async function assignModerator(
-  role: ModeratorRole,
-  serverId: number,
-  channelId: number | undefined,
-  targetUser: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
-  caller: CallerInfo
-) {
-  await assertCallerCanAssignModerator(caller, serverId);
-
-  // Verify server exists
-  const server = await prisma.server.findUnique({
-    where: { id: serverId },
-    select: { id: true, name: true, isActive: true },
-  });
-
-  if (!server || !server.isActive) {
-    throw new NotFoundError("Server not found or inactive");
-  }
-
-  // Verify user is a member of the server
-  const membership = await prisma.serverMembership.findUnique({
-    where: {
-      userId_serverId: { userId: targetUser.id, serverId },
-    },
-  });
-
-  if (!membership) {
-    throw new ValidationError("User must be a member of the server to be assigned as moderator");
-  }
-
-  // If channel-scoped, verify channel belongs to server
-  if (role === "channel_moderator") {
-    const channel = await prisma.channel.findFirst({
-      where: { id: channelId, serverId, isDeleted: false },
-    });
-
-    if (!channel) {
-      throw new NotFoundError("Channel not found in this server");
-    }
-  }
-
-  const scopeType = role === "channel_moderator" ? "CHANNEL" : "SERVER";
-
-  // Check for existing assignment (NULL channelId doesn't trigger unique constraint in PostgreSQL)
-  const existing = await prisma.moderatorAssignment.findFirst({
-    where: {
-      userId: targetUser.id,
-      serverId,
-      channelId: channelId ?? null,
-    },
-  });
-
-  if (existing) {
-    throw new ConflictError("User is already a moderator for this scope");
-  }
-
-  const assignment = await prisma.moderatorAssignment.create({
-    data: {
-      userId: targetUser.id,
-      scopeType,
-      serverId,
-      channelId: channelId ?? null,
-      assignedBy: caller.id,
-    },
-  });
-
   return {
-    role,
+    role: "cr",
     userId: targetUser.id,
-    serverId,
-    channelId: role === "channel_moderator" ? (channelId ?? null) : null,
-    scopeType: scopeType.toLowerCase(),
-    assignmentId: assignment.id,
+    classId,
+    serverId: classRecord.serverId,
   };
 }
 
-// ─── Revoke Role ───────────────────────────────────────────────────────────
-
-export async function revokeRole(
-  input: RevokeRoleInput,
+async function revokeHOD(
+  departmentId: number,
+  userId: number,
   caller: CallerInfo,
-  auditContext?: AuditContext
 ) {
-  const result = await (async () => {
-    switch (input.role) {
-    case "hod":
-      return revokeHOD(input.scopeId!, input.userId, caller);
-    case "program_director":
-      return revokeProgramDirector(input.scopeId!, input.userId, caller);
-    case "cr":
-      return revokeCR(input.scopeId!, input.userId, caller);
-    case "server_moderator":
-      return revokeModerator("server_moderator", input.serverId!, undefined, input.userId, caller);
-    case "channel_moderator":
-      return revokeModerator("channel_moderator", input.serverId!, input.channelId!, input.userId, caller);
-    default:
-      throw new ValidationError("Unknown role");
-    }
-  })();
-
-  emitRolesUpdated(input.userId);
-  if (auditContext) {
-    await recordAuditLog(
-      {
-        action: "role.revoke",
-        targetType: "role",
-        targetId: input.userId,
-        summary: {
-          role: result.role,
-          scopeId: input.scopeId ?? null,
-          serverId: "serverId" in result ? result.serverId : null,
-          channelId: "channelId" in result ? result.channelId : null,
-        },
-      },
-      auditContext
-    );
-  }
-  return result;
-}
-
-async function revokeHOD(departmentId: number, userId: number, caller: CallerInfo) {
   await assertCallerCanAssignHOD(caller);
 
   const department = await prisma.department.findUnique({
@@ -1676,10 +1737,19 @@ async function revokeHOD(departmentId: number, userId: number, caller: CallerInf
   return { role: "hod", userId, departmentId, departmentName: department.name };
 }
 
-async function revokeProgramDirector(programId: number, userId: number, caller: CallerInfo) {
+async function revokeProgramDirector(
+  programId: number,
+  userId: number,
+  caller: CallerInfo,
+) {
   const program = await prisma.program.findUnique({
     where: { id: programId },
-    select: { id: true, code: true, departmentId: true, programDirectorId: true },
+    select: {
+      id: true,
+      code: true,
+      departmentId: true,
+      programDirectorId: true,
+    },
   });
 
   if (!program) {
@@ -1697,7 +1767,12 @@ async function revokeProgramDirector(programId: number, userId: number, caller: 
     data: { programDirectorId: null },
   });
 
-  return { role: "program_director", userId, programId, programCode: program.code };
+  return {
+    role: "program_director",
+    userId,
+    programId,
+    programCode: program.code,
+  };
 }
 
 async function revokeCR(classId: number, userId: number, caller: CallerInfo) {
@@ -1714,7 +1789,11 @@ async function revokeCR(classId: number, userId: number, caller: CallerInfo) {
     throw new NotFoundError("Class not found");
   }
 
-  await assertCallerCanAssignCR(caller, classRecord.program.departmentId, classRecord.program.id);
+  await assertCallerCanAssignCR(
+    caller,
+    classRecord.program.departmentId,
+    classRecord.program.id,
+  );
 
   if (classRecord.crId !== userId) {
     throw new NotFoundError("User is not the CR of this class");
@@ -1728,50 +1807,541 @@ async function revokeCR(classId: number, userId: number, caller: CallerInfo) {
   return { role: "cr", userId, classId };
 }
 
-async function revokeModerator(
-  role: ModeratorRole,
-  serverId: number,
-  channelId: number | undefined,
-  userId: number,
-  caller: CallerInfo
-) {
-  await assertCallerCanAssignModerator(caller, serverId);
+async function finalizeAcademicChange(
+  action: "assign" | "revoke",
+  result: { role: string; userId: number; serverId?: number },
+  targetUserPublicId: string,
+  auditContext?: AuditContext,
+): Promise<void> {
+  emitRolesUpdated(result.userId);
+  if (action === "assign" && result.serverId) {
+    await notifyRoleAssigned(result.userId, result.role, result.serverId);
+  }
+  if (auditContext) {
+    await recordAuditLog(
+      {
+        action: `role.${action}`,
+        targetType: "role",
+        targetId: targetUserPublicId,
+        summary: { role: result.role },
+      },
+      auditContext,
+    );
+  }
+}
 
-  const assignment = await prisma.moderatorAssignment.findFirst({
-    where: {
-      userId,
-      serverId,
-      channelId: channelId ?? null,
+export async function assignDepartmentHod(
+  departmentId: number,
+  userPublicId: string,
+  caller: CallerInfo,
+  auditContext?: AuditContext,
+) {
+  const targetUser = await findActiveUserOrThrow(userPublicId);
+  const result = await assignHOD(departmentId, targetUser, caller);
+  await finalizeAcademicChange(
+    "assign",
+    result,
+    targetUser.publicId,
+    auditContext,
+  );
+  return { ...result, userPublicId: targetUser.publicId };
+}
+
+export async function revokeDepartmentHod(
+  departmentId: number,
+  caller: CallerInfo,
+  auditContext?: AuditContext,
+) {
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
+    select: {
+      hod: { select: { user: { select: { id: true, publicId: true } } } },
     },
   });
+  if (!department?.hod)
+    throw new NotFoundError("Department HOD assignment not found");
+  const result = await revokeHOD(departmentId, department.hod.user.id, caller);
+  await finalizeAcademicChange(
+    "revoke",
+    result,
+    department.hod.user.publicId,
+    auditContext,
+  );
+  return { ...result, userPublicId: department.hod.user.publicId };
+}
 
-  if (!assignment) {
-    throw new NotFoundError("Moderator assignment not found");
+export async function assignProgramDirectorRole(
+  programId: number,
+  userPublicId: string,
+  caller: CallerInfo,
+  auditContext?: AuditContext,
+) {
+  const targetUser = await findActiveUserOrThrow(userPublicId);
+  const result = await assignProgramDirector(programId, targetUser, caller);
+  await finalizeAcademicChange(
+    "assign",
+    result,
+    targetUser.publicId,
+    auditContext,
+  );
+  return { ...result, userPublicId: targetUser.publicId };
+}
+
+export async function revokeProgramDirectorRole(
+  programId: number,
+  caller: CallerInfo,
+  auditContext?: AuditContext,
+) {
+  const program = await prisma.program.findUnique({
+    where: { id: programId },
+    select: {
+      programDirector: {
+        select: { user: { select: { id: true, publicId: true } } },
+      },
+    },
+  });
+  if (!program?.programDirector)
+    throw new NotFoundError("Program Director assignment not found");
+  const result = await revokeProgramDirector(
+    programId,
+    program.programDirector.user.id,
+    caller,
+  );
+  await finalizeAcademicChange(
+    "revoke",
+    result,
+    program.programDirector.user.publicId,
+    auditContext,
+  );
+  return { ...result, userPublicId: program.programDirector.user.publicId };
+}
+
+export async function assignClassCr(
+  classPublicId: string,
+  userPublicId: string,
+  caller: CallerInfo,
+  auditContext?: AuditContext,
+) {
+  const { id: classId } = await resolveClassPublicId(classPublicId);
+  const targetUser = await findActiveUserOrThrow(userPublicId);
+  const result = await assignCR(classId, targetUser, caller);
+  await finalizeAcademicChange(
+    "assign",
+    result,
+    targetUser.publicId,
+    auditContext,
+  );
+  return { ...result, userPublicId: targetUser.publicId };
+}
+
+export async function revokeClassCr(
+  classPublicId: string,
+  caller: CallerInfo,
+  auditContext?: AuditContext,
+) {
+  const { id: classId } = await resolveClassPublicId(classPublicId);
+  const classRecord = await prisma.class.findUnique({
+    where: { id: classId },
+    select: {
+      cr: { select: { user: { select: { id: true, publicId: true } } } },
+    },
+  });
+  if (!classRecord?.cr)
+    throw new NotFoundError("Class CR assignment not found");
+  const result = await revokeCR(classId, classRecord.cr.user.id, caller);
+  await finalizeAcademicChange(
+    "revoke",
+    result,
+    classRecord.cr.user.publicId,
+    auditContext,
+  );
+  return { ...result, userPublicId: classRecord.cr.user.publicId };
+}
+
+// ─── Platform Role Assignment Resources ────────────────────────────────────
+
+type CreatePlatformAssignmentInput = {
+  userPublicId: string;
+  role: PlatformRoleName;
+  serverPublicId: string;
+  channelPublicId?: string;
+  expiresAt?: string | null;
+};
+
+type UpdatePlatformAssignmentExpiryInput = {
+  expiresAt: string | null;
+};
+
+type PlatformAssignmentHistoryQuery = OptionQuery & {
+  state?: "ACTIVE" | "EXPIRED" | "REVOKED";
+  role?: PlatformRoleName;
+  userPublicId?: string;
+  serverPublicId?: string;
+  channelPublicId?: string;
+};
+
+const platformAssignmentSelect = {
+  publicId: true,
+  scopeType: true,
+  assignedAt: true,
+  expiresAt: true,
+  revokedAt: true,
+  user: { select: { publicId: true, fullName: true, email: true } },
+  role: { select: { name: true } },
+  server: { select: { publicId: true, name: true, type: true } },
+  channel: { select: { publicId: true, name: true } },
+  assigner: { select: { publicId: true, fullName: true } },
+  revoker: { select: { publicId: true, fullName: true } },
+} as const;
+
+function parseFutureExpiry(value: string | null | undefined): Date | null {
+  if (value === null || value === undefined) return null;
+  const expiresAt = new Date(value);
+  if (expiresAt <= new Date()) {
+    throw new ValidationError("Expiry must be in the future", [
+      { field: "expiresAt", message: "Expiry must be in the future" },
+    ]);
+  }
+  return expiresAt;
+}
+
+function isOverlapConstraintError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes("user_role_assignments_no_overlapping_periods")
+  );
+}
+
+function platformAssignmentState(assignment: {
+  revokedAt: Date | null;
+  expiresAt: Date | null;
+}): "ACTIVE" | "EXPIRED" | "REVOKED" {
+  if (assignment.revokedAt) return "REVOKED";
+  if (assignment.expiresAt && assignment.expiresAt <= new Date())
+    return "EXPIRED";
+  return "ACTIVE";
+}
+
+function mapPlatformAssignment(
+  assignment: Prisma.UserRoleAssignmentGetPayload<{
+    select: typeof platformAssignmentSelect;
+  }>,
+) {
+  return {
+    assignmentPublicId: assignment.publicId,
+    role: assignment.role.name,
+    scopeType: assignment.scopeType.toLowerCase(),
+    assignedAt: assignment.assignedAt,
+    expiresAt: assignment.expiresAt,
+    revokedAt: assignment.revokedAt,
+    state: platformAssignmentState(assignment),
+    user: assignment.user,
+    server: assignment.server,
+    channel: assignment.channel,
+    assignedBy: assignment.assigner,
+    revokedBy: assignment.revoker,
+  };
+}
+
+async function resolvePlatformScope(input: {
+  role: PlatformRoleName;
+  serverPublicId: string;
+  channelPublicId?: string;
+}) {
+  const serverResolution = await resolveServerPublicId(input.serverPublicId);
+  const server = await prisma.server.findFirst({
+    where: { id: serverResolution.id, ...activePlatformRoleServerWhere() },
+    select: { id: true, publicId: true },
+  });
+  if (!server) throw new NotFoundError("Server not found or inactive");
+
+  if (input.role === "server_moderator") {
+    return { server, channel: null, scopeType: "SERVER" as const };
   }
 
-  await prisma.moderatorAssignment.delete({
-    where: { id: assignment.id },
+  const channelResolution = await resolveChannelPublicId(input.channelPublicId);
+  const channel = await prisma.channel.findFirst({
+    where: {
+      id: channelResolution.id,
+      serverId: server.id,
+      isDeleted: false,
+      isArchived: false,
+    },
+    select: { id: true, publicId: true },
   });
+  if (!channel) throw new NotFoundError("Channel not found in this server");
+  return { server, channel, scopeType: "CHANNEL" as const };
+}
 
+async function findCurrentPlatformAssignmentOrThrow(
+  assignmentPublicId: string,
+) {
+  const assignment = await prisma.userRoleAssignment.findFirst({
+    where: {
+      publicId: assignmentPublicId,
+      ...activePlatformRoleAssignmentWhere(),
+    },
+    select: {
+      id: true,
+      userId: true,
+      serverId: true,
+      channelId: true,
+      ...platformAssignmentSelect,
+    },
+  });
+  if (!assignment)
+    throw new NotFoundError("Active platform role assignment not found");
+  return assignment;
+}
+
+function findPlatformAssignmentByIdOrThrow(id: number) {
+  return prisma.userRoleAssignment.findUniqueOrThrow({
+    where: { id },
+    select: platformAssignmentSelect,
+  });
+}
+
+export async function createPlatformAssignment(
+  input: CreatePlatformAssignmentInput,
+  caller: CallerInfo,
+  auditContext: AuditContext,
+) {
+  const [targetUser, scope] = await Promise.all([
+    findActiveUserOrThrow(input.userPublicId),
+    resolvePlatformScope(input),
+  ]);
+  await assertCallerCanAssignModerator(caller, scope.server.id);
+
+  const membership = await prisma.serverMembership.findUnique({
+    where: {
+      userId_serverId: { userId: targetUser.id, serverId: scope.server.id },
+    },
+    select: { userId: true },
+  });
+  if (!membership) {
+    throw new ValidationError(
+      "User must be a member of the server to be assigned as moderator",
+    );
+  }
+
+  const role = await prisma.role.findFirst({
+    where: { name: input.role, scopeType: scope.scopeType },
+    select: { id: true },
+  });
+  if (!role) throw new NotFoundError("Platform role definition not found");
+  const expiresAt = parseFutureExpiry(input.expiresAt);
+
+  try {
+    const assignmentId = await prisma.$transaction(async (tx) => {
+      const created = await tx.userRoleAssignment.create({
+        data: {
+          userId: targetUser.id,
+          roleId: role.id,
+          scopeType: scope.scopeType,
+          serverId: scope.server.id,
+          channelId: scope.channel?.id ?? null,
+          assignedBy: caller.id,
+          expiresAt,
+        },
+        select: { id: true, publicId: true },
+      });
+      await recordAuditLog(
+        {
+          action: "role.platform.assign",
+          targetType: "platform_role_assignment",
+          targetId: created.publicId,
+          summary: {
+            role: input.role,
+            userPublicId: targetUser.publicId,
+            serverPublicId: scope.server.publicId,
+            channelPublicId: scope.channel?.publicId ?? null,
+            expiresAt,
+          },
+        },
+        auditContext,
+        tx,
+      );
+      return created.id;
+    });
+
+    const assignment = await findPlatformAssignmentByIdOrThrow(assignmentId);
+    await notifyRoleAssigned(
+      targetUser.id,
+      input.role,
+      scope.server.id,
+      scope.channel?.id,
+    );
+    emitRolesUpdated(targetUser.id);
+    return mapPlatformAssignment(assignment);
+  } catch (error) {
+    if (isOverlapConstraintError(error)) {
+      throw new ConflictError(
+        "User already has an overlapping platform role assignment",
+      );
+    }
+    throw error;
+  }
+}
+
+export async function revokePlatformAssignment(
+  assignmentPublicId: string,
+  caller: CallerInfo,
+  auditContext: AuditContext,
+) {
+  const current =
+    await findCurrentPlatformAssignmentOrThrow(assignmentPublicId);
+  await assertCallerCanAssignModerator(caller, current.serverId);
+  const revokedAt = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    const update = await tx.userRoleAssignment.updateMany({
+      where: { id: current.id, revokedAt: null },
+      data: { revokedAt, revokedBy: caller.id },
+    });
+    if (update.count !== 1)
+      throw new ConflictError("Platform role assignment was already changed");
+    await recordAuditLog(
+      {
+        action: "role.platform.revoke",
+        targetType: "platform_role_assignment",
+        targetId: assignmentPublicId,
+        summary: { revokedAt },
+      },
+      auditContext,
+      tx,
+    );
+  });
+  const assignment = await findPlatformAssignmentByIdOrThrow(current.id);
+  emitRolesUpdated(current.userId);
+  return mapPlatformAssignment(assignment);
+}
+
+export async function updatePlatformAssignmentExpiry(
+  assignmentPublicId: string,
+  input: UpdatePlatformAssignmentExpiryInput,
+  caller: CallerInfo,
+  auditContext: AuditContext,
+) {
+  const current =
+    await findCurrentPlatformAssignmentOrThrow(assignmentPublicId);
+  await assertCallerCanAssignModerator(caller, current.serverId);
+  const expiresAt = parseFutureExpiry(input.expiresAt);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const update = await tx.userRoleAssignment.updateMany({
+        where: { id: current.id, revokedAt: null },
+        data: { expiresAt },
+      });
+      if (update.count !== 1)
+        throw new ConflictError("Platform role assignment was already changed");
+      await recordAuditLog(
+        {
+          action: "role.platform.expiry.update",
+          targetType: "platform_role_assignment",
+          targetId: assignmentPublicId,
+          summary: { previousExpiresAt: current.expiresAt, expiresAt },
+        },
+        auditContext,
+        tx,
+      );
+    });
+    const assignment = await findPlatformAssignmentByIdOrThrow(current.id);
+    emitRolesUpdated(current.userId);
+    return mapPlatformAssignment(assignment);
+  } catch (error) {
+    if (isOverlapConstraintError(error)) {
+      throw new ConflictError(
+        "Expiry overlaps another platform role assignment period",
+      );
+    }
+    throw error;
+  }
+}
+
+export async function listPlatformAssignmentHistory(
+  query: PlatformAssignmentHistoryQuery,
+) {
+  const { page, limit, skip, take } = parsePagination(query);
+  const now = new Date();
+  const [user, server, channel] = await Promise.all([
+    query.userPublicId
+      ? resolveUserPublicId(query.userPublicId, { includeDeleted: true })
+      : undefined,
+    query.serverPublicId
+      ? resolveServerPublicId(query.serverPublicId, { includeDeleted: true })
+      : undefined,
+    query.channelPublicId
+      ? resolveChannelPublicId(query.channelPublicId, { includeDeleted: true })
+      : undefined,
+  ]);
+  const search = normalizeSearch(query.search);
+  const where: Prisma.UserRoleAssignmentWhereInput = {
+    ...(query.role ? { role: { name: query.role } } : {}),
+    ...(user ? { userId: user.id } : {}),
+    ...(server ? { serverId: server.id } : {}),
+    ...(channel ? { channelId: channel.id } : {}),
+    ...(query.state === "ACTIVE"
+      ? {
+          revokedAt: null,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+        }
+      : {}),
+    ...(query.state === "EXPIRED"
+      ? { revokedAt: null, expiresAt: { lte: now } }
+      : {}),
+    ...(query.state === "REVOKED" ? { revokedAt: { not: null } } : {}),
+  };
+  if (search) {
+    where.AND = [
+      {
+        OR: [
+          { user: { fullName: { contains: search, mode: "insensitive" } } },
+          { user: { email: { contains: search, mode: "insensitive" } } },
+          { server: { name: { contains: search, mode: "insensitive" } } },
+          {
+            channel: {
+              is: { name: { contains: search, mode: "insensitive" } },
+            },
+          },
+        ],
+      },
+    ];
+  }
+
+  const [assignments, total] = await prisma.$transaction([
+    prisma.userRoleAssignment.findMany({
+      where,
+      skip,
+      take,
+      orderBy: [{ assignedAt: "desc" }, { id: "desc" }],
+      select: platformAssignmentSelect,
+    }),
+    prisma.userRoleAssignment.count({ where }),
+  ]);
   return {
-    role,
-    userId,
-    serverId,
-    channelId: role === "channel_moderator" ? (channelId ?? null) : null,
-    scopeType: assignment.scopeType.toLowerCase(),
+    success: true as const,
+    data: assignments.map(mapPlatformAssignment),
+    pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
 // ─── Get User Roles ────────────────────────────────────────────────────────
 
-export async function getUserRoles(userId: number, caller: CallerInfo) {
-  // Verify target user exists
+export async function getUserRoles(userPublicId: string, caller: CallerInfo) {
+  const resolved = await resolveUserPublicId(userPublicId);
   const targetUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, departmentId: true, isActive: true },
+    where: { id: resolved.id },
+    select: {
+      id: true,
+      departmentId: true,
+      isActive: true,
+      isDeleted: true,
+      status: true,
+    },
   });
 
-  if (!targetUser) {
+  if (!targetUser || targetUser.isDeleted) {
     throw new NotFoundError("User not found");
   }
 
@@ -1781,55 +2351,80 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
     if (!hodDeptId) {
       throw new ForbiddenError(
         "You do not have permission to view roles for this user",
-        ApiErrorCode.SCOPE_FORBIDDEN
+        ApiErrorCode.SCOPE_FORBIDDEN,
       );
     }
     if (targetUser.departmentId !== hodDeptId) {
-      throw new ForbiddenError("You can only view roles for users in your department");
+      throw new ForbiddenError(
+        "You can only view roles for users in your department",
+      );
     }
   }
 
   // Query all role assignments in parallel
-  const [hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, moderatorAssignments] =
-    await Promise.all([
-      prisma.department.findMany({
-        where: { hodId: userId },
-        select: { id: true, name: true },
-      }),
-      prisma.program.findMany({
-        where: { programDirectorId: userId },
-        select: { id: true, code: true, department: { select: { name: true } } },
-      }),
-      prisma.class.findMany({
-        where: { crId: userId },
-        select: {
-          id: true,
-          serverId: true,
-          currentSemester: true,
-          section: true,
-          program: { select: { code: true } },
-        },
-      }),
-      prisma.society.findMany({
-        where: { presidentId: userId },
-        select: { id: true, name: true },
-      }),
-      prisma.society.findMany({
-        where: { convenorId: userId },
-        select: { id: true, name: true },
-      }),
-      prisma.moderatorAssignment.findMany({
-        where: { userId },
-        select: {
-          id: true,
-          serverId: true,
-          channelId: true,
-          scopeType: true,
-          server: { select: { name: true } },
-          channel: { select: { name: true } },
-        },
-      }),
-    ]);
+  const [
+    hodDepartments,
+    directedPrograms,
+    crClasses,
+    presidentSocieties,
+    convenorSocieties,
+    platformAssignments,
+  ] = await Promise.all([
+    prisma.department.findMany({
+      where: { hodId: targetUser.id, server: activePlatformRoleServerWhere() },
+      select: { id: true, name: true },
+    }),
+    prisma.program.findMany({
+      where: {
+        programDirectorId: targetUser.id,
+        department: { server: activePlatformRoleServerWhere() },
+      },
+      select: { id: true, code: true, department: { select: { name: true } } },
+    }),
+    prisma.class.findMany({
+      where: {
+        crId: targetUser.id,
+        status: "ACTIVE",
+        server: activePlatformRoleServerWhere(),
+      },
+      select: {
+        publicId: true,
+        server: { select: { publicId: true } },
+        currentSemester: true,
+        section: true,
+        program: { select: { code: true } },
+      },
+    }),
+    prisma.society.findMany({
+      where: {
+        presidentId: targetUser.id,
+        status: "ACTIVE",
+        isActive: true,
+        isDeleted: false,
+      },
+      select: { publicId: true, name: true },
+    }),
+    prisma.society.findMany({
+      where: {
+        convenorId: targetUser.id,
+        status: "ACTIVE",
+        isActive: true,
+        isDeleted: false,
+      },
+      select: { publicId: true, name: true },
+    }),
+    prisma.userRoleAssignment.findMany({
+      where: { userId: targetUser.id, ...activePlatformRoleAssignmentWhere() },
+      select: {
+        publicId: true,
+        scopeType: true,
+        expiresAt: true,
+        role: { select: { name: true } },
+        server: { select: { publicId: true, name: true } },
+        channel: { select: { publicId: true, name: true } },
+      },
+    }),
+  ]);
 
   const roles: Array<Record<string, unknown>> = [];
 
@@ -1854,8 +2449,8 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
   for (const cls of crClasses) {
     roles.push({
       role: "cr",
-      classId: cls.id,
-      serverId: cls.serverId,
+      classPublicId: cls.publicId,
+      serverPublicId: cls.server.publicId,
       scopeContext: `CR of ${cls.program.code}-${cls.currentSemester}${cls.section}`,
     });
   }
@@ -1863,7 +2458,7 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
   for (const soc of presidentSocieties) {
     roles.push({
       role: "society_president",
-      societyId: soc.id,
+      societyPublicId: soc.publicId,
       societyName: soc.name,
       scopeContext: `President of ${soc.name}`,
     });
@@ -1872,18 +2467,20 @@ export async function getUserRoles(userId: number, caller: CallerInfo) {
   for (const soc of convenorSocieties) {
     roles.push({
       role: "society_convenor",
-      societyId: soc.id,
+      societyPublicId: soc.publicId,
       societyName: soc.name,
       scopeContext: `Convenor of ${soc.name}`,
     });
   }
 
-  for (const mod of moderatorAssignments) {
+  for (const mod of platformAssignments) {
     const isChannel = mod.scopeType === "CHANNEL";
     roles.push({
-      role: isChannel ? "channel_moderator" : "server_moderator",
-      serverId: mod.serverId,
-      channelId: mod.channelId,
+      assignmentPublicId: mod.publicId,
+      role: mod.role.name,
+      serverPublicId: mod.server.publicId,
+      channelPublicId: mod.channel?.publicId ?? null,
+      expiresAt: mod.expiresAt,
       scopeType: mod.scopeType.toLowerCase(),
       serverName: mod.server.name,
       channelName: mod.channel?.name ?? null,

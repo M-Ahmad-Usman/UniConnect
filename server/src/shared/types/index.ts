@@ -42,6 +42,8 @@ export interface UserRole {
   serverId: number;
   channelId?: number | null;
   scopeType: "server" | "channel";
+  assignmentPublicId?: string;
+  expiresAt?: Date | null;
 }
 
 declare global {

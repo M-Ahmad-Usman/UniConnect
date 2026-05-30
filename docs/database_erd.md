@@ -334,7 +334,8 @@ POST_ATTACHMENT.post_id > POST.id
 
 ROLE {
   id SERIAL PK
-  name VARCHAR(100) // NOT NULL enum ['hod', 'program_director', 'society_president', 'society_convenor', 'cr', 'server_moderator', 'channel_moderator']
+  name VARCHAR(100) // NOT NULL enum ['server_moderator', 'channel_moderator']
+  scope_type VARCHAR(20) // NOT NULL enum ['server', 'channel']
 }
 
 PERMISSION {
@@ -342,8 +343,8 @@ PERMISSION {
   name VARCHAR(100) // NOT NULL enum['post:channel', 'create:channel', 'delete:channel', 'create:society', create:department', 'create:class' 'assign:program_director', 'assign:...other roles'] 
 }
 
-// This table will only capture what permissions each role has. The scope of permissions can be derived from the tables where those roles are used.
-// For example: HOD can create/post/delete channels only in his department. Can create society and class servers only within his department. Can assign society president and convenor only for societies associated with his department
+// This table captures configurable platform-role permissions only.
+// Fixed academic capability bundles live in application code.
 ROLE_PERMISSION {
   role_id INTEGER PK FK // NOT NULL
   permission_id INTEGER PK FK // NOT NULL
@@ -352,31 +353,30 @@ ROLE_PERMISSION {
 ROLE_PERMISSION.role_id > ROLE.id
 ROLE_PERMISSION.permission_id > PERMISSION.id
 
-MODERATOR_ASSIGNMENT {
+USER_ROLE_ASSIGNMENT {
   id SERIAL PK
+  public_id UUID // NOT NULL UNIQUE DEFAULT uuidv7()
   user_id INTEGER FK
+  role_id INTEGER FK
   scope_type VARCHAR(20) // NOT NULL enum ['server' or 'channel']
   server_id INTEGER FK // NOT NULL Always required
   channel_id INTEGER FK
+  assigned_by INTEGER FK
+  assigned_at TIMESTAMPTZ // DEFAULT CURRENT_TIMESTAMP
+  expires_at TIMESTAMPTZ
+  revoked_by INTEGER FK
+  revoked_at TIMESTAMPTZ
 
-  // Application-level role names map as follows:
-  // scope_type='server'  => 'server_moderator'
-  // scope_type='channel' => 'channel_moderator'
-
-  // CONSTRAINT: CHECK (
-    // (scope_type='server' AND channel_id IS NULL)
-  // )
-
-  // UNIQUE(user_id, server_id, COALESCE(channel_id, 0))
-
-  assigned_by INTEGER FK // NOT NULL
-  assigned_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  // CHECK scope/channel consistency and temporal ordering.
+  // EXCLUDE overlapping periods for user, role, server, and channel scope.
 }
 
-MODERATOR_ASSIGNMENT.user_id > USER.id
-MODERATOR_ASSIGNMENT.server_id > SERVER.id
-MODERATOR_ASSIGNMENT.channel_id > CHANNEL.id
-MODERATOR_ASSIGNMENT.assigned_by > USER.id
+USER_ROLE_ASSIGNMENT.user_id > USER.id
+USER_ROLE_ASSIGNMENT.role_id > ROLE.id
+USER_ROLE_ASSIGNMENT.server_id > SERVER.id
+USER_ROLE_ASSIGNMENT.channel_id > CHANNEL.id
+USER_ROLE_ASSIGNMENT.assigned_by > USER.id
+USER_ROLE_ASSIGNMENT.revoked_by > USER.id
 
 NOTIFICATION {
   id SERIAL PK

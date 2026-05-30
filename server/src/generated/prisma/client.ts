@@ -147,10 +147,10 @@ export type Permission = Prisma.PermissionModel
  */
 export type RolePermission = Prisma.RolePermissionModel
 /**
- * Model ModeratorAssignment
+ * Model UserRoleAssignment
  * 
  */
-export type ModeratorAssignment = Prisma.ModeratorAssignmentModel
+export type UserRoleAssignment = Prisma.UserRoleAssignmentModel
 /**
  * Model Notification
  * 

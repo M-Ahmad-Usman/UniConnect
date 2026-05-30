@@ -359,8 +359,9 @@ export type UserWhereInput = {
   deletedPosts?: Prisma.PostListRelationFilter
   updatedPosts?: Prisma.PostListRelationFilter
   pinnedPosts?: Prisma.PostListRelationFilter
-  moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentListRelationFilter
+  platformRoleAssignments?: Prisma.UserRoleAssignmentListRelationFilter
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentListRelationFilter
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
@@ -408,8 +409,9 @@ export type UserOrderByWithRelationInput = {
   deletedPosts?: Prisma.PostOrderByRelationAggregateInput
   updatedPosts?: Prisma.PostOrderByRelationAggregateInput
   pinnedPosts?: Prisma.PostOrderByRelationAggregateInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentOrderByRelationAggregateInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentOrderByRelationAggregateInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentOrderByRelationAggregateInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentOrderByRelationAggregateInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
   refreshTokens?: Prisma.RefreshTokenOrderByRelationAggregateInput
@@ -460,8 +462,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   deletedPosts?: Prisma.PostListRelationFilter
   updatedPosts?: Prisma.PostListRelationFilter
   pinnedPosts?: Prisma.PostListRelationFilter
-  moderatorAssignments?: Prisma.ModeratorAssignmentListRelationFilter
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentListRelationFilter
+  platformRoleAssignments?: Prisma.UserRoleAssignmentListRelationFilter
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentListRelationFilter
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
@@ -560,8 +563,9 @@ export type UserCreateInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -607,8 +611,9 @@ export type UserUncheckedCreateInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -653,8 +658,9 @@ export type UserUpdateInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -700,8 +706,9 @@ export type UserUncheckedUpdateInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -1266,34 +1273,50 @@ export type UserUpdateOneWithoutPinnedPostsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPinnedPostsInput, Prisma.UserUpdateWithoutPinnedPostsInput>, Prisma.UserUncheckedUpdateWithoutPinnedPostsInput>
 }
 
-export type UserCreateNestedOneWithoutModeratorAssignmentsInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutModeratorAssignmentsInput
+export type UserCreateNestedOneWithoutPlatformRoleAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlatformRoleAssignmentsInput
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserCreateNestedOneWithoutModeratorAssignmentsCreatedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutModeratorAssignmentsCreatedInput
+export type UserCreateNestedOneWithoutPlatformRoleAssignmentsCreatedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsCreatedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlatformRoleAssignmentsCreatedInput
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutModeratorAssignmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutModeratorAssignmentsInput
-  upsert?: Prisma.UserUpsertWithoutModeratorAssignmentsInput
+export type UserCreateNestedOneWithoutPlatformRoleAssignmentsRevokedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsRevokedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlatformRoleAssignmentsRevokedInput
   connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutModeratorAssignmentsInput, Prisma.UserUpdateWithoutModeratorAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsInput>
 }
 
-export type UserUpdateOneWithoutModeratorAssignmentsCreatedNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutModeratorAssignmentsCreatedInput
-  upsert?: Prisma.UserUpsertWithoutModeratorAssignmentsCreatedInput
+export type UserUpdateOneRequiredWithoutPlatformRoleAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlatformRoleAssignmentsInput
+  upsert?: Prisma.UserUpsertWithoutPlatformRoleAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPlatformRoleAssignmentsInput, Prisma.UserUpdateWithoutPlatformRoleAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
+}
+
+export type UserUpdateOneWithoutPlatformRoleAssignmentsCreatedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsCreatedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlatformRoleAssignmentsCreatedInput
+  upsert?: Prisma.UserUpsertWithoutPlatformRoleAssignmentsCreatedInput
   disconnect?: Prisma.UserWhereInput | boolean
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutModeratorAssignmentsCreatedInput, Prisma.UserUpdateWithoutModeratorAssignmentsCreatedInput>, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUpdateWithoutPlatformRoleAssignmentsCreatedInput>, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsCreatedInput>
+}
+
+export type UserUpdateOneWithoutPlatformRoleAssignmentsRevokedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsRevokedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlatformRoleAssignmentsRevokedInput
+  upsert?: Prisma.UserUpsertWithoutPlatformRoleAssignmentsRevokedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUpdateWithoutPlatformRoleAssignmentsRevokedInput>, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsRevokedInput>
 }
 
 export type UserCreateNestedOneWithoutNotificationsInput = {
@@ -1386,8 +1409,9 @@ export type UserCreateWithoutDepartmentInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -1432,8 +1456,9 @@ export type UserUncheckedCreateWithoutDepartmentInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -1530,8 +1555,9 @@ export type UserCreateWithoutDeletedUsersInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -1576,8 +1602,9 @@ export type UserUncheckedCreateWithoutDeletedUsersInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -1625,8 +1652,9 @@ export type UserCreateWithoutDeletedByUserInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -1671,8 +1699,9 @@ export type UserUncheckedCreateWithoutDeletedByUserInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -1738,8 +1767,9 @@ export type UserUpdateWithoutDeletedUsersInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -1784,8 +1814,9 @@ export type UserUncheckedUpdateWithoutDeletedUsersInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -1844,8 +1875,9 @@ export type UserCreateWithoutStudentInfoInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -1890,8 +1922,9 @@ export type UserUncheckedCreateWithoutStudentInfoInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -1951,8 +1984,9 @@ export type UserUpdateWithoutStudentInfoInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -1997,8 +2031,9 @@ export type UserUncheckedUpdateWithoutStudentInfoInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -2042,8 +2077,9 @@ export type UserCreateWithoutTeacherInfoInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -2088,8 +2124,9 @@ export type UserUncheckedCreateWithoutTeacherInfoInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -2149,8 +2186,9 @@ export type UserUpdateWithoutTeacherInfoInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -2195,8 +2233,9 @@ export type UserUncheckedUpdateWithoutTeacherInfoInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -2241,8 +2280,9 @@ export type UserCreateWithoutGraduatedClassesInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -2287,8 +2327,9 @@ export type UserUncheckedCreateWithoutGraduatedClassesInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -2348,8 +2389,9 @@ export type UserUpdateWithoutGraduatedClassesInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -2394,8 +2436,9 @@ export type UserUncheckedUpdateWithoutGraduatedClassesInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -2439,8 +2482,9 @@ export type UserCreateWithoutDeletedSocietiesInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -2485,8 +2529,9 @@ export type UserUncheckedCreateWithoutDeletedSocietiesInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -2546,8 +2591,9 @@ export type UserUpdateWithoutDeletedSocietiesInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -2592,8 +2638,9 @@ export type UserUncheckedUpdateWithoutDeletedSocietiesInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -2636,8 +2683,9 @@ export type UserCreateWithoutCreatedServersInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -2682,8 +2730,9 @@ export type UserUncheckedCreateWithoutCreatedServersInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -2732,8 +2781,9 @@ export type UserCreateWithoutDeletedServersInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -2778,8 +2828,9 @@ export type UserUncheckedCreateWithoutDeletedServersInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -2839,8 +2890,9 @@ export type UserUpdateWithoutCreatedServersInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -2885,8 +2937,9 @@ export type UserUncheckedUpdateWithoutCreatedServersInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -2941,8 +2994,9 @@ export type UserUpdateWithoutDeletedServersInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -2987,8 +3041,9 @@ export type UserUncheckedUpdateWithoutDeletedServersInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -3032,8 +3087,9 @@ export type UserCreateWithoutLockedChannelsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -3078,8 +3134,9 @@ export type UserUncheckedCreateWithoutLockedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -3128,8 +3185,9 @@ export type UserCreateWithoutDeletedChannelsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -3174,8 +3232,9 @@ export type UserUncheckedCreateWithoutDeletedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -3224,8 +3283,9 @@ export type UserCreateWithoutCreatedChannelsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -3270,8 +3330,9 @@ export type UserUncheckedCreateWithoutCreatedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -3320,8 +3381,9 @@ export type UserCreateWithoutArchivedChannelsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -3366,8 +3428,9 @@ export type UserUncheckedCreateWithoutArchivedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -3427,8 +3490,9 @@ export type UserUpdateWithoutLockedChannelsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -3473,8 +3537,9 @@ export type UserUncheckedUpdateWithoutLockedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -3529,8 +3594,9 @@ export type UserUpdateWithoutDeletedChannelsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -3575,8 +3641,9 @@ export type UserUncheckedUpdateWithoutDeletedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -3631,8 +3698,9 @@ export type UserUpdateWithoutCreatedChannelsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -3677,8 +3745,9 @@ export type UserUncheckedUpdateWithoutCreatedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -3733,8 +3802,9 @@ export type UserUpdateWithoutArchivedChannelsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -3779,8 +3849,9 @@ export type UserUncheckedUpdateWithoutArchivedChannelsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -3824,8 +3895,9 @@ export type UserCreateWithoutServerMembershipsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -3870,8 +3942,9 @@ export type UserUncheckedCreateWithoutServerMembershipsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -3931,8 +4004,9 @@ export type UserUpdateWithoutServerMembershipsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -3977,8 +4051,9 @@ export type UserUncheckedUpdateWithoutServerMembershipsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -4023,8 +4098,9 @@ export type UserCreateWithoutSocietyMembershipRequestsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -4069,8 +4145,9 @@ export type UserUncheckedCreateWithoutSocietyMembershipRequestsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -4119,8 +4196,9 @@ export type UserCreateWithoutReviewedMembershipRequestsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -4165,8 +4243,9 @@ export type UserUncheckedCreateWithoutReviewedMembershipRequestsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -4226,8 +4305,9 @@ export type UserUpdateWithoutSocietyMembershipRequestsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -4272,8 +4352,9 @@ export type UserUncheckedUpdateWithoutSocietyMembershipRequestsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -4328,8 +4409,9 @@ export type UserUpdateWithoutReviewedMembershipRequestsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -4374,8 +4456,9 @@ export type UserUncheckedUpdateWithoutReviewedMembershipRequestsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -4418,8 +4501,9 @@ export type UserCreateWithoutAuthoredPostsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -4464,8 +4548,9 @@ export type UserUncheckedCreateWithoutAuthoredPostsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -4514,8 +4599,9 @@ export type UserCreateWithoutDeletedPostsInput = {
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -4560,8 +4646,9 @@ export type UserUncheckedCreateWithoutDeletedPostsInput = {
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -4610,8 +4697,9 @@ export type UserCreateWithoutUpdatedPostsInput = {
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -4656,8 +4744,9 @@ export type UserUncheckedCreateWithoutUpdatedPostsInput = {
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -4706,8 +4795,9 @@ export type UserCreateWithoutPinnedPostsInput = {
   authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -4752,8 +4842,9 @@ export type UserUncheckedCreateWithoutPinnedPostsInput = {
   authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -4813,8 +4904,9 @@ export type UserUpdateWithoutAuthoredPostsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -4859,8 +4951,9 @@ export type UserUncheckedUpdateWithoutAuthoredPostsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -4915,8 +5008,9 @@ export type UserUpdateWithoutDeletedPostsInput = {
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -4961,8 +5055,9 @@ export type UserUncheckedUpdateWithoutDeletedPostsInput = {
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -5017,8 +5112,9 @@ export type UserUpdateWithoutUpdatedPostsInput = {
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -5063,8 +5159,9 @@ export type UserUncheckedUpdateWithoutUpdatedPostsInput = {
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -5119,8 +5216,9 @@ export type UserUpdateWithoutPinnedPostsInput = {
   authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -5165,8 +5263,9 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -5178,7 +5277,7 @@ export type UserUncheckedUpdateWithoutPinnedPostsInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
-export type UserCreateWithoutModeratorAssignmentsInput = {
+export type UserCreateWithoutPlatformRoleAssignmentsInput = {
   publicId?: string
   fullName: string
   email: string
@@ -5211,7 +5310,8 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -5223,7 +5323,7 @@ export type UserCreateWithoutModeratorAssignmentsInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
-export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
+export type UserUncheckedCreateWithoutPlatformRoleAssignmentsInput = {
   id?: number
   publicId?: string
   fullName: string
@@ -5257,7 +5357,8 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -5269,12 +5370,12 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
 
-export type UserCreateOrConnectWithoutModeratorAssignmentsInput = {
+export type UserCreateOrConnectWithoutPlatformRoleAssignmentsInput = {
   where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsInput>
 }
 
-export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
+export type UserCreateWithoutPlatformRoleAssignmentsCreatedInput = {
   publicId?: string
   fullName: string
   email: string
@@ -5307,7 +5408,8 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -5319,7 +5421,7 @@ export type UserCreateWithoutModeratorAssignmentsCreatedInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
 }
 
-export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
+export type UserUncheckedCreateWithoutPlatformRoleAssignmentsCreatedInput = {
   id?: number
   publicId?: string
   fullName: string
@@ -5353,7 +5455,8 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -5365,23 +5468,121 @@ export type UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
 }
 
-export type UserCreateOrConnectWithoutModeratorAssignmentsCreatedInput = {
+export type UserCreateOrConnectWithoutPlatformRoleAssignmentsCreatedInput = {
   where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsCreatedInput>
 }
 
-export type UserUpsertWithoutModeratorAssignmentsInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutModeratorAssignmentsInput, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsInput>
+export type UserCreateWithoutPlatformRoleAssignmentsRevokedInput = {
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  department?: Prisma.DepartmentCreateNestedOneWithoutUsersInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedUsersInput
+  studentInfo?: Prisma.StudentInfoCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutPlatformRoleAssignmentsRevokedInput = {
+  id?: number
+  publicId?: string
+  fullName: string
+  email: string
+  phone: string
+  passwordHash: string
+  gender: $Enums.Gender
+  profilePictureUrl?: string | null
+  bio?: string | null
+  userType: $Enums.UserType
+  departmentId?: number | null
+  status?: $Enums.UserStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  mustChangePassword?: boolean
+  passwordResetTokenHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedCreateNestedOneWithoutUserInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedCreateNestedOneWithoutUserInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdServers?: Prisma.ServerUncheckedCreateNestedManyWithoutCreatorInput
+  deletedServers?: Prisma.ServerUncheckedCreateNestedManyWithoutDeletedByUserInput
+  lockedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutLockerInput
+  deletedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutDeleterInput
+  createdChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutCreatorInput
+  archivedChannels?: Prisma.ChannelUncheckedCreateNestedManyWithoutArchiverInput
+  authoredPosts?: Prisma.PostUncheckedCreateNestedManyWithoutAuthorInput
+  deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
+  updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
+  pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  deletedUsers?: Prisma.UserUncheckedCreateNestedManyWithoutDeletedByUserInput
+  deletedSocieties?: Prisma.SocietyUncheckedCreateNestedManyWithoutDeletedByUserInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutPlatformRoleAssignmentsRevokedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsRevokedInput>
+}
+
+export type UserUpsertWithoutPlatformRoleAssignmentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPlatformRoleAssignmentsInput, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsInput>
   where?: Prisma.UserWhereInput
 }
 
-export type UserUpdateToOneWithWhereWithoutModeratorAssignmentsInput = {
+export type UserUpdateToOneWithWhereWithoutPlatformRoleAssignmentsInput = {
   where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutModeratorAssignmentsInput, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsInput>
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPlatformRoleAssignmentsInput, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsInput>
 }
 
-export type UserUpdateWithoutModeratorAssignmentsInput = {
+export type UserUpdateWithoutPlatformRoleAssignmentsInput = {
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5414,7 +5615,8 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -5426,7 +5628,7 @@ export type UserUpdateWithoutModeratorAssignmentsInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
-export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
+export type UserUncheckedUpdateWithoutPlatformRoleAssignmentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5460,7 +5662,8 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -5472,18 +5675,18 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
-export type UserUpsertWithoutModeratorAssignmentsCreatedInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutModeratorAssignmentsCreatedInput>
+export type UserUpsertWithoutPlatformRoleAssignmentsCreatedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsCreatedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsCreatedInput>
   where?: Prisma.UserWhereInput
 }
 
-export type UserUpdateToOneWithWhereWithoutModeratorAssignmentsCreatedInput = {
+export type UserUpdateToOneWithWhereWithoutPlatformRoleAssignmentsCreatedInput = {
   where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutModeratorAssignmentsCreatedInput, Prisma.UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput>
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPlatformRoleAssignmentsCreatedInput, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsCreatedInput>
 }
 
-export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
+export type UserUpdateWithoutPlatformRoleAssignmentsCreatedInput = {
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5516,7 +5719,8 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -5528,7 +5732,7 @@ export type UserUpdateWithoutModeratorAssignmentsCreatedInput = {
   reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
 }
 
-export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
+export type UserUncheckedUpdateWithoutPlatformRoleAssignmentsCreatedInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   publicId?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5562,7 +5766,112 @@ export type UserUncheckedUpdateWithoutModeratorAssignmentsCreatedInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUpsertWithoutPlatformRoleAssignmentsRevokedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsRevokedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUncheckedCreateWithoutPlatformRoleAssignmentsRevokedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPlatformRoleAssignmentsRevokedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPlatformRoleAssignmentsRevokedInput, Prisma.UserUncheckedUpdateWithoutPlatformRoleAssignmentsRevokedInput>
+}
+
+export type UserUpdateWithoutPlatformRoleAssignmentsRevokedInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneWithoutUsersNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedUsersNestedInput
+  studentInfo?: Prisma.StudentInfoUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
+  graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  deletedUsers?: Prisma.UserUpdateManyWithoutDeletedByUserNestedInput
+  deletedSocieties?: Prisma.SocietyUpdateManyWithoutDeletedByUserNestedInput
+  societyMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutUserNestedInput
+  reviewedMembershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPlatformRoleAssignmentsRevokedInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+  profilePictureUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userType?: Prisma.EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
+  departmentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studentInfo?: Prisma.StudentInfoUncheckedUpdateOneWithoutUserNestedInput
+  teacherInfo?: Prisma.TeacherInfoUncheckedUpdateOneWithoutUserNestedInput
+  serverMemberships?: Prisma.ServerMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdServers?: Prisma.ServerUncheckedUpdateManyWithoutCreatorNestedInput
+  deletedServers?: Prisma.ServerUncheckedUpdateManyWithoutDeletedByUserNestedInput
+  lockedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutLockerNestedInput
+  deletedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutDeleterNestedInput
+  createdChannels?: Prisma.ChannelUncheckedUpdateManyWithoutCreatorNestedInput
+  archivedChannels?: Prisma.ChannelUncheckedUpdateManyWithoutArchiverNestedInput
+  authoredPosts?: Prisma.PostUncheckedUpdateManyWithoutAuthorNestedInput
+  deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
+  updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
+  pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -5607,8 +5916,9 @@ export type UserCreateWithoutNotificationsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
@@ -5653,8 +5963,9 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
@@ -5714,8 +6025,9 @@ export type UserUpdateWithoutNotificationsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
@@ -5760,8 +6072,9 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
@@ -5805,8 +6118,9 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
@@ -5851,8 +6165,9 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
@@ -5912,8 +6227,9 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
@@ -5958,8 +6274,9 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
@@ -6003,8 +6320,9 @@ export type UserCreateWithoutRefreshTokensInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassCreateNestedManyWithoutGraduatorInput
@@ -6049,8 +6367,9 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   graduatedClasses?: Prisma.ClassUncheckedCreateNestedManyWithoutGraduatorInput
@@ -6110,8 +6429,9 @@ export type UserUpdateWithoutRefreshTokensInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUpdateManyWithoutGraduatorNestedInput
@@ -6156,8 +6476,9 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   graduatedClasses?: Prisma.ClassUncheckedUpdateManyWithoutGraduatorNestedInput
@@ -6201,8 +6522,9 @@ export type UserCreateWithoutAuditLogsInput = {
   deletedPosts?: Prisma.PostCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
@@ -6247,8 +6569,9 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   deletedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutDeleterInput
   updatedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutUpdaterInput
   pinnedPosts?: Prisma.PostUncheckedCreateNestedManyWithoutPinnerInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutUserInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutUserInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedCreateNestedManyWithoutRevokerInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
@@ -6308,8 +6631,9 @@ export type UserUpdateWithoutAuditLogsInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -6354,8 +6678,9 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -6420,8 +6745,9 @@ export type UserUpdateWithoutDepartmentInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -6466,8 +6792,9 @@ export type UserUncheckedUpdateWithoutDepartmentInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -6555,8 +6882,9 @@ export type UserUpdateWithoutDeletedByUserInput = {
   deletedPosts?: Prisma.PostUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
@@ -6601,8 +6929,9 @@ export type UserUncheckedUpdateWithoutDeletedByUserInput = {
   deletedPosts?: Prisma.PostUncheckedUpdateManyWithoutDeleterNestedInput
   updatedPosts?: Prisma.PostUncheckedUpdateManyWithoutUpdaterNestedInput
   pinnedPosts?: Prisma.PostUncheckedUpdateManyWithoutPinnerNestedInput
-  moderatorAssignments?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutUserNestedInput
-  moderatorAssignmentsCreated?: Prisma.ModeratorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignments?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutUserNestedInput
+  platformRoleAssignmentsCreated?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+  platformRoleAssignmentsRevoked?: Prisma.UserRoleAssignmentUncheckedUpdateManyWithoutRevokerNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
@@ -6653,8 +6982,9 @@ export type UserCountOutputType = {
   deletedPosts: number
   updatedPosts: number
   pinnedPosts: number
-  moderatorAssignments: number
-  moderatorAssignmentsCreated: number
+  platformRoleAssignments: number
+  platformRoleAssignmentsCreated: number
+  platformRoleAssignmentsRevoked: number
   notifications: number
   notificationPreferences: number
   refreshTokens: number
@@ -6678,8 +7008,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   deletedPosts?: boolean | UserCountOutputTypeCountDeletedPostsArgs
   updatedPosts?: boolean | UserCountOutputTypeCountUpdatedPostsArgs
   pinnedPosts?: boolean | UserCountOutputTypeCountPinnedPostsArgs
-  moderatorAssignments?: boolean | UserCountOutputTypeCountModeratorAssignmentsArgs
-  moderatorAssignmentsCreated?: boolean | UserCountOutputTypeCountModeratorAssignmentsCreatedArgs
+  platformRoleAssignments?: boolean | UserCountOutputTypeCountPlatformRoleAssignmentsArgs
+  platformRoleAssignmentsCreated?: boolean | UserCountOutputTypeCountPlatformRoleAssignmentsCreatedArgs
+  platformRoleAssignmentsRevoked?: boolean | UserCountOutputTypeCountPlatformRoleAssignmentsRevokedArgs
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
   notificationPreferences?: boolean | UserCountOutputTypeCountNotificationPreferencesArgs
   refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
@@ -6781,15 +7112,22 @@ export type UserCountOutputTypeCountPinnedPostsArgs<ExtArgs extends runtime.Type
 /**
  * UserCountOutputType without action
  */
-export type UserCountOutputTypeCountModeratorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ModeratorAssignmentWhereInput
+export type UserCountOutputTypeCountPlatformRoleAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserRoleAssignmentWhereInput
 }
 
 /**
  * UserCountOutputType without action
  */
-export type UserCountOutputTypeCountModeratorAssignmentsCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ModeratorAssignmentWhereInput
+export type UserCountOutputTypeCountPlatformRoleAssignmentsCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserRoleAssignmentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPlatformRoleAssignmentsRevokedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserRoleAssignmentWhereInput
 }
 
 /**
@@ -6892,8 +7230,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   deletedPosts?: boolean | Prisma.User$deletedPostsArgs<ExtArgs>
   updatedPosts?: boolean | Prisma.User$updatedPostsArgs<ExtArgs>
   pinnedPosts?: boolean | Prisma.User$pinnedPostsArgs<ExtArgs>
-  moderatorAssignments?: boolean | Prisma.User$moderatorAssignmentsArgs<ExtArgs>
-  moderatorAssignmentsCreated?: boolean | Prisma.User$moderatorAssignmentsCreatedArgs<ExtArgs>
+  platformRoleAssignments?: boolean | Prisma.User$platformRoleAssignmentsArgs<ExtArgs>
+  platformRoleAssignmentsCreated?: boolean | Prisma.User$platformRoleAssignmentsCreatedArgs<ExtArgs>
+  platformRoleAssignmentsRevoked?: boolean | Prisma.User$platformRoleAssignmentsRevokedArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
@@ -6996,8 +7335,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   deletedPosts?: boolean | Prisma.User$deletedPostsArgs<ExtArgs>
   updatedPosts?: boolean | Prisma.User$updatedPostsArgs<ExtArgs>
   pinnedPosts?: boolean | Prisma.User$pinnedPostsArgs<ExtArgs>
-  moderatorAssignments?: boolean | Prisma.User$moderatorAssignmentsArgs<ExtArgs>
-  moderatorAssignmentsCreated?: boolean | Prisma.User$moderatorAssignmentsCreatedArgs<ExtArgs>
+  platformRoleAssignments?: boolean | Prisma.User$platformRoleAssignmentsArgs<ExtArgs>
+  platformRoleAssignmentsCreated?: boolean | Prisma.User$platformRoleAssignmentsCreatedArgs<ExtArgs>
+  platformRoleAssignmentsRevoked?: boolean | Prisma.User$platformRoleAssignmentsRevokedArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
@@ -7036,8 +7376,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     deletedPosts: Prisma.$PostPayload<ExtArgs>[]
     updatedPosts: Prisma.$PostPayload<ExtArgs>[]
     pinnedPosts: Prisma.$PostPayload<ExtArgs>[]
-    moderatorAssignments: Prisma.$ModeratorAssignmentPayload<ExtArgs>[]
-    moderatorAssignmentsCreated: Prisma.$ModeratorAssignmentPayload<ExtArgs>[]
+    platformRoleAssignments: Prisma.$UserRoleAssignmentPayload<ExtArgs>[]
+    platformRoleAssignmentsCreated: Prisma.$UserRoleAssignmentPayload<ExtArgs>[]
+    platformRoleAssignmentsRevoked: Prisma.$UserRoleAssignmentPayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
     refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
@@ -7478,8 +7819,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   deletedPosts<T extends Prisma.User$deletedPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deletedPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   updatedPosts<T extends Prisma.User$updatedPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$updatedPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pinnedPosts<T extends Prisma.User$pinnedPostsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pinnedPostsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  moderatorAssignments<T extends Prisma.User$moderatorAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$moderatorAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ModeratorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  moderatorAssignmentsCreated<T extends Prisma.User$moderatorAssignmentsCreatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$moderatorAssignmentsCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ModeratorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  platformRoleAssignments<T extends Prisma.User$platformRoleAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$platformRoleAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserRoleAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  platformRoleAssignmentsCreated<T extends Prisma.User$platformRoleAssignmentsCreatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$platformRoleAssignmentsCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserRoleAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  platformRoleAssignmentsRevoked<T extends Prisma.User$platformRoleAssignmentsRevokedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$platformRoleAssignmentsRevokedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserRoleAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.User$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   refreshTokens<T extends Prisma.User$refreshTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -8279,51 +8621,75 @@ export type User$pinnedPostsArgs<ExtArgs extends runtime.Types.Extensions.Intern
 }
 
 /**
- * User.moderatorAssignments
+ * User.platformRoleAssignments
  */
-export type User$moderatorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type User$platformRoleAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ModeratorAssignment
+   * Select specific fields to fetch from the UserRoleAssignment
    */
-  select?: Prisma.ModeratorAssignmentSelect<ExtArgs> | null
+  select?: Prisma.UserRoleAssignmentSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ModeratorAssignment
+   * Omit specific fields from the UserRoleAssignment
    */
-  omit?: Prisma.ModeratorAssignmentOmit<ExtArgs> | null
+  omit?: Prisma.UserRoleAssignmentOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ModeratorAssignmentInclude<ExtArgs> | null
-  where?: Prisma.ModeratorAssignmentWhereInput
-  orderBy?: Prisma.ModeratorAssignmentOrderByWithRelationInput | Prisma.ModeratorAssignmentOrderByWithRelationInput[]
-  cursor?: Prisma.ModeratorAssignmentWhereUniqueInput
+  include?: Prisma.UserRoleAssignmentInclude<ExtArgs> | null
+  where?: Prisma.UserRoleAssignmentWhereInput
+  orderBy?: Prisma.UserRoleAssignmentOrderByWithRelationInput | Prisma.UserRoleAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.UserRoleAssignmentWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.ModeratorAssignmentScalarFieldEnum | Prisma.ModeratorAssignmentScalarFieldEnum[]
+  distinct?: Prisma.UserRoleAssignmentScalarFieldEnum | Prisma.UserRoleAssignmentScalarFieldEnum[]
 }
 
 /**
- * User.moderatorAssignmentsCreated
+ * User.platformRoleAssignmentsCreated
  */
-export type User$moderatorAssignmentsCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type User$platformRoleAssignmentsCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ModeratorAssignment
+   * Select specific fields to fetch from the UserRoleAssignment
    */
-  select?: Prisma.ModeratorAssignmentSelect<ExtArgs> | null
+  select?: Prisma.UserRoleAssignmentSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ModeratorAssignment
+   * Omit specific fields from the UserRoleAssignment
    */
-  omit?: Prisma.ModeratorAssignmentOmit<ExtArgs> | null
+  omit?: Prisma.UserRoleAssignmentOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ModeratorAssignmentInclude<ExtArgs> | null
-  where?: Prisma.ModeratorAssignmentWhereInput
-  orderBy?: Prisma.ModeratorAssignmentOrderByWithRelationInput | Prisma.ModeratorAssignmentOrderByWithRelationInput[]
-  cursor?: Prisma.ModeratorAssignmentWhereUniqueInput
+  include?: Prisma.UserRoleAssignmentInclude<ExtArgs> | null
+  where?: Prisma.UserRoleAssignmentWhereInput
+  orderBy?: Prisma.UserRoleAssignmentOrderByWithRelationInput | Prisma.UserRoleAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.UserRoleAssignmentWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.ModeratorAssignmentScalarFieldEnum | Prisma.ModeratorAssignmentScalarFieldEnum[]
+  distinct?: Prisma.UserRoleAssignmentScalarFieldEnum | Prisma.UserRoleAssignmentScalarFieldEnum[]
+}
+
+/**
+ * User.platformRoleAssignmentsRevoked
+ */
+export type User$platformRoleAssignmentsRevokedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserRoleAssignment
+   */
+  select?: Prisma.UserRoleAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserRoleAssignment
+   */
+  omit?: Prisma.UserRoleAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserRoleAssignmentInclude<ExtArgs> | null
+  where?: Prisma.UserRoleAssignmentWhereInput
+  orderBy?: Prisma.UserRoleAssignmentOrderByWithRelationInput | Prisma.UserRoleAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.UserRoleAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserRoleAssignmentScalarFieldEnum | Prisma.UserRoleAssignmentScalarFieldEnum[]
 }
 
 /**

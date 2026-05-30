@@ -57,6 +57,32 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-05-30 - Schema/Lifecycle Refactor Module 4 Complete
+- Replaced destructive moderator rows with append-only platform role assignment
+  history, UUIDv7 assignment IDs, optional expiry, audited revocation, and
+  audited expiry editing.
+- Added database scope-integrity constraints and a PostgreSQL `btree_gist`
+  exclusion constraint to reject overlapping assignment periods under
+  concurrency.
+- Kept academic roles entity-owned with fixed TypeScript capability bundles;
+  the `roles` table now stores platform roles only.
+- Removed generic `/api/roles/assign` and `/api/roles/revoke` writes. Added
+  canonical academic owner endpoints and platform assignment resource
+  endpoints.
+- Migrated `/api/roles/*` core references to public IDs and added admin-only
+  paginated platform assignment history.
+- Updated authorization readers, badges, cleanup checks, seed data, test
+  fixtures, Socket.IO invalidation, the frontend role workspace, expiry editor,
+  lazy admin history panel, and AuthGuard nearest-expiry refresh scheduling.
+- Kept platform-assignment transactions focused on mutation plus audit, with
+  response DTO hydration after commit, and documented SQL-only integrity
+  constraints that future Prisma-generated migrations must preserve.
+- Verification passed:
+  - Prisma validate, generate, and isolated test migration deploy
+  - backend build and full Jest suite, 479/479
+  - frontend type-check, lint, production build, and full Vitest suite, 131/131
+  - focused Module 4 Playwright suite, 4/4, and full Playwright suite, 36/36
+
 ### 2026-05-29 - Schema/Lifecycle Refactor Module 3 Complete
 - Migrated user/auth/admin user surfaces to public user IDs while leaving
   role-management numeric user-ID contracts for Module 4.

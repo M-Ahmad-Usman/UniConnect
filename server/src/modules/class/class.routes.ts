@@ -14,6 +14,8 @@ import {
   semesterProgressionSchema,
   transferStudentSchema,
   graduationSchema,
+  assignClassCrSchema,
+  classCrParamSchema,
 } from "./class.schema.js";
 import {
   handleCreateClass,
@@ -29,6 +31,8 @@ import {
   handleListTeacherCandidates,
   handleReplaceCourseTeacher,
   handleGraduateClass,
+  handleAssignClassCr,
+  handleRevokeClassCr,
 } from "./class.controller.js";
 
 const router = Router();
@@ -50,6 +54,22 @@ router.get(
   authenticate,
   validate(classIdParamSchema),
   handleGetClass
+);
+
+router.put(
+  "/:classPublicId/cr",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(assignClassCrSchema),
+  handleAssignClassCr
+);
+
+router.delete(
+  "/:classPublicId/cr",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(classCrParamSchema),
+  handleRevokeClassCr
 );
 
 // ─── Course Assignment Routes ──────────────────────────────────────────────

@@ -8,48 +8,49 @@ import {
 } from '../utils';
 
 describe('role management utils', () => {
-  it('builds scoped role assignment payloads', () => {
+  it('builds canonical academic assignment payloads', () => {
     expect(
       buildAssignPayload({
         role: 'cr',
-        userId: 10,
-        scopeId: 20,
-        serverId: null,
-        channelId: null,
+        userPublicId: 'user-public-id',
+        scopeId: null,
+        classPublicId: 'class-public-id',
+        serverPublicId: null,
+        channelPublicId: null,
+        expiresAt: null,
       }),
-    ).toEqual({ userId: 10, role: 'cr', scopeId: 20 });
+    ).toEqual({ userPublicId: 'user-public-id', role: 'cr', classPublicId: 'class-public-id' });
   });
 
-  it('builds moderator assignment payloads only after required scopes are selected', () => {
+  it('builds platform assignment payloads only after required scopes are selected', () => {
     expect(
       buildAssignPayload({
         role: 'server_moderator',
-        userId: 10,
+        userPublicId: 'user-public-id',
         scopeId: null,
-        serverId: 30,
-        channelId: null,
+        classPublicId: null,
+        serverPublicId: 'server-public-id',
+        channelPublicId: null,
+        expiresAt: null,
       }),
-    ).toEqual({ userId: 10, role: 'server_moderator', serverId: 30 });
+    ).toEqual({
+      userPublicId: 'user-public-id',
+      role: 'server_moderator',
+      serverPublicId: 'server-public-id',
+      expiresAt: null,
+    });
 
     expect(
       buildAssignPayload({
         role: 'channel_moderator',
-        userId: 10,
+        userPublicId: 'user-public-id',
         scopeId: null,
-        serverId: 30,
-        channelId: null,
+        classPublicId: null,
+        serverPublicId: 'server-public-id',
+        channelPublicId: null,
+        expiresAt: null,
       }),
     ).toBeNull();
-
-    expect(
-      buildAssignPayload({
-        role: 'channel_moderator',
-        userId: 10,
-        scopeId: null,
-        serverId: 30,
-        channelId: 40,
-      }),
-    ).toEqual({ userId: 10, role: 'channel_moderator', serverId: 30, channelId: 40 });
   });
 
   it('chooses the first backend-provided role option without adding local roles', () => {
@@ -68,25 +69,23 @@ describe('role management utils', () => {
     expect(chooseInitialRole([])).toBeNull();
   });
 
-  it('normalizes backend-provided revoke payloads', () => {
+  it('normalizes backend-provided platform revoke payloads', () => {
     const assignment: RevokableRoleAssignment = {
-      assignmentKey: 'server_moderator:1',
+      assignmentKey: 'server_moderator:assignment-public-id',
       role: 'server_moderator',
       user: {
-        id: 5,
+        publicId: 'user-public-id',
         fullName: 'Moderator',
         email: 'moderator@example.test',
         userType: 'STUDENT',
         departmentId: 1,
       },
-      server: { id: 7, label: 'Class Server', type: 'CLASS' },
-      revokePayload: { userId: 5, role: 'server_moderator', serverId: 7 },
+      server: { publicId: 'server-public-id', label: 'Class Server', type: 'CLASS' },
+      revokePayload: { assignmentPublicId: 'assignment-public-id' },
     };
 
     expect(normalizeRevokablePayload(assignment)).toEqual({
-      userId: 5,
-      role: 'server_moderator',
-      serverId: 7,
+      assignmentPublicId: 'assignment-public-id',
     });
   });
 

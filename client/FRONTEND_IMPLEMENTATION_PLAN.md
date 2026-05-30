@@ -1834,21 +1834,24 @@ Dynamic form that adapts based on selected role type:
 
 **Step 3:** Submit
 
-- `POST /api/roles/assign` with payload:
+- Dispatch to canonical academic owner endpoints or
+  `POST /api/roles/platform-assignments` with payload:
 
   ```typescript
   // Non-moderator roles
-  { userId: number, role: string, scopeId: number }
+  { userPublicId: string, role: "hod" | "program_director", scopeId: number }
+  { userPublicId: string, role: "cr", classPublicId: string }
 
   // Moderation roles
-  { userId: number, role: "server_moderator", serverId: number }
-  { userId: number, role: "channel_moderator", serverId: number, channelId: number }
+  { userPublicId: string, role: "server_moderator", serverPublicId: string, expiresAt?: string | null }
+  { userPublicId: string, role: "channel_moderator", serverPublicId: string, channelPublicId: string, expiresAt?: string | null }
   ```
 
 ##### `RevokeRoleButton` (`src/features/roles/components/RevokeRoleButton.tsx`)
 
 - Confirmation dialog: "Are you sure you want to revoke {roleName} from {userName}?"
-- Confirm → `POST /api/roles/revoke` with same payload shape as assign
+- Confirm → owner-entity `DELETE` for academic roles or
+  `DELETE /api/roles/platform-assignments/:assignmentPublicId`
 - **Note:** Society President and Convenor roles cannot be revoked directly (must change via `PATCH /api/societies/:id`)
 
 ##### `RoleScopePicker` (`src/features/roles/components/RoleScopePicker.tsx`)
@@ -1867,11 +1870,13 @@ Dropdown that loads entities based on role type:
 ```typescript
 // src/api/endpoints/roles.api.ts
 export const rolesApi = {
-  getUserRoles: (userId: number) => axios.get<UserRole[]>(`/roles/users/${userId}`),
+  getUserRoles: (userPublicId: string) => axios.get<UserRole[]>(`/roles/users/${userPublicId}`),
 
-  assignRole: (data: AssignRoleDto) => axios.post('/roles/assign', data),
+  assignPlatformRole: (data: CreatePlatformAssignmentDto) =>
+    axios.post('/roles/platform-assignments', data),
 
-  revokeRole: (data: RevokeRoleDto) => axios.post('/roles/revoke', data),
+  revokePlatformRole: (assignmentPublicId: string) =>
+    axios.delete(`/roles/platform-assignments/${assignmentPublicId}`),
 };
 ```
 

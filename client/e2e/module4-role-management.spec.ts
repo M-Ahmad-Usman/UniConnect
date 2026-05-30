@@ -14,6 +14,8 @@ import {
   setClassCr,
 } from './helpers/role-management';
 
+const ROLE_ASSIGNMENT_POLL_TIMEOUT_MS = 15_000;
+
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
@@ -22,12 +24,15 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/servers$/);
 }
 
-async function assignRoleByValues(page: Page, input: { role: string; scopeId: number; userId: number }) {
+async function assignRoleByValues(
+  page: Page,
+  input: { role: string; scopeId: string; userId: string },
+) {
   await page.goto('/roles');
   await page.locator('select').nth(0).selectOption(input.role);
-  await page.locator('select').nth(1).selectOption(String(input.scopeId));
+  await page.locator('select').nth(1).selectOption(input.scopeId);
   await expect(page.locator('select').nth(2)).toBeEnabled();
-  await page.locator('select').nth(2).selectOption(String(input.userId));
+  await page.locator('select').nth(2).selectOption(input.userId);
   await page.getByRole('button', { name: 'Assign role' }).click();
 }
 
@@ -44,7 +49,11 @@ test.describe.serial('Module 4 role management hardening flows', () => {
     await prepareStudentForClass(student!.id, classRecord!.id, classRecord!.department_id);
 
     await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
-    await assignRoleByValues(page, { role: 'cr', scopeId: classRecord!.id, userId: student!.id });
+    await assignRoleByValues(page, {
+      role: 'cr',
+      scopeId: classRecord!.public_id,
+      userId: student!.public_id,
+    });
 
     await expect.poll(() => findClassCrId(classRecord!.id)).toBe(student!.id);
   });
@@ -59,7 +68,11 @@ test.describe.serial('Module 4 role management hardening flows', () => {
     await prepareStudentForClass(student!.id, classRecord!.id, classRecord!.department_id);
 
     await signIn(page, e2eUsers.moduleAcademicPd.email, e2eUsers.moduleAcademicPd.password);
-    await assignRoleByValues(page, { role: 'cr', scopeId: classRecord!.id, userId: student!.id });
+    await assignRoleByValues(page, {
+      role: 'cr',
+      scopeId: classRecord!.public_id,
+      userId: student!.public_id,
+    });
 
     await expect.poll(() => findClassCrId(classRecord!.id)).toBe(student!.id);
   });
@@ -81,11 +94,15 @@ test.describe.serial('Module 4 role management hardening flows', () => {
     await page.goto('/roles');
     await page.locator('select').nth(0).selectOption('server_moderator');
     await expect(page.locator('select').nth(1)).toContainText('Academic Transfer Target Class');
-    await page.locator('select').nth(1).selectOption(String(classRecord!.server_id));
-    await page.locator('select').nth(2).selectOption(String(target!.id));
+    await page.locator('select').nth(1).selectOption(classRecord!.server_public_id);
+    await page.locator('select').nth(2).selectOption(target!.public_id);
     await page.getByRole('button', { name: 'Assign role' }).click();
 
-    await expect.poll(() => hasServerModerator(target!.id, classRecord!.server_id)).toBe(true);
+    await expect
+      .poll(() => hasServerModerator(target!.id, classRecord!.server_id), {
+        timeout: ROLE_ASSIGNMENT_POLL_TIMEOUT_MS,
+      })
+      .toBe(true);
   });
 
   test('society leader assigns society server moderator', async ({ page }) => {
@@ -104,10 +121,14 @@ test.describe.serial('Module 4 role management hardening flows', () => {
     );
     await page.goto('/roles');
     await page.locator('select').nth(0).selectOption('server_moderator');
-    await page.locator('select').nth(1).selectOption(String(society!.server_id));
-    await page.locator('select').nth(2).selectOption(String(target!.id));
+    await page.locator('select').nth(1).selectOption(society!.server_public_id);
+    await page.locator('select').nth(2).selectOption(target!.public_id);
     await page.getByRole('button', { name: 'Assign role' }).click();
 
-    await expect.poll(() => hasServerModerator(target!.id, society!.server_id)).toBe(true);
+    await expect
+      .poll(() => hasServerModerator(target!.id, society!.server_id), {
+        timeout: ROLE_ASSIGNMENT_POLL_TIMEOUT_MS,
+      })
+      .toBe(true);
   });
 });

@@ -115,8 +115,12 @@ export type {
   RevokableRoleName,
   ScopedRoleAssignment,
   UserRole,
+  AcademicAssignRoleRequest,
+  CreatePlatformAssignmentRequest,
   AssignRoleRequest,
   RevokeRoleRequest,
+  UpdatePlatformAssignmentExpiryRequest,
+  PlatformAssignment,
   RoleOption,
   RoleScopeOption,
   RoleChannelOption,
@@ -127,6 +131,7 @@ export type {
   AssignableChannelsParams,
   AssignableUsersParams,
   RevokableRolesParams,
+  PlatformAssignmentHistoryParams,
 } from './role.types';
 
 // Permissions

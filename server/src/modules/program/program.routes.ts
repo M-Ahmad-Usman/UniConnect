@@ -9,6 +9,7 @@ import {
   getCurriculumSchema,
   addCurriculumSchema,
   removeCurriculumSchema,
+  assignProgramDirectorSchema,
 } from "./program.schema.js";
 import {
   handleListPrograms,
@@ -17,6 +18,8 @@ import {
   handleGetCurriculum,
   handleAddCurriculum,
   handleRemoveCurriculum,
+  handleAssignProgramDirector,
+  handleRevokeProgramDirector,
 } from "./program.controller.js";
 
 const router = Router();
@@ -41,6 +44,22 @@ router.patch(
   authorize({ userTypes: ["ADMIN"] }),
   validate(updateProgramSchema),
   handleUpdateProgram
+);
+
+router.put(
+  "/:id/program-director",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(assignProgramDirectorSchema),
+  handleAssignProgramDirector
+);
+
+router.delete(
+  "/:id/program-director",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(programIdParamSchema),
+  handleRevokeProgramDirector
 );
 
 // ─── Curriculum Routes ─────────────────────────────────────────────────────
