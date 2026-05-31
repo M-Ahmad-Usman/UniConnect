@@ -5,6 +5,12 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const backendDir = path.resolve(__dirname, '../server');
+const frontendHost = process.env.E2E_FRONTEND_HOST ?? '127.0.0.1';
+const frontendPort = process.env.E2E_FRONTEND_PORT ?? '5173';
+const backendHost = process.env.E2E_BACKEND_HOST ?? '127.0.0.1';
+const backendPort = process.env.E2E_BACKEND_PORT ?? '4100';
+const frontendUrl = `http://${frontendHost}:${frontendPort}`;
+const backendUrl = `http://${backendHost}:${backendPort}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -15,7 +21,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: frontendUrl,
     trace: 'on-first-retry',
     video: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -30,25 +36,34 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command:
-        'CSRF_ENABLED=true CSRF_SECRET=test-csrf-secret-at-least-32-characters-long CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 npm run dev:e2e',
+      command: 'npm run dev:e2e',
       cwd: backendDir,
-      url: 'http://127.0.0.1:4100/api/health',
+      url: `${backendUrl}/api/health`,
       reuseExistingServer: false,
       timeout: 120 * 1000,
       stdout: 'ignore',
       stderr: 'pipe',
       name: 'Backend',
+      env: {
+        ...process.env,
+        PORT: backendPort,
+        CORS_ORIGIN: frontendUrl,
+        CSRF_TRUSTED_ORIGINS: frontendUrl,
+      },
     },
     {
-      command: 'VITE_PROXY_TARGET=http://127.0.0.1:4100 npm run dev -- --host 127.0.0.1 --port 5173',
+      command: `npm run dev -- --host ${frontendHost} --port ${frontendPort}`,
       cwd: __dirname,
-      url: 'http://127.0.0.1:5173/login',
-      reuseExistingServer: !process.env.CI,
+      url: `${frontendUrl}/login`,
+      reuseExistingServer: false,
       timeout: 120 * 1000,
       stdout: 'ignore',
       stderr: 'pipe',
       name: 'Frontend',
+      env: {
+        ...process.env,
+        VITE_PROXY_TARGET: backendUrl,
+      },
     },
   ],
 });

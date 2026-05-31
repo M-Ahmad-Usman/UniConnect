@@ -1,7 +1,6 @@
 import { Pool, type QueryResultRow } from 'pg';
 
-export const E2E_DATABASE_URL =
-  process.env.E2E_DATABASE_URL ??
+const DEFAULT_E2E_DATABASE_URL =
   'postgresql://uniconnect:uniconnect@localhost:5433/uniconnect_test';
 
 const TABLE_NAMES = [
@@ -35,7 +34,8 @@ const TABLE_NAMES = [
 
 export function createDbPool() {
   return new Pool({
-    connectionString: E2E_DATABASE_URL,
+    connectionString:
+      process.env.E2E_DATABASE_URL ?? process.env.DATABASE_URL ?? DEFAULT_E2E_DATABASE_URL,
     max: 1,
   });
 }

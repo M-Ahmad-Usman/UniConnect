@@ -312,6 +312,7 @@ available.
   - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns paginated active users valid for the selected role/scope.
   - Moderator candidates are active server members and exclude users already assigned for the same moderator scope.
+  - Moderator candidates exclude `ADMIN` users (only `TEACHER` and `STUDENT` are eligible).
 - `GET /revokable`
   - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns only caller-revokable assignments with a server-provided `revokePayload`.

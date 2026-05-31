@@ -245,6 +245,40 @@ function assertStudent(
   }
 }
 
+function formatUserTypeLabel(userType: "ADMIN" | "TEACHER" | "STUDENT") {
+  switch (userType) {
+    case "ADMIN":
+      return "an admin";
+    case "TEACHER":
+      return "a teacher";
+    case "STUDENT":
+      return "a student";
+    default:
+      return "a valid user";
+  }
+}
+
+function assertTargetUserType(
+  role: AssignableRole,
+  user: Awaited<ReturnType<typeof findActiveUserOrThrow>>,
+) {
+  const roleOption = ROLE_OPTIONS[role];
+  const allowedTypes = roleOption?.targetUserTypes ?? [];
+  const userType = user.userType as RoleOption["targetUserTypes"][number];
+
+  if (!allowedTypes.includes(userType)) {
+    const allowedLabel = allowedTypes.map(formatUserTypeLabel).join(" or ");
+    throw new ValidationError(`Target user must be ${allowedLabel} for this role`);
+  }
+
+  if (user.userType === "TEACHER") {
+    assertTeacher(user);
+  }
+  if (user.userType === "STUDENT") {
+    assertStudent(user);
+  }
+}
+
 // ─── Authorization Helpers ─────────────────────────────────────────────────
 
 /**
@@ -972,6 +1006,11 @@ async function listModeratorCandidateUsers(
     await assertCallerCanUseModeratorServer(caller, serverId);
   }
 
+  const roleOption = ROLE_OPTIONS[query.role];
+  if (!roleOption) {
+    throw new ValidationError("Invalid role");
+  }
+
   const { page, limit, skip, take } = parsePagination(query);
   const search = normalizeSearch(query.search);
   const userSearch = buildUserSearch(search);
@@ -981,6 +1020,7 @@ async function listModeratorCandidateUsers(
       status: "ACTIVE",
       isActive: true,
       isDeleted: false,
+      userType: { in: roleOption.targetUserTypes },
       ...(userSearch ?? {}),
       platformRoleAssignments: {
         none: {
@@ -2111,6 +2151,7 @@ export async function createPlatformAssignment(
     resolvePlatformScope(input),
   ]);
   await assertCallerCanAssignModerator(caller, scope.server.id);
+  assertTargetUserType(input.role, targetUser);
 
   const membership = await prisma.serverMembership.findUnique({
     where: {

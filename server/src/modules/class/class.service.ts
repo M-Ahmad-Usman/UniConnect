@@ -10,6 +10,7 @@ import { buildPaginationResponse, parsePagination } from "../../shared/utils/pag
 import { buildClassPermissions, getPermissionContext } from "../../shared/permissions/index.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
+import { disconnectUserSockets } from "../../socket/index.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -350,7 +351,7 @@ async function cleanupAutoClassMembershipIfUnused(
   userId: number,
   classId: number,
   serverId: number
-): Promise<void> {
+): Promise<boolean> {
   const [membership, teachesCount, moderatorCount] = await Promise.all([
     tx.serverMembership.findUnique({
       where: { userId_serverId: { userId, serverId } },
@@ -366,7 +367,10 @@ async function cleanupAutoClassMembershipIfUnused(
     await tx.serverMembership.delete({
       where: { userId_serverId: { userId, serverId } },
     });
+    return true;
   }
+
+  return false;
 }
 
 function buildScopedClassWhere(
@@ -683,7 +687,8 @@ export async function replaceClassCourseTeacher(
     throw new ConflictError("This course is already assigned to this teacher");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const { updated, removedUserIds } = await prisma.$transaction(async (tx) => {
+    const removedUserIds = new Set<number>();
     const updated = await tx.teaches.update({
       where: { classId_courseId: { classId, courseId } },
       data: { teacherId: data.teacherId },
@@ -700,15 +705,22 @@ export async function replaceClassCourseTeacher(
       update: {},
     });
 
-    await cleanupAutoClassMembershipIfUnused(
-      tx,
-      existingAssignment.teacherId,
-      classId,
-      classRecord.serverId
-    );
+    if (
+      await cleanupAutoClassMembershipIfUnused(
+        tx,
+        existingAssignment.teacherId,
+        classId,
+        classRecord.serverId
+      )
+    ) {
+      removedUserIds.add(existingAssignment.teacherId);
+    }
 
-    return updated;
+    return { updated, removedUserIds: Array.from(removedUserIds) };
   });
+
+  removedUserIds.forEach(disconnectUserSockets);
+  return updated;
 }
 
 export async function removeCourseFromClass(
@@ -736,7 +748,8 @@ export async function removeCourseFromClass(
     throw new NotFoundError("Course is not assigned to this class");
   }
 
-  await prisma.$transaction(async (tx) => {
+  const removedUserIds = await prisma.$transaction(async (tx) => {
+    const removedUserIds = new Set<number>();
     await tx.teaches.deleteMany({ where: { classId, courseId } });
 
     await tx.channel.updateMany({
@@ -754,14 +767,22 @@ export async function removeCourseFromClass(
     });
 
     for (const assignment of assignments) {
-      await cleanupAutoClassMembershipIfUnused(
-        tx,
-        assignment.teacherId,
-        classId,
-        classRecord.serverId
-      );
+      if (
+        await cleanupAutoClassMembershipIfUnused(
+          tx,
+          assignment.teacherId,
+          classId,
+          classRecord.serverId
+        )
+      ) {
+        removedUserIds.add(assignment.teacherId);
+      }
     }
+
+    return Array.from(removedUserIds);
   });
+
+  removedUserIds.forEach(disconnectUserSockets);
 }
 
 export async function listClassStudents(
@@ -910,7 +931,8 @@ export async function transferStudentToClass(
     throw new ConflictError("Reassign or remove the class representative role before transfer");
   }
 
-  const updatedStudent = await prisma.$transaction(async (tx) => {
+  const { updatedStudent, removedUserIds } = await prisma.$transaction(async (tx) => {
+    const removedUserIds = new Set<number>();
     const updated = await tx.studentInfo.update({
       where: { studentId: data.studentId },
       data: { classId },
@@ -927,16 +949,21 @@ export async function transferStudentToClass(
       update: {},
     });
 
-    await cleanupAutoClassMembershipIfUnused(
-      tx,
-      data.studentId,
-      student.classId,
-      student.class.serverId
-    );
+    if (
+      await cleanupAutoClassMembershipIfUnused(
+        tx,
+        data.studentId,
+        student.classId,
+        student.class.serverId
+      )
+    ) {
+      removedUserIds.add(data.studentId);
+    }
 
-    return updated;
+    return { updatedStudent: updated, removedUserIds: Array.from(removedUserIds) };
   });
 
+  removedUserIds.forEach(disconnectUserSockets);
   return updatedStudent;
 }
 
@@ -1077,7 +1104,8 @@ export async function advanceSemester(
     distinct: ["teacherId"],
   });
 
-  const advancedClass = await prisma.$transaction(async (tx) => {
+  const { advancedClass, removedUserIds } = await prisma.$transaction(async (tx) => {
+    const removedUserIds = new Set<number>();
     await tx.channel.updateMany({
       where: {
         serverId: classRecord.serverId,
@@ -1175,16 +1203,22 @@ export async function advanceSemester(
     }
 
     for (const previousTeacher of previousTeacherIds) {
-      await cleanupAutoClassMembershipIfUnused(
-        tx,
-        previousTeacher.teacherId,
-        classId,
-        classRecord.serverId
-      );
+      if (
+        await cleanupAutoClassMembershipIfUnused(
+          tx,
+          previousTeacher.teacherId,
+          classId,
+          classRecord.serverId
+        )
+      ) {
+        removedUserIds.add(previousTeacher.teacherId);
+      }
     }
 
-    return updatedClass;
+    return { advancedClass: updatedClass, removedUserIds: Array.from(removedUserIds) };
   });
+
+  removedUserIds.forEach(disconnectUserSockets);
 
   return {
     ...advancedClass,

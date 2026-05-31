@@ -247,6 +247,48 @@ describe("Module 4 - Platform RBAC", () => {
     );
   });
 
+  it("filters admin users from moderator candidate lists", async () => {
+    const fixture = await createPlatformFixture();
+    const adminTarget = await createUser({
+      email: `role-admin-target-${uid()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    await addServerMembership(adminTarget.id, fixture.server.id);
+
+    const response = await request(app)
+      .get("/api/roles/assignable-users")
+      .query({ role: "server_moderator", serverPublicId: fixture.server.publicId })
+      .set("Cookie", fixture.cookies);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ publicId: adminTarget.publicId })]),
+    );
+  });
+
+  it("rejects admin moderator assignments", async () => {
+    const fixture = await createPlatformFixture();
+    const adminTarget = await createUser({
+      email: `role-admin-assign-${uid()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    await addServerMembership(adminTarget.id, fixture.server.id);
+
+    const response = await request(app)
+      .post("/api/roles/platform-assignments")
+      .set("Cookie", fixture.cookies)
+      .send({
+        userPublicId: adminTarget.publicId,
+        role: "server_moderator",
+        serverPublicId: fixture.server.publicId,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+  });
+
   it("allows an HOD to manage moderators only in their live department scope", async () => {
     const suffix = uid();
     const first = await createDepartment({ code: `HOD-A-${suffix}` });

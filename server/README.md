@@ -80,6 +80,11 @@ Common prep for a fresh machine:
 npm run db:migrate:test
 ```
 
+## E2E (Playwright)
+- `npm run dev:e2e` runs the backend with `.env.e2e`.
+- Keep `.env.e2e` pointing at the shared `uniconnect_test` database.
+- If Playwright runs on non-default ports, override `PORT`, `CORS_ORIGIN`, and `CSRF_TRUSTED_ORIGINS`.
+
 ## Troubleshooting
 
 ### Missing table or migration errors in tests

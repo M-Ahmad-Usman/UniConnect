@@ -32,6 +32,14 @@ npm run build
 npm run test:e2e
 ```
 
+## E2E (Playwright)
+`npm run test:e2e` starts the backend and frontend dev servers automatically.
+
+Environment overrides:
+- `E2E_FRONTEND_HOST`, `E2E_FRONTEND_PORT`
+- `E2E_BACKEND_HOST`, `E2E_BACKEND_PORT`
+- `E2E_DATABASE_URL` (or `DATABASE_URL` from `server/.env.e2e`)
+
 ## Environment
 Local development normally needs no frontend env file. Use `.env.example` only
 when overriding the proxy target or enabling optional Sentry telemetry.

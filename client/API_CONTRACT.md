@@ -2524,6 +2524,7 @@ GET /api/roles/assignable-users?role=&scopeId=&classPublicId=&serverPublicId=&ch
 ```
 
 Returns paginated active users valid for the selected role/scope. Moderator candidates are active members of the selected server and exclude users already assigned for the same moderator scope.
+Moderator candidates exclude `ADMIN` users (only `TEACHER` and `STUDENT` are eligible).
 
 #### Get Revokable Assignments
 

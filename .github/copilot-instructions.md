@@ -1,14 +1,274 @@
-# UniConnect Copilot Instructions
+# UniConnect — Codex Agent Context
 
-## Repository Overview
+## Project Overview
+UniConnect is a Discord-like university communication platform for National Textile University (NTU), Faisalabad. It organizes official announcements into servers (departments, classes, societies) and channels, with fine-grained role-based access control.
 
-UniConnect is a university collaboration platform with two independent Node/TypeScript apps:
-- `client/` — React 19 + Vite + TanStack Query + Zustand + Tailwind
-- `server/` — Express 5 + Prisma + PostgreSQL + Socket.IO
+## Monorepo Structure
+This is a two-app monorepo. Each app is fully independent — no shared packages, no root workspace.
 
-Run all commands inside `client/` or `server/` (no root workspace orchestration).
+```
+uniconnect/
+├── client/        # React 19 + Vite frontend
+├── server/        # Express 5 + Prisma backend
+├── docs/          # Shared documentation
+└── AGENTS.md      # This file
+```
 
-## Commands
+**CRITICAL:** Always `cd` into the correct workspace before running commands.
+- Backend commands: run inside `server/`
+- Frontend commands: run inside `client/`
+- Never run commands from the repo root.
+- Make sure that every command exits cleanly and doesn't leak any memory or leave open handles. Don't run heavy commands like linting, building and testing simultaneously. Running multiple heavy commands simulataneoulsy makes the system unresponsive
+- Always try to save context. Don't try to read the full output of long commands like `npm test`. Only read the relevant chunk like using `npm test 2>&1 | tail -40`. If all tests pass then `tail -40` is enough but if any test fail then you can update the command to find the failing tests. You can use `grep` or any other tool or even read the whole command output if necessary. Rerunning the command with updated flags is cheaper than trying to read the whole output in one go. Using `2>&1 | tail -<number>` isn't a hard constraint. You can use any other more better way if you found any. The goal is to save context.
+
+## Tech Stack
+
+### Backend (`server/`)
+- **Runtime:** Node.js, native ESM (`"type": "module"`)
+- **Framework:** Express 5 (async-aware, no need for try/catch in route handlers)
+- **Language:** TypeScript (strict mode)
+- **ORM:** Prisma 7 with PostgreSQL (`@prisma/adapter-pg`)
+- **Validation:** Zod 4
+- **Auth:** JWT via httpOnly cookies (`access_token` at `/api`, `refresh_token` at `/api/auth/refresh`)
+- **Realtime:** Socket.IO
+- **Email:** Resend
+- **File uploads:** Multer + Cloudinary
+- **Testing:** Jest + Supertest (integration tests)
+- **Package manager:** npm
+
+### Frontend (`client/`)
+- **Framework:** React 19 + Vite 7
+- **Language:** TypeScript 5.9 (strict mode)
+- **Server state:** TanStack Query v5
+- **Client state:** Zustand
+- **Routing:** React Router v7
+- **UI:** shadcn/ui (Base UI stack) + Tailwind CSS v4 (official Vite plugin)
+- **Forms:** React Hook Form + Zod (resolver)
+- **Rich text:** Tiptap (StarterKit + CharacterCount + Placeholder)
+- **HTTP:** axios (`withCredentials: true`, interceptors for 401 refresh retry)
+- **Realtime:** Socket.IO client
+- **Unit tests:** Vitest
+- **E2E tests:** Playwright (Chromium)
+- **Package manager:** npm
+
+## Backend Architecture
+
+### Request Flow
+```
+Route → validate(zodSchema) → authenticate → authorize → Controller → Service → Prisma → DB
+```
+
+### Module Layout
+Every feature module lives under `server/src/modules/<name>/` with exactly these files:
+```
+<name>.routes.ts      # Express router, middleware chain
+<name>.controller.ts  # HTTP handlers — thin, return typed responses
+<name>.service.ts     # Business logic — Prisma queries, throw typed errors
+<name>.schema.ts      # Zod validation schemas
+<name>.listener.ts    # Event listeners (optional, some modules only)
+```
+
+### Controller Pattern
+Controllers are HTTP-thin. They call one service function, shape the response, and return.
+```typescript
+export async function handleCreateUser(req: Request, res: Response): Promise<void> {
+  const user = await userService.createUser(req.body);
+  const response: ApiResponse<typeof user> = { success: true, data: user, message: 'User created' };
+  res.status(StatusCodes.CREATED).json(response);
+}
+```
+
+### Service Pattern
+Services own all business logic and Prisma calls. They throw typed errors, never touch `req`/`res`.
+```typescript
+export async function createUser(input: CreateUserInput) {
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) throw new ConflictError('Email already exists');
+  return prisma.user.create({ data: input, select: userDetailSelect });
+}
+```
+
+### Route Pattern
+```typescript
+router.post(
+  '/',
+  authenticate,
+  authorize({ userTypes: ['ADMIN'] }),
+  validate(createUserSchema),
+  handleCreateUser
+);
+```
+
+### Error Classes
+Always use typed errors from `src/shared/errors/index.ts`. Never build ad-hoc error responses.
+- `NotFoundError` → 404
+- `UnauthorizedError` → 401
+- `ForbiddenError` → 403
+- `ConflictError` → 409
+- `ValidationError` → 400 (with field details)
+
+### Response Contract
+```typescript
+// Success
+{ success: true, data: T, message?: string }
+
+// Paginated
+{ success: true, data: T[], pagination: { page, limit, total, totalPages } }
+
+// Error
+{ success: false, error: { code: string, message: string, details?: [] } }
+```
+
+### Validation Schemas (Zod 4)
+```typescript
+export const createUserSchema = {
+  body: z.object({ fullName: z.string().min(1), email: z.string().email() }),
+  params: z.object({ id: z.coerce.number().int().positive() }),
+  query: paginationQuerySchema.extend({ userType: userTypeEnum.optional() }),
+};
+```
+
+### Logging
+Currently project uses prefixed console methods. Do NOT use any logger library.
+```typescript
+console.warn('[AUTH] Failed login attempt', { email, reason: 'invalid_credentials', timestamp: new Date().toISOString() });
+console.error('[USER] Unexpected error creating user', { error });
+```
+
+### Prisma Rules
+- Always use explicit `select` or `include` — never return the full Prisma model.
+- Multi-write flows must use Prisma transactions.
+- Use `@prisma/adapter-pg` — the project uses the Prisma driver adapter pattern.
+- ESM imports use `.js` extension: `import { prisma } from '../config/prisma.js'`
+- Enum-like values use Prisma enums or string literals matching the schema.
+- When running migrations: `npm run db:migrate` (dev) or `npm run db:migrate:test` (test DB).
+
+### TypeScript Rules (Backend)
+- Native ESM: all source imports must include `.js` extension.
+- Use `import type` for type-only imports.
+- `strict: true` — no `any`, use `unknown` + type guards.
+- Path alias: `@/*` maps to `src/*`.
+
+## Frontend Architecture
+
+### Feature Module Structure
+```
+client/src/features/<feature>/
+├── pages/           # Route-level page components
+├── components/      # Feature-specific components
+├── hooks/           # Custom hooks (useLogin, useChannelPosts, etc.)
+├── schemas.ts       # Zod validation schemas
+└── __tests__/       # Vitest unit tests
+```
+
+### State Management
+- **Server state:** TanStack Query (all API data — caching, mutations, invalidation)
+- **Client state:** Zustand (auth user, notification unread count)
+- **URL state:** React Router `useSearchParams` (filters, search, pagination)
+
+### API Layer
+All requests go through `client/src/api/client.ts` (axios instance).
+Domain-specific functions live in `client/src/api/endpoints/<resource>.api.ts`.
+
+```typescript
+// src/api/endpoints/posts.api.ts
+export const postsApi = {
+  list: (channelId: number, params: PostListParams) =>
+    apiClient.get(`/channels/${channelId}/posts`, { params }),
+  create: (channelId: number, formData: FormData) =>
+    apiClient.post(`/channels/${channelId}/posts`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};
+```
+
+### Query Hook Pattern
+```typescript
+export function useChannelPosts(channelId: number | null) {
+  return useQuery({
+    queryKey: queryKeys.posts.byChannel(channelId),
+    queryFn: () => postsApi.list(channelId!),
+    enabled: channelId !== null,
+  });
+}
+```
+
+### Mutation Hook Pattern
+```typescript
+export function useLogin() {
+  return useMutation({
+    mutationFn: authApi.login,
+    onSuccess: (user) => { setUser(user); navigate(ROUTES.SERVERS); },
+  });
+}
+```
+
+### TypeScript Rules (Frontend)
+- `strict: true` + `noUncheckedIndexedAccess: true`
+- Path alias: `@/*` maps to `src/*`
+- Use `import type` for type-only imports.
+- Enums as const objects:
+  ```typescript
+  export const UserType = { TEACHER: 'TEACHER', STUDENT: 'STUDENT', ADMIN: 'ADMIN' } as const;
+  export type UserType = (typeof UserType)[keyof typeof UserType];
+  ```
+- Tailwind v4 is imported via `@import 'tailwindcss';` in `src/index.css` — never via PostCSS config.
+
+### Forms
+React Hook Form + Zod resolver. Never use uncontrolled inputs outside of RHF.
+```typescript
+const { register, handleSubmit, formState: { errors } } = useForm({
+  resolver: zodResolver(schema),
+  defaultValues: { email: '', password: '' },
+});
+```
+
+### Styling
+Tailwind CSS + shadcn/ui + CVA for variants. Use `cn()` from `@/lib/utils` for conditional classes.
+```typescript
+cn('base-classes', condition && 'conditional-class', className)
+```
+
+### Realtime (Socket.IO)
+- Socket lifecycle is owned by `AuthGuard`, not `AppShell`.
+- `connectSocket()` / `disconnectSocket()` live in `src/lib/socket.ts`.
+- Socket connects **only** for fully authenticated users who do NOT have `mustChangePassword === true`.
+- Core events: `notification:new`, `notification:unread-count`, `auth:expired`.
+- Channel-scoped feed updates use a `useChannelPostRealtime` hook.
+
+## Naming Conventions
+
+| Element | Convention | Examples |
+|---------|------------|---------|
+| React components/pages | PascalCase | `LoginForm`, `ServerListPage` |
+| Component files | PascalCase.tsx | `LoginForm.tsx`, `AppShell.tsx` |
+| Hooks | `use` + PascalCase | `useLogin`, `useChannelPosts` |
+| Stores | `use` + PascalCase + `Store` | `useAuthStore`, `useNotificationStore` |
+| API endpoint objects | camelCase + `Api` | `authApi`, `serversApi` |
+| Types/Interfaces | PascalCase | `AuthUser`, `CreatePostInput` |
+| Constants | UPPER_SNAKE_CASE | `DEFAULT_PAGE_SIZE`, `MAX_FILE_SIZE` |
+| Backend handlers | `handle` + PascalCase | `handleCreateUser`, `handleLogin` |
+| Backend services | verb + Noun | `createUser`, `listPosts`, `getUserById` |
+| Backend files | kebab-case.ts | `auth.controller.ts`, `user.service.ts` |
+
+## Import Order (Frontend — enforced by ESLint)
+```typescript
+// 1. React and external libraries
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+
+// 2. Internal shared (UI, lib, types)
+import { Button } from '@/components/ui/button';
+import type { AuthUser } from '@/types';
+
+// 3. Feature-specific
+import { useLogin } from '@/features/auth/hooks/useLogin';
+
+// 4. Relative imports
+import { PasswordField } from './PasswordField';
+```
+
+## Commands Reference
 
 ### Backend (`server/`)
 | Task | Command |
@@ -22,8 +282,7 @@ Run all commands inside `client/` or `server/` (no root workspace orchestration)
 | Dev DB migration | `npm run db:migrate` |
 | Test DB migration | `npm run db:migrate:test` |
 | Seed | `npm run db:seed` |
-| Single Jest | `npm test -- tests/modules/file.test.ts` |
-| Single Jest by name | `npm test -- tests/modules/file.test.ts -t "test name"` |
+| Single Jest test | `npm test -- tests/modules/file.test.ts` |
 
 ### Frontend (`client/`)
 | Task | Command |
@@ -36,253 +295,64 @@ Run all commands inside `client/` or `server/` (no root workspace orchestration)
 | Unit tests | `npm run test` |
 | E2E tests | `npm run test:e2e` |
 | Single Vitest | `npx vitest run path/to/test.ts` |
-| Single Vitest by name | `npx vitest run path/to/test.ts -t "test name"` |
 | Single Playwright | `npx playwright test e2e/file.spec.ts` |
-| Single Playwright by name | `npx playwright test -g "test title"` |
 
-## Architecture
-
-### Authentication
-- Cookie-based auth (not bearer tokens) for both REST and Socket.IO.
-- Backend sets `access_token` (path `/api`) and `refresh_token` (path `/api/auth/refresh`).
+## Authentication Model
+- Cookie-based auth. Frontend never handles tokens directly.
+- `access_token` cookie (path `/api`, 15 min), `refresh_token` cookie (path `/api/auth/refresh`, 7 days).
 - Frontend axios client uses `withCredentials: true` and auto-refreshes on 401.
-- Refresh tokens are rotated and stored hashed; password reset tokens are one-time-use.
+- After any password change: backend clears all cookies, user must re-login.
+- If `mustChangePassword === true` after login: backend blocks all routes except `/api/auth/change-password` with 403. Do NOT connect Socket.IO until user logs in again after changing password.
 
-### Frontend (`client/src/`)
-```
-api/
-├── client.ts           # Axios instance with interceptors
-└── endpoints/          # Domain-specific API functions (auth.api.ts, users.api.ts, etc.)
-components/
-├── ui/                 # shadcn/ui primitives (button, input, dialog, etc.)
-├── layout/             # AppShell, TopBar, Sidebars, AdminLayout
-└── shared/             # ErrorBoundary, LoadingSpinner, EmptyState, ConfirmDialog
-features/               # Feature modules (auth, servers, channels, posts, notifications, admin)
-└── {feature}/
-    ├── pages/          # Page components
-    ├── components/     # Feature-specific components
-    ├── hooks/          # Custom hooks (useLogin, useChannelPosts, etc.)
-    ├── schemas.ts      # Zod validation schemas
-    └── __tests__/
-hooks/                  # Global hooks (useDebouncedValue, useMediaQuery)
-lib/                    # Utilities (constants, query-client, socket, utils)
-routes/
-├── index.tsx           # Router definition
-└── guards/             # AuthGuard, AdminGuard, GuestGuard, etc.
-stores/                 # Zustand stores (auth.store.ts, notification.store.ts)
-types/                  # TypeScript types organized by domain
-```
-
-**State management split:**
-- Server state: TanStack Query (caching, refetching, mutations)
-- Client state: Zustand (auth user, notification count)
-- URL state: React Router search params
-
-### Backend (`server/src/`)
-```
-config/                 # env, prisma, email, cloudinary
-middleware/             # authenticate, authorize, validate, errorHandler, uploads, rateLimiter
-modules/                # Feature modules (15 modules)
-└── {module}/
-    ├── {name}.routes.ts      # Express routes with middleware chain
-    ├── {name}.controller.ts  # HTTP handlers (response shaping)
-    ├── {name}.service.ts     # Business logic (data access)
-    ├── {name}.schema.ts      # Zod validation schemas
-    └── {name}.listener.ts    # Event listeners (optional)
-shared/
-├── errors/             # AppError, NotFoundError, ForbiddenError, etc.
-├── types/              # Shared TypeScript types
-├── utils/              # Utility functions
-├── constants.ts        # Pagination limits, file constraints
-└── events.ts           # Typed event emitter
-socket/                 # Socket.IO setup and handlers
-```
-
-**Request flow:** Route → validate → authenticate → authorize → Controller → Service → Prisma
-
-## Coding Conventions
-
-### Naming
-
-| Element | Convention | Examples |
-|---------|------------|----------|
-| Components/Pages | PascalCase | `LoginForm`, `ServerListPage` |
-| Component files | PascalCase.tsx | `LoginForm.tsx`, `AppShell.tsx` |
-| Hooks | use + PascalCase | `useLogin`, `useChannelPosts` |
-| Hook files | camelCase.ts | `useLogin.ts`, `useDebouncedValue.ts` |
-| Stores | use + PascalCase + Store | `useAuthStore`, `useNotificationStore` |
-| API endpoints | camelCase + Api | `authApi`, `serversApi` |
-| Types/Interfaces | PascalCase | `AuthUser`, `CreatePostInput` |
-| Constants | UPPER_SNAKE_CASE | `DEFAULT_PAGE_SIZE`, `MAX_FILE_SIZE` |
-| Server handlers | handle + PascalCase | `handleCreateUser`, `handleLogin` |
-| Server services | verb + Noun | `createUser`, `listPosts`, `getUserById` |
-| Server files | kebab-case.ts | `auth.controller.ts`, `user.service.ts` |
-
-### TypeScript
-
-- Strict mode enabled (`strict: true`, `noUncheckedIndexedAccess: true`).
-- Path alias: `@/*` maps to `src/*` in both apps.
-- Use `import type` for type-only imports.
-- Server uses native ESM: imports include `.js` extensions.
-- Enums as const objects with derived types:
-  ```typescript
-  export const UserType = { TEACHER: 'TEACHER', STUDENT: 'STUDENT', ADMIN: 'ADMIN' } as const;
-  export type UserType = (typeof UserType)[keyof typeof UserType];
-  ```
-
-### Import Order (Enforced)
-
-Organize imports in this order with blank lines between groups:
-```typescript
-// 1. React and external libraries
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-
-// 2. Internal shared (UI, lib, types)
-import { Button } from '@/components/ui/button';
-import { ROUTES } from '@/lib/constants';
-import type { AuthUser } from '@/types';
-
-// 3. Feature-specific
-import { useLogin } from '@/features/auth/hooks/useLogin';
-import { loginSchema } from '@/features/auth/schemas';
-
-// 4. Relative imports
-import { PasswordField } from './PasswordField';
-```
-
-### Frontend Patterns
-
-**Components:** Functional components with hooks. Use composition over inheritance.
-
-**Forms:** React Hook Form + Zod resolver:
-```typescript
-const { register, handleSubmit, formState: { errors } } = useForm({
-  resolver: zodResolver(schema),
-  defaultValues: { email: '', password: '' },
-});
-```
-
-**Data fetching:** TanStack Query with custom hooks:
-```typescript
-// Query hook
-export function useChannelPosts(channelId: number | null) {
-  return useQuery({
-    queryKey: queryKeys.posts.byChannel(channelId),
-    queryFn: () => postsApi.listByChannel(channelId!),
-    enabled: channelId !== null,
-  });
-}
-
-// Mutation hook
-export function useLogin() {
-  return useMutation({
-    mutationFn: authApi.login,
-    onSuccess: (user) => { setUser(user); navigate(ROUTES.SERVERS); },
-  });
-}
-```
-
-**Query keys:** Use factory pattern from `lib/constants.ts`:
-```typescript
-queryKeys.posts.byChannel(channelId, params)
-queryKeys.servers.detail(serverId)
-```
-
-**Styling:** Tailwind CSS + shadcn/ui + CVA for variants. Use `cn()` for conditional classes:
-```typescript
-cn("base-classes", condition && "conditional-class", className)
-```
-
-### Backend Patterns
-
-**Controller:** Handle HTTP concerns, call services, return typed responses:
-```typescript
-export async function handleCreateUser(req: Request, res: Response): Promise<void> {
-  const user = await userService.createUser(req.body);
-  const response: ApiResponse<typeof user> = { success: true, data: user, message: "User created" };
-  res.status(StatusCodes.CREATED).json(response);
-}
-```
-
-**Service:** Business logic, Prisma queries, throw typed errors:
-```typescript
-export async function createUser(input: CreateUserInput) {
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
-  if (existing) throw new ConflictError("Email already exists");
-  return prisma.user.create({ data: input, select: userDetailSelect });
-}
-```
-
-**Routes:** Middleware chain pattern:
-```typescript
-router.post("/", authenticate, authorize({ userTypes: ["ADMIN"] }), validate(createUserSchema), handleCreateUser);
-```
-
-**Errors:** Throw typed errors from `shared/errors/`:
-- `NotFoundError` (404), `UnauthorizedError` (401), `ForbiddenError` (403)
-- `ConflictError` (409), `ValidationError` (400 with details)
-
-**Response contract:**
-```typescript
-// Success
-{ success: true, data: T, message?: string }
-
-// Paginated
-{ success: true, data: T[], pagination: { page, limit, total, totalPages } }
-
-// Error
-{ success: false, error: { code: string, message: string, details?: [] } }
-```
-
-**Validation schemas:** Zod with structured exports:
-```typescript
-export const createUserSchema = {
-  body: z.object({ fullName: z.string().min(1), email: z.string().email() }),
-  params: z.object({ id: z.coerce.number().int().positive() }),
-  query: paginationQuerySchema.extend({ userType: userTypeEnum.optional() }),
-};
-```
-
-**Logging:** Use prefixed console methods for traceability:
-```typescript
-console.warn("[AUTH] Failed login attempt", { email, reason: "invalid_credentials", timestamp: new Date().toISOString() });
-```
-
-### Testing Requirements
-
-- All new features require tests before merging.
-- Backend: Jest + Supertest integration tests in `server/tests/modules/`.
-- Frontend: Vitest unit tests in `__tests__/` folders, Playwright E2E in `client/e2e/`.
-- Test helpers: `server/tests/helpers/` for DB reset/seed utilities.
-- Rate limits are disabled when `NODE_ENV === "test"`.
-
-### Code Style
-
-- Write self-documenting code with clear naming.
-- Add JSDoc comments only for complex functions or non-obvious behavior.
-- Prettier config: single quotes, semicolons, trailing commas, 100 char width.
-- Avoid magic numbers; use constants from `shared/constants.ts` or `lib/constants.ts`.
-
-## Reference Docs
-
-| Document | Location |
-|----------|----------|
-| API contract | `client/API_CONTRACT.md`, `server/docs/FRONTEND_BACKEND_CONTRACT.md` |
-
-### Frontend
-
-| Document | Location |
-|----------|----------|
-| Frontend architecture | `client/ARCHITECTURE.md` |
-| Development plan | `client/PLAN.md` |
-| Development progress | `client/PROGRESS.md` |
+## What NOT to Do
 
 ### Backend
+- Do NOT use `any` type — use `unknown` + type guards.
+- Do NOT build ad-hoc error response objects in services — throw typed errors from `shared/errors/`.
+- Do NOT omit `.js` extension on ESM imports.
+- Do NOT put business logic in controllers.
+- Do NOT fetch more Prisma fields than needed — always use explicit `select`/`include`.
+- Do NOT use raw SQL strings unless there is a documented reason.
+- Do NOT skip the `validate` middleware for routes that accept user input.
+- Do NOT log with `console.log` — use `console.warn` or `console.error` with a `[MODULE]` prefix.
 
+### Frontend
+- Do NOT use `any` type.
+- Do NOT use `localStorage` or `sessionStorage` — auth is cookie-based.
+- Do NOT manage server state with `useState` + `useEffect` — use TanStack Query.
+- Do NOT call `apiClient` directly inside components — go through endpoint functions in `api/endpoints/`.
+- Do NOT render unsanitized HTML — always use DOMPurify for post content.
+- Do NOT use offset pagination — the backend uses page/limit pagination, use `useSearchParams` to track page.
+- Do NOT forget `withCredentials: true` — all requests must send cookies.
+- Do NOT connect Socket.IO in `AppShell` or page components — it is managed by `AuthGuard`.
+
+## Testing Requirements
+- All new backend features require Jest integration tests in `server/tests/modules/` before merging.
+- All new frontend features require Vitest unit tests in `__tests__/` folders.
+- E2E Playwright coverage required for high-risk runtime flows (auth, route guards, cookie behavior).
+- Rate limits are disabled when `NODE_ENV === 'test'`.
+- Backend test DB is isolated: uses `server/.env.test`, separate `uniconnect_test` database.
+- Playwright uses isolated backend on port 4100 via `server/.env.e2e`.
+
+## Code Style
+- Prettier: single quotes, semicolons, trailing commas, 100 char width.
+- Write self-documenting code — JSDoc only for complex/non-obvious functions.
+- Avoid magic numbers — use constants from `server/src/shared/constants.ts` or `client/src/lib/constants.ts`.
+
+## Reference Documents
 | Document | Location |
 |----------|----------|
+| Documentation index | `docs/README.md` |
+| Release readiness | `docs/release_readiness.md` |
+| Release log | `docs/release_log.md` |
+| Security posture | `docs/security.md` |
+| Backend summary | `docs/backend.md` |
+| Frontend summary | `docs/frontend.md` |
 | Frontend architecture | `client/ARCHITECTURE.md` |
-| Error codes | `server/docs/API_ERROR_CODES.md` |
-| Backend development | `server/API_DEVELOPMENT_PLAN.md` |
-| Backend progress | `server/PROGRESS.md` |
+| Frontend implementation plan | `client/FRONTEND_IMPLEMENTATION_PLAN.md` |
+| API contract | `client/API_CONTRACT.md` |
+| Backend architecture | `server/BACKEND_ARCHITECTURE.md` |
+| API error codes | `server/docs/API_ERROR_CODES.md` |
+| Frontend-backend contract | `server/docs/FRONTEND_BACKEND_CONTRACT.md` |
+| Database ERD | `docs/database_erd.md` |
+| Functional requirements | `docs/functional_requirements.md` |

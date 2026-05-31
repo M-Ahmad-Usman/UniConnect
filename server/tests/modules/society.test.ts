@@ -1,9 +1,28 @@
 import request from "supertest";
 import { jest } from "@jest/globals";
-import { app } from "../../src/app.js";
-import { prisma } from "../../src/config/prisma.js";
-import { resetDB } from "../helpers/db.helper.js";
-import {
+
+const disconnectUserSockets = jest.fn();
+const emitToUser = jest.fn();
+const emitToChannel = jest.fn();
+const getIO = jest.fn(() => null);
+const initializeSocket = jest.fn();
+const resetConnectionCounts = jest.fn();
+const resetIO = jest.fn();
+
+await jest.unstable_mockModule("../../src/socket/index.js", () => ({
+  disconnectUserSockets,
+  emitToUser,
+  emitToChannel,
+  getIO,
+  initializeSocket,
+  resetConnectionCounts,
+  resetIO,
+}));
+
+const { app } = await import("../../src/app.js");
+const { prisma } = await import("../../src/config/prisma.js");
+const { resetDB } = await import("../helpers/db.helper.js");
+const {
   createUser,
   createDepartment,
   createProgram,
@@ -13,7 +32,7 @@ import {
   createSociety,
   createSocietyMembershipRequest,
   loginAs,
-} from "../helpers/factory.js";
+} = await import("../helpers/factory.js");
 
 /** Short unique suffix */
 let uidCounter = 0;
@@ -26,7 +45,7 @@ beforeAll(async () => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  jest.clearAllMocks();
 });
 
 describe("Module 6 - Society Management", () => {
@@ -1582,6 +1601,42 @@ describe("Module 6 - Society Management", () => {
         },
       });
       expect(membership).toBeNull();
+    });
+
+    it("disconnects sockets for removed members", async () => {
+      const admin = await createUser({
+        email: `admin-soc-rmsock-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-RMSOCK-${uid()}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-rmsock-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-rmsock-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      const { society } = await createSociety(dept.id, president.id, convenor.id, {
+        name: `RmSock Society ${uid()}`,
+        creatorId: admin.id,
+      });
+      const member = await createStudentWithInfo(cls.id, dept.id, {
+        email: `mem-rmsock-${uid()}@test.com`,
+      });
+      await prisma.serverMembership.create({
+        data: { userId: member.id, serverId: society.serverId, isAutoJoined: false },
+      });
+      const cookies = await loginAs(convenor.email, "Pass@1234");
+
+      const res = await request(app)
+        .delete(`/api/societies/${society.id}/members/${member.id}`)
+        .set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(disconnectUserSockets).toHaveBeenCalledWith(member.id);
     });
 
     it("should return 403 when trying to remove president", async () => {

@@ -57,6 +57,11 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-01 - Module 4 Hardening + E2E Reliability
+- Enforced moderator eligibility to teacher/student users only, with assignable-user filtering, assignment validation, and updated contract/tests.
+- Disconnected sockets when society members are removed and when class auto-memberships are cleaned up after teaching changes.
+- Playwright E2E now loads `.env.e2e` for seeding, enables CSRF, and supports env-driven host/port overrides with forced server restarts.
+
 ### 2026-05-30 - Schema/Lifecycle Refactor Module 4 Complete
 - Replaced destructive moderator rows with append-only platform role assignment
   history, UUIDv7 assignment IDs, optional expiry, audited revocation, and

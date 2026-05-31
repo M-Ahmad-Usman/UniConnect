@@ -11,7 +11,7 @@ import {
   buildSocietyPermissions,
   getPermissionContext,
 } from "../../shared/permissions/index.js";
-import { emitToUser } from "../../socket/index.js";
+import { disconnectUserSockets, emitToUser } from "../../socket/index.js";
 import * as notificationService from "../notification/notification.service.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 
@@ -827,6 +827,8 @@ export async function removeMember(societyId: number, userId: number, caller: Ca
       userId_serverId: { userId, serverId: society.serverId },
     },
   });
+
+  disconnectUserSockets(userId);
 }
 
 export async function listMembers(societyId: number, query: PaginationQuery, caller: CallerInfo) {

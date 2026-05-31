@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const workspaceRoot = path.resolve(__dirname, '../..');
 const serverDir = path.resolve(workspaceRoot, 'server');
 const migrationsDir = path.resolve(serverDir, 'prisma/migrations');
+const e2eEnvPath = path.resolve(serverDir, '.env.e2e');
 
 interface SeedUser {
   email: string;
@@ -23,6 +24,35 @@ interface SeedUser {
 interface SeededUserRow {
   id: number;
   email: string;
+}
+
+async function loadEnvFile(filePath: string) {
+  try {
+    const contents = await readFile(filePath, 'utf8');
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const equalsIndex = trimmed.indexOf('=');
+      if (equalsIndex === -1) continue;
+
+      const key = trimmed.slice(0, equalsIndex).trim();
+      let value = trimmed.slice(equalsIndex + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+
+      if (process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error;
+    }
+  }
 }
 
 async function applyMigrations(pool: Pool) {
@@ -1095,6 +1125,7 @@ async function seedModule2AcademicHardeningData(pool: Pool) {
 }
 
 export default async function globalSetup() {
+  await loadEnvFile(e2eEnvPath);
   const pool = createDbPool();
 
   try {
