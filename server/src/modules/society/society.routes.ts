@@ -5,7 +5,9 @@ import { validate } from "../../middleware/validate.js";
 import {
   createSocietySchema,
   listSocietiesSchema,
-  societyIdParamSchema,
+  societyPublicIdParamSchema,
+  societyLifecycleReasonSchema,
+  updateSocietyStatusSchema,
   updateSocietySchema,
   joinRequestSchema,
   listJoinRequestsSchema,
@@ -30,6 +32,10 @@ import {
   handleGetMyMembershipStatus,
   handleListMemberCandidates,
   handleListLeadershipCandidates,
+  handleGetSocietyDeletionImpact,
+  handleUpdateSocietyStatus,
+  handleDeleteSociety,
+  handleRestoreSociety,
 } from "./society.controller.js";
 
 const router = Router();
@@ -60,14 +66,42 @@ router.get(
 );
 
 router.get(
-  "/:id",
+  "/:publicId/deletion-impact",
   authenticate,
-  validate(societyIdParamSchema),
+  validate(societyPublicIdParamSchema),
+  handleGetSocietyDeletionImpact
+);
+
+router.patch(
+  "/:publicId/status",
+  authenticate,
+  validate(updateSocietyStatusSchema),
+  handleUpdateSocietyStatus
+);
+
+router.patch(
+  "/:publicId/restore",
+  authenticate,
+  validate(societyLifecycleReasonSchema),
+  handleRestoreSociety
+);
+
+router.delete(
+  "/:publicId",
+  authenticate,
+  validate(societyLifecycleReasonSchema),
+  handleDeleteSociety
+);
+
+router.get(
+  "/:publicId",
+  authenticate,
+  validate(societyPublicIdParamSchema),
   handleGetSociety
 );
 
 router.patch(
-  "/:id",
+  "/:publicId",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(updateSocietySchema),
@@ -75,16 +109,16 @@ router.patch(
 );
 
 router.get(
-  "/:id/my-membership",
+  "/:publicId/my-membership",
   authenticate,
-  validate(societyIdParamSchema),
+  validate(societyPublicIdParamSchema),
   handleGetMyMembershipStatus
 );
 
 // ─── Join Requests ─────────────────────────────────────────────────────────
 
 router.post(
-  "/:id/join-request",
+  "/:publicId/join-request",
   authenticate,
   authorize({ userTypes: ["STUDENT"] }),
   validate(joinRequestSchema),
@@ -92,7 +126,7 @@ router.post(
 );
 
 router.get(
-  "/:id/join-requests",
+  "/:publicId/join-requests",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(listJoinRequestsSchema),
@@ -100,7 +134,7 @@ router.get(
 );
 
 router.patch(
-  "/:id/join-requests/:requestId",
+  "/:publicId/join-requests/:requestId",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(reviewJoinRequestSchema),
@@ -110,7 +144,7 @@ router.patch(
 // ─── Members ───────────────────────────────────────────────────────────────
 
 router.post(
-  "/:id/members",
+  "/:publicId/members",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(addMemberSchema),
@@ -118,7 +152,7 @@ router.post(
 );
 
 router.delete(
-  "/:id/members/:userId",
+  "/:publicId/members/:userPublicId",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(removeMemberSchema),
@@ -126,7 +160,7 @@ router.delete(
 );
 
 router.get(
-  "/:id/member-candidates",
+  "/:publicId/member-candidates",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(listMemberCandidatesSchema),
@@ -134,7 +168,7 @@ router.get(
 );
 
 router.get(
-  "/:id/members",
+  "/:publicId/members",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER", "STUDENT"] }),
   validate(listMembersSchema),

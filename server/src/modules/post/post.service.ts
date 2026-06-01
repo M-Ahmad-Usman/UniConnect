@@ -1,6 +1,10 @@
 import type { PostPriority, ServerType } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
-import { cloudinaryService } from "../../config/cloudinary.js";
+import {
+  cleanupCloudinaryUploads,
+  cloudinaryService,
+  type CloudinaryUpload,
+} from "../../config/cloudinary.js";
 import {
   ApiErrorCode,
   ForbiddenError,
@@ -20,6 +24,10 @@ import { appEvents, APP_EVENTS } from "../../shared/events.js";
 import { emitToChannel } from "../../socket/index.js";
 import type { UserRole } from "../../shared/types/index.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
+import {
+  assertServerAcceptsWrites,
+  type PrismaTransaction,
+} from "../../shared/lifecycle/society.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -130,8 +138,11 @@ const postDetailSelect = {
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
-async function findActivePostOrThrow(postId: number) {
-  const post = await prisma.post.findUnique({
+async function findActivePostOrThrow(
+  postId: number,
+  client: PrismaTransaction = prisma,
+) {
+  const post = await client.post.findUnique({
     where: { id: postId },
     select: {
       id: true,
@@ -156,8 +167,11 @@ async function findActivePostOrThrow(postId: number) {
   return post;
 }
 
-async function findActiveChannelForPostsOrThrow(channelId: number) {
-  const channel = await prisma.channel.findUnique({
+async function findActiveChannelForPostsOrThrow(
+  channelId: number,
+  client: PrismaTransaction = prisma,
+) {
+  const channel = await client.channel.findUnique({
     where: { id: channelId },
     select: {
       id: true,
@@ -174,6 +188,24 @@ async function findActiveChannelForPostsOrThrow(channelId: number) {
   }
 
   return channel;
+}
+
+async function lockActiveChannelForPostsOrThrow(
+  channelId: number,
+  client: PrismaTransaction,
+) {
+  const rows = await client.$queryRaw<Array<{ id: number }>>`
+    SELECT "id"
+    FROM "channels"
+    WHERE "id" = ${channelId}
+      AND "is_deleted" = FALSE
+      AND "is_archived" = FALSE
+    FOR UPDATE
+  `;
+  if (rows.length === 0) {
+    throw new NotFoundError("Channel not found");
+  }
+  return findActiveChannelForPostsOrThrow(channelId, client);
 }
 
 async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
@@ -311,26 +343,75 @@ async function resolveAuthorBadges(
   return badgeMap;
 }
 
-async function uploadAttachments(
-  postId: number,
+async function uploadAttachmentImages(
   files: UploadedFile[],
-): Promise<void> {
-  // Upload all files to Cloudinary in parallel
-  const uploaded = await Promise.all(
+): Promise<CloudinaryUpload[]> {
+  const results = await Promise.allSettled(
     files.map((file) =>
       cloudinaryService.uploadImage(file.buffer, "post-attachments"),
     ),
   );
+  const uploaded = results.flatMap((result) =>
+    result.status === "fulfilled" ? [result.value] : [],
+  );
+  const failure = results.find((result) => result.status === "rejected");
+  if (failure) {
+    await cleanupCloudinaryUploads(uploaded);
+    throw failure.reason;
+  }
+  return uploaded;
+}
 
-  // Batch-insert all attachment records in one query
-  await prisma.postAttachment.createMany({
-    data: uploaded.map(({ url }, i) => ({
+async function createAttachmentRecords(
+  client: PrismaTransaction,
+  postId: number,
+  files: UploadedFile[],
+  uploaded: CloudinaryUpload[],
+): Promise<void> {
+  await client.postAttachment.createMany({
+    data: uploaded.map(({ url }, index) => ({
       postId,
       fileUrl: url,
-      fileType: files[i].mimetype,
-      fileSize: files[i].size,
+      fileType: files[index].mimetype,
+      fileSize: files[index].size,
     })),
   });
+}
+
+async function uploadAttachments(
+  postId: number,
+  serverId: number,
+  files: UploadedFile[],
+  enforceLimit = false,
+): Promise<void> {
+  const uploaded = await uploadAttachmentImages(files);
+  try {
+    await prisma.$transaction(async (tx) => {
+      await assertServerAcceptsWrites(serverId, tx);
+      if (enforceLimit) {
+        const rows = await tx.$queryRaw<Array<{ id: number }>>`
+          SELECT "id"
+          FROM "posts"
+          WHERE "id" = ${postId}
+            AND "is_deleted" = FALSE
+          FOR UPDATE
+        `;
+        if (rows.length === 0) {
+          throw new NotFoundError("Post not found");
+        }
+        const existingCount = await tx.postAttachment.count({ where: { postId } });
+        if (existingCount + files.length > MAX_ATTACHMENTS) {
+          throw new ValidationError(
+            `Cannot exceed ${MAX_ATTACHMENTS} attachments per post (currently ${existingCount})`,
+          );
+        }
+      }
+      await createAttachmentRecords(tx, postId, files, uploaded);
+    });
+  } catch (error) {
+    await cleanupCloudinaryUploads(uploaded);
+    throw error;
+  }
 }
 
 // ─── Exported Helpers ──────────────────────────────────────────────────────
@@ -369,6 +450,8 @@ export async function createPost(
     throw new ForbiddenError("Channel is locked", ApiErrorCode.CHANNEL_LOCKED);
   }
 
+  await prisma.$transaction((tx) => assertServerAcceptsWrites(channel.serverId, tx));
+
   // Check posting rights
   const allowed = await canPostInChannel(
     caller.id,
@@ -382,60 +465,37 @@ export async function createPost(
     );
   }
 
-  // Create the post
-  const post = await prisma.post.create({
-    data: {
-      authorId: caller.id,
-      channelId,
-      title: data.title,
-      content: data.content,
-      priority: data.priority ?? "NORMAL",
-    },
-    select: postDetailSelect,
-  });
-
-  // Upload attachments if provided
-  if (files.length > 0) {
-    await uploadAttachments(post.id, files);
-
-    // Re-fetch to include attachments
-    const withAttachments = await prisma.post.findUnique({
-      where: { id: post.id },
-      select: postDetailSelect,
+  const uploaded = files.length > 0 ? await uploadAttachmentImages(files) : [];
+  let post;
+  try {
+    // Serialize the insert and attachment records with society lifecycle transitions.
+    post = await prisma.$transaction(async (tx) => {
+      await assertServerAcceptsWrites(channel.serverId, tx);
+      const lockedChannel = await lockActiveChannelForPostsOrThrow(channelId, tx);
+      if (lockedChannel.isLocked) {
+        throw new ForbiddenError("Channel is locked", ApiErrorCode.CHANNEL_LOCKED);
+      }
+      const created = await tx.post.create({
+        data: {
+          authorId: caller.id,
+          channelId,
+          title: data.title,
+          content: data.content,
+          priority: data.priority ?? "NORMAL",
+        },
+        select: { id: true },
+      });
+      if (uploaded.length > 0) {
+        await createAttachmentRecords(tx, created.id, files, uploaded);
+      }
+      return tx.post.findUniqueOrThrow({
+        where: { id: created.id },
+        select: postDetailSelect,
+      });
     });
-
-    if (!withAttachments) {
-      throw new NotFoundError("Post not found");
-    }
-
-    const badgeMap = await resolveAuthorBadges(
-      channel.serverId,
-      channel.server.type,
-      [withAttachments.author.id],
-    );
-
-    appEvents.emit(APP_EVENTS.POST_CREATED, {
-      postId: post.id,
-      channelId,
-      serverId: channel.serverId,
-      authorId: caller.id,
-      title: data.title,
-      priority: data.priority ?? "NORMAL",
-      serverType: channel.server.type,
-    });
-
-    const response = {
-      ...withAttachments,
-      author: {
-        ...withAttachments.author,
-        badges: badgeMap.get(withAttachments.author.id) ?? [],
-      },
-    };
-
-    emitToChannel(channelId, "post:created", { channelId, post: response });
-
-    invalidateSystemStatsCache();
-    return response;
+  } catch (error) {
+    await cleanupCloudinaryUploads(uploaded);
+    throw error;
   }
 
   // Resolve author badge
@@ -607,16 +667,19 @@ export async function updatePost(
     throw new ForbiddenError("Edit window has expired", ApiErrorCode.EDIT_WINDOW_EXPIRED);
   }
 
-  const updated = await prisma.post.update({
-    where: { id: postId },
-    data: {
-      ...(data.title !== undefined ? { title: data.title } : {}),
-      ...(data.content !== undefined ? { content: data.content } : {}),
-      ...(data.priority !== undefined ? { priority: data.priority } : {}),
-      updatedAt: new Date(),
-      updatedBy: caller.id,
-    },
-    select: postDetailSelect,
+  const updated = await prisma.$transaction(async (tx) => {
+    await assertServerAcceptsWrites(post.channel.serverId, tx);
+    return tx.post.update({
+      where: { id: postId },
+      data: {
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.content !== undefined ? { content: data.content } : {}),
+        ...(data.priority !== undefined ? { priority: data.priority } : {}),
+        updatedAt: new Date(),
+        updatedBy: caller.id,
+      },
+      select: postDetailSelect,
+    });
   });
 
   // Resolve author badge
@@ -651,6 +714,7 @@ export async function deletePost(postId: number, caller: CallerInfo) {
   }
 
   const deletedNotifications = await prisma.$transaction(async (tx) => {
+    await assertServerAcceptsWrites(post.channel.serverId, tx);
     await tx.post.update({
       where: { id: postId },
       data: {
@@ -690,12 +754,15 @@ export async function pinPost(
 ) {
   const post = await findActivePostOrThrow(postId);
 
-  const updated = await prisma.post.update({
-    where: { id: postId },
-    data: data.isPinned
-      ? { isPinned: true, pinnedBy: caller.id, pinnedAt: new Date() }
-      : { isPinned: false, pinnedBy: null, pinnedAt: null },
-    select: postDetailSelect,
+  const updated = await prisma.$transaction(async (tx) => {
+    await assertServerAcceptsWrites(post.channel.serverId, tx);
+    return tx.post.update({
+      where: { id: postId },
+      data: data.isPinned
+        ? { isPinned: true, pinnedBy: caller.id, pinnedAt: new Date() }
+        : { isPinned: false, pinnedBy: null, pinnedAt: null },
+      select: postDetailSelect,
+    });
   });
 
   const badgeMap = await resolveAuthorBadges(
@@ -749,7 +816,7 @@ export async function addAttachments(
     );
   }
 
-  await uploadAttachments(postId, files);
+  await uploadAttachments(postId, post.channel.serverId, files, true);
 
   // Return updated post with attachments
   const updated = await prisma.post.findUnique({

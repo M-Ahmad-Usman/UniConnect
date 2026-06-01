@@ -57,6 +57,32 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-01 - Schema/Lifecycle Refactor Module 5 Complete
+- Migrated society-facing routes, DTOs, frontend URLs, query keys, and related
+  user references to UUIDv7 public IDs.
+- Added admin/own-department-HOD deletion-impact, suspend/activate, soft-delete,
+  and restore APIs with audited transaction-scoped lifecycle row locking.
+- Made suspended societies fully read-only, including membership, leadership,
+  channel/server, moderator, posting, and post-mutation paths.
+- Soft-delete now marks society-owned servers and live channels with one cascade
+  ID, deletes pending membership requests, preserves historical and content
+  data, and restores only descendants deleted by the same cascade.
+- Added society-linked lifecycle notifications for suspend, activate, delete,
+  and restore. Fanout uses one transactional `INSERT ... SELECT`, excludes the
+  actor, targets active members, and emits Socket.IO updates after commit.
+- Hardened notification preferences with SQL checks, channel/server ownership
+  enforcement, null-safe uniqueness, and atomic upsert behavior.
+- Hardened Cloudinary writes with deletion metadata and best-effort rollback;
+  post rows and uploaded attachment rows now commit together after upload.
+- Added deleted-society discovery, lifecycle filters and badges, impact-aware
+  confirmation dialogs, and role-sensitive realtime cache invalidation.
+- Verification passed:
+  - Prisma generate and Module 5 migration SQL execution against the isolated
+    test DB
+  - backend build and full Jest suite, 488/488
+  - frontend type-check, lint, production build, and full Vitest suite, 131/131
+  - focused society Playwright suite, 3/3, and full Playwright suite, 36/36
+
 ### 2026-06-01 - Module 4 Hardening + E2E Reliability
 - Enforced moderator eligibility to teacher/student users only, with assignable-user filtering, assignment validation, and updated contract/tests.
 - Disconnected sockets when society members are removed and when class auto-memberships are cleaned up after teaching changes.

@@ -14,7 +14,10 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model UserRoleAssignment
- * 
+ * The Module 4 SQL migration adds composite role/scope and channel/server
+ * foreign keys plus the non-overlapping-period exclusion constraint. Prisma's
+ * schema DSL cannot represent those safeguards; review generated migrations
+ * so they do not drop the SQL-only constraints.
  */
 export type UserRoleAssignmentModel = runtime.Types.Result.DefaultSelection<Prisma.$UserRoleAssignmentPayload>
 

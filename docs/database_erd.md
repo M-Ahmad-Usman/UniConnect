@@ -154,13 +154,19 @@ CLASS.server_id - SERVER.id
 
 SOCIETY {
   id SERIAL PK
-  name VARCHAR(100) // UNIQUE NOT NULL
+  public_id UUID // NOT NULL UNIQUE DEFAULT uuidv7()
+  name VARCHAR(100) // NOT NULL; partial unique index while is_deleted = false
   description TEXT
   department_id INT FK // NOT NULL
   president_id INT FK // NOT NULL
   convenor_id INT FK // NOT NULL
   server_id INT FK // UNIQUE NOT NULL
+  status VARCHAR(20) // NOT NULL enum ['active', 'suspended']; defaults to active
   is_active BOOLEAN // DEFAULT TRUE
+  is_deleted BOOLEAN // DEFAULT FALSE
+  deleted_at TIMESTAMP
+  deleted_by INTEGER FK
+  deleted_cascade_id UUID
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
 }
 
@@ -179,12 +185,17 @@ SOCIETY.server_id - SERVER.id
 
 SERVER {
   id SERIAL PK
+  public_id UUID // NOT NULL UNIQUE DEFAULT uuidv7()
   name VARCHAR(100) // NOT NULL
   description TEXT
   type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
 
   icon_url TEXT
   is_active BOOLEAN // DEFAULT TRUE
+  is_deleted BOOLEAN // DEFAULT FALSE
+  deleted_at TIMESTAMP
+  deleted_by INTEGER FK
+  deleted_cascade_id UUID
   created_by INTEGER FK // NOT NULL
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
 }
@@ -193,6 +204,7 @@ SERVER.created_by > USER.id
 
 CHANNEL {
   id SERIAL PK
+  public_id UUID // NOT NULL UNIQUE DEFAULT uuidv7()
   server_id INTEGER FK // NOT NULL
   name VARCHAR(100) // NOT NULL
   description TEXT
@@ -216,6 +228,7 @@ CHANNEL {
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
   deleted_by INTEGER FK
+  deleted_cascade_id UUID
   
   is_auto_created BOOLEAN // DEFAULT FALSE
   created_at TIMESTAMP
@@ -382,7 +395,8 @@ NOTIFICATION {
   id SERIAL PK
   user_id INTEGER FK // NOT NULL
   post_id INTEGER FK 
-  type VARCHAR(50) // enum ['new_post', 'role_assigned', 'society_request_reviewed']
+  society_id INTEGER FK
+  type VARCHAR(50) // enum ['new_post', 'role_assigned', 'society_request_reviewed', 'society_suspended', 'society_activated', 'society_deleted', 'society_restored']
   title VARCHAR(200) // NOT NULL
   message TEXT
   read_at TIMESTAMP
@@ -391,11 +405,12 @@ NOTIFICATION {
 
 NOTIFICATION.user_id > USER.id
 NOTIFICATION.post_id > POST.id
+NOTIFICATION.society_id > SOCIETY.id
 
 NOTIFICATION_PREFERENCE {
   id SERIAL PK
   user_id INTEGER FK
-  notification_type VARCHAR(50) // enum ['new_post', 'role_assigned', 'society_request_reviewed']; preferences currently use new_post and role_assigned
+  notification_type VARCHAR(50) // preferences support new_post and role_assigned only
   scope_type VARCHAR(20) // enum['server, 'channel']
   server_id INTEGER FK
   channel_id INTEGER FK
@@ -403,6 +418,7 @@ NOTIFICATION_PREFERENCE {
   updated_at TIMESTAMP
 
   // UNIQUE(user_id, notification_type, scope_type, server_id, COALESCE(channel_id, 0))
+  // Composite FK (channel_id, server_id) enforces channel ownership for channel scope.
 }
 
 NOTIFICATION_PREFERENCE.user_id > USER.id

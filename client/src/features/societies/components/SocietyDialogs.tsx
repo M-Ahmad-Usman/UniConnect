@@ -37,9 +37,9 @@ interface SocietyEditDialogProps {
   initialValues: {
     name: string;
     description: string;
-    presidentId: number;
+    presidentPublicId: string;
     presidentName: string;
-    convenorId: number;
+    convenorPublicId: string;
     convenorName: string;
   };
   canChangeLeadership: boolean;
@@ -77,8 +77,8 @@ function useLeadershipCandidates(
 function LeadershipSelects({
   open,
   departmentId,
-  presidentId,
-  convenorId,
+  presidentPublicId,
+  convenorPublicId,
   presidentLabel,
   convenorLabel,
   onPresidentSearchChange,
@@ -93,8 +93,8 @@ function LeadershipSelects({
 }: {
   open: boolean;
   departmentId: number | undefined;
-  presidentId?: number;
-  convenorId?: number;
+  presidentPublicId?: string;
+  convenorPublicId?: string;
   presidentLabel?: string;
   convenorLabel?: string;
   onPresidentSearchChange: (value: string) => void;
@@ -142,12 +142,12 @@ function LeadershipSelects({
             aria-invalid={presidentError ? 'true' : undefined}
             {...presidentRegistration}
           >
-            <option value={presidentId ?? 0}>
+            <option value={presidentPublicId ?? ''}>
               {presidentLabel ??
                 (presidentsQuery.isLoading ? 'Loading students...' : 'Select student')}
             </option>
             {presidents.map((student) => (
-              <option key={student.id} value={student.id}>
+              <option key={student.publicId} value={student.publicId}>
                 {candidateLabel(student)}
               </option>
             ))}
@@ -172,12 +172,12 @@ function LeadershipSelects({
             aria-invalid={convenorError ? 'true' : undefined}
             {...convenorRegistration}
           >
-            <option value={convenorId ?? 0}>
+            <option value={convenorPublicId ?? ''}>
               {convenorLabel ??
                 (convenorsQuery.isLoading ? 'Loading teachers...' : 'Select teacher')}
             </option>
             {convenors.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
+              <option key={teacher.publicId} value={teacher.publicId}>
                 {candidateLabel(teacher)}
               </option>
             ))}
@@ -203,8 +203,8 @@ export function SocietyDialog({
       name: '',
       description: '',
       departmentId: 0,
-      presidentId: 0,
-      convenorId: 0,
+      presidentPublicId: '',
+      convenorPublicId: '',
     },
   });
   const departmentId = useWatch({ control: form.control, name: 'departmentId' });
@@ -212,8 +212,8 @@ export function SocietyDialog({
   const departmentRegistration = form.register('departmentId', { valueAsNumber: true });
 
   useEffect(() => {
-    form.setValue('presidentId', 0);
-    form.setValue('convenorId', 0);
+    form.setValue('presidentPublicId', '');
+    form.setValue('convenorPublicId', '');
   }, [departmentId, form]);
 
   async function submit(values: SocietyFormValues) {
@@ -280,10 +280,10 @@ export function SocietyDialog({
             convenorSearch={convenorSearch}
             onPresidentSearchChange={setPresidentSearch}
             onConvenorSearchChange={setConvenorSearch}
-            presidentRegistration={form.register('presidentId', { valueAsNumber: true })}
-            convenorRegistration={form.register('convenorId', { valueAsNumber: true })}
-            presidentError={form.formState.errors.presidentId?.message}
-            convenorError={form.formState.errors.convenorId?.message}
+            presidentRegistration={form.register('presidentPublicId')}
+            convenorRegistration={form.register('convenorPublicId')}
+            presidentError={form.formState.errors.presidentPublicId?.message}
+            convenorError={form.formState.errors.convenorPublicId?.message}
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
@@ -333,12 +333,12 @@ export function SocietyEditDialog({
       payload.description = nextDescription;
     }
 
-    if (canChangeLeadership && values.presidentId !== initialValues.presidentId) {
-      payload.presidentId = values.presidentId;
+    if (canChangeLeadership && values.presidentPublicId !== initialValues.presidentPublicId) {
+      payload.presidentPublicId = values.presidentPublicId;
     }
 
-    if (canChangeLeadership && values.convenorId !== initialValues.convenorId) {
-      payload.convenorId = values.convenorId;
+    if (canChangeLeadership && values.convenorPublicId !== initialValues.convenorPublicId) {
+      payload.convenorPublicId = values.convenorPublicId;
     }
 
     if (Object.keys(payload).length === 0) {
@@ -385,18 +385,18 @@ export function SocietyEditDialog({
             <LeadershipSelects
               open={open}
               departmentId={departmentId}
-              presidentId={initialValues.presidentId}
+              presidentPublicId={initialValues.presidentPublicId}
               presidentLabel={initialValues.presidentName}
-              convenorId={initialValues.convenorId}
+              convenorPublicId={initialValues.convenorPublicId}
               convenorLabel={initialValues.convenorName}
               presidentSearch={presidentSearch}
               convenorSearch={convenorSearch}
               onPresidentSearchChange={setPresidentSearch}
               onConvenorSearchChange={setConvenorSearch}
-              presidentRegistration={form.register('presidentId', { valueAsNumber: true })}
-              convenorRegistration={form.register('convenorId', { valueAsNumber: true })}
-              presidentError={form.formState.errors.presidentId?.message}
-              convenorError={form.formState.errors.convenorId?.message}
+              presidentRegistration={form.register('presidentPublicId')}
+              convenorRegistration={form.register('convenorPublicId')}
+              presidentError={form.formState.errors.presidentPublicId?.message}
+              convenorError={form.formState.errors.convenorPublicId?.message}
             />
           ) : null}
           <DialogFooter>

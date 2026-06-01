@@ -1696,13 +1696,13 @@ HODs, and admins can all use this workspace.
 
 - Shown to students viewing a society they're not a member of
 - Button: "Request to Join"
-- Click → `POST /api/societies/:id/join-request`
+- Click → `POST /api/societies/:publicId/join-request`
 - On success: button changes to "Request Sent" (disabled)
 
 ##### `AddMemberDialog` (`src/features/societies/components/AddMemberDialog.tsx`)
 
 - Searchable dropdown to find students by name/email
-- Submit → `POST /api/societies/:id/members`
+- Submit → `POST /api/societies/:publicId/members`
 
 #### API Integrations
 
@@ -1852,7 +1852,7 @@ Dynamic form that adapts based on selected role type:
 - Confirmation dialog: "Are you sure you want to revoke {roleName} from {userName}?"
 - Confirm → owner-entity `DELETE` for academic roles or
   `DELETE /api/roles/platform-assignments/:assignmentPublicId`
-- **Note:** Society President and Convenor roles cannot be revoked directly (must change via `PATCH /api/societies/:id`)
+- **Note:** Society President and Convenor roles cannot be revoked directly (must change via `PATCH /api/societies/:publicId`)
 
 ##### `RoleScopePicker` (`src/features/roles/components/RoleScopePicker.tsx`)
 

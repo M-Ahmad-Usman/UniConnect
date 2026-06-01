@@ -5,8 +5,10 @@ import type {
   CreateSocietyRequest,
   SocietyCandidateParams,
   SocietyLeadershipCandidateParams,
+  SocietyLifecycleReasonRequest,
   SocietyListParams,
   SocietyRequestListParams,
+  UpdateSocietyStatusRequest,
   UpdateSocietyRequest,
 } from '@/types';
 
@@ -14,6 +16,19 @@ function cleanParams(params?: object) {
   return Object.fromEntries(
     Object.entries(params ?? {}).filter(([, value]) => value !== undefined && value !== ''),
   );
+}
+
+function invalidateSocietyLifecycleQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  societyPublicId: string,
+) {
+  void queryClient.invalidateQueries({ queryKey: queryKeys.societies.all() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyPublicId) });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.societies.deletionImpact(societyPublicId) });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.roles.all() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.permissions.me() });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() });
 }
 
 export function useSocieties(params: SocietyListParams) {
@@ -24,58 +39,58 @@ export function useSocieties(params: SocietyListParams) {
   });
 }
 
-export function useSociety(societyId: number | null) {
+export function useSociety(societyPublicId: string | null) {
   return useQuery({
-    queryKey: societyId ? queryKeys.societies.detail(societyId) : ['societies', 'idle'],
-    queryFn: () => societiesApi.getById(societyId!),
-    enabled: societyId !== null,
+    queryKey: societyPublicId ? queryKeys.societies.detail(societyPublicId) : ['societies', 'idle'],
+    queryFn: () => societiesApi.getById(societyPublicId!),
+    enabled: societyPublicId !== null,
   });
 }
 
-export function useSocietyMembershipStatus(societyId: number | null) {
+export function useSocietyMembershipStatus(societyPublicId: string | null) {
   return useQuery({
-    queryKey: societyId ? queryKeys.societies.myMembership(societyId) : ['societies', 'membership', 'idle'],
-    queryFn: () => societiesApi.getMyMembershipStatus(societyId!),
-    enabled: societyId !== null,
+    queryKey: societyPublicId ? queryKeys.societies.myMembership(societyPublicId) : ['societies', 'membership', 'idle'],
+    queryFn: () => societiesApi.getMyMembershipStatus(societyPublicId!),
+    enabled: societyPublicId !== null,
   });
 }
 
 export function useSocietyMembers(
-  societyId: number | null,
+  societyPublicId: string | null,
   params: SocietyListParams,
   enabled = true,
 ) {
   const normalized = cleanParams(params);
   return useQuery({
-    queryKey: societyId ? queryKeys.societies.members(societyId, normalized) : ['societies', 'members', 'idle'],
-    queryFn: () => societiesApi.listMembers(societyId!, params),
-    enabled: societyId !== null && enabled,
+    queryKey: societyPublicId ? queryKeys.societies.members(societyPublicId, normalized) : ['societies', 'members', 'idle'],
+    queryFn: () => societiesApi.listMembers(societyPublicId!, params),
+    enabled: societyPublicId !== null && enabled,
   });
 }
 
 export function useSocietyJoinRequests(
-  societyId: number | null,
+  societyPublicId: string | null,
   params: SocietyRequestListParams,
   enabled = true,
 ) {
   const normalized = cleanParams(params);
   return useQuery({
-    queryKey: societyId ? queryKeys.societies.requests(societyId, normalized) : ['societies', 'requests', 'idle'],
-    queryFn: () => societiesApi.listJoinRequests(societyId!, params),
-    enabled: societyId !== null && enabled,
+    queryKey: societyPublicId ? queryKeys.societies.requests(societyPublicId, normalized) : ['societies', 'requests', 'idle'],
+    queryFn: () => societiesApi.listJoinRequests(societyPublicId!, params),
+    enabled: societyPublicId !== null && enabled,
   });
 }
 
 export function useSocietyMemberCandidates(
-  societyId: number | null,
+  societyPublicId: string | null,
   params: SocietyCandidateParams,
   enabled = true,
 ) {
   const normalized = cleanParams(params);
   return useQuery({
-    queryKey: societyId ? queryKeys.societies.candidates(societyId, normalized) : ['societies', 'candidates', 'idle'],
-    queryFn: () => societiesApi.listMemberCandidates(societyId!, params),
-    enabled: societyId !== null && enabled,
+    queryKey: societyPublicId ? queryKeys.societies.candidates(societyPublicId, normalized) : ['societies', 'candidates', 'idle'],
+    queryFn: () => societiesApi.listMemberCandidates(societyPublicId!, params),
+    enabled: societyPublicId !== null && enabled,
   });
 }
 
@@ -105,15 +120,15 @@ export function useCreateSociety() {
   });
 }
 
-export function useUpdateSociety(societyId: number) {
+export function useUpdateSociety(societyPublicId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: UpdateSocietyRequest) => societiesApi.update(societyId, payload),
+    mutationFn: (payload: UpdateSocietyRequest) => societiesApi.update(societyPublicId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.societies.leadershipCandidates() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
@@ -122,53 +137,90 @@ export function useUpdateSociety(societyId: number) {
   });
 }
 
-export function useSubmitSocietyJoinRequest(societyId: number) {
+export function useSubmitSocietyJoinRequest(societyPublicId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => societiesApi.submitJoinRequest(societyId),
+    mutationFn: () => societiesApi.submitJoinRequest(societyPublicId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.myMembership(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.requests(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.myMembership(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.requests(societyPublicId) });
     },
   });
 }
 
-export function useReviewSocietyJoinRequest(societyId: number) {
+export function useReviewSocietyJoinRequest(societyPublicId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, status }: { requestId: number; status: 'APPROVED' | 'REJECTED' }) =>
-      societiesApi.reviewJoinRequest(societyId, requestId, status),
+      societiesApi.reviewJoinRequest(societyPublicId, requestId, status),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.requests(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.requests(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyPublicId) });
     },
   });
 }
 
-export function useAddSocietyMember(societyId: number) {
+export function useAddSocietyMember(societyPublicId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: number) => societiesApi.addMember(societyId, userId),
+    mutationFn: (userPublicId: string) => societiesApi.addMember(societyPublicId, userPublicId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
     },
   });
 }
 
-export function useRemoveSocietyMember(societyId: number) {
+export function useRemoveSocietyMember(societyPublicId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: number) => societiesApi.removeMember(societyId, userId),
+    mutationFn: (userPublicId: string) => societiesApi.removeMember(societyPublicId, userPublicId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.members(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.detail(societyPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.societies.candidates(societyPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
     },
+  });
+}
+
+export function useSocietyDeletionImpact(societyPublicId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: societyPublicId
+      ? queryKeys.societies.deletionImpact(societyPublicId)
+      : ['societies', 'deletion-impact', 'idle'],
+    queryFn: () => societiesApi.getDeletionImpact(societyPublicId!),
+    enabled: enabled && societyPublicId !== null,
+  });
+}
+
+export function useUpdateSocietyStatus(societyPublicId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateSocietyStatusRequest) =>
+      societiesApi.updateStatus(societyPublicId, payload),
+    onSuccess: () => invalidateSocietyLifecycleQueries(queryClient, societyPublicId),
+  });
+}
+
+export function useDeleteSociety(societyPublicId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SocietyLifecycleReasonRequest) =>
+      societiesApi.delete(societyPublicId, payload),
+    onSuccess: () => invalidateSocietyLifecycleQueries(queryClient, societyPublicId),
+  });
+}
+
+export function useRestoreSociety(societyPublicId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SocietyLifecycleReasonRequest) =>
+      societiesApi.restore(societyPublicId, payload),
+    onSuccess: () => invalidateSocietyLifecycleQueries(queryClient, societyPublicId),
   });
 }

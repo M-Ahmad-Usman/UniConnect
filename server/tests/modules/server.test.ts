@@ -737,6 +737,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
         .spyOn(cloudinaryService, "uploadImage")
         .mockResolvedValue({
           url: `https://res.cloudinary.com/test/server-icons/${u}.jpg`,
+          publicId: `server-icons/${u}`,
         });
 
       const cookies = await loginAs(`hod-icon-${u}@test.com`, "Pass@1234");

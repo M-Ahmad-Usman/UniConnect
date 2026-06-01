@@ -26,6 +26,7 @@ import * as notificationService from "../notification/notification.service.js";
 import { emitToUser } from "../../socket/index.js";
 import type { AuditContext } from "../audit/audit.service.js";
 import { recordAuditLog } from "../audit/audit.service.js";
+import { assertServerAcceptsWrites } from "../../shared/lifecycle/society.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -2174,6 +2175,7 @@ export async function createPlatformAssignment(
 
   try {
     const assignmentId = await prisma.$transaction(async (tx) => {
+      await assertServerAcceptsWrites(scope.server.id, tx);
       const created = await tx.userRoleAssignment.create({
         data: {
           userId: targetUser.id,
@@ -2235,6 +2237,7 @@ export async function revokePlatformAssignment(
   const revokedAt = new Date();
 
   await prisma.$transaction(async (tx) => {
+    await assertServerAcceptsWrites(current.serverId, tx);
     const update = await tx.userRoleAssignment.updateMany({
       where: { id: current.id, revokedAt: null },
       data: { revokedAt, revokedBy: caller.id },
@@ -2270,6 +2273,7 @@ export async function updatePlatformAssignmentExpiry(
 
   try {
     await prisma.$transaction(async (tx) => {
+      await assertServerAcceptsWrites(current.serverId, tx);
       const update = await tx.userRoleAssignment.updateMany({
         where: { id: current.id, revokedAt: null },
         data: { expiresAt },

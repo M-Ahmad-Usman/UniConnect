@@ -3,14 +3,17 @@ import type {
   CreateSocietyRequest,
   PaginatedResponse,
   SocietyCandidateParams,
+  SocietyDeletionImpact,
   SocietyDetail,
   SocietyLeadershipCandidateParams,
+  SocietyLifecycleReasonRequest,
   SocietyListItem,
   SocietyListParams,
   SocietyMember,
   SocietyMembershipRequest,
   SocietyMembershipStatus,
   SocietyRequestListParams,
+  UpdateSocietyStatusRequest,
   UpdateSocietyRequest,
   UserSummary,
 } from '@/types';
@@ -23,8 +26,8 @@ export const societiesApi = {
     return response.data;
   },
 
-  async getById(societyId: number) {
-    const response = await apiClient.get<SocietyDetail>(`/societies/${societyId}`);
+  async getById(societyPublicId: string) {
+    const response = await apiClient.get<SocietyDetail>(`/societies/${societyPublicId}`);
     return response.data;
   },
 
@@ -33,56 +36,56 @@ export const societiesApi = {
     return response.data;
   },
 
-  async update(societyId: number, payload: UpdateSocietyRequest) {
-    const response = await apiClient.patch<SocietyListItem>(`/societies/${societyId}`, payload);
+  async update(societyPublicId: string, payload: UpdateSocietyRequest) {
+    const response = await apiClient.patch<SocietyListItem>(`/societies/${societyPublicId}`, payload);
     return response.data;
   },
 
-  async getMyMembershipStatus(societyId: number) {
+  async getMyMembershipStatus(societyPublicId: string) {
     const response = await apiClient.get<SocietyMembershipStatus>(
-      `/societies/${societyId}/my-membership`,
+      `/societies/${societyPublicId}/my-membership`,
     );
     return response.data;
   },
 
-  async submitJoinRequest(societyId: number) {
+  async submitJoinRequest(societyPublicId: string) {
     const response = await apiClient.post<SocietyMembershipRequest>(
-      `/societies/${societyId}/join-request`,
+      `/societies/${societyPublicId}/join-request`,
     );
     return response.data;
   },
 
-  async listJoinRequests(societyId: number, params: SocietyRequestListParams = {}) {
+  async listJoinRequests(societyPublicId: string, params: SocietyRequestListParams = {}) {
     const response = await apiClient.get<PaginatedResponse<SocietyMembershipRequest>>(
-      `/societies/${societyId}/join-requests`,
+      `/societies/${societyPublicId}/join-requests`,
       { params },
     );
     return response.data;
   },
 
   async reviewJoinRequest(
-    societyId: number,
+    societyPublicId: string,
     requestId: number,
     status: 'APPROVED' | 'REJECTED',
   ) {
     const response = await apiClient.patch<SocietyMembershipRequest>(
-      `/societies/${societyId}/join-requests/${requestId}`,
+      `/societies/${societyPublicId}/join-requests/${requestId}`,
       { status },
     );
     return response.data;
   },
 
-  async listMembers(societyId: number, params: SocietyListParams = {}) {
+  async listMembers(societyPublicId: string, params: SocietyListParams = {}) {
     const response = await apiClient.get<PaginatedResponse<SocietyMember>>(
-      `/societies/${societyId}/members`,
+      `/societies/${societyPublicId}/members`,
       { params },
     );
     return response.data;
   },
 
-  async listMemberCandidates(societyId: number, params: SocietyCandidateParams = {}) {
+  async listMemberCandidates(societyPublicId: string, params: SocietyCandidateParams = {}) {
     const response = await apiClient.get<PaginatedResponse<UserSummary>>(
-      `/societies/${societyId}/member-candidates`,
+      `/societies/${societyPublicId}/member-candidates`,
       { params },
     );
     return response.data;
@@ -96,15 +99,45 @@ export const societiesApi = {
     return response.data;
   },
 
-  async addMember(societyId: number, userId: number) {
-    const response = await apiClient.post<SocietyMember>(`/societies/${societyId}/members`, {
-      userId,
+  async addMember(societyPublicId: string, userPublicId: string) {
+    const response = await apiClient.post<SocietyMember>(`/societies/${societyPublicId}/members`, {
+      userPublicId,
     });
     return response.data;
   },
 
-  async removeMember(societyId: number, userId: number) {
-    const response = await apiClient.delete<null>(`/societies/${societyId}/members/${userId}`);
+  async removeMember(societyPublicId: string, userPublicId: string) {
+    const response = await apiClient.delete<null>(`/societies/${societyPublicId}/members/${userPublicId}`);
+    return response.data;
+  },
+
+  async getDeletionImpact(societyPublicId: string) {
+    const response = await apiClient.get<SocietyDeletionImpact>(
+      `/societies/${societyPublicId}/deletion-impact`,
+    );
+    return response.data;
+  },
+
+  async updateStatus(societyPublicId: string, payload: UpdateSocietyStatusRequest) {
+    const response = await apiClient.patch<SocietyListItem>(
+      `/societies/${societyPublicId}/status`,
+      payload,
+    );
+    return response.data;
+  },
+
+  async delete(societyPublicId: string, payload: SocietyLifecycleReasonRequest) {
+    const response = await apiClient.delete<SocietyListItem>(`/societies/${societyPublicId}`, {
+      data: payload,
+    });
+    return response.data;
+  },
+
+  async restore(societyPublicId: string, payload: SocietyLifecycleReasonRequest) {
+    const response = await apiClient.patch<SocietyListItem>(
+      `/societies/${societyPublicId}/restore`,
+      payload,
+    );
     return response.data;
   },
 };

@@ -261,39 +261,55 @@ available.
 ### Societies (`/api/societies`)
 
 - `POST /`
-  - Body: `{ name, description?, departmentId, presidentId, convenorId }`
+  - Body: `{ name, description?, departmentId, presidentPublicId, convenorPublicId }`
   - Auth: admin or HOD for the target department
 - `GET /`
-  - Query: `page, limit, departmentId?`
-- `GET /:id`
+  - Query: `page, limit, departmentId?, status?, lifecycle?`
+  - `lifecycle` is `live | deleted | all`. Deleted rows are discoverable only by admin or own-department HOD.
+- `GET /:publicId`
   - Returns society detail plus `viewer: { isMember, requestStatus }` and caller-specific `permissions`.
   - Member visibility remains restricted to members, society leadership, and admins.
   - Frontend should gate society tabs and protected queries from this response instead of local role inference.
-- `GET /:id/my-membership`
+- `GET /:publicId/my-membership`
   - Returns `{ isMember, requestStatus, requestedAt, reviewedAt }` for the authenticated user
-- `PATCH /:id`
-  - Body: `{ name?, description?, presidentId?, convenorId? }`
+- `PATCH /:publicId`
+  - Body: `{ name?, description?, presidentPublicId?, convenorPublicId? }`
   - Auth: info changes by admin, department HOD, convenor, or president; leadership changes by admin or department HOD
-- `POST /:id/join-request`
-- `GET /:id/join-requests`
+- `GET /:publicId/deletion-impact`
+  - Auth: admin or own-department HOD
+  - Returns preserved member/channel/request/post/platform-assignment counts for confirmation UI.
+- `PATCH /:publicId/status`
+  - Body: `{ status: "ACTIVE" | "SUSPENDED", reason? }`
+  - Auth: admin or own-department HOD
+- `DELETE /:publicId`
+  - Body: `{ reason? }`
+  - Auth: admin or own-department HOD
+- `PATCH /:publicId/restore`
+  - Body: `{ reason? }`
+  - Auth: admin or own-department HOD
+- `POST /:publicId/join-request`
+- `GET /:publicId/join-requests`
   - Query: `page, limit, status?`
   - Auth: admin, convenor, or president
-- `PATCH /:id/join-requests/:requestId`
+- `PATCH /:publicId/join-requests/:requestId`
   - Body: `{ status: "APPROVED" | "REJECTED" }`
   - Approval adds server membership; approval and rejection notify the requester with `SOCIETY_REQUEST_REVIEWED`
-- `POST /:id/members`
-  - Body: `{ userId }`
-- `DELETE /:id/members/:userId`
-- `GET /:id/members`
+- `POST /:publicId/members`
+  - Body: `{ userPublicId }`
+- `DELETE /:publicId/members/:userPublicId`
+- `GET /:publicId/members`
   - Query: `page, limit`
   - Auth: admin, society president/convenor, or an existing society member. HOD does not get member visibility by department alone.
-- `GET /:id/member-candidates`
+- `GET /:publicId/member-candidates`
   - Query: `page, limit, search?`
   - Returns active university-wide students who are not already society server members
 - `GET /leadership-candidates`
   - Query: `departmentId, role=president|convenor, page, limit, search?`
   - Auth: admin or HOD for the requested department
   - Returns same-department students with `StudentInfo` for president or same-department teachers with `TeacherInfo` for convenor
+
+Suspended societies are readable only by authorized viewers and fully frozen for
+writes, including lifecycle-scoped server/channel/post/moderator mutations.
 
 ### Roles (`/api/roles`)
 
@@ -396,6 +412,8 @@ Academic role writes use their owning modules:
   - Query: `page, limit, type?, unreadOnly?`
   - `NEW_POST` items include post channel, server, and priority metadata for routing and urgent UI.
   - `SOCIETY_REQUEST_REVIEWED` items are emitted when a society join request is approved or rejected.
+  - `SOCIETY_SUSPENDED`, `SOCIETY_ACTIVATED`, `SOCIETY_DELETED`, and `SOCIETY_RESTORED`
+    items include society metadata for list/detail routing.
 - `GET /unread-count`
 - `PATCH /read-all`
 - `PATCH /:id/read`
@@ -408,7 +426,7 @@ Academic role writes use their owning modules:
   - Body: `{ notificationType, scopeType, serverId, channelId?, isSubscribed }`
   - `NEW_POST` supports server and channel scope.
   - `ROLE_ASSIGNED` supports server scope only.
-  - `SOCIETY_REQUEST_REVIEWED` does not use notification preferences.
+  - Society-request and lifecycle notifications do not use notification preferences.
   - Missing preference means subscribed.
 
 ### Admin (`/api/admin`)

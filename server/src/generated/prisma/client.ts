@@ -148,7 +148,10 @@ export type Permission = Prisma.PermissionModel
 export type RolePermission = Prisma.RolePermissionModel
 /**
  * Model UserRoleAssignment
- * 
+ * The Module 4 SQL migration adds composite role/scope and channel/server
+ * foreign keys plus the non-overlapping-period exclusion constraint. Prisma's
+ * schema DSL cannot represent those safeguards; review generated migrations
+ * so they do not drop the SQL-only constraints.
  */
 export type UserRoleAssignment = Prisma.UserRoleAssignmentModel
 /**
@@ -158,7 +161,9 @@ export type UserRoleAssignment = Prisma.UserRoleAssignmentModel
 export type Notification = Prisma.NotificationModel
 /**
  * Model NotificationPreference
- * 
+ * The Module 5 SQL migration adds null-safe uniqueness, scope/type checks,
+ * and a composite channel/server foreign key. Prisma's schema DSL cannot
+ * represent every safeguard; review generated migrations before applying.
  */
 export type NotificationPreference = Prisma.NotificationPreferenceModel
 /**

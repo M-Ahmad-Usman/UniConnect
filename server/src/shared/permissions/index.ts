@@ -33,6 +33,7 @@ export interface SocietyPermissions {
   canManageChannels: boolean;
   canAssignModerators: boolean;
   canSubmitJoinRequest: boolean;
+  canManageLifecycle: boolean;
 }
 
 export interface RoleWorkspacePermissions {
@@ -85,7 +86,8 @@ export interface SocietyPermissionTarget {
   id: number;
   serverId: number;
   departmentId: number;
-  isActive: boolean;
+  status: string;
+  isDeleted: boolean;
   presidentUserId: number;
   convenorUserId: number;
   departmentHodId: number | null;
@@ -133,6 +135,7 @@ export function emptySocietyPermissions(): SocietyPermissions {
     canManageChannels: false,
     canAssignModerators: false,
     canSubmitJoinRequest: false,
+    canManageLifecycle: false,
   };
 }
 
@@ -350,18 +353,21 @@ export function buildSocietyPermissions(
     society.convenorUserId === context.user.id ||
     context.scopes.societyLeadershipIds.includes(society.id);
   const isHod = society.departmentHodId === context.user.id;
+  const isWritable = society.status === "ACTIVE" && !society.isDeleted;
+  const canManageLifecycle = isAdmin || isHod;
 
   if (isAdmin || isLeader) {
     return {
       canViewMembers: true,
-      canManageMembers: true,
+      canManageMembers: isWritable,
       canViewJoinRequests: true,
-      canReviewJoinRequests: true,
-      canEditInfo: true,
-      canChangeLeadership: true,
-      canManageChannels: true,
-      canAssignModerators: true,
+      canReviewJoinRequests: isWritable,
+      canEditInfo: isWritable,
+      canChangeLeadership: isWritable,
+      canManageChannels: isWritable,
+      canAssignModerators: isWritable,
       canSubmitJoinRequest: false,
+      canManageLifecycle,
     };
   }
 
@@ -370,16 +376,17 @@ export function buildSocietyPermissions(
     canManageMembers: false,
     canViewJoinRequests: false,
     canReviewJoinRequests: false,
-    canEditInfo: isHod,
-    canChangeLeadership: isHod,
+    canEditInfo: isHod && isWritable,
+    canChangeLeadership: isHod && isWritable,
     canManageChannels: false,
-    canAssignModerators: isHod,
+    canAssignModerators: isHod && isWritable,
     canSubmitJoinRequest:
-      society.isActive &&
+      isWritable &&
       context.user.userType === "STUDENT" &&
       !viewer.isMember &&
       viewer.requestStatus !== "PENDING" &&
       viewer.requestStatus !== "APPROVED",
+    canManageLifecycle,
   };
 }
 

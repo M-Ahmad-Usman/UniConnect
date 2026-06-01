@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { e2eUsers } from './helpers/auth';
 import { findClassIdByServerName, module2Fixtures } from './helpers/module2';
-import { findSocietyIdByName, module3Fixtures } from './helpers/module3';
+import { findSocietyByName, module3Fixtures } from './helpers/module3';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -75,15 +75,15 @@ test.describe.serial('Module 6 UI and accessibility hardening', () => {
   test('society detail tabs and destructive confirmation are keyboard reachable', async ({
     page,
   }) => {
-    const societyId = await findSocietyIdByName(module3Fixtures.societyName);
-    expect(societyId).not.toBeNull();
+    const society = await findSocietyByName(module3Fixtures.societyName);
+    expect(society).not.toBeNull();
 
     await signIn(
       page,
       e2eUsers.moduleSocietyPresident.email,
       e2eUsers.moduleSocietyPresident.password,
     );
-    await page.goto(`/societies/${societyId}`);
+    await page.goto(`/societies/${society!.publicId}`);
 
     await expect(page.getByRole('tablist', { name: 'Society detail sections' })).toBeVisible();
     await page.getByRole('tab', { name: 'members' }).focus();
@@ -97,7 +97,7 @@ test.describe.serial('Module 6 UI and accessibility hardening', () => {
     await page.getByRole('button', { name: 'Cancel' }).click();
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`/societies/${societyId}`);
+    await page.goto(`/societies/${society!.publicId}`);
     await expectNoPageOverflow(page);
     await expectNoCriticalA11yViolations(page);
   });

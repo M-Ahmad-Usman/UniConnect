@@ -1,13 +1,16 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
-export const societyIdParamSchema = {
+export const societyPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
+
+const lifecycleReasonSchema = z.string().trim().min(1).max(500).optional();
 
 // ─── Create Society ────────────────────────────────────────────────────────
 
@@ -27,14 +30,8 @@ export const createSocietySchema = {
       .number()
       .int()
       .positive({ error: "Department ID must be a positive integer" }),
-    presidentId: z
-      .number()
-      .int()
-      .positive({ error: "President ID must be a positive integer" }),
-    convenorId: z
-      .number()
-      .int()
-      .positive({ error: "Convenor ID must be a positive integer" }),
+    presidentPublicId: publicIdSchema,
+    convenorPublicId: publicIdSchema,
   }),
 };
 
@@ -47,6 +44,8 @@ export const listSocietiesSchema = {
       .int()
       .positive({ error: "Department ID must be a positive integer" })
       .optional(),
+    status: z.enum(["ACTIVE", "SUSPENDED"]).optional(),
+    lifecycle: z.enum(["live", "deleted", "all"]).optional(),
   }),
 };
 
@@ -54,7 +53,7 @@ export const listSocietiesSchema = {
 
 export const updateSocietySchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z
     .object({
@@ -69,25 +68,17 @@ export const updateSocietySchema = {
         .trim()
         .max(500, { error: "Description must be at most 500 characters" })
         .optional(),
-      presidentId: z
-        .number()
-        .int()
-        .positive({ error: "President ID must be a positive integer" })
-        .optional(),
-      convenorId: z
-        .number()
-        .int()
-        .positive({ error: "Convenor ID must be a positive integer" })
-        .optional(),
+      presidentPublicId: publicIdSchema.optional(),
+      convenorPublicId: publicIdSchema.optional(),
     })
     .refine(
       (data) =>
         data.name !== undefined ||
         data.description !== undefined ||
-        data.presidentId !== undefined ||
-        data.convenorId !== undefined,
+        data.presidentPublicId !== undefined ||
+        data.convenorPublicId !== undefined,
       {
-        error: "At least one field (name, description, presidentId, or convenorId) must be provided",
+        error: "At least one field (name, description, presidentPublicId, or convenorPublicId) must be provided",
         path: ["name"],
       }
     ),
@@ -96,16 +87,14 @@ export const updateSocietySchema = {
 // ─── Join Request ──────────────────────────────────────────────────────────
 
 export const joinRequestSchema = {
-  params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
-  }),
+  params: societyPublicIdParamSchema.params,
 };
 
 // ─── List Join Requests ────────────────────────────────────────────────────
 
 export const listJoinRequestsSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: paginationQuerySchema.extend({
     status: z.enum(["PENDING", "APPROVED", "REJECTED"], {
@@ -118,7 +107,7 @@ export const listJoinRequestsSchema = {
 
 export const reviewJoinRequestSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
     requestId: z.coerce.number().int().positive({ error: "Request ID must be a positive integer" }),
   }),
   body: z.object({
@@ -132,13 +121,10 @@ export const reviewJoinRequestSchema = {
 
 export const addMemberSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
-    userId: z
-      .number()
-      .int()
-      .positive({ error: "User ID must be a positive integer" }),
+    userPublicId: publicIdSchema,
   }),
 };
 
@@ -146,8 +132,8 @@ export const addMemberSchema = {
 
 export const removeMemberSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
-    userId: z.coerce.number().int().positive({ error: "User ID must be a positive integer" }),
+    publicId: publicIdSchema,
+    userPublicId: publicIdSchema,
   }),
 };
 
@@ -155,14 +141,14 @@ export const removeMemberSchema = {
 
 export const listMembersSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: paginationQuerySchema,
 };
 
 export const listMemberCandidatesSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Society ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: paginationQuerySchema.extend({
     search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
@@ -180,4 +166,20 @@ export const listLeadershipCandidatesSchema = {
     }),
     search: z.string().trim().max(100, { error: "Search must be at most 100 characters" }).optional(),
   }),
+};
+
+export const updateSocietyStatusSchema = {
+  params: societyPublicIdParamSchema.params,
+  body: z.object({
+    status: z.enum(["ACTIVE", "SUSPENDED"]),
+    reason: lifecycleReasonSchema,
+  }),
+};
+
+export const societyLifecycleReasonSchema = {
+  params: societyPublicIdParamSchema.params,
+  body: z.preprocess(
+    (value) => value ?? {},
+    z.object({ reason: lifecycleReasonSchema }),
+  ),
 };

@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { prisma } from "../../src/config/prisma.js";
 import { NotFoundError, ValidationError } from "../../src/shared/errors/index.js";
 import {
@@ -132,26 +134,28 @@ describe("Module 2 - Public ID Foundation", () => {
 
     it("excludes soft-deleted records by default and resolves them only when requested", async () => {
       const { admin, society, server, channel, post } = await createCoreFixtures();
+      const deletedAt = new Date();
+      const deletedCascadeId = randomUUID();
 
       await prisma.user.update({
         where: { id: admin.id },
-        data: { isDeleted: true, deletedAt: new Date() },
+        data: { isDeleted: true, deletedAt },
       });
       await prisma.society.update({
         where: { id: society.id },
-        data: { isDeleted: true, deletedAt: new Date() },
+        data: { isDeleted: true, isActive: false, deletedAt, deletedCascadeId },
       });
       await prisma.server.update({
         where: { id: server.id },
-        data: { isDeleted: true, deletedAt: new Date() },
+        data: { isDeleted: true, isActive: false, deletedAt, deletedCascadeId },
       });
       await prisma.channel.update({
         where: { id: channel.id },
-        data: { isDeleted: true, deletedAt: new Date() },
+        data: { isDeleted: true, deletedAt, deletedCascadeId },
       });
       await prisma.post.update({
         where: { id: post.id },
-        data: { isDeleted: true, deletedAt: new Date() },
+        data: { isDeleted: true, deletedAt },
       });
 
       await expect(resolveUserPublicId(admin.publicId)).rejects.toBeInstanceOf(NotFoundError);
@@ -272,4 +276,3 @@ describe("Module 2 - Public ID Foundation", () => {
     });
   });
 });
-

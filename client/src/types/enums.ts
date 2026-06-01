@@ -13,6 +13,12 @@ export const UserStatus = {
 } as const;
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
 
+export const SocietyStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+export type SocietyStatus = (typeof SocietyStatus)[keyof typeof SocietyStatus];
+
 export const ServerType = {
   DEPARTMENT: 'DEPARTMENT',
   CLASS: 'CLASS',
@@ -64,6 +70,10 @@ export const NotificationType = {
   NEW_POST: 'NEW_POST',
   ROLE_ASSIGNED: 'ROLE_ASSIGNED',
   SOCIETY_REQUEST_REVIEWED: 'SOCIETY_REQUEST_REVIEWED',
+  SOCIETY_SUSPENDED: 'SOCIETY_SUSPENDED',
+  SOCIETY_ACTIVATED: 'SOCIETY_ACTIVATED',
+  SOCIETY_DELETED: 'SOCIETY_DELETED',
+  SOCIETY_RESTORED: 'SOCIETY_RESTORED',
 } as const;
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 

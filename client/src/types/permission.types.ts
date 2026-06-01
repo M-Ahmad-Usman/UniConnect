@@ -30,6 +30,7 @@ export interface SocietyPermissions {
   canManageChannels: boolean;
   canAssignModerators: boolean;
   canSubmitJoinRequest: boolean;
+  canManageLifecycle: boolean;
 }
 
 export interface RoleWorkspacePermissions {

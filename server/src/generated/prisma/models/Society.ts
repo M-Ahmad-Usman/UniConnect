@@ -322,6 +322,7 @@ export type SocietyWhereInput = {
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   deletedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   membershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }
 
 export type SocietyOrderByWithRelationInput = {
@@ -346,6 +347,7 @@ export type SocietyOrderByWithRelationInput = {
   server?: Prisma.ServerOrderByWithRelationInput
   deletedByUser?: Prisma.UserOrderByWithRelationInput
   membershipRequests?: Prisma.SocietyMembershipRequestOrderByRelationAggregateInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
 }
 
 export type SocietyWhereUniqueInput = Prisma.AtLeast<{
@@ -373,6 +375,7 @@ export type SocietyWhereUniqueInput = Prisma.AtLeast<{
   server?: Prisma.XOR<Prisma.ServerScalarRelationFilter, Prisma.ServerWhereInput>
   deletedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   membershipRequests?: Prisma.SocietyMembershipRequestListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }, "id" | "publicId" | "presidentId" | "convenorId" | "serverId">
 
 export type SocietyOrderByWithAggregationInput = {
@@ -435,6 +438,7 @@ export type SocietyCreateInput = {
   server: Prisma.ServerCreateNestedOneWithoutSocietyInput
   deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
   membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateInput = {
@@ -454,6 +458,7 @@ export type SocietyUncheckedCreateInput = {
   deletedCascadeId?: string | null
   createdAt?: Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUpdateInput = {
@@ -472,6 +477,7 @@ export type SocietyUpdateInput = {
   server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
   deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
   membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateInput = {
@@ -491,6 +497,7 @@ export type SocietyUncheckedUpdateInput = {
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyCreateManyInput = {
@@ -831,6 +838,22 @@ export type SocietyUpdateOneRequiredWithoutMembershipRequestsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.SocietyUpdateToOneWithWhereWithoutMembershipRequestsInput, Prisma.SocietyUpdateWithoutMembershipRequestsInput>, Prisma.SocietyUncheckedUpdateWithoutMembershipRequestsInput>
 }
 
+export type SocietyCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.SocietyCreateWithoutNotificationsInput, Prisma.SocietyUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.SocietyCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.SocietyWhereUniqueInput
+}
+
+export type SocietyUpdateOneWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.SocietyCreateWithoutNotificationsInput, Prisma.SocietyUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.SocietyCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.SocietyUpsertWithoutNotificationsInput
+  disconnect?: Prisma.SocietyWhereInput | boolean
+  delete?: Prisma.SocietyWhereInput | boolean
+  connect?: Prisma.SocietyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SocietyUpdateToOneWithWhereWithoutNotificationsInput, Prisma.SocietyUpdateWithoutNotificationsInput>, Prisma.SocietyUncheckedUpdateWithoutNotificationsInput>
+}
+
 export type SocietyCreateWithoutDepartmentInput = {
   publicId?: string
   name: string
@@ -846,6 +869,7 @@ export type SocietyCreateWithoutDepartmentInput = {
   server: Prisma.ServerCreateNestedOneWithoutSocietyInput
   deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
   membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateWithoutDepartmentInput = {
@@ -864,6 +888,7 @@ export type SocietyUncheckedCreateWithoutDepartmentInput = {
   deletedCascadeId?: string | null
   createdAt?: Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyCreateOrConnectWithoutDepartmentInput = {
@@ -928,6 +953,7 @@ export type SocietyCreateWithoutDeletedByUserInput = {
   convenor: Prisma.TeacherInfoCreateNestedOneWithoutConvenorOfSocietyInput
   server: Prisma.ServerCreateNestedOneWithoutSocietyInput
   membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateWithoutDeletedByUserInput = {
@@ -946,6 +972,7 @@ export type SocietyUncheckedCreateWithoutDeletedByUserInput = {
   deletedCascadeId?: string | null
   createdAt?: Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyCreateOrConnectWithoutDeletedByUserInput = {
@@ -989,6 +1016,7 @@ export type SocietyCreateWithoutPresidentInput = {
   server: Prisma.ServerCreateNestedOneWithoutSocietyInput
   deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
   membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateWithoutPresidentInput = {
@@ -1007,6 +1035,7 @@ export type SocietyUncheckedCreateWithoutPresidentInput = {
   deletedCascadeId?: string | null
   createdAt?: Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyCreateOrConnectWithoutPresidentInput = {
@@ -1040,6 +1069,7 @@ export type SocietyUpdateWithoutPresidentInput = {
   server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
   deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
   membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateWithoutPresidentInput = {
@@ -1058,6 +1088,7 @@ export type SocietyUncheckedUpdateWithoutPresidentInput = {
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyCreateWithoutConvenorInput = {
@@ -1075,6 +1106,7 @@ export type SocietyCreateWithoutConvenorInput = {
   server: Prisma.ServerCreateNestedOneWithoutSocietyInput
   deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
   membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateWithoutConvenorInput = {
@@ -1093,6 +1125,7 @@ export type SocietyUncheckedCreateWithoutConvenorInput = {
   deletedCascadeId?: string | null
   createdAt?: Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyCreateOrConnectWithoutConvenorInput = {
@@ -1126,6 +1159,7 @@ export type SocietyUpdateWithoutConvenorInput = {
   server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
   deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
   membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateWithoutConvenorInput = {
@@ -1144,6 +1178,7 @@ export type SocietyUncheckedUpdateWithoutConvenorInput = {
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyCreateWithoutServerInput = {
@@ -1161,6 +1196,7 @@ export type SocietyCreateWithoutServerInput = {
   convenor: Prisma.TeacherInfoCreateNestedOneWithoutConvenorOfSocietyInput
   deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
   membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateWithoutServerInput = {
@@ -1179,6 +1215,7 @@ export type SocietyUncheckedCreateWithoutServerInput = {
   deletedCascadeId?: string | null
   createdAt?: Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyCreateOrConnectWithoutServerInput = {
@@ -1212,6 +1249,7 @@ export type SocietyUpdateWithoutServerInput = {
   convenor?: Prisma.TeacherInfoUpdateOneRequiredWithoutConvenorOfSocietyNestedInput
   deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
   membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateWithoutServerInput = {
@@ -1230,6 +1268,7 @@ export type SocietyUncheckedUpdateWithoutServerInput = {
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyCreateWithoutMembershipRequestsInput = {
@@ -1247,6 +1286,7 @@ export type SocietyCreateWithoutMembershipRequestsInput = {
   convenor: Prisma.TeacherInfoCreateNestedOneWithoutConvenorOfSocietyInput
   server: Prisma.ServerCreateNestedOneWithoutSocietyInput
   deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyUncheckedCreateWithoutMembershipRequestsInput = {
@@ -1265,6 +1305,7 @@ export type SocietyUncheckedCreateWithoutMembershipRequestsInput = {
   deletedBy?: number | null
   deletedCascadeId?: string | null
   createdAt?: Date | string
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSocietyInput
 }
 
 export type SocietyCreateOrConnectWithoutMembershipRequestsInput = {
@@ -1298,6 +1339,7 @@ export type SocietyUpdateWithoutMembershipRequestsInput = {
   convenor?: Prisma.TeacherInfoUpdateOneRequiredWithoutConvenorOfSocietyNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
   deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateWithoutMembershipRequestsInput = {
@@ -1316,6 +1358,97 @@ export type SocietyUncheckedUpdateWithoutMembershipRequestsInput = {
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
+}
+
+export type SocietyCreateWithoutNotificationsInput = {
+  publicId?: string
+  name: string
+  description?: string | null
+  status?: $Enums.SocietyStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedCascadeId?: string | null
+  createdAt?: Date | string
+  department: Prisma.DepartmentCreateNestedOneWithoutSocietiesInput
+  president: Prisma.StudentInfoCreateNestedOneWithoutPresidentOfSocietyInput
+  convenor: Prisma.TeacherInfoCreateNestedOneWithoutConvenorOfSocietyInput
+  server: Prisma.ServerCreateNestedOneWithoutSocietyInput
+  deletedByUser?: Prisma.UserCreateNestedOneWithoutDeletedSocietiesInput
+  membershipRequests?: Prisma.SocietyMembershipRequestCreateNestedManyWithoutSocietyInput
+}
+
+export type SocietyUncheckedCreateWithoutNotificationsInput = {
+  id?: number
+  publicId?: string
+  name: string
+  description?: string | null
+  departmentId: number
+  presidentId: number
+  convenorId: number
+  serverId: number
+  status?: $Enums.SocietyStatus
+  isActive?: boolean
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deletedBy?: number | null
+  deletedCascadeId?: string | null
+  createdAt?: Date | string
+  membershipRequests?: Prisma.SocietyMembershipRequestUncheckedCreateNestedManyWithoutSocietyInput
+}
+
+export type SocietyCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.SocietyWhereUniqueInput
+  create: Prisma.XOR<Prisma.SocietyCreateWithoutNotificationsInput, Prisma.SocietyUncheckedCreateWithoutNotificationsInput>
+}
+
+export type SocietyUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.SocietyUpdateWithoutNotificationsInput, Prisma.SocietyUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.SocietyCreateWithoutNotificationsInput, Prisma.SocietyUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.SocietyWhereInput
+}
+
+export type SocietyUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.SocietyWhereInput
+  data: Prisma.XOR<Prisma.SocietyUpdateWithoutNotificationsInput, Prisma.SocietyUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type SocietyUpdateWithoutNotificationsInput = {
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  department?: Prisma.DepartmentUpdateOneRequiredWithoutSocietiesNestedInput
+  president?: Prisma.StudentInfoUpdateOneRequiredWithoutPresidentOfSocietyNestedInput
+  convenor?: Prisma.TeacherInfoUpdateOneRequiredWithoutConvenorOfSocietyNestedInput
+  server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
+  deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
+  membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+}
+
+export type SocietyUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  publicId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departmentId?: Prisma.IntFieldUpdateOperationsInput | number
+  presidentId?: Prisma.IntFieldUpdateOperationsInput | number
+  convenorId?: Prisma.IntFieldUpdateOperationsInput | number
+  serverId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyCreateManyDepartmentInput = {
@@ -1350,6 +1483,7 @@ export type SocietyUpdateWithoutDepartmentInput = {
   server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
   deletedByUser?: Prisma.UserUpdateOneWithoutDeletedSocietiesNestedInput
   membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateWithoutDepartmentInput = {
@@ -1368,6 +1502,7 @@ export type SocietyUncheckedUpdateWithoutDepartmentInput = {
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateManyWithoutDepartmentInput = {
@@ -1419,6 +1554,7 @@ export type SocietyUpdateWithoutDeletedByUserInput = {
   convenor?: Prisma.TeacherInfoUpdateOneRequiredWithoutConvenorOfSocietyNestedInput
   server?: Prisma.ServerUpdateOneRequiredWithoutSocietyNestedInput
   membershipRequests?: Prisma.SocietyMembershipRequestUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateWithoutDeletedByUserInput = {
@@ -1437,6 +1573,7 @@ export type SocietyUncheckedUpdateWithoutDeletedByUserInput = {
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membershipRequests?: Prisma.SocietyMembershipRequestUncheckedUpdateManyWithoutSocietyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutSocietyNestedInput
 }
 
 export type SocietyUncheckedUpdateManyWithoutDeletedByUserInput = {
@@ -1463,10 +1600,12 @@ export type SocietyUncheckedUpdateManyWithoutDeletedByUserInput = {
 
 export type SocietyCountOutputType = {
   membershipRequests: number
+  notifications: number
 }
 
 export type SocietyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   membershipRequests?: boolean | SocietyCountOutputTypeCountMembershipRequestsArgs
+  notifications?: boolean | SocietyCountOutputTypeCountNotificationsArgs
 }
 
 /**
@@ -1484,6 +1623,13 @@ export type SocietyCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
  */
 export type SocietyCountOutputTypeCountMembershipRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.SocietyMembershipRequestWhereInput
+}
+
+/**
+ * SocietyCountOutputType without action
+ */
+export type SocietyCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
 }
 
 
@@ -1509,6 +1655,7 @@ export type SocietySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   deletedByUser?: boolean | Prisma.Society$deletedByUserArgs<ExtArgs>
   membershipRequests?: boolean | Prisma.Society$membershipRequestsArgs<ExtArgs>
+  notifications?: boolean | Prisma.Society$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.SocietyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["society"]>
 
@@ -1584,6 +1731,7 @@ export type SocietyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   server?: boolean | Prisma.ServerDefaultArgs<ExtArgs>
   deletedByUser?: boolean | Prisma.Society$deletedByUserArgs<ExtArgs>
   membershipRequests?: boolean | Prisma.Society$membershipRequestsArgs<ExtArgs>
+  notifications?: boolean | Prisma.Society$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.SocietyCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type SocietyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1610,6 +1758,7 @@ export type $SocietyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     server: Prisma.$ServerPayload<ExtArgs>
     deletedByUser: Prisma.$UserPayload<ExtArgs> | null
     membershipRequests: Prisma.$SocietyMembershipRequestPayload<ExtArgs>[]
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -2027,6 +2176,7 @@ export interface Prisma__SocietyClient<T, Null = never, ExtArgs extends runtime.
   server<T extends Prisma.ServerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ServerDefaultArgs<ExtArgs>>): Prisma.Prisma__ServerClient<runtime.Types.Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   deletedByUser<T extends Prisma.Society$deletedByUserArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Society$deletedByUserArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   membershipRequests<T extends Prisma.Society$membershipRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Society$membershipRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocietyMembershipRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.Society$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Society$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2512,6 +2662,30 @@ export type Society$membershipRequestsArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.SocietyMembershipRequestScalarFieldEnum | Prisma.SocietyMembershipRequestScalarFieldEnum[]
+}
+
+/**
+ * Society.notifications
+ */
+export type Society$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
 }
 
 /**

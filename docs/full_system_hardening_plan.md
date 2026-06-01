@@ -61,7 +61,7 @@ Make backend permissions the source of truth and expose enough caller-specific c
 - Add shared backend permission helpers instead of scattering role checks across services.
 - Add caller-specific permission/capability metadata to detail responses that drive UI:
   - `GET /api/classes/:id`
-  - `GET /api/societies/:id`
+  - `GET /api/societies/:publicId`
   - a new role-management bootstrap endpoint or scoped assignable-options endpoints.
 - Update frontend permission utilities to consume backend-provided capabilities where available, with local helpers only as optimistic display shortcuts.
 - Ensure `auth:roles-updated` invalidates current-user, role, server, society, and permission-sensitive query data.

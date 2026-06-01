@@ -16,6 +16,7 @@ const emptyPermissions: SocietyPermissions = {
   canManageChannels: false,
   canAssignModerators: false,
   canSubmitJoinRequest: false,
+  canManageLifecycle: false,
 };
 
 function societyWithPermissions(permissions: Partial<SocietyPermissions>) {

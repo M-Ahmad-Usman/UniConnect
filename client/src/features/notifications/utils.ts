@@ -23,8 +23,16 @@ export function getNotificationTarget(notification: Notification) {
     return serverId ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId) : ROUTES.PROFILE;
   }
 
-  if (notification.type === NotificationType.SOCIETY_REQUEST_REVIEWED) {
-    return ROUTES.SOCIETIES;
+  if (
+    notification.type === NotificationType.SOCIETY_REQUEST_REVIEWED ||
+    notification.type === NotificationType.SOCIETY_SUSPENDED ||
+    notification.type === NotificationType.SOCIETY_ACTIVATED ||
+    notification.type === NotificationType.SOCIETY_DELETED ||
+    notification.type === NotificationType.SOCIETY_RESTORED
+  ) {
+    return notification.society && !notification.society.isDeleted
+      ? ROUTES.SOCIETY(notification.society.publicId)
+      : ROUTES.SOCIETIES;
   }
 
   const serverId = notification.post?.channel.serverId;

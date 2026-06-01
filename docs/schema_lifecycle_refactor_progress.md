@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 4 complete
+- Status: Module 5 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -24,7 +24,7 @@
 | 2 | Public-ID Resolver and Test Foundation | Complete | 2026-05-28 | 2026-05-28 | Strict UUIDv7 validation, resolvers, DTO mappers, dual helper, and API-ID test helper support added |
 | 3 | User Lifecycle and Auth | Complete | 2026-05-29 | 2026-05-29 | User public-ID routes, deletion impact, status/delete/restore, auth/session invalidation, and frontend admin lifecycle UI added |
 | 4 | Platform RBAC Refactor | Complete | 2026-05-30 | 2026-05-30 | Append-only platform role assignments, expiry, public role-workspace IDs, canonical academic writes, and admin history added |
-| 5 | Society Lifecycle and Notifications | Not started | - | - | Adds society status/delete/restore cascade and lifecycle notifications |
+| 5 | Society Lifecycle and Notifications | Complete | 2026-06-01 | 2026-06-01 | Society UUIDv7 API migration, frozen suspension state, audited delete/restore cascade, transactional lifecycle notifications, and frontend lifecycle UI added |
 | 6 | Server, Channel, and Post Public-ID Migration | Not started | - | - | Migrates communication routes and URLs to public IDs |
 | 7 | Class and Academic Public-ID Migration | Not started | - | - | Migrates class routes and academic workflows to public IDs |
 | 8 | Rare Entity Impact Reports | Not started | - | - | Adds read-only blocker reports for rare destructive entities |
@@ -223,6 +223,9 @@
 - [x] Focused frontend Vitest suites, 8/8
 - [x] Full frontend Vitest suite, 131/131
 - [x] Frontend production build
+- [x] Focused society Playwright suite, 3/3
+- [x] Full Playwright suite, 36/36. E2E global setup rebuilt its isolated
+  database from all migrations, validating clean-schema Module 5 deployment.
 - [x] Focused Module 4 Playwright suite, 4/4
 - [x] Full Playwright suite, 36/36
 
@@ -232,3 +235,63 @@
   or restored.
 - Continue using `activePlatformRoleAssignmentWhere()` for operational role
   reads so suspended/deleted society scopes never authorize.
+
+## Module 5 Checklist
+
+### Implementation
+
+- [x] Migrated society-facing API routes, DTOs, frontend URLs, query keys, and
+  user references to UUIDv7 public IDs.
+- [x] Added admin/own-department-HOD lifecycle endpoints:
+  `GET /api/societies/:publicId/deletion-impact`,
+  `PATCH /api/societies/:publicId/status`,
+  `DELETE /api/societies/:publicId`, and
+  `PATCH /api/societies/:publicId/restore`.
+- [x] Enforced a fully frozen `SUSPENDED` society state for joins, request
+  review, member changes, leadership/info edits, channel/server writes,
+  moderator writes, posting, and post mutations.
+- [x] Added transaction-scoped lifecycle row locking and database lifecycle
+  state checks for societies, owned servers, and channels.
+- [x] Soft-delete society-owned servers and live channels with one cascade ID,
+  delete pending membership requests, preserve approved/rejected request
+  history, and restore only descendants marked by the same cascade.
+- [x] Preserved society status, memberships, posts, notification preferences,
+  leadership, and platform-role assignment history across soft delete/restore.
+- [x] Added `SOCIETY_SUSPENDED`, `SOCIETY_ACTIVATED`, `SOCIETY_DELETED`, and
+  `SOCIETY_RESTORED` notifications linked to societies.
+- [x] Persisted lifecycle notifications transactionally with set-based
+  `INSERT ... SELECT` fanout to active members excluding the actor, then emitted
+  Socket.IO updates only after commit.
+- [x] Added notification-preference SQL safeguards: configurable-type checks,
+  channel/server ownership FK, null-safe uniqueness, and atomic upsert.
+- [x] Added lifecycle audit logs, role-sensitive socket invalidation, filtered
+  deleted-society discovery, deletion-impact dialogs, list filters, state
+  badges, and lifecycle action UI.
+- [x] Added Cloudinary rollback metadata and best-effort cleanup so attachment,
+  server-icon, and profile-picture persistence failures do not leave newly
+  uploaded assets orphaned. Post rows and attachment rows now commit together.
+
+### Verification
+
+- [x] `npx prisma generate`
+- [x] Applied the Module 5 migration SQL against the existing isolated test DB.
+  `npm run db:migrate:test` could not deploy because that local DB predates
+  Prisma migration tracking (`P3005`), so the additive migration was exercised
+  with `prisma db execute`.
+- [x] Backend build
+- [x] Focused Module 5 lifecycle suite, 6/6
+- [x] Existing society regression suite, 58/58
+- [x] Adjacent backend notification/channel/post/role/server/admin/permission/
+  public-ID/schema suites
+- [x] Full backend Jest suite, 488/488
+- [x] Frontend type-check
+- [x] Frontend lint
+- [x] Full frontend Vitest suite, 131/131
+- [x] Frontend production build
+
+### Follow-Up for Module 6
+
+- Keep the lifecycle write guards in place while migrating server, channel, and
+  post routes and frontend URLs to UUIDv7 public IDs.
+- Preserve the SQL-only Module 5 preference and lifecycle safeguards in future
+  Prisma-generated migrations.

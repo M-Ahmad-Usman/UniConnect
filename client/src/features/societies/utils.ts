@@ -12,6 +12,7 @@ const DEFAULT_SOCIETY_PERMISSIONS: SocietyPermissions = {
   canManageChannels: false,
   canAssignModerators: false,
   canSubmitJoinRequest: false,
+  canManageLifecycle: false,
 };
 
 export function parseSocietyTab(value: string | null): SocietyDetailTab {
@@ -39,6 +40,7 @@ export function getSocietyDetailActionState(society: SocietyDetail | null | unde
     canEditInfo: permissions.canEditInfo,
     canChangeLeadership: permissions.canChangeLeadership,
     canSubmitJoinRequest: permissions.canSubmitJoinRequest,
+    canManageLifecycle: permissions.canManageLifecycle,
   };
 }
 

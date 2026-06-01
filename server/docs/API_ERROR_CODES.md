@@ -43,6 +43,7 @@ Canonical error codes for frontend handling and UX mapping.
 | `CURRICULUM_TEACHER_ASSIGNMENT_REQUIRED` | 400 | Class progression service | Missing required teacher assignments | Send user to teacher assignment workflow |
 | `ALREADY_MEMBER` | 409 | Society service | User is already a society member | Refresh membership state |
 | `JOIN_REQUEST_PENDING` | 409 | Society service | Join request already pending | Show pending request state |
+| `SOCIETY_SUSPENDED` | 409 | Society/server/channel/post/role services | Suspended society is frozen and cannot accept writes | Show read-only society state and disable write actions |
 | `CHANNEL_LOCKED` | 403/400 | Channel/post services | Channel cannot accept the action while locked | Show locked-channel state |
 | `EDIT_WINDOW_EXPIRED` | 403 | Post service | Post edit window expired | Disable edit action |
 | `UPLOAD_FILE_TOO_LARGE` | 400 | Upload middleware | Uploaded file exceeds size limit | Ask for smaller file |

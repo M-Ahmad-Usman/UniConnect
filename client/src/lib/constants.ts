@@ -152,20 +152,21 @@ export const queryKeys = {
   societies: {
     all: () => ['societies'] as const,
     list: (params?: Record<string, unknown>) => ['societies', params] as const,
-    detail: (societyId: number) => ['societies', societyId] as const,
-    myMembership: (societyId: number) => ['societies', societyId, 'my-membership'] as const,
-    requests: (societyId: number, params?: Record<string, unknown>) =>
+    detail: (societyPublicId: string) => ['societies', societyPublicId] as const,
+    deletionImpact: (societyPublicId: string) => ['societies', societyPublicId, 'deletion-impact'] as const,
+    myMembership: (societyPublicId: string) => ['societies', societyPublicId, 'my-membership'] as const,
+    requests: (societyPublicId: string, params?: Record<string, unknown>) =>
       params
-        ? (['societies', societyId, 'requests', params] as const)
-        : (['societies', societyId, 'requests'] as const),
-    members: (societyId: number, params?: Record<string, unknown>) =>
+        ? (['societies', societyPublicId, 'requests', params] as const)
+        : (['societies', societyPublicId, 'requests'] as const),
+    members: (societyPublicId: string, params?: Record<string, unknown>) =>
       params
-        ? (['societies', societyId, 'members', params] as const)
-        : (['societies', societyId, 'members'] as const),
-    candidates: (societyId: number, params?: Record<string, unknown>) =>
+        ? (['societies', societyPublicId, 'members', params] as const)
+        : (['societies', societyPublicId, 'members'] as const),
+    candidates: (societyPublicId: string, params?: Record<string, unknown>) =>
       params
-        ? (['societies', societyId, 'candidates', params] as const)
-        : (['societies', societyId, 'candidates'] as const),
+        ? (['societies', societyPublicId, 'candidates', params] as const)
+        : (['societies', societyPublicId, 'candidates'] as const),
     leadershipCandidates: (params?: Record<string, unknown>) =>
       params
         ? (['societies', 'leadership-candidates', params] as const)

@@ -14,7 +14,9 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model NotificationPreference
- * 
+ * The Module 5 SQL migration adds null-safe uniqueness, scope/type checks,
+ * and a composite channel/server foreign key. Prisma's schema DSL cannot
+ * represent every safeguard; review generated migrations before applying.
  */
 export type NotificationPreferenceModel = runtime.Types.Result.DefaultSelection<Prisma.$NotificationPreferencePayload>
 

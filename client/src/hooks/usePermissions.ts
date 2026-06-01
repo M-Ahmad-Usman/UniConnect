@@ -46,6 +46,7 @@ export function getDefaultSocietyPermissions(): SocietyPermissions {
     canManageChannels: false,
     canAssignModerators: false,
     canSubmitJoinRequest: false,
+    canManageLifecycle: false,
   };
 }
 

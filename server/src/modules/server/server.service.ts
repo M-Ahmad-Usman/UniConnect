@@ -1,12 +1,16 @@
 import type { ServerType } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
-import { cloudinaryService } from "../../config/cloudinary.js";
+import {
+  cleanupCloudinaryUploads,
+  cloudinaryService,
+} from "../../config/cloudinary.js";
 import { ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import {
   parsePagination,
   buildPaginationResponse,
 } from "../../shared/utils/pagination.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
+import { assertServerAcceptsWrites } from "../../shared/lifecycle/society.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -432,54 +436,51 @@ export async function createChannel(
   data: CreateChannelInput,
   caller: CallerInfo,
 ) {
-  const server = await findServerOrThrow(serverId);
-
-  if (!server.isActive) {
-    throw new ForbiddenError("Cannot create channels in an inactive server");
-  }
-
-  const existing = await prisma.channel.findFirst({
-    where: { serverId, name: data.name, isDeleted: false },
-    select: { id: true },
+  return prisma.$transaction(async (tx) => {
+    await assertServerAcceptsWrites(serverId, tx);
+    const existing = await tx.channel.findFirst({
+      where: { serverId, name: data.name, isDeleted: false },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new ConflictError("A channel with this name already exists in this server");
+    }
+    return tx.channel.create({
+      data: {
+        serverId,
+        name: data.name,
+        description: data.description ?? null,
+        type: "GENERAL",
+        isAutoCreated: false,
+        createdBy: caller.id,
+      },
+      select: channelCreatedSelect,
+    });
   });
-
-  if (existing) {
-    throw new ConflictError("A channel with this name already exists in this server");
-  }
-
-  const channel = await prisma.channel.create({
-    data: {
-      serverId,
-      name: data.name,
-      description: data.description ?? null,
-      type: "GENERAL",
-      isAutoCreated: false,
-      createdBy: caller.id,
-    },
-    select: channelCreatedSelect,
-  });
-
-  return channel;
 }
 
 export async function updateServerIcon(serverId: number, fileBuffer: Buffer) {
-  const server = await findServerOrThrow(serverId);
-
-  if (!server.isActive) {
-    throw new ForbiddenError("Cannot update an inactive server");
-  }
+  await prisma.$transaction((tx) => assertServerAcceptsWrites(serverId, tx));
 
   const uploaded = await cloudinaryService.uploadImage(
     fileBuffer,
     "server-icons",
   );
 
-  return prisma.server.update({
-    where: { id: serverId },
-    data: { iconUrl: uploaded.url },
-    select: {
-      id: true,
-      iconUrl: true,
-    },
-  });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      await assertServerAcceptsWrites(serverId, tx);
+      return tx.server.update({
+        where: { id: serverId },
+        data: { iconUrl: uploaded.url },
+        select: {
+          id: true,
+          iconUrl: true,
+        },
+      });
+    });
+  } catch (error) {
+    await cleanupCloudinaryUploads([uploaded]);
+    throw error;
+  }
 }

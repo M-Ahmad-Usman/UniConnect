@@ -89,7 +89,11 @@ export type PlatformRoleScopeType = (typeof PlatformRoleScopeType)[keyof typeof 
 export const NotificationType = {
   NEW_POST: 'NEW_POST',
   ROLE_ASSIGNED: 'ROLE_ASSIGNED',
-  SOCIETY_REQUEST_REVIEWED: 'SOCIETY_REQUEST_REVIEWED'
+  SOCIETY_REQUEST_REVIEWED: 'SOCIETY_REQUEST_REVIEWED',
+  SOCIETY_SUSPENDED: 'SOCIETY_SUSPENDED',
+  SOCIETY_ACTIVATED: 'SOCIETY_ACTIVATED',
+  SOCIETY_DELETED: 'SOCIETY_DELETED',
+  SOCIETY_RESTORED: 'SOCIETY_RESTORED'
 } as const
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]

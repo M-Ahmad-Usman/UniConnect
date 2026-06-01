@@ -97,6 +97,11 @@ const ERROR_COPY: Record<string, ErrorCopy> = {
     message: 'Graduated classes are read-only.',
     retryable: false,
   },
+  SOCIETY_SUSPENDED: {
+    title: 'Society suspended',
+    message: 'Suspended societies are read-only.',
+    retryable: false,
+  },
   CLASS_FINAL_SEMESTER_REQUIRED: {
     title: 'Final semester required',
     message: 'Only final-semester classes can be graduated.',

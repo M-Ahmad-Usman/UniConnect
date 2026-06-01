@@ -480,7 +480,10 @@ describe("Module 2 - User Management", () => {
 
       jest
         .spyOn(cloudinaryService, "uploadImage")
-        .mockResolvedValue({ url: "https://cloudinary.com/profile/test.jpg" });
+        .mockResolvedValue({
+          url: "https://cloudinary.com/profile/test.jpg",
+          publicId: "profile-pictures/test",
+        });
 
       const cookies = await loginAs(user.email, "Pass@1234");
 

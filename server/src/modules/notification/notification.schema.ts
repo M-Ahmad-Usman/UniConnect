@@ -16,7 +16,15 @@ export const notificationIdParamSchema = {
 
 export const listNotificationsSchema = {
   query: paginationQuerySchema.extend({
-    type: z.enum(["NEW_POST", "ROLE_ASSIGNED", "SOCIETY_REQUEST_REVIEWED"]).optional(),
+    type: z.enum([
+      "NEW_POST",
+      "ROLE_ASSIGNED",
+      "SOCIETY_REQUEST_REVIEWED",
+      "SOCIETY_SUSPENDED",
+      "SOCIETY_ACTIVATED",
+      "SOCIETY_DELETED",
+      "SOCIETY_RESTORED",
+    ]).optional(),
     unreadOnly: z
       .enum(["true", "false"])
       .transform((v) => v === "true")

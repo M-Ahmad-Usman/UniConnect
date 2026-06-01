@@ -31,14 +31,15 @@ export async function findChannelIdByName(serverId: number, name: string) {
   });
 }
 
-export async function findSocietyIdByName(name: string) {
+export async function findSocietyByName(name: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number }>(
-      'SELECT id FROM societies WHERE name = $1 LIMIT 1',
+    const result = await pool.query<{ id: number; public_id: string }>(
+      'SELECT id, public_id FROM societies WHERE name = $1 LIMIT 1',
       [name],
     );
 
-    return result.rows[0]?.id ?? null;
+    const society = result.rows[0];
+    return society ? { id: society.id, publicId: society.public_id } : null;
   });
 }
 

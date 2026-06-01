@@ -1,4 +1,9 @@
-import type { MembershipRequestStatus } from "../../generated/prisma/enums.js";
+import { randomUUID } from "node:crypto";
+import type {
+  MembershipRequestStatus,
+  SocietyStatus,
+} from "../../generated/prisma/enums.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../config/prisma.js";
 import {
   ApiErrorCode,
@@ -6,34 +11,49 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "../../shared/errors/index.js";
-import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
+import {
+  resolveSocietyPublicId,
+  resolveUserPublicId,
+} from "../../shared/ids/index.js";
+import {
+  assertSocietyAcceptsWrites,
+  lockSocietyLifecycleRow,
+  type PrismaTransaction,
+} from "../../shared/lifecycle/society.js";
 import {
   buildSocietyPermissions,
   getPermissionContext,
 } from "../../shared/permissions/index.js";
-import { disconnectUserSockets, emitToUser } from "../../socket/index.js";
-import * as notificationService from "../notification/notification.service.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
-
-// ─── Types ─────────────────────────────────────────────────────────────────
+import {
+  buildPaginationResponse,
+  parsePagination,
+} from "../../shared/utils/pagination.js";
+import { disconnectUserSockets, emitToUser } from "../../socket/index.js";
+import { invalidateSystemStatsCache } from "../admin/admin.service.js";
+import type { AuditContext } from "../audit/audit.service.js";
+import { recordAuditLog } from "../audit/audit.service.js";
+import * as notificationService from "../notification/notification.service.js";
 
 type CreateSocietyInput = {
   name: string;
   description?: string;
   departmentId: number;
-  presidentId: number; // User ID
-  convenorId: number; // User ID
+  presidentPublicId: string;
+  convenorPublicId: string;
 };
 
 type UpdateSocietyInput = {
   name?: string;
   description?: string;
-  presidentId?: number; // User ID
-  convenorId?: number; // User ID
+  presidentPublicId?: string;
+  convenorPublicId?: string;
 };
 
 type ListSocietiesQuery = {
   departmentId?: number;
+  status?: SocietyStatus;
+  lifecycle?: "live" | "deleted" | "all";
   page?: number;
   limit?: number;
 };
@@ -49,10 +69,8 @@ type PaginationQuery = {
   limit?: number;
 };
 
-type MemberCandidatesQuery = {
+type MemberCandidatesQuery = PaginationQuery & {
   search?: string;
-  page?: number;
-  limit?: number;
 };
 
 type LeadershipCandidatesQuery = MemberCandidatesQuery & {
@@ -65,43 +83,37 @@ type CallerInfo = {
   userType: string;
 };
 
-// ─── Select Constants ──────────────────────────────────────────────────────
+type LifecycleResult<T> = {
+  data: T;
+  notificationIds: number[];
+  refreshUserIds: number[];
+};
 
 const societyListSelect = {
-  id: true,
+  publicId: true,
   name: true,
   description: true,
   departmentId: true,
   status: true,
-  isActive: true,
   isDeleted: true,
+  deletedAt: true,
   createdAt: true,
   department: {
-    select: { id: true, name: true, serverId: true },
+    select: { id: true, name: true },
   },
   president: {
     select: {
-      user: { select: { id: true, fullName: true, email: true } },
+      user: { select: { publicId: true, fullName: true, email: true } },
     },
   },
   convenor: {
     select: {
-      user: { select: { id: true, fullName: true, email: true } },
+      user: { select: { publicId: true, fullName: true, email: true } },
     },
   },
   server: {
     select: {
-      _count: { select: { memberships: true } },
-    },
-  },
-} as const;
-
-const societyDetailSelect = {
-  ...societyListSelect,
-  serverId: true,
-  server: {
-    select: {
-      id: true,
+      publicId: true,
       _count: { select: { memberships: true } },
     },
   },
@@ -109,34 +121,40 @@ const societyDetailSelect = {
 
 const joinRequestSelect = {
   id: true,
-  societyId: true,
-  userId: true,
   status: true,
   requestedAt: true,
   reviewedAt: true,
+  society: {
+    select: { publicId: true },
+  },
   user: {
-    select: { id: true, fullName: true, email: true, profilePictureUrl: true },
+    select: {
+      publicId: true,
+      fullName: true,
+      email: true,
+      profilePictureUrl: true,
+    },
   },
   reviewer: {
-    select: { id: true, fullName: true },
+    select: { publicId: true, fullName: true },
   },
 } as const;
 
 const memberCandidateSelect = {
-  id: true,
+  publicId: true,
   fullName: true,
   email: true,
   userType: true,
   profilePictureUrl: true,
 } as const;
 
-const memberSelect = {
+const memberInternalSelect = {
   userId: true,
   joinedAt: true,
   isAutoJoined: true,
   user: {
     select: {
-      id: true,
+      publicId: true,
       fullName: true,
       email: true,
       userType: true,
@@ -145,126 +163,206 @@ const memberSelect = {
   },
 } as const;
 
-// ─── Internal Helpers ──────────────────────────────────────────────────────
-
-async function findSocietyOrThrow(id: number) {
-  const society = await prisma.society.findFirst({
-    where: { id, isDeleted: false },
+async function findSocietyOrThrow(
+  societyId: number,
+  client: PrismaTransaction = prisma,
+  includeDeleted = false,
+) {
+  const society = await client.society.findFirst({
+    where: { id: societyId, ...(includeDeleted ? {} : { isDeleted: false }) },
     select: {
       id: true,
+      publicId: true,
       name: true,
       serverId: true,
       presidentId: true,
       convenorId: true,
       departmentId: true,
+      status: true,
+      isActive: true,
+      isDeleted: true,
+      deletedCascadeId: true,
       president: { select: { user: { select: { id: true } } } },
       convenor: { select: { user: { select: { id: true } } } },
       department: { select: { id: true, hodId: true } },
     },
   });
-
   if (!society) {
     throw new NotFoundError("Society not found");
   }
-
   return society;
 }
 
-async function assertStudentForSocietyOrThrow(userId: number, departmentId: number) {
-  const user = await prisma.user.findFirst({
+async function assertStudentForSocietyOrThrow(
+  userPublicId: string,
+  departmentId: number,
+  client: PrismaTransaction = prisma,
+) {
+  const resolved = await resolveUserPublicId(userPublicId, {
+    field: "presidentPublicId",
+    client,
+  });
+  const user = await client.user.findFirst({
     where: {
-      id: userId,
+      id: resolved.id,
       userType: "STUDENT",
       status: "ACTIVE",
       isActive: true,
       isDeleted: false,
     },
-    select: { id: true, departmentId: true, studentInfo: { select: { studentId: true } } },
+    select: {
+      id: true,
+      publicId: true,
+      departmentId: true,
+      studentInfo: { select: { studentId: true } },
+    },
   });
-
   if (!user || !user.studentInfo) {
     throw new NotFoundError("Student not found for president role");
   }
-
   if (user.departmentId !== departmentId) {
     throw new ForbiddenError("President must belong to the same department as the society");
   }
-
   return user;
 }
 
-async function assertTeacherForSocietyOrThrow(userId: number, departmentId: number) {
-  const user = await prisma.user.findFirst({
+async function assertTeacherForSocietyOrThrow(
+  userPublicId: string,
+  departmentId: number,
+  client: PrismaTransaction = prisma,
+) {
+  const resolved = await resolveUserPublicId(userPublicId, {
+    field: "convenorPublicId",
+    client,
+  });
+  const user = await client.user.findFirst({
     where: {
-      id: userId,
+      id: resolved.id,
       userType: "TEACHER",
       status: "ACTIVE",
       isActive: true,
       isDeleted: false,
     },
-    select: { id: true, departmentId: true, teacherInfo: { select: { teacherId: true } } },
+    select: {
+      id: true,
+      publicId: true,
+      departmentId: true,
+      teacherInfo: { select: { teacherId: true } },
+    },
   });
-
   if (!user || !user.teacherInfo) {
     throw new NotFoundError("Teacher not found for convenor role");
   }
-
   if (user.departmentId !== departmentId) {
     throw new ForbiddenError("Convenor must belong to the same department as the society");
   }
-
   return user;
 }
 
-function isCallerAuthorized(
+function isCallerLeader(
   society: Awaited<ReturnType<typeof findSocietyOrThrow>>,
-  caller: CallerInfo
+  caller: CallerInfo,
 ): boolean {
-  if (caller.userType === "ADMIN") return true;
-  if (society.president.user.id === caller.id) return true;
-  if (society.convenor.user.id === caller.id) return true;
-  return false;
+  return (
+    society.president.user.id === caller.id ||
+    society.convenor.user.id === caller.id
+  );
 }
 
-function isCallerHODOrAdmin(
+function isCallerHodOrAdmin(
   society: Awaited<ReturnType<typeof findSocietyOrThrow>>,
-  caller: CallerInfo
+  caller: CallerInfo,
 ): boolean {
-  if (caller.userType === "ADMIN") return true;
-  if (society.department.hodId === caller.id) return true;
-  return false;
+  return caller.userType === "ADMIN" || society.department.hodId === caller.id;
 }
 
-function emitRolesUpdated(userId: number): void {
-  emitToUser(userId, "auth:roles-updated", {});
-}
-
-async function createSocietyRequestReviewedNotification(input: {
-  userId: number;
-  societyName: string;
-  status: "APPROVED" | "REJECTED";
-}): Promise<void> {
-  try {
-    await notificationService.createSocietyRequestReviewedNotification(input);
-  } catch (error) {
-    console.error("[SOCIETY] Failed to create membership review notification", { error });
+function assertLifecycleAuthority(
+  society: Awaited<ReturnType<typeof findSocietyOrThrow>>,
+  caller: CallerInfo,
+): void {
+  if (!isCallerHodOrAdmin(society, caller)) {
+    throw new ForbiddenError(
+      "Only an admin or the department HOD can manage society lifecycle",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
   }
+}
+
+function assertLeadershipAuthority(
+  society: Awaited<ReturnType<typeof findSocietyOrThrow>>,
+  caller: CallerInfo,
+): void {
+  if (caller.userType !== "ADMIN" && !isCallerLeader(society, caller)) {
+    throw new ForbiddenError(
+      "You do not have permission to manage this society",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
+  }
+}
+
+async function collectLifecycleRefreshUserIds(
+  client: PrismaTransaction,
+  serverId: number,
+  departmentId: number,
+  actorUserId: number,
+): Promise<number[]> {
+  const [members, admins, department] = await Promise.all([
+    client.serverMembership.findMany({
+      where: {
+        serverId,
+        user: { status: "ACTIVE", isActive: true, isDeleted: false },
+      },
+      select: { userId: true },
+    }),
+    client.user.findMany({
+      where: {
+        userType: "ADMIN",
+        status: "ACTIVE",
+        isActive: true,
+        isDeleted: false,
+      },
+      select: { id: true },
+    }),
+    client.department.findUnique({
+      where: { id: departmentId },
+      select: { hodId: true },
+    }),
+  ]);
+  return [
+    ...new Set([
+      actorUserId,
+      ...members.map((member) => member.userId),
+      ...admins.map((admin) => admin.id),
+      ...(department?.hodId ? [department.hodId] : []),
+    ]),
+  ];
+}
+
+async function emitLifecycleEffects(
+  result: Pick<LifecycleResult<unknown>, "notificationIds" | "refreshUserIds">,
+  societyPublicId: string,
+): Promise<void> {
+  try {
+    await notificationService.emitCreatedNotifications(result.notificationIds);
+  } catch (error) {
+    console.error("[SOCIETY] Failed to emit lifecycle notifications", { error });
+  }
+  for (const userId of result.refreshUserIds) {
+    emitToUser(userId, "auth:roles-updated", {});
+    emitToUser(userId, "society:lifecycle-updated", { societyPublicId });
+  }
+  invalidateSystemStatsCache();
 }
 
 async function resolveSocietyMemberBadges(
   serverId: number,
-  memberUserIds: number[]
+  memberUserIds: number[],
 ): Promise<Map<number, string[]>> {
-  const badgeMap = new Map<number, string[]>();
-
-  const addBadge = (userId: number, badge: string) => {
-    const current = badgeMap.get(userId) ?? [];
-    current.push(badge);
-    badgeMap.set(userId, current);
+  const badges = new Map<number, string[]>();
+  const add = (userId: number, badge: string) => {
+    badges.set(userId, [...(badges.get(userId) ?? []), badge]);
   };
-
-  if (memberUserIds.length === 0) return badgeMap;
-
+  if (memberUserIds.length === 0) return badges;
   const [society, moderators] = await Promise.all([
     prisma.society.findUnique({
       where: { serverId },
@@ -280,728 +378,422 @@ async function resolveSocietyMemberBadges(
       select: { userId: true, role: { select: { name: true } } },
     }),
   ]);
-
   if (society) {
-    const presidentUserId = society.president.user.id;
-    const convenorUserId = society.convenor.user.id;
-    if (memberUserIds.includes(presidentUserId)) addBadge(presidentUserId, "president");
-    if (memberUserIds.includes(convenorUserId)) addBadge(convenorUserId, "convenor");
+    if (memberUserIds.includes(society.president.user.id)) add(society.president.user.id, "president");
+    if (memberUserIds.includes(society.convenor.user.id)) add(society.convenor.user.id, "convenor");
   }
-
-  for (const moderator of moderators) {
-    addBadge(
-      moderator.userId,
-      moderator.role.name
-    );
-  }
-
-  return badgeMap;
+  for (const moderator of moderators) add(moderator.userId, moderator.role.name);
+  return badges;
 }
 
-// ─── Service Functions ─────────────────────────────────────────────────────
-
 export async function createSociety(data: CreateSocietyInput, caller: CallerInfo) {
-  // 1. Verify department exists
   const department = await prisma.department.findUnique({
     where: { id: data.departmentId },
     select: { id: true, hodId: true },
   });
-
-  if (!department) {
-    throw new NotFoundError("Department not found");
+  if (!department) throw new NotFoundError("Department not found");
+  if (caller.userType !== "ADMIN" && department.hodId !== caller.id) {
+    throw new ForbiddenError("Only the HOD of this department can create societies");
   }
-
-  // 2. HOD can only create in own department
-  if (caller.userType !== "ADMIN") {
-    if (department.hodId !== caller.id) {
-      throw new ForbiddenError("Only the HOD of this department can create societies");
-    }
-  }
-
-  // 3. Resolve and validate leadership users (parallel — independent checks)
-  await Promise.all([
-    assertStudentForSocietyOrThrow(data.presidentId, data.departmentId),
-    assertTeacherForSocietyOrThrow(data.convenorId, data.departmentId),
+  const [president, convenor] = await Promise.all([
+    assertStudentForSocietyOrThrow(data.presidentPublicId, data.departmentId),
+    assertTeacherForSocietyOrThrow(data.convenorPublicId, data.departmentId),
   ]);
-
-  const existingSociety = await prisma.society.findFirst({
+  const existing = await prisma.society.findFirst({
     where: { name: data.name, isDeleted: false },
     select: { id: true },
   });
-
-  if (existingSociety) {
-    throw new ConflictError("A society with this name already exists");
+  if (existing) {
+    throw new ConflictError("A society with this name already exists", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
   }
-
-  // 5. Create everything in a transaction
   return prisma.$transaction(async (tx) => {
     const server = await tx.server.create({
       data: {
         name: data.name,
         type: "SOCIETY",
         createdBy: caller.id,
-        isDeleted: false,
-        isActive: true,
       },
     });
-
     await tx.channel.createMany({
       data: [
-        {
-          serverId: server.id,
-          name: "announcements",
-          type: "ANNOUNCEMENT",
-          isAutoCreated: true,
-          createdBy: caller.id,
-        },
-        {
-          serverId: server.id,
-          name: "general",
-          type: "GENERAL",
-          isAutoCreated: true,
-          createdBy: caller.id,
-        },
+        { serverId: server.id, name: "announcements", type: "ANNOUNCEMENT", isAutoCreated: true, createdBy: caller.id },
+        { serverId: server.id, name: "general", type: "GENERAL", isAutoCreated: true, createdBy: caller.id },
       ],
     });
-
     const society = await tx.society.create({
       data: {
         name: data.name,
         description: data.description,
         departmentId: data.departmentId,
-        presidentId: data.presidentId,
-        convenorId: data.convenorId,
+        presidentId: president.id,
+        convenorId: convenor.id,
         serverId: server.id,
-        status: "ACTIVE",
-        isActive: true,
-        isDeleted: false,
       },
       select: societyListSelect,
     });
-
-    // Auto-add convenor and president to server
     await tx.serverMembership.createMany({
       data: [
-        { userId: data.convenorId, serverId: server.id, isAutoJoined: true },
-        { userId: data.presidentId, serverId: server.id, isAutoJoined: true },
+        { userId: convenor.id, serverId: server.id, isAutoJoined: true },
+        { userId: president.id, serverId: server.id, isAutoJoined: true },
       ],
     });
-
     return society;
   });
 }
 
-export async function listSocieties(query: ListSocietiesQuery) {
+export async function listSocieties(query: ListSocietiesQuery, caller: CallerInfo) {
   const { page, limit, skip, take } = parsePagination(query);
-
-  const where: Record<string, unknown> = { isDeleted: false };
-  if (query.departmentId) where.departmentId = query.departmentId;
-
+  const lifecycle = query.lifecycle ?? "live";
+  const where: Prisma.SocietyWhereInput = {
+    ...(query.departmentId ? { departmentId: query.departmentId } : {}),
+    ...(query.status ? { status: query.status } : {}),
+    ...(lifecycle === "live" ? { isDeleted: false } : {}),
+    ...(lifecycle === "deleted" ? { isDeleted: true } : {}),
+  };
+  if (caller.userType !== "ADMIN") {
+    if (lifecycle === "deleted" || lifecycle === "all") {
+      where.department = { hodId: caller.id };
+    } else {
+      where.OR = [
+        { status: "ACTIVE" },
+        { department: { hodId: caller.id } },
+        { server: { memberships: { some: { userId: caller.id } } } },
+      ];
+    }
+  }
   const [societies, total] = await Promise.all([
-    prisma.society.findMany({
-      where,
-      select: societyListSelect,
-      orderBy: { name: "asc" },
-      skip,
-      take,
-    }),
+    prisma.society.findMany({ where, select: societyListSelect, orderBy: { name: "asc" }, skip, take }),
     prisma.society.count({ where }),
   ]);
-
-  return {
-    data: societies,
-    pagination: buildPaginationResponse(page, limit, total),
-  };
+  return { data: societies, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-export async function getSocietyById(id: number, callerUserId: number) {
-  const [society, target] = await Promise.all([
-    prisma.society.findFirst({
-      where: { id, isDeleted: false },
-      select: societyDetailSelect,
-    }),
-    prisma.society.findFirst({
-      where: { id, isDeleted: false },
-      select: {
-        id: true,
-        serverId: true,
-        departmentId: true,
-        isActive: true,
-        president: { select: { user: { select: { id: true } } } },
-        convenor: { select: { user: { select: { id: true } } } },
-        department: { select: { hodId: true } },
-      },
-    }),
-  ]);
-
-  if (!society || !target) {
-    throw new NotFoundError("Society not found");
-  }
-
-  const [context, membership, request] = await Promise.all([
-    getPermissionContext(callerUserId),
+export async function getSocietyByPublicId(societyPublicId: string, caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, {
+    field: "publicId",
+    includeDeleted: true,
+  });
+  const society = await findSocietyOrThrow(resolved.id, prisma, true);
+  const [data, context, membership, request] = await Promise.all([
+    prisma.society.findUniqueOrThrow({ where: { id: society.id }, select: societyListSelect }),
+    getPermissionContext(caller.id),
     prisma.serverMembership.findUnique({
-      where: { userId_serverId: { userId: callerUserId, serverId: target.serverId } },
+      where: { userId_serverId: { userId: caller.id, serverId: society.serverId } },
       select: { userId: true },
     }),
     prisma.societyMembershipRequest.findUnique({
-      where: { societyId_userId: { societyId: id, userId: callerUserId } },
+      where: { societyId_userId: { societyId: society.id, userId: caller.id } },
       select: { status: true },
     }),
   ]);
-  const viewer = {
-    isMember: Boolean(membership),
-    requestStatus: request?.status ?? null,
-  };
-  const permissions = buildSocietyPermissions(
-    context,
-    {
-      id: target.id,
-      serverId: target.serverId,
-      departmentId: target.departmentId,
-      isActive: target.isActive,
-      presidentUserId: target.president.user.id,
-      convenorUserId: target.convenor.user.id,
-      departmentHodId: target.department.hodId,
-    },
-    viewer
-  );
-
+  const isMember = Boolean(membership);
+  if (
+    (society.isDeleted && !isCallerHodOrAdmin(society, caller)) ||
+    (society.status === "SUSPENDED" && !isMember && !isCallerHodOrAdmin(society, caller))
+  ) {
+    throw new NotFoundError("Society not found");
+  }
+  const viewer = { isMember, requestStatus: request?.status ?? null };
   return {
-    ...society,
+    ...data,
     viewer,
-    permissions,
+    permissions: buildSocietyPermissions(context, {
+      id: society.id,
+      serverId: society.serverId,
+      departmentId: society.departmentId,
+      status: society.status,
+      isDeleted: society.isDeleted,
+      presidentUserId: society.president.user.id,
+      convenorUserId: society.convenor.user.id,
+      departmentHodId: society.department.hodId,
+    }, viewer),
   };
 }
 
-export async function updateSociety(id: number, data: UpdateSocietyInput, caller: CallerInfo) {
-  const society = await findSocietyOrThrow(id);
-
-  const hasLeadershipChange = data.presidentId !== undefined || data.convenorId !== undefined;
-  const hasInfoChange = data.name !== undefined || data.description !== undefined;
-
-  // Leadership changes require HOD or Admin
-  if (hasLeadershipChange) {
-    if (!isCallerHODOrAdmin(society, caller)) {
-      throw new ForbiddenError("Only the HOD or an admin can change society leadership");
-    }
-  } else if (hasInfoChange) {
-    // Info-only changes allowed for Convenor, President, HOD, or Admin
-    if (!isCallerAuthorized(society, caller) && !isCallerHODOrAdmin(society, caller)) {
-      throw new ForbiddenError(
-        "You do not have permission to update this society",
-        ApiErrorCode.SCOPE_FORBIDDEN
-      );
-    }
-  }
-
-  if (data.name !== undefined && data.name !== society.name) {
-    const existingSociety = await prisma.society.findFirst({
-      where: { name: data.name, isDeleted: false, id: { not: id } },
-      select: { id: true },
-    });
-
-    if (existingSociety) {
-      throw new ConflictError("A society with this name already exists");
-    }
-  }
-
+export async function updateSociety(societyPublicId: string, data: UpdateSocietyInput, caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
   const updated = await prisma.$transaction(async (tx) => {
-    const updateData: Record<string, unknown> = {};
-
+    await assertSocietyAcceptsWrites(resolved.id, tx);
+    const society = await findSocietyOrThrow(resolved.id, tx);
+    const leadershipChange = data.presidentPublicId !== undefined || data.convenorPublicId !== undefined;
+    if (leadershipChange ? !isCallerHodOrAdmin(society, caller) : !isCallerHodOrAdmin(society, caller) && !isCallerLeader(society, caller)) {
+      throw new ForbiddenError("You do not have permission to update this society", ApiErrorCode.SCOPE_FORBIDDEN);
+    }
+    if (data.name && data.name !== society.name) {
+      const duplicate = await tx.society.findFirst({ where: { name: data.name, isDeleted: false, id: { not: society.id } }, select: { id: true } });
+      if (duplicate) throw new ConflictError("A society with this name already exists", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
+    }
+    const updateData: Prisma.SocietyUpdateInput = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
-
-    // Handle president change
-    if (data.presidentId !== undefined) {
-      await assertStudentForSocietyOrThrow(data.presidentId, society.departmentId);
-
-      updateData.presidentId = data.presidentId;
-
-      // Add new president to server membership (upsert)
+    if (data.presidentPublicId !== undefined) {
+      const president = await assertStudentForSocietyOrThrow(data.presidentPublicId, society.departmentId, tx);
+      updateData.president = { connect: { studentId: president.id } };
       await tx.serverMembership.upsert({
-        where: {
-          userId_serverId: {
-            userId: data.presidentId,
-            serverId: society.serverId,
-          },
-        },
-        create: {
-          userId: data.presidentId,
-          serverId: society.serverId,
-          isAutoJoined: true,
-        },
+        where: { userId_serverId: { userId: president.id, serverId: society.serverId } },
+        create: { userId: president.id, serverId: society.serverId, isAutoJoined: true },
         update: {},
       });
     }
-
-    // Handle convenor change
-    if (data.convenorId !== undefined) {
-      await assertTeacherForSocietyOrThrow(data.convenorId, society.departmentId);
-
-      updateData.convenorId = data.convenorId;
-
-      // Add new convenor to server membership (upsert)
+    if (data.convenorPublicId !== undefined) {
+      const convenor = await assertTeacherForSocietyOrThrow(data.convenorPublicId, society.departmentId, tx);
+      updateData.convenor = { connect: { teacherId: convenor.id } };
       await tx.serverMembership.upsert({
-        where: {
-          userId_serverId: {
-            userId: data.convenorId,
-            serverId: society.serverId,
-          },
-        },
-        create: {
-          userId: data.convenorId,
-          serverId: society.serverId,
-          isAutoJoined: true,
-        },
+        where: { userId_serverId: { userId: convenor.id, serverId: society.serverId } },
+        create: { userId: convenor.id, serverId: society.serverId, isAutoJoined: true },
         update: {},
       });
     }
-
-    // Update server name if society name changes
-    if (data.name !== undefined) {
-      await tx.server.update({
-        where: { id: society.serverId },
-        data: { name: data.name },
-      });
-    }
-
-    return tx.society.update({
-      where: { id },
-      data: updateData,
-      select: societyListSelect,
-    });
+    if (data.name !== undefined) await tx.server.update({ where: { id: society.serverId }, data: { name: data.name } });
+    return tx.society.update({ where: { id: society.id }, data: updateData, select: societyListSelect });
   });
-
-  if (data.presidentId !== undefined) {
-    emitRolesUpdated(data.presidentId);
-    emitRolesUpdated(society.president.user.id);
-  }
-  if (data.convenorId !== undefined) {
-    emitRolesUpdated(data.convenorId);
-    emitRolesUpdated(society.convenor.user.id);
-  }
-
   return updated;
 }
 
-export async function submitJoinRequest(societyId: number, userId: number) {
-  const society = await findSocietyOrThrow(societyId);
-
-  // Check if already a server member
-  const existingMembership = await prisma.serverMembership.findUnique({
-    where: {
-      userId_serverId: { userId, serverId: society.serverId },
-    },
-  });
-
-  if (existingMembership) {
-    throw new ConflictError("You are already a member of this society", ApiErrorCode.ALREADY_MEMBER);
-  }
-
-  // Check existing request
-  const existingRequest = await prisma.societyMembershipRequest.findUnique({
-    where: { societyId_userId: { societyId, userId } },
-    select: { id: true, status: true },
-  });
-
-  if (existingRequest) {
-    if (existingRequest.status === "PENDING") {
-      throw new ConflictError("You already have a pending join request", ApiErrorCode.JOIN_REQUEST_PENDING);
-    }
-    if (existingRequest.status === "APPROVED") {
-      throw new ConflictError("Your request has already been approved");
-    }
-    // REJECTED → allow re-apply by resetting to PENDING
-    return prisma.societyMembershipRequest.update({
-      where: { id: existingRequest.id },
-      data: {
-        status: "PENDING",
-        reviewedBy: null,
-        reviewedAt: null,
-        requestedAt: new Date(),
-      },
-      select: joinRequestSelect,
-    });
-  }
-
-  return prisma.societyMembershipRequest.create({
-    data: {
-      societyId,
-      userId,
-      status: "PENDING",
-    },
-    select: joinRequestSelect,
+export async function submitJoinRequest(societyPublicId: string, userId: number) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  return prisma.$transaction(async (tx) => {
+    await assertSocietyAcceptsWrites(resolved.id, tx);
+    const society = await findSocietyOrThrow(resolved.id, tx);
+    const membership = await tx.serverMembership.findUnique({ where: { userId_serverId: { userId, serverId: society.serverId } }, select: { userId: true } });
+    if (membership) throw new ConflictError("You are already a member of this society", ApiErrorCode.ALREADY_MEMBER);
+    const existing = await tx.societyMembershipRequest.findUnique({ where: { societyId_userId: { societyId: society.id, userId } }, select: { id: true, status: true } });
+    if (existing?.status === "PENDING") throw new ConflictError("You already have a pending join request", ApiErrorCode.JOIN_REQUEST_PENDING);
+    if (existing?.status === "APPROVED") throw new ConflictError("Your request has already been approved");
+    return existing
+      ? tx.societyMembershipRequest.update({ where: { id: existing.id }, data: { status: "PENDING", reviewedBy: null, reviewedAt: null, requestedAt: new Date() }, select: joinRequestSelect })
+      : tx.societyMembershipRequest.create({ data: { societyId: society.id, userId }, select: joinRequestSelect });
   });
 }
 
-export async function listJoinRequests(
-  societyId: number,
-  query: ListJoinRequestsQuery,
-  caller: CallerInfo
-) {
-  const society = await findSocietyOrThrow(societyId);
-
-  if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError(
-      "You do not have permission to view join requests for this society",
-      ApiErrorCode.SCOPE_FORBIDDEN
-    );
-  }
-
+export async function listJoinRequests(societyPublicId: string, query: ListJoinRequestsQuery, caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  const society = await findSocietyOrThrow(resolved.id);
+  assertLeadershipAuthority(society, caller);
   const { page, limit, skip, take } = parsePagination(query);
-
-  const where: Record<string, unknown> = { societyId };
-  if (query.status) where.status = query.status;
-
+  const where = { societyId: society.id, ...(query.status ? { status: query.status } : {}) };
   const [requests, total] = await Promise.all([
-    prisma.societyMembershipRequest.findMany({
-      where,
-      select: joinRequestSelect,
-      orderBy: { requestedAt: "desc" },
-      skip,
-      take,
-    }),
+    prisma.societyMembershipRequest.findMany({ where, select: joinRequestSelect, orderBy: { requestedAt: "desc" }, skip, take }),
     prisma.societyMembershipRequest.count({ where }),
   ]);
-
-  return {
-    data: requests,
-    pagination: buildPaginationResponse(page, limit, total),
-  };
+  return { data: requests, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-export async function reviewJoinRequest(
-  societyId: number,
-  requestId: number,
-  status: "APPROVED" | "REJECTED",
-  caller: CallerInfo
-) {
-  const society = await findSocietyOrThrow(societyId);
-
-  if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError(
-      "You do not have permission to review join requests for this society",
-      ApiErrorCode.SCOPE_FORBIDDEN
-    );
-  }
-
-  const request = await prisma.societyMembershipRequest.findFirst({
-    where: { id: requestId, societyId },
-    select: { id: true, status: true, userId: true },
-  });
-
-  if (!request) {
-    throw new NotFoundError("Join request not found");
-  }
-
-  if (request.status !== "PENDING") {
-    throw new ConflictError("This request has already been reviewed");
-  }
-
-  const requestUserId = request.userId;
-  const updated = await prisma.$transaction(async (tx) => {
-    const updated = await tx.societyMembershipRequest.update({
-      where: { id: requestId },
-      data: {
-        status,
-        reviewedBy: caller.id,
-        reviewedAt: new Date(),
-      },
-      select: joinRequestSelect,
-    });
-
+export async function reviewJoinRequest(societyPublicId: string, requestId: number, status: "APPROVED" | "REJECTED", caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  const result = await prisma.$transaction(async (tx) => {
+    await assertSocietyAcceptsWrites(resolved.id, tx);
+    const society = await findSocietyOrThrow(resolved.id, tx);
+    assertLeadershipAuthority(society, caller);
+    const request = await tx.societyMembershipRequest.findFirst({ where: { id: requestId, societyId: society.id }, select: { id: true, status: true, userId: true } });
+    if (!request) throw new NotFoundError("Join request not found");
+    if (request.status !== "PENDING") throw new ConflictError("This request has already been reviewed");
+    const updated = await tx.societyMembershipRequest.update({ where: { id: request.id }, data: { status, reviewedBy: caller.id, reviewedAt: new Date() }, select: joinRequestSelect });
     if (status === "APPROVED") {
-      await tx.serverMembership.createMany({
-        data: [{
-          userId: requestUserId,
-          serverId: society.serverId,
-          isAutoJoined: false,
-        }],
-        skipDuplicates: true,
-      });
+      await tx.serverMembership.createMany({ data: [{ userId: request.userId, serverId: society.serverId }], skipDuplicates: true });
     }
-
-    return updated;
+    return { updated, userId: request.userId, societyId: society.id, societyName: society.name };
   });
-
-  await createSocietyRequestReviewedNotification({
-    userId: requestUserId,
-    societyName: society.name,
-    status,
-  });
-
-  return updated;
-}
-
-export async function addMember(societyId: number, userId: number, caller: CallerInfo) {
-  const society = await findSocietyOrThrow(societyId);
-
-  if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError(
-      "You do not have permission to add members to this society",
-      ApiErrorCode.SCOPE_FORBIDDEN
-    );
-  }
-
-  // Verify target user exists
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, userType: true, isActive: true },
-  });
-
-  if (!user) {
-    throw new NotFoundError("User not found");
-  }
-
-  if (user.userType !== "STUDENT" || !user.isActive) {
-    throw new ForbiddenError("Only active students can be added as society members");
-  }
-
-  // Check if already a member
-  const existingMembership = await prisma.serverMembership.findUnique({
-    where: {
-      userId_serverId: { userId, serverId: society.serverId },
-    },
-  });
-
-  if (existingMembership) {
-    throw new ConflictError("User is already a member of this society", ApiErrorCode.ALREADY_MEMBER);
-  }
-
-  return prisma.$transaction(async (tx) => {
-    const membership = await tx.serverMembership.create({
-      data: {
-        userId,
-        serverId: society.serverId,
-        isAutoJoined: false,
-      },
-      select: memberSelect,
+  try {
+    await notificationService.createSocietyRequestReviewedNotification({
+      userId: result.userId,
+      societyId: result.societyId,
+      societyName: result.societyName,
+      status,
     });
-
-    // Auto-approve any pending request for this user
-    await tx.societyMembershipRequest.updateMany({
-      where: {
-        societyId,
-        userId,
-        status: "PENDING",
-      },
-      data: {
-        status: "APPROVED",
-        reviewedBy: caller.id,
-        reviewedAt: new Date(),
-      },
-    });
-
-    return membership;
-  });
+  } catch (error) {
+    console.error("[SOCIETY] Failed to create membership review notification", { error });
+  }
+  return result.updated;
 }
 
-export async function removeMember(societyId: number, userId: number, caller: CallerInfo) {
-  const society = await findSocietyOrThrow(societyId);
-
-  if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError(
-      "You do not have permission to remove members from this society",
-      ApiErrorCode.SCOPE_FORBIDDEN
-    );
-  }
-
-  // Cannot remove president or convenor
-  if (society.president.user.id === userId || society.convenor.user.id === userId) {
-    throw new ForbiddenError("Cannot remove society leadership. Change leadership roles first");
-  }
-
-  const membership = await prisma.serverMembership.findUnique({
-    where: {
-      userId_serverId: { userId, serverId: society.serverId },
-    },
+export async function addMember(societyPublicId: string, userPublicId: string, caller: CallerInfo) {
+  const [societyResolution, userResolution] = await Promise.all([
+    resolveSocietyPublicId(societyPublicId, { field: "publicId" }),
+    resolveUserPublicId(userPublicId, { field: "userPublicId" }),
+  ]);
+  const membership = await prisma.$transaction(async (tx) => {
+    await assertSocietyAcceptsWrites(societyResolution.id, tx);
+    const society = await findSocietyOrThrow(societyResolution.id, tx);
+    assertLeadershipAuthority(society, caller);
+    const user = await tx.user.findFirst({ where: { id: userResolution.id, userType: "STUDENT", status: "ACTIVE", isActive: true, isDeleted: false }, select: { id: true } });
+    if (!user) throw new ForbiddenError("Only active students can be added as society members");
+    const existing = await tx.serverMembership.findUnique({ where: { userId_serverId: { userId: user.id, serverId: society.serverId } }, select: { userId: true } });
+    if (existing) throw new ConflictError("User is already a member of this society", ApiErrorCode.ALREADY_MEMBER);
+    const created = await tx.serverMembership.create({ data: { userId: user.id, serverId: society.serverId }, select: memberInternalSelect });
+    await tx.societyMembershipRequest.updateMany({ where: { societyId: society.id, userId: user.id, status: "PENDING" }, data: { status: "APPROVED", reviewedBy: caller.id, reviewedAt: new Date() } });
+    return created;
   });
-
-  if (!membership) {
-    throw new NotFoundError("User is not a member of this society");
-  }
-
-  await prisma.serverMembership.delete({
-    where: {
-      userId_serverId: { userId, serverId: society.serverId },
-    },
-  });
-
-  disconnectUserSockets(userId);
+  const { userId: _userId, ...publicMembership } = membership;
+  return { ...publicMembership, badges: [] as string[] };
 }
 
-export async function listMembers(societyId: number, query: PaginationQuery, caller: CallerInfo) {
-  const society = await findSocietyOrThrow(societyId);
+export async function removeMember(societyPublicId: string, userPublicId: string, caller: CallerInfo) {
+  const [societyResolution, userResolution] = await Promise.all([
+    resolveSocietyPublicId(societyPublicId, { field: "publicId" }),
+    resolveUserPublicId(userPublicId, { field: "userPublicId" }),
+  ]);
+  await prisma.$transaction(async (tx) => {
+    await assertSocietyAcceptsWrites(societyResolution.id, tx);
+    const society = await findSocietyOrThrow(societyResolution.id, tx);
+    assertLeadershipAuthority(society, caller);
+    if (society.president.user.id === userResolution.id || society.convenor.user.id === userResolution.id) {
+      throw new ForbiddenError("Cannot remove society leadership. Change leadership roles first");
+    }
+    const deleted = await tx.serverMembership.deleteMany({ where: { userId: userResolution.id, serverId: society.serverId } });
+    if (deleted.count !== 1) throw new NotFoundError("User is not a member of this society");
+  });
+  disconnectUserSockets(userResolution.id);
+}
 
+export async function listMembers(societyPublicId: string, query: PaginationQuery, caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  const society = await findSocietyOrThrow(resolved.id);
   if (caller.userType !== "ADMIN") {
-    const callerMembership = await prisma.serverMembership.findUnique({
-      where: {
-        userId_serverId: {
-          userId: caller.id,
-          serverId: society.serverId,
-        },
-      },
-      select: { userId: true },
-    });
-
-    if (!callerMembership) {
-      throw new ForbiddenError(
-        "You do not have permission to view members of this society",
-        ApiErrorCode.SCOPE_FORBIDDEN
-      );
-    }
+    const membership = await prisma.serverMembership.findUnique({ where: { userId_serverId: { userId: caller.id, serverId: society.serverId } }, select: { userId: true } });
+    if (!membership) throw new ForbiddenError("You do not have permission to view members of this society", ApiErrorCode.SCOPE_FORBIDDEN);
   }
-
   const { page, limit, skip, take } = parsePagination(query);
-
-  const where = { serverId: society.serverId };
-
   const [members, total] = await Promise.all([
-    prisma.serverMembership.findMany({
-      where,
-      select: memberSelect,
-      orderBy: { joinedAt: "asc" },
-      skip,
-      take,
-    }),
-    prisma.serverMembership.count({ where }),
+    prisma.serverMembership.findMany({ where: { serverId: society.serverId }, select: memberInternalSelect, orderBy: { joinedAt: "asc" }, skip, take }),
+    prisma.serverMembership.count({ where: { serverId: society.serverId } }),
   ]);
-
-  const badgeMap = await resolveSocietyMemberBadges(
-    society.serverId,
-    members.map((member) => member.userId)
-  );
-
+  const badges = await resolveSocietyMemberBadges(society.serverId, members.map((member) => member.userId));
   return {
-    data: members.map((member) => ({
-      ...member,
-      badges: badgeMap.get(member.userId) ?? [],
-    })),
+    data: members.map(({ userId, ...member }) => ({ ...member, badges: badges.get(userId) ?? [] })),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
-export async function getMyMembershipStatus(societyId: number, userId: number) {
-  const society = await findSocietyOrThrow(societyId);
-
+export async function getMyMembershipStatus(societyPublicId: string, userId: number) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  const society = await findSocietyOrThrow(resolved.id);
   const [membership, request] = await Promise.all([
-    prisma.serverMembership.findUnique({
-      where: { userId_serverId: { userId, serverId: society.serverId } },
-      select: { userId: true },
-    }),
-    prisma.societyMembershipRequest.findUnique({
-      where: { societyId_userId: { societyId, userId } },
-      select: { status: true, requestedAt: true, reviewedAt: true },
-    }),
+    prisma.serverMembership.findUnique({ where: { userId_serverId: { userId, serverId: society.serverId } }, select: { userId: true } }),
+    prisma.societyMembershipRequest.findUnique({ where: { societyId_userId: { societyId: society.id, userId } }, select: { status: true, requestedAt: true, reviewedAt: true } }),
   ]);
-
-  return {
-    isMember: Boolean(membership),
-    requestStatus: request?.status ?? null,
-    requestedAt: request?.requestedAt ?? null,
-    reviewedAt: request?.reviewedAt ?? null,
-  };
+  return { isMember: Boolean(membership), requestStatus: request?.status ?? null, requestedAt: request?.requestedAt ?? null, reviewedAt: request?.reviewedAt ?? null };
 }
 
-export async function listMemberCandidates(
-  societyId: number,
-  query: MemberCandidatesQuery,
-  caller: CallerInfo
-) {
-  const society = await findSocietyOrThrow(societyId);
-
-  if (!isCallerAuthorized(society, caller)) {
-    throw new ForbiddenError(
-      "You do not have permission to add members to this society",
-      ApiErrorCode.SCOPE_FORBIDDEN
-    );
-  }
-
-  const { page, limit, skip, take } = parsePagination(query);
-  const search = query.search?.trim();
-  const where = {
-    userType: "STUDENT" as const,
-    isActive: true,
-    serverMemberships: {
-      none: { serverId: society.serverId },
-    },
-    ...(search
-      ? {
-          OR: [
-            { fullName: { contains: search, mode: "insensitive" as const } },
-            { email: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-  };
-
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: memberCandidateSelect,
-      orderBy: [{ fullName: "asc" }, { id: "asc" }],
-      skip,
-      take,
-    }),
-    prisma.user.count({ where }),
-  ]);
-
-  return {
-    data: users,
-    pagination: buildPaginationResponse(page, limit, total),
-  };
-}
-
-export async function listLeadershipCandidates(
-  query: LeadershipCandidatesQuery,
-  caller: CallerInfo
-) {
-  const department = await prisma.department.findUnique({
-    where: { id: query.departmentId },
-    select: { id: true, hodId: true },
+export async function listMemberCandidates(societyPublicId: string, query: MemberCandidatesQuery, caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  const society = await prisma.$transaction(async (tx) => {
+    await assertSocietyAcceptsWrites(resolved.id, tx);
+    const current = await findSocietyOrThrow(resolved.id, tx);
+    assertLeadershipAuthority(current, caller);
+    return current;
   });
-
-  if (!department) {
-    throw new NotFoundError("Department not found");
-  }
-
-  if (caller.userType !== "ADMIN" && department.hodId !== caller.id) {
-    throw new ForbiddenError("Only an admin or the department HOD can view leadership candidates");
-  }
-
   const { page, limit, skip, take } = parsePagination(query);
   const search = query.search?.trim();
-  const where = {
-    userType: query.role === "president" ? ("STUDENT" as const) : ("TEACHER" as const),
+  const where: Prisma.UserWhereInput = {
+    userType: "STUDENT",
+    status: "ACTIVE",
     isActive: true,
-    departmentId: query.departmentId,
-    ...(query.role === "president"
-      ? { studentInfo: { isNot: null } }
-      : { teacherInfo: { isNot: null } }),
-    ...(search
-      ? {
-          OR: [
-            { fullName: { contains: search, mode: "insensitive" as const } },
-            { email: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
+    isDeleted: false,
+    serverMemberships: { none: { serverId: society.serverId } },
+    ...(search ? { OR: [{ fullName: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
   };
-
   const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: memberCandidateSelect,
-      orderBy: [{ fullName: "asc" }, { id: "asc" }],
-      skip,
-      take,
-    }),
+    prisma.user.findMany({ where, select: memberCandidateSelect, orderBy: [{ fullName: "asc" }, { id: "asc" }], skip, take }),
     prisma.user.count({ where }),
   ]);
+  return { data: users, pagination: buildPaginationResponse(page, limit, total) };
+}
 
-  return {
-    data: users,
-    pagination: buildPaginationResponse(page, limit, total),
+export async function listLeadershipCandidates(query: LeadershipCandidatesQuery, caller: CallerInfo) {
+  const department = await prisma.department.findUnique({ where: { id: query.departmentId }, select: { id: true, hodId: true } });
+  if (!department) throw new NotFoundError("Department not found");
+  if (caller.userType !== "ADMIN" && department.hodId !== caller.id) throw new ForbiddenError("Only an admin or the department HOD can view leadership candidates");
+  const { page, limit, skip, take } = parsePagination(query);
+  const search = query.search?.trim();
+  const where: Prisma.UserWhereInput = {
+    userType: query.role === "president" ? "STUDENT" : "TEACHER",
+    status: "ACTIVE",
+    isActive: true,
+    isDeleted: false,
+    departmentId: query.departmentId,
+    ...(query.role === "president" ? { studentInfo: { isNot: null } } : { teacherInfo: { isNot: null } }),
+    ...(search ? { OR: [{ fullName: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
   };
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({ where, select: memberCandidateSelect, orderBy: [{ fullName: "asc" }, { id: "asc" }], skip, take }),
+    prisma.user.count({ where }),
+  ]);
+  return { data: users, pagination: buildPaginationResponse(page, limit, total) };
+}
+
+export async function getSocietyDeletionImpact(societyPublicId: string, caller: CallerInfo) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId", includeDeleted: true });
+  return prisma.$transaction(async (tx) => {
+    const society = await findSocietyOrThrow(resolved.id, tx, true);
+    assertLifecycleAuthority(society, caller);
+    const [activeMemberCount, liveChannelCount, pendingRequestCount, preservedPostCount, preservedPlatformRoleAssignmentCount] = await Promise.all([
+      tx.serverMembership.count({ where: { serverId: society.serverId, user: { status: "ACTIVE", isActive: true, isDeleted: false } } }),
+      tx.channel.count({ where: { serverId: society.serverId, isDeleted: false } }),
+      tx.societyMembershipRequest.count({ where: { societyId: society.id, status: "PENDING" } }),
+      tx.post.count({ where: { channel: { serverId: society.serverId } } }),
+      tx.userRoleAssignment.count({ where: { serverId: society.serverId } }),
+    ]);
+    return { canDelete: !society.isDeleted, activeMemberCount, liveChannelCount, pendingRequestCount, preservedPostCount, preservedPlatformRoleAssignmentCount };
+  });
+}
+
+export async function updateSocietyStatus(societyPublicId: string, status: SocietyStatus, caller: CallerInfo, auditContext: AuditContext, reason?: string) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
+  const result = await prisma.$transaction(async (tx) => {
+    const locked = await lockSocietyLifecycleRow(resolved.id, tx);
+    const society = await findSocietyOrThrow(locked.id, tx);
+    assertLifecycleAuthority(society, caller);
+    if (locked.status === status) throw new ConflictError(`Society is already ${status.toLowerCase()}`);
+    const updated = await tx.society.update({ where: { id: society.id }, data: { status, isActive: status === "ACTIVE" }, select: societyListSelect });
+    await tx.server.update({ where: { id: society.serverId }, data: { isActive: status === "ACTIVE" } });
+    const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: status === "ACTIVE" ? "SOCIETY_ACTIVATED" : "SOCIETY_SUSPENDED" });
+    await recordAuditLog({ action: "society.status_update", targetType: "society", targetId: society.publicId, summary: { status: { before: locked.status, after: status }, reason: reason ?? null } }, auditContext, tx);
+    return { data: updated, notificationIds, refreshUserIds: await collectLifecycleRefreshUserIds(tx, society.serverId, society.departmentId, caller.id) };
+  });
+  await emitLifecycleEffects(result, societyPublicId);
+  return result.data;
+}
+
+export async function deleteSociety(societyPublicId: string, caller: CallerInfo, auditContext: AuditContext, reason?: string) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId", includeDeleted: true });
+  const result = await prisma.$transaction(async (tx) => {
+    const locked = await lockSocietyLifecycleRow(resolved.id, tx);
+    const society = await findSocietyOrThrow(locked.id, tx, true);
+    assertLifecycleAuthority(society, caller);
+    if (locked.isDeleted) throw new ConflictError("Society is already deleted");
+    const now = new Date();
+    const cascadeId = randomUUID();
+    const updated = await tx.society.update({ where: { id: society.id }, data: { isDeleted: true, isActive: false, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId }, select: societyListSelect });
+    await tx.server.update({ where: { id: society.serverId }, data: { isDeleted: true, isActive: false, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId } });
+    const channels = await tx.channel.updateMany({ where: { serverId: society.serverId, isDeleted: false }, data: { isDeleted: true, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId } });
+    const pendingRequests = await tx.societyMembershipRequest.deleteMany({ where: { societyId: society.id, status: "PENDING" } });
+    const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: "SOCIETY_DELETED" });
+    await recordAuditLog({ action: "society.delete", targetType: "society", targetId: society.publicId, summary: { statusPreserved: society.status, reason: reason ?? null, cascadeId, deletedChannels: channels.count, deletedPendingRequests: pendingRequests.count } }, auditContext, tx);
+    return { data: updated, notificationIds, refreshUserIds: await collectLifecycleRefreshUserIds(tx, society.serverId, society.departmentId, caller.id) };
+  });
+  await emitLifecycleEffects(result, societyPublicId);
+  return result.data;
+}
+
+export async function restoreSociety(societyPublicId: string, caller: CallerInfo, auditContext: AuditContext, reason?: string) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId", includeDeleted: true });
+  const result = await prisma.$transaction(async (tx) => {
+    const locked = await lockSocietyLifecycleRow(resolved.id, tx);
+    const society = await findSocietyOrThrow(locked.id, tx, true);
+    assertLifecycleAuthority(society, caller);
+    if (!locked.isDeleted) throw new ConflictError("Society is not deleted");
+    if (!locked.deletedCascadeId) throw new ConflictError("Society deletion cascade metadata is missing");
+    const duplicate = await tx.society.findFirst({ where: { id: { not: society.id }, name: society.name, isDeleted: false }, select: { id: true } });
+    if (duplicate) throw new ConflictError("Society name has been reused", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
+    const server = await tx.server.updateMany({ where: { id: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, isActive: society.status === "ACTIVE", deletedAt: null, deletedBy: null, deletedCascadeId: null } });
+    if (server.count !== 1) throw new ConflictError("Society server cascade metadata is inconsistent");
+    const channels = await tx.channel.updateMany({ where: { serverId: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, deletedAt: null, deletedBy: null, deletedCascadeId: null } });
+    const updated = await tx.society.update({ where: { id: society.id }, data: { isDeleted: false, isActive: society.status === "ACTIVE", deletedAt: null, deletedBy: null, deletedCascadeId: null }, select: societyListSelect });
+    const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: "SOCIETY_RESTORED" });
+    await recordAuditLog({ action: "society.restore", targetType: "society", targetId: society.publicId, summary: { restoredStatus: society.status, reason: reason ?? null, restoredChannels: channels.count } }, auditContext, tx);
+    return { data: updated, notificationIds, refreshUserIds: await collectLifecycleRefreshUserIds(tx, society.serverId, society.departmentId, caller.id) };
+  });
+  await emitLifecycleEffects(result, societyPublicId);
+  return result.data;
 }

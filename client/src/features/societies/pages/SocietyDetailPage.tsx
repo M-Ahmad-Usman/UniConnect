@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Check, Pencil, Plus, UserMinus, X } from 'lucide-react';
+import { Check, Pencil, Plus, RotateCcw, Trash2, UserCheck, UserMinus, UserX, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { UserAvatar } from '@/components/shared/UserAvatar';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
+import { getApiErrorMessage } from '@/features/auth/utils';
+import { SocietyStatus } from '@/types';
 import { parsePositiveInt } from '@/features/admin/utils';
 import {
   AdminPageHeader,
@@ -18,13 +23,17 @@ import {
 } from '@/features/admin/components/AdminDataPrimitives';
 import {
   useAddSocietyMember,
+  useDeleteSociety,
   useReviewSocietyJoinRequest,
   useRemoveSocietyMember,
+  useRestoreSociety,
   useSociety,
+  useSocietyDeletionImpact,
   useSocietyJoinRequests,
   useSocietyMemberCandidates,
   useSocietyMembers,
   useSubmitSocietyJoinRequest,
+  useUpdateSocietyStatus,
   useUpdateSociety,
 } from '../hooks/useSocieties';
 import { SocietyEditDialog } from '../components/SocietyDialogs';
@@ -35,42 +44,54 @@ import {
   type SocietyDetailTab,
 } from '../utils';
 
+type LifecycleAction = 'suspend' | 'activate' | 'delete' | 'restore';
+
 export function SocietyDetailPage() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const societyId = parseRouteParamId(params.societyId ?? params.id);
+  const societyPublicId = parseRouteParamPublicId(params.societyId ?? params.id);
   const requestedTab = parseSocietyTab(searchParams.get('tab'));
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const [candidateSearch, setCandidateSearch] = useState('');
-  const [selectedCandidateId, setSelectedCandidateId] = useState('');
+  const [selectedCandidatePublicId, setSelectedCandidatePublicId] = useState('');
   const [editOpen, setEditOpen] = useState(false);
-  const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const [removingMemberPublicId, setRemovingMemberPublicId] = useState<string | null>(null);
+  const [lifecycleAction, setLifecycleAction] = useState<LifecycleAction | null>(null);
+  const [lifecycleReason, setLifecycleReason] = useState('');
 
-  const societyQuery = useSociety(societyId);
+  const societyQuery = useSociety(societyPublicId);
   const society = societyQuery.data;
   const actions = getSocietyDetailActionState(society);
   const tab = isSocietyTabAvailable(requestedTab, actions.tabs) ? requestedTab : 'overview';
 
   const membersQuery = useSocietyMembers(
-    societyId,
+    societyPublicId,
     { page, limit: DEFAULT_PAGE_SIZE },
     tab === 'members' && actions.canViewMembers,
   );
   const requestsQuery = useSocietyJoinRequests(
-    societyId,
+    societyPublicId,
     { page, limit: DEFAULT_PAGE_SIZE, status: 'PENDING' },
     tab === 'requests' && actions.canViewJoinRequests,
   );
   const candidatesQuery = useSocietyMemberCandidates(
-    societyId,
+    societyPublicId,
     { page: 1, limit: 20, search: candidateSearch.trim() || undefined },
     tab === 'members' && actions.canManageMembers,
   );
-  const submitJoinRequest = useSubmitSocietyJoinRequest(societyId ?? 0);
-  const reviewRequest = useReviewSocietyJoinRequest(societyId ?? 0);
-  const addMember = useAddSocietyMember(societyId ?? 0);
-  const removeMember = useRemoveSocietyMember(societyId ?? 0);
-  const updateSociety = useUpdateSociety(societyId ?? 0);
+  const stableSocietyPublicId = societyPublicId ?? '';
+  const submitJoinRequest = useSubmitSocietyJoinRequest(stableSocietyPublicId);
+  const reviewRequest = useReviewSocietyJoinRequest(stableSocietyPublicId);
+  const addMember = useAddSocietyMember(stableSocietyPublicId);
+  const removeMember = useRemoveSocietyMember(stableSocietyPublicId);
+  const updateSociety = useUpdateSociety(stableSocietyPublicId);
+  const updateSocietyStatus = useUpdateSocietyStatus(stableSocietyPublicId);
+  const deleteSociety = useDeleteSociety(stableSocietyPublicId);
+  const restoreSociety = useRestoreSociety(stableSocietyPublicId);
+  const deletionImpact = useSocietyDeletionImpact(
+    societyPublicId,
+    lifecycleAction === 'delete',
+  );
 
   useEffect(() => {
     if (!society || requestedTab === tab) return;
@@ -86,9 +107,9 @@ export function SocietyDetailPage() {
     return {
       name: society.name,
       description: society.description ?? '',
-      presidentId: society.president.user.id,
+      presidentPublicId: society.president.user.publicId,
       presidentName: society.president.user.fullName,
-      convenorId: society.convenor.user.id,
+      convenorPublicId: society.convenor.user.publicId,
       convenorName: society.convenor.user.fullName,
     };
   }, [society]);
@@ -106,14 +127,46 @@ export function SocietyDetailPage() {
     setSearchParams(next);
   }
 
-  if (societyId === null) {
+  async function handleLifecycleAction() {
+    if (!lifecycleAction) return;
+    const payload = { reason: lifecycleReason.trim() || undefined };
+    try {
+      if (lifecycleAction === 'suspend') {
+        await updateSocietyStatus.mutateAsync({ ...payload, status: SocietyStatus.SUSPENDED });
+      } else if (lifecycleAction === 'activate') {
+        await updateSocietyStatus.mutateAsync({ ...payload, status: SocietyStatus.ACTIVE });
+      } else if (lifecycleAction === 'delete') {
+        await deleteSociety.mutateAsync(payload);
+      } else {
+        await restoreSociety.mutateAsync(payload);
+      }
+      toast.success(
+        lifecycleAction === 'suspend'
+          ? 'Society suspended successfully.'
+          : lifecycleAction === 'activate'
+            ? 'Society activated successfully.'
+            : lifecycleAction === 'delete'
+              ? 'Society deleted successfully.'
+              : 'Society restored successfully.',
+      );
+      setLifecycleAction(null);
+      setLifecycleReason('');
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Unable to update society lifecycle.'));
+    }
+  }
+
+  if (societyPublicId === null) {
     return <EmptyState title="Society not found" description="The society route is invalid." />;
   }
 
   const members = membersQuery.data?.data ?? [];
   const requests = requestsQuery.data?.data ?? [];
   const candidates = candidatesQuery.data?.data ?? [];
-  const removingMember = members.find((member) => member.userId === removingMemberId) ?? null;
+  const removingMember =
+    members.find((member) => member.user.publicId === removingMemberPublicId) ?? null;
+  const lifecyclePending =
+    updateSocietyStatus.isPending || deleteSociety.isPending || restoreSociety.isPending;
 
   return (
     <section className="space-y-5">
@@ -139,6 +192,33 @@ export function SocietyDetailPage() {
                 Edit society
               </Button>
             ) : null}
+            {society && actions.canManageLifecycle ? (
+              <>
+                {!society.isDeleted && society.status === SocietyStatus.ACTIVE ? (
+                  <Button type="button" variant="outline" onClick={() => setLifecycleAction('suspend')}>
+                    <UserX className="size-4" />
+                    Suspend
+                  </Button>
+                ) : null}
+                {!society.isDeleted && society.status === SocietyStatus.SUSPENDED ? (
+                  <Button type="button" variant="outline" onClick={() => setLifecycleAction('activate')}>
+                    <UserCheck className="size-4" />
+                    Activate
+                  </Button>
+                ) : null}
+                {!society.isDeleted ? (
+                  <Button type="button" variant="destructive" onClick={() => setLifecycleAction('delete')}>
+                    <Trash2 className="size-4" />
+                    Delete
+                  </Button>
+                ) : (
+                  <Button type="button" variant="outline" onClick={() => setLifecycleAction('restore')}>
+                    <RotateCcw className="size-4" />
+                    Restore
+                  </Button>
+                )}
+              </>
+            ) : null}
           </>
         }
       />
@@ -148,6 +228,16 @@ export function SocietyDetailPage() {
         onRetry={() => void societyQuery.refetch()}
         empty={!society}
       >
+        {society && (society.isDeleted || society.status === SocietyStatus.SUSPENDED) ? (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+            <Badge variant="outline">{society.isDeleted ? 'Deleted' : 'Suspended'}</Badge>
+            <p className="mt-2">
+              {society.isDeleted
+                ? 'This society is deleted. Restore it to make the workspace available again.'
+                : 'This society is read-only while suspended.'}
+            </p>
+          </div>
+        ) : null}
         <Tabs
           value={tab}
           onValueChange={(value) => {
@@ -211,14 +301,14 @@ export function SocietyDetailPage() {
                         <span className="text-sm font-medium">Eligible student</span>
                         <select
                           className={inputClassName}
-                          value={selectedCandidateId}
-                          onChange={(event) => setSelectedCandidateId(event.target.value)}
+                          value={selectedCandidatePublicId}
+                          onChange={(event) => setSelectedCandidatePublicId(event.target.value)}
                         >
                           <option value="">
                             {candidatesQuery.isLoading ? 'Loading students...' : 'Select student'}
                           </option>
                           {candidates.map((candidate) => (
-                            <option key={candidate.id} value={candidate.id}>
+                            <option key={candidate.publicId} value={candidate.publicId}>
                               {candidate.fullName} · {candidate.email}
                             </option>
                           ))}
@@ -227,10 +317,10 @@ export function SocietyDetailPage() {
                       <Button
                         type="button"
                         className="self-end"
-                        disabled={!selectedCandidateId || addMember.isPending}
+                        disabled={!selectedCandidatePublicId || addMember.isPending}
                         onClick={() => {
-                          void addMember.mutateAsync(Number(selectedCandidateId));
-                          setSelectedCandidateId('');
+                          void addMember.mutateAsync(selectedCandidatePublicId);
+                          setSelectedCandidatePublicId('');
                         }}
                       >
                         <Plus className="size-4" />
@@ -251,7 +341,7 @@ export function SocietyDetailPage() {
                     <div className="divide-y">
                       {members.map((member) => (
                         <div
-                          key={member.userId}
+                          key={member.user.publicId}
                           className="flex items-center justify-between gap-3 px-4 py-3"
                         >
                           <div className="flex min-w-0 items-center gap-3">
@@ -279,7 +369,7 @@ export function SocietyDetailPage() {
                               variant="outline"
                               size="sm"
                               disabled={removeMember.isPending}
-                              onClick={() => setRemovingMemberId(member.userId)}
+                              onClick={() => setRemovingMemberPublicId(member.user.publicId)}
                             >
                               <UserMinus className="size-4" />
                               Remove
@@ -383,8 +473,8 @@ export function SocietyDetailPage() {
         />
       ) : null}
       <ConfirmDialog
-        open={removingMemberId !== null}
-        onOpenChange={(open) => !open && setRemovingMemberId(null)}
+        open={removingMemberPublicId !== null}
+        onOpenChange={(open) => !open && setRemovingMemberPublicId(null)}
         title="Remove society member"
         description={
           removingMember
@@ -394,10 +484,43 @@ export function SocietyDetailPage() {
         confirmLabel="Remove member"
         variant="destructive"
         onConfirm={async () => {
-          if (removingMemberId === null) return;
-          await removeMember.mutateAsync(removingMemberId);
+          if (removingMemberPublicId === null) return;
+          await removeMember.mutateAsync(removingMemberPublicId);
         }}
       />
+      <ConfirmDialog
+        open={lifecycleAction !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setLifecycleAction(null);
+            setLifecycleReason('');
+          }
+        }}
+        title={`${lifecycleAction ?? 'Update'} society?`}
+        description="Lifecycle changes affect the society workspace and its members."
+        confirmLabel={lifecycleAction ?? 'Confirm'}
+        variant={lifecycleAction === 'delete' ? 'destructive' : 'default'}
+        confirmDisabled={lifecyclePending || (lifecycleAction === 'delete' && deletionImpact.data?.canDelete === false)}
+        onConfirm={handleLifecycleAction}
+      >
+        <div className="space-y-3">
+          {lifecycleAction === 'delete' && deletionImpact.data ? (
+            <dl className="grid grid-cols-2 gap-2 rounded-lg border p-3 text-sm">
+              <div><dt className="text-muted-foreground">Active members</dt><dd>{deletionImpact.data.activeMemberCount}</dd></div>
+              <div><dt className="text-muted-foreground">Channels</dt><dd>{deletionImpact.data.liveChannelCount}</dd></div>
+              <div><dt className="text-muted-foreground">Pending requests removed</dt><dd>{deletionImpact.data.pendingRequestCount}</dd></div>
+              <div><dt className="text-muted-foreground">Posts preserved</dt><dd>{deletionImpact.data.preservedPostCount}</dd></div>
+              <div><dt className="text-muted-foreground">Role assignments preserved</dt><dd>{deletionImpact.data.preservedPlatformRoleAssignmentCount}</dd></div>
+            </dl>
+          ) : null}
+          <Textarea
+            placeholder="Reason (optional)"
+            value={lifecycleReason}
+            onChange={(event) => setLifecycleReason(event.target.value)}
+            maxLength={500}
+          />
+        </div>
+      </ConfirmDialog>
     </section>
   );
 }

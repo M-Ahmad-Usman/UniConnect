@@ -1,6 +1,6 @@
 import type { NotificationScopeType, NotificationType, PostPriority, ServerType } from './enums';
 
-export type NotificationPreferenceType = Exclude<NotificationType, 'SOCIETY_REQUEST_REVIEWED'>;
+export type NotificationPreferenceType = Extract<NotificationType, 'NEW_POST' | 'ROLE_ASSIGNED'>;
 
 // ─── Notification ───────────────────────────────────────────────────────────
 
@@ -22,6 +22,11 @@ export interface Notification {
         name: string;
       };
     };
+  } | null;
+  society: {
+    publicId: string;
+    name: string;
+    isDeleted: boolean;
   } | null;
 }
 
@@ -90,6 +95,11 @@ export interface NewNotificationPayload {
         name: string;
       };
     };
+  } | null;
+  society: {
+    publicId: string;
+    name: string;
+    isDeleted: boolean;
   } | null;
 }
 

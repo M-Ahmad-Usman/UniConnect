@@ -19,11 +19,16 @@ export type CloudinaryUploadFolder =
   | "post-attachments"
   | "server-icons";
 
+export type CloudinaryUpload = {
+  url: string;
+  publicId: string;
+};
+
 export const cloudinaryService = {
   async uploadImage(
     buffer: Buffer,
     folder: CloudinaryUploadFolder,
-  ): Promise<{ url: string }> {
+  ): Promise<CloudinaryUpload> {
     if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
       throw new ValidationError("Upload folder is not allowed");
     }
@@ -37,11 +42,31 @@ export const cloudinaryService = {
             return;
           }
 
-          resolve({ url: result.secure_url });
+          resolve({ url: result.secure_url, publicId: result.public_id });
         },
       );
 
       uploadStream.end(buffer);
     });
   },
+
+  async deleteImage(publicId: string): Promise<void> {
+    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+  },
 };
+
+export async function cleanupCloudinaryUploads(
+  uploads: CloudinaryUpload[],
+): Promise<void> {
+  const results = await Promise.allSettled(
+    uploads.map((upload) => cloudinaryService.deleteImage(upload.publicId)),
+  );
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.warn("[UPLOAD] Failed to clean up Cloudinary image", {
+        publicId: uploads[index]?.publicId,
+        error: result.reason,
+      });
+    }
+  });
+}

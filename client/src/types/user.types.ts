@@ -184,7 +184,7 @@ export interface BulkImportResult {
 // ─── User Summary (embedded in other responses) ─────────────────────────────
 
 export interface UserSummary {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   userType: UserType;

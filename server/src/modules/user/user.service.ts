@@ -6,7 +6,10 @@ import { prisma } from "../../config/prisma.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import type { UserStatus } from "../../generated/prisma/enums.js";
 import { emailService } from "../../config/email.js";
-import { cloudinaryService } from "../../config/cloudinary.js";
+import {
+  cleanupCloudinaryUploads,
+  cloudinaryService,
+} from "../../config/cloudinary.js";
 import { BCRYPT_ROUNDS, TEMP_PASSWORD_PREFIX } from "../../shared/constants.js";
 import {
   ApiErrorCode,
@@ -535,15 +538,18 @@ export async function updateProfile(userId: number, input: { bio?: string }) {
 export async function updateProfilePicture(userId: number, fileBuffer: Buffer) {
   const uploaded = await cloudinaryService.uploadImage(fileBuffer, "profile-pictures");
 
-  const user = await prisma.user.update({
-    where: { id: userId },
-    data: { profilePictureUrl: uploaded.url },
-    select: {
-      profilePictureUrl: true,
-    },
-  });
-
-  return user;
+  try {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { profilePictureUrl: uploaded.url },
+      select: {
+        profilePictureUrl: true,
+      },
+    });
+  } catch (error) {
+    await cleanupCloudinaryUploads([uploaded]);
+    throw error;
+  }
 }
 
 // ─── Users List / Detail ───────────────────────────────────────────────────

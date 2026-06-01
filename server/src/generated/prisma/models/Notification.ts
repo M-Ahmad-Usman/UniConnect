@@ -30,18 +30,21 @@ export type NotificationAvgAggregateOutputType = {
   id: number | null
   userId: number | null
   postId: number | null
+  societyId: number | null
 }
 
 export type NotificationSumAggregateOutputType = {
   id: number | null
   userId: number | null
   postId: number | null
+  societyId: number | null
 }
 
 export type NotificationMinAggregateOutputType = {
   id: number | null
   userId: number | null
   postId: number | null
+  societyId: number | null
   type: $Enums.NotificationType | null
   title: string | null
   message: string | null
@@ -53,6 +56,7 @@ export type NotificationMaxAggregateOutputType = {
   id: number | null
   userId: number | null
   postId: number | null
+  societyId: number | null
   type: $Enums.NotificationType | null
   title: string | null
   message: string | null
@@ -64,6 +68,7 @@ export type NotificationCountAggregateOutputType = {
   id: number
   userId: number
   postId: number
+  societyId: number
   type: number
   title: number
   message: number
@@ -77,18 +82,21 @@ export type NotificationAvgAggregateInputType = {
   id?: true
   userId?: true
   postId?: true
+  societyId?: true
 }
 
 export type NotificationSumAggregateInputType = {
   id?: true
   userId?: true
   postId?: true
+  societyId?: true
 }
 
 export type NotificationMinAggregateInputType = {
   id?: true
   userId?: true
   postId?: true
+  societyId?: true
   type?: true
   title?: true
   message?: true
@@ -100,6 +108,7 @@ export type NotificationMaxAggregateInputType = {
   id?: true
   userId?: true
   postId?: true
+  societyId?: true
   type?: true
   title?: true
   message?: true
@@ -111,6 +120,7 @@ export type NotificationCountAggregateInputType = {
   id?: true
   userId?: true
   postId?: true
+  societyId?: true
   type?: true
   title?: true
   message?: true
@@ -209,6 +219,7 @@ export type NotificationGroupByOutputType = {
   id: number
   userId: number
   postId: number | null
+  societyId: number | null
   type: $Enums.NotificationType
   title: string
   message: string | null
@@ -243,6 +254,7 @@ export type NotificationWhereInput = {
   id?: Prisma.IntFilter<"Notification"> | number
   userId?: Prisma.IntFilter<"Notification"> | number
   postId?: Prisma.IntNullableFilter<"Notification"> | number | null
+  societyId?: Prisma.IntNullableFilter<"Notification"> | number | null
   type?: Prisma.EnumNotificationTypeFilter<"Notification"> | $Enums.NotificationType
   title?: Prisma.StringFilter<"Notification"> | string
   message?: Prisma.StringNullableFilter<"Notification"> | string | null
@@ -250,12 +262,14 @@ export type NotificationWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Notification"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   post?: Prisma.XOR<Prisma.PostNullableScalarRelationFilter, Prisma.PostWhereInput> | null
+  society?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
 }
 
 export type NotificationOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrderInput | Prisma.SortOrder
+  societyId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   title?: Prisma.SortOrder
   message?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -263,6 +277,7 @@ export type NotificationOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   post?: Prisma.PostOrderByWithRelationInput
+  society?: Prisma.SocietyOrderByWithRelationInput
 }
 
 export type NotificationWhereUniqueInput = Prisma.AtLeast<{
@@ -272,6 +287,7 @@ export type NotificationWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.NotificationWhereInput | Prisma.NotificationWhereInput[]
   userId?: Prisma.IntFilter<"Notification"> | number
   postId?: Prisma.IntNullableFilter<"Notification"> | number | null
+  societyId?: Prisma.IntNullableFilter<"Notification"> | number | null
   type?: Prisma.EnumNotificationTypeFilter<"Notification"> | $Enums.NotificationType
   title?: Prisma.StringFilter<"Notification"> | string
   message?: Prisma.StringNullableFilter<"Notification"> | string | null
@@ -279,12 +295,14 @@ export type NotificationWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Notification"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   post?: Prisma.XOR<Prisma.PostNullableScalarRelationFilter, Prisma.PostWhereInput> | null
+  society?: Prisma.XOR<Prisma.SocietyNullableScalarRelationFilter, Prisma.SocietyWhereInput> | null
 }, "id">
 
 export type NotificationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrderInput | Prisma.SortOrder
+  societyId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   title?: Prisma.SortOrder
   message?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -304,6 +322,7 @@ export type NotificationScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Notification"> | number
   userId?: Prisma.IntWithAggregatesFilter<"Notification"> | number
   postId?: Prisma.IntNullableWithAggregatesFilter<"Notification"> | number | null
+  societyId?: Prisma.IntNullableWithAggregatesFilter<"Notification"> | number | null
   type?: Prisma.EnumNotificationTypeWithAggregatesFilter<"Notification"> | $Enums.NotificationType
   title?: Prisma.StringWithAggregatesFilter<"Notification"> | string
   message?: Prisma.StringNullableWithAggregatesFilter<"Notification"> | string | null
@@ -319,12 +338,14 @@ export type NotificationCreateInput = {
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutNotificationsInput
   post?: Prisma.PostCreateNestedOneWithoutNotificationsInput
+  society?: Prisma.SocietyCreateNestedOneWithoutNotificationsInput
 }
 
 export type NotificationUncheckedCreateInput = {
   id?: number
   userId: number
   postId?: number | null
+  societyId?: number | null
   type: $Enums.NotificationType
   title: string
   message?: string | null
@@ -340,12 +361,14 @@ export type NotificationUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutNotificationsNestedInput
   post?: Prisma.PostUpdateOneWithoutNotificationsNestedInput
+  society?: Prisma.SocietyUpdateOneWithoutNotificationsNestedInput
 }
 
 export type NotificationUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   postId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  societyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   title?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -357,6 +380,7 @@ export type NotificationCreateManyInput = {
   id?: number
   userId: number
   postId?: number | null
+  societyId?: number | null
   type: $Enums.NotificationType
   title: string
   message?: string | null
@@ -376,6 +400,7 @@ export type NotificationUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   postId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  societyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   title?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -397,6 +422,7 @@ export type NotificationCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrder
+  societyId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   title?: Prisma.SortOrder
   message?: Prisma.SortOrder
@@ -408,12 +434,14 @@ export type NotificationAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrder
+  societyId?: Prisma.SortOrder
 }
 
 export type NotificationMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrder
+  societyId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   title?: Prisma.SortOrder
   message?: Prisma.SortOrder
@@ -425,6 +453,7 @@ export type NotificationMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrder
+  societyId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   title?: Prisma.SortOrder
   message?: Prisma.SortOrder
@@ -436,6 +465,7 @@ export type NotificationSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   postId?: Prisma.SortOrder
+  societyId?: Prisma.SortOrder
 }
 
 export type NotificationCreateNestedManyWithoutUserInput = {
@@ -477,6 +507,48 @@ export type NotificationUncheckedUpdateManyWithoutUserNestedInput = {
   connect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
   update?: Prisma.NotificationUpdateWithWhereUniqueWithoutUserInput | Prisma.NotificationUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.NotificationUpdateManyWithWhereWithoutUserInput | Prisma.NotificationUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.NotificationScalarWhereInput | Prisma.NotificationScalarWhereInput[]
+}
+
+export type NotificationCreateNestedManyWithoutSocietyInput = {
+  create?: Prisma.XOR<Prisma.NotificationCreateWithoutSocietyInput, Prisma.NotificationUncheckedCreateWithoutSocietyInput> | Prisma.NotificationCreateWithoutSocietyInput[] | Prisma.NotificationUncheckedCreateWithoutSocietyInput[]
+  connectOrCreate?: Prisma.NotificationCreateOrConnectWithoutSocietyInput | Prisma.NotificationCreateOrConnectWithoutSocietyInput[]
+  createMany?: Prisma.NotificationCreateManySocietyInputEnvelope
+  connect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+}
+
+export type NotificationUncheckedCreateNestedManyWithoutSocietyInput = {
+  create?: Prisma.XOR<Prisma.NotificationCreateWithoutSocietyInput, Prisma.NotificationUncheckedCreateWithoutSocietyInput> | Prisma.NotificationCreateWithoutSocietyInput[] | Prisma.NotificationUncheckedCreateWithoutSocietyInput[]
+  connectOrCreate?: Prisma.NotificationCreateOrConnectWithoutSocietyInput | Prisma.NotificationCreateOrConnectWithoutSocietyInput[]
+  createMany?: Prisma.NotificationCreateManySocietyInputEnvelope
+  connect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+}
+
+export type NotificationUpdateManyWithoutSocietyNestedInput = {
+  create?: Prisma.XOR<Prisma.NotificationCreateWithoutSocietyInput, Prisma.NotificationUncheckedCreateWithoutSocietyInput> | Prisma.NotificationCreateWithoutSocietyInput[] | Prisma.NotificationUncheckedCreateWithoutSocietyInput[]
+  connectOrCreate?: Prisma.NotificationCreateOrConnectWithoutSocietyInput | Prisma.NotificationCreateOrConnectWithoutSocietyInput[]
+  upsert?: Prisma.NotificationUpsertWithWhereUniqueWithoutSocietyInput | Prisma.NotificationUpsertWithWhereUniqueWithoutSocietyInput[]
+  createMany?: Prisma.NotificationCreateManySocietyInputEnvelope
+  set?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  disconnect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  delete?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  connect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  update?: Prisma.NotificationUpdateWithWhereUniqueWithoutSocietyInput | Prisma.NotificationUpdateWithWhereUniqueWithoutSocietyInput[]
+  updateMany?: Prisma.NotificationUpdateManyWithWhereWithoutSocietyInput | Prisma.NotificationUpdateManyWithWhereWithoutSocietyInput[]
+  deleteMany?: Prisma.NotificationScalarWhereInput | Prisma.NotificationScalarWhereInput[]
+}
+
+export type NotificationUncheckedUpdateManyWithoutSocietyNestedInput = {
+  create?: Prisma.XOR<Prisma.NotificationCreateWithoutSocietyInput, Prisma.NotificationUncheckedCreateWithoutSocietyInput> | Prisma.NotificationCreateWithoutSocietyInput[] | Prisma.NotificationUncheckedCreateWithoutSocietyInput[]
+  connectOrCreate?: Prisma.NotificationCreateOrConnectWithoutSocietyInput | Prisma.NotificationCreateOrConnectWithoutSocietyInput[]
+  upsert?: Prisma.NotificationUpsertWithWhereUniqueWithoutSocietyInput | Prisma.NotificationUpsertWithWhereUniqueWithoutSocietyInput[]
+  createMany?: Prisma.NotificationCreateManySocietyInputEnvelope
+  set?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  disconnect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  delete?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  connect?: Prisma.NotificationWhereUniqueInput | Prisma.NotificationWhereUniqueInput[]
+  update?: Prisma.NotificationUpdateWithWhereUniqueWithoutSocietyInput | Prisma.NotificationUpdateWithWhereUniqueWithoutSocietyInput[]
+  updateMany?: Prisma.NotificationUpdateManyWithWhereWithoutSocietyInput | Prisma.NotificationUpdateManyWithWhereWithoutSocietyInput[]
   deleteMany?: Prisma.NotificationScalarWhereInput | Prisma.NotificationScalarWhereInput[]
 }
 
@@ -533,11 +605,13 @@ export type NotificationCreateWithoutUserInput = {
   readAt?: Date | string | null
   createdAt?: Date | string
   post?: Prisma.PostCreateNestedOneWithoutNotificationsInput
+  society?: Prisma.SocietyCreateNestedOneWithoutNotificationsInput
 }
 
 export type NotificationUncheckedCreateWithoutUserInput = {
   id?: number
   postId?: number | null
+  societyId?: number | null
   type: $Enums.NotificationType
   title: string
   message?: string | null
@@ -578,11 +652,59 @@ export type NotificationScalarWhereInput = {
   id?: Prisma.IntFilter<"Notification"> | number
   userId?: Prisma.IntFilter<"Notification"> | number
   postId?: Prisma.IntNullableFilter<"Notification"> | number | null
+  societyId?: Prisma.IntNullableFilter<"Notification"> | number | null
   type?: Prisma.EnumNotificationTypeFilter<"Notification"> | $Enums.NotificationType
   title?: Prisma.StringFilter<"Notification"> | string
   message?: Prisma.StringNullableFilter<"Notification"> | string | null
   readAt?: Prisma.DateTimeNullableFilter<"Notification"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Notification"> | Date | string
+}
+
+export type NotificationCreateWithoutSocietyInput = {
+  type: $Enums.NotificationType
+  title: string
+  message?: string | null
+  readAt?: Date | string | null
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutNotificationsInput
+  post?: Prisma.PostCreateNestedOneWithoutNotificationsInput
+}
+
+export type NotificationUncheckedCreateWithoutSocietyInput = {
+  id?: number
+  userId: number
+  postId?: number | null
+  type: $Enums.NotificationType
+  title: string
+  message?: string | null
+  readAt?: Date | string | null
+  createdAt?: Date | string
+}
+
+export type NotificationCreateOrConnectWithoutSocietyInput = {
+  where: Prisma.NotificationWhereUniqueInput
+  create: Prisma.XOR<Prisma.NotificationCreateWithoutSocietyInput, Prisma.NotificationUncheckedCreateWithoutSocietyInput>
+}
+
+export type NotificationCreateManySocietyInputEnvelope = {
+  data: Prisma.NotificationCreateManySocietyInput | Prisma.NotificationCreateManySocietyInput[]
+  skipDuplicates?: boolean
+}
+
+export type NotificationUpsertWithWhereUniqueWithoutSocietyInput = {
+  where: Prisma.NotificationWhereUniqueInput
+  update: Prisma.XOR<Prisma.NotificationUpdateWithoutSocietyInput, Prisma.NotificationUncheckedUpdateWithoutSocietyInput>
+  create: Prisma.XOR<Prisma.NotificationCreateWithoutSocietyInput, Prisma.NotificationUncheckedCreateWithoutSocietyInput>
+}
+
+export type NotificationUpdateWithWhereUniqueWithoutSocietyInput = {
+  where: Prisma.NotificationWhereUniqueInput
+  data: Prisma.XOR<Prisma.NotificationUpdateWithoutSocietyInput, Prisma.NotificationUncheckedUpdateWithoutSocietyInput>
+}
+
+export type NotificationUpdateManyWithWhereWithoutSocietyInput = {
+  where: Prisma.NotificationScalarWhereInput
+  data: Prisma.XOR<Prisma.NotificationUpdateManyMutationInput, Prisma.NotificationUncheckedUpdateManyWithoutSocietyInput>
 }
 
 export type NotificationCreateWithoutPostInput = {
@@ -592,11 +714,13 @@ export type NotificationCreateWithoutPostInput = {
   readAt?: Date | string | null
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutNotificationsInput
+  society?: Prisma.SocietyCreateNestedOneWithoutNotificationsInput
 }
 
 export type NotificationUncheckedCreateWithoutPostInput = {
   id?: number
   userId: number
+  societyId?: number | null
   type: $Enums.NotificationType
   title: string
   message?: string | null
@@ -633,6 +757,7 @@ export type NotificationUpdateManyWithWhereWithoutPostInput = {
 export type NotificationCreateManyUserInput = {
   id?: number
   postId?: number | null
+  societyId?: number | null
   type: $Enums.NotificationType
   title: string
   message?: string | null
@@ -647,11 +772,13 @@ export type NotificationUpdateWithoutUserInput = {
   readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   post?: Prisma.PostUpdateOneWithoutNotificationsNestedInput
+  society?: Prisma.SocietyUpdateOneWithoutNotificationsNestedInput
 }
 
 export type NotificationUncheckedUpdateWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   postId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  societyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   title?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -661,6 +788,50 @@ export type NotificationUncheckedUpdateWithoutUserInput = {
 
 export type NotificationUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  postId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  societyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type NotificationCreateManySocietyInput = {
+  id?: number
+  userId: number
+  postId?: number | null
+  type: $Enums.NotificationType
+  title: string
+  message?: string | null
+  readAt?: Date | string | null
+  createdAt?: Date | string
+}
+
+export type NotificationUpdateWithoutSocietyInput = {
+  type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutNotificationsNestedInput
+  post?: Prisma.PostUpdateOneWithoutNotificationsNestedInput
+}
+
+export type NotificationUncheckedUpdateWithoutSocietyInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  userId?: Prisma.IntFieldUpdateOperationsInput | number
+  postId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type NotificationUncheckedUpdateManyWithoutSocietyInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  userId?: Prisma.IntFieldUpdateOperationsInput | number
   postId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -672,6 +843,7 @@ export type NotificationUncheckedUpdateManyWithoutUserInput = {
 export type NotificationCreateManyPostInput = {
   id?: number
   userId: number
+  societyId?: number | null
   type: $Enums.NotificationType
   title: string
   message?: string | null
@@ -686,11 +858,13 @@ export type NotificationUpdateWithoutPostInput = {
   readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutNotificationsNestedInput
+  society?: Prisma.SocietyUpdateOneWithoutNotificationsNestedInput
 }
 
 export type NotificationUncheckedUpdateWithoutPostInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  societyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   title?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -701,6 +875,7 @@ export type NotificationUncheckedUpdateWithoutPostInput = {
 export type NotificationUncheckedUpdateManyWithoutPostInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+  societyId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   type?: Prisma.EnumNotificationTypeFieldUpdateOperationsInput | $Enums.NotificationType
   title?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -714,6 +889,7 @@ export type NotificationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   id?: boolean
   userId?: boolean
   postId?: boolean
+  societyId?: boolean
   type?: boolean
   title?: boolean
   message?: boolean
@@ -721,12 +897,14 @@ export type NotificationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   post?: boolean | Prisma.Notification$postArgs<ExtArgs>
+  society?: boolean | Prisma.Notification$societyArgs<ExtArgs>
 }, ExtArgs["result"]["notification"]>
 
 export type NotificationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
   postId?: boolean
+  societyId?: boolean
   type?: boolean
   title?: boolean
   message?: boolean
@@ -734,12 +912,14 @@ export type NotificationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   post?: boolean | Prisma.Notification$postArgs<ExtArgs>
+  society?: boolean | Prisma.Notification$societyArgs<ExtArgs>
 }, ExtArgs["result"]["notification"]>
 
 export type NotificationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
   postId?: boolean
+  societyId?: boolean
   type?: boolean
   title?: boolean
   message?: boolean
@@ -747,12 +927,14 @@ export type NotificationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   post?: boolean | Prisma.Notification$postArgs<ExtArgs>
+  society?: boolean | Prisma.Notification$societyArgs<ExtArgs>
 }, ExtArgs["result"]["notification"]>
 
 export type NotificationSelectScalar = {
   id?: boolean
   userId?: boolean
   postId?: boolean
+  societyId?: boolean
   type?: boolean
   title?: boolean
   message?: boolean
@@ -760,18 +942,21 @@ export type NotificationSelectScalar = {
   createdAt?: boolean
 }
 
-export type NotificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "postId" | "type" | "title" | "message" | "readAt" | "createdAt", ExtArgs["result"]["notification"]>
+export type NotificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "postId" | "societyId" | "type" | "title" | "message" | "readAt" | "createdAt", ExtArgs["result"]["notification"]>
 export type NotificationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   post?: boolean | Prisma.Notification$postArgs<ExtArgs>
+  society?: boolean | Prisma.Notification$societyArgs<ExtArgs>
 }
 export type NotificationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   post?: boolean | Prisma.Notification$postArgs<ExtArgs>
+  society?: boolean | Prisma.Notification$societyArgs<ExtArgs>
 }
 export type NotificationIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   post?: boolean | Prisma.Notification$postArgs<ExtArgs>
+  society?: boolean | Prisma.Notification$societyArgs<ExtArgs>
 }
 
 export type $NotificationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -779,11 +964,13 @@ export type $NotificationPayload<ExtArgs extends runtime.Types.Extensions.Intern
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
     post: Prisma.$PostPayload<ExtArgs> | null
+    society: Prisma.$SocietyPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     userId: number
     postId: number | null
+    societyId: number | null
     type: $Enums.NotificationType
     title: string
     message: string | null
@@ -1185,6 +1372,7 @@ export interface Prisma__NotificationClient<T, Null = never, ExtArgs extends run
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   post<T extends Prisma.Notification$postArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Notification$postArgs<ExtArgs>>): Prisma.Prisma__PostClient<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  society<T extends Prisma.Notification$societyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Notification$societyArgs<ExtArgs>>): Prisma.Prisma__SocietyClient<runtime.Types.Result.GetResult<Prisma.$SocietyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1217,6 +1405,7 @@ export interface NotificationFieldRefs {
   readonly id: Prisma.FieldRef<"Notification", 'Int'>
   readonly userId: Prisma.FieldRef<"Notification", 'Int'>
   readonly postId: Prisma.FieldRef<"Notification", 'Int'>
+  readonly societyId: Prisma.FieldRef<"Notification", 'Int'>
   readonly type: Prisma.FieldRef<"Notification", 'NotificationType'>
   readonly title: Prisma.FieldRef<"Notification", 'String'>
   readonly message: Prisma.FieldRef<"Notification", 'String'>
@@ -1639,6 +1828,25 @@ export type Notification$postArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   include?: Prisma.PostInclude<ExtArgs> | null
   where?: Prisma.PostWhereInput
+}
+
+/**
+ * Notification.society
+ */
+export type Notification$societyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Society
+   */
+  select?: Prisma.SocietySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Society
+   */
+  omit?: Prisma.SocietyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SocietyInclude<ExtArgs> | null
+  where?: Prisma.SocietyWhereInput
 }
 
 /**

@@ -134,6 +134,7 @@ export async function getSystemStats(): Promise<SystemStats> {
     prisma.user.count({ where: { status: "ACTIVE", isDeleted: false } }),
     prisma.server.groupBy({
       by: ["type"],
+      where: { isDeleted: false },
       _count: { _all: true },
     }),
     prisma.post.count({ where: { isDeleted: false } }),

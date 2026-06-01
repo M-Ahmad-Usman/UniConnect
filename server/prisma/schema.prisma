@@ -81,6 +81,10 @@ enum NotificationType {
   NEW_POST                 @map("new_post")
   ROLE_ASSIGNED            @map("role_assigned")
   SOCIETY_REQUEST_REVIEWED @map("society_request_reviewed")
+  SOCIETY_SUSPENDED        @map("society_suspended")
+  SOCIETY_ACTIVATED        @map("society_activated")
+  SOCIETY_DELETED          @map("society_deleted")
+  SOCIETY_RESTORED         @map("society_restored")
 
   @@map("notification_type")
 }
@@ -314,6 +318,7 @@ model Society {
   deletedByUser User?       @relation("SocietyDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
 
   membershipRequests SocietyMembershipRequest[]
+  notifications      Notification[]
 
   @@index([departmentId, isDeleted])
   @@index([status, isDeleted])
@@ -583,21 +588,27 @@ model Notification {
   id        Int              @id @default(autoincrement())
   userId    Int              @map("user_id")
   postId    Int?             @map("post_id")
+  societyId Int?             @map("society_id")
   type      NotificationType
   title     String           @db.VarChar(200)
   message   String?
   readAt    DateTime?        @map("read_at")
   createdAt DateTime         @default(now()) @map("created_at")
 
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  society Society? @relation(fields: [societyId], references: [id], onDelete: SetNull)
 
   @@index([userId, readAt])
   @@index([userId, type, createdAt])
   @@index([postId])
+  @@index([societyId])
   @@map("notifications")
 }
 
+/// The Module 5 SQL migration adds null-safe uniqueness, scope/type checks,
+/// and a composite channel/server foreign key. Prisma's schema DSL cannot
+/// represent every safeguard; review generated migrations before applying.
 model NotificationPreference {
   id               Int                   @id @default(autoincrement())
   userId           Int                   @map("user_id")

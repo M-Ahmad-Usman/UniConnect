@@ -23,7 +23,11 @@ function parseType(value: string | null) {
   if (
     value === NotificationType.NEW_POST ||
     value === NotificationType.ROLE_ASSIGNED ||
-    value === NotificationType.SOCIETY_REQUEST_REVIEWED
+    value === NotificationType.SOCIETY_REQUEST_REVIEWED ||
+    value === NotificationType.SOCIETY_SUSPENDED ||
+    value === NotificationType.SOCIETY_ACTIVATED ||
+    value === NotificationType.SOCIETY_DELETED ||
+    value === NotificationType.SOCIETY_RESTORED
   ) {
     return value;
   }
@@ -136,7 +140,35 @@ export function NotificationInboxPage() {
           size="sm"
           onClick={() => updateFilter({ type: NotificationType.SOCIETY_REQUEST_REVIEWED })}
         >
-          Societies
+          Membership reviews
+        </Button>
+        <Button
+          variant={type === NotificationType.SOCIETY_SUSPENDED ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => updateFilter({ type: NotificationType.SOCIETY_SUSPENDED })}
+        >
+          Society suspensions
+        </Button>
+        <Button
+          variant={type === NotificationType.SOCIETY_ACTIVATED ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => updateFilter({ type: NotificationType.SOCIETY_ACTIVATED })}
+        >
+          Society activations
+        </Button>
+        <Button
+          variant={type === NotificationType.SOCIETY_DELETED ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => updateFilter({ type: NotificationType.SOCIETY_DELETED })}
+        >
+          Society deletions
+        </Button>
+        <Button
+          variant={type === NotificationType.SOCIETY_RESTORED ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => updateFilter({ type: NotificationType.SOCIETY_RESTORED })}
+        >
+          Society restores
         </Button>
         {pagination ? <Badge variant="outline">{pagination.total} total</Badge> : null}
       </div>

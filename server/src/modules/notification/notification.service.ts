@@ -15,6 +15,7 @@ import {
   buildPaginationResponse,
 } from "../../shared/utils/pagination.js";
 import { getIO } from "../../socket/index.js";
+import type { PrismaTransaction } from "../../shared/lifecycle/society.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -57,8 +58,23 @@ type CreateRoleAssignedNotificationInput = {
 
 type CreateSocietyRequestReviewedNotificationInput = {
   userId: number;
+  societyId: number;
   societyName: string;
   status: "APPROVED" | "REJECTED";
+};
+
+type SocietyLifecycleNotificationType =
+  | "SOCIETY_SUSPENDED"
+  | "SOCIETY_ACTIVATED"
+  | "SOCIETY_DELETED"
+  | "SOCIETY_RESTORED";
+
+type CreateSocietyLifecycleNotificationsInput = {
+  societyId: number;
+  serverId: number;
+  actorUserId: number;
+  societyName: string;
+  type: SocietyLifecycleNotificationType;
 };
 
 // ─── Select Constants ──────────────────────────────────────────────────────
@@ -86,6 +102,13 @@ const notificationListSelect = {
           },
         },
       },
+    },
+  },
+  society: {
+    select: {
+      publicId: true,
+      name: true,
+      isDeleted: true,
     },
   },
 } as const;
@@ -392,6 +415,7 @@ export async function createSocietyRequestReviewedNotification(
   const notification = await prisma.notification.create({
     data: {
       userId: input.userId,
+      societyId: input.societyId,
       type: "SOCIETY_REQUEST_REVIEWED",
       title: isApproved
         ? "Society request approved"
@@ -405,6 +429,100 @@ export async function createSocietyRequestReviewedNotification(
 
   emitToUser(input.userId, "notification:new", notification);
   await emitUnreadCount(input.userId);
+}
+
+function societyLifecycleCopy(
+  type: SocietyLifecycleNotificationType,
+  societyName: string,
+): { title: string; message: string } {
+  switch (type) {
+    case "SOCIETY_SUSPENDED":
+      return {
+        title: "Society suspended",
+        message: `${societyName} is temporarily read-only`,
+      };
+    case "SOCIETY_ACTIVATED":
+      return {
+        title: "Society activated",
+        message: `${societyName} is active again`,
+      };
+    case "SOCIETY_DELETED":
+      return {
+        title: "Society deleted",
+        message: `${societyName} has been removed`,
+      };
+    case "SOCIETY_RESTORED":
+      return {
+        title: "Society restored",
+        message: `${societyName} has been restored`,
+      };
+  }
+}
+
+/**
+ * Persist lifecycle notices inside the caller's lifecycle transaction. The
+ * set-based insert avoids loading large membership lists into application
+ * memory and intentionally bypasses preferences: lifecycle notices are
+ * mandatory operational messages.
+ */
+export async function createSocietyLifecycleNotifications(
+  client: PrismaTransaction,
+  input: CreateSocietyLifecycleNotificationsInput,
+): Promise<number[]> {
+  const copy = societyLifecycleCopy(input.type, input.societyName);
+  const databaseType = input.type.toLowerCase();
+  const notifications = await client.$queryRaw<Array<{ id: number }>>`
+    INSERT INTO "notifications" (
+      "user_id",
+      "society_id",
+      "type",
+      "title",
+      "message"
+    )
+    SELECT
+      membership."user_id",
+      ${input.societyId},
+      ${databaseType}::"notification_type",
+      ${copy.title},
+      ${copy.message}
+    FROM "server_memberships" AS membership
+    INNER JOIN "users" AS member ON member."id" = membership."user_id"
+    WHERE membership."server_id" = ${input.serverId}
+      AND membership."user_id" <> ${input.actorUserId}
+      AND member."status" = 'active'::"user_status"
+      AND member."is_active" = TRUE
+      AND member."is_deleted" = FALSE
+    RETURNING "id"
+  `;
+  return notifications.map((notification) => notification.id);
+}
+
+export async function emitCreatedNotifications(notificationIds: number[]): Promise<void> {
+  if (notificationIds.length === 0) {
+    return;
+  }
+  const notifications = await prisma.notification.findMany({
+    where: { id: { in: notificationIds } },
+    select: { ...notificationListSelect, userId: true },
+  });
+  if (notifications.length === 0) {
+    return;
+  }
+  const userIds = [...new Set(notifications.map((notification) => notification.userId))];
+  const unreadCounts = await prisma.notification.groupBy({
+    by: ["userId"],
+    where: { userId: { in: userIds }, readAt: null },
+    _count: { _all: true },
+  });
+  const unreadCountMap = new Map(
+    unreadCounts.map((row) => [row.userId, row._count._all]),
+  );
+  for (const { userId, ...notification } of notifications) {
+    emitToUser(userId, "notification:new", notification);
+    emitToUser(userId, "notification:unread-count", {
+      count: unreadCountMap.get(userId) ?? 0,
+    });
+  }
 }
 
 export async function listNotifications(
@@ -554,59 +672,48 @@ export async function updatePreference(
     }
   }
 
-  // Upsert the preference record
-  // For CHANNEL scope, use the compound unique key
-  // For SERVER scope (channelId is null), use findFirst + create/update
-  if (scopeType === "CHANNEL" && channelId) {
-    const preference = await prisma.notificationPreference.upsert({
-      where: {
-        userId_notificationType_scopeType_serverId_channelId: {
-          userId,
-          notificationType,
-          scopeType,
-          serverId,
-          channelId,
-        },
-      },
-      update: { isSubscribed },
-      create: {
-        userId,
-        notificationType,
-        scopeType,
-        serverId,
-        channelId,
-        isSubscribed,
-      },
-      select: preferenceListSelect,
-    });
-
-    return preference;
+  // The SQL-only null-safe unique index covers server and channel scopes.
+  // Use one atomic statement so concurrent first writes cannot create duplicate
+  // server-scope rows or surface a uniqueness race as a 500.
+  const databaseType = notificationType.toLowerCase();
+  const databaseScope = scopeType.toLowerCase();
+  const rows = await prisma.$queryRaw<Array<{ id: number }>>`
+    INSERT INTO "notification_preferences" (
+      "user_id",
+      "notification_type",
+      "scope_type",
+      "server_id",
+      "channel_id",
+      "is_subscribed",
+      "updated_at"
+    )
+    VALUES (
+      ${userId},
+      ${databaseType}::"notification_type",
+      ${databaseScope}::"notification_scope_type",
+      ${serverId},
+      ${channelId ?? null},
+      ${isSubscribed},
+      NOW()
+    )
+    ON CONFLICT (
+      "user_id",
+      "notification_type",
+      "scope_type",
+      "server_id",
+      (COALESCE("channel_id", 0))
+    )
+    DO UPDATE SET
+      "is_subscribed" = EXCLUDED."is_subscribed",
+      "updated_at" = NOW()
+    RETURNING "id"
+  `;
+  const preference = rows[0];
+  if (!preference) {
+    throw new NotFoundError("Notification preference could not be saved");
   }
-
-  // SERVER scope — channelId is null, can't use compound unique directly
-  const existing = await prisma.notificationPreference.findFirst({
-    where: { userId, notificationType, scopeType, serverId, channelId: null },
-  });
-
-  if (existing) {
-    const preference = await prisma.notificationPreference.update({
-      where: { id: existing.id },
-      data: { isSubscribed },
-      select: preferenceListSelect,
-    });
-    return preference;
-  }
-
-  const preference = await prisma.notificationPreference.create({
-    data: {
-      userId,
-      notificationType,
-      scopeType,
-      serverId,
-      isSubscribed,
-    },
+  return prisma.notificationPreference.findUniqueOrThrow({
+    where: { id: preference.id },
     select: preferenceListSelect,
   });
-
-  return preference;
 }

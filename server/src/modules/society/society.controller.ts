@@ -12,6 +12,14 @@ function auditContextFromRequest(req: Request) {
   });
 }
 
+function routeParam(req: Request, name: string): string {
+  const value = req.params[name];
+  if (typeof value !== "string") {
+    throw new Error(`Missing validated route parameter: ${name}`);
+  }
+  return value;
+}
+
 // ─── Society Handlers ──────────────────────────────────────────────────────
 
 export async function handleCreateSociety(req: Request, res: Response): Promise<void> {
@@ -23,12 +31,12 @@ export async function handleCreateSociety(req: Request, res: Response): Promise<
     {
       action: "society.create",
       targetType: "society",
-      targetId: society.id,
+      targetId: society.publicId,
       summary: {
         name: society.name,
         departmentId: society.department.id,
-        presidentId: req.body.presidentId,
-        convenorId: req.body.convenorId,
+        presidentPublicId: req.body.presidentPublicId,
+        convenorPublicId: req.body.convenorPublicId,
       },
     },
     auditContextFromRequest(req)
@@ -47,9 +55,11 @@ export async function handleListSocieties(req: Request, res: Response): Promise<
   const query = req.query as Record<string, string | undefined>;
   const result = await societyService.listSocieties({
     departmentId: query.departmentId ? Number(query.departmentId) : undefined,
+    status: query.status as "ACTIVE" | "SUSPENDED" | undefined,
+    lifecycle: query.lifecycle as "live" | "deleted" | "all" | undefined,
     page: query.page ? Number(query.page) : undefined,
     limit: query.limit ? Number(query.limit) : undefined,
-  });
+  }, { id: req.user!.id, userType: req.user!.userType });
 
   const response: PaginatedResponse<(typeof result.data)[number]> = {
     success: true,
@@ -61,7 +71,10 @@ export async function handleListSocieties(req: Request, res: Response): Promise<
 }
 
 export async function handleGetSociety(req: Request, res: Response): Promise<void> {
-  const society = await societyService.getSocietyById(Number(req.params.id), req.user!.id);
+  const society = await societyService.getSocietyByPublicId(routeParam(req, "publicId"), {
+    id: req.user!.id,
+    userType: req.user!.userType,
+  });
 
   const response: ApiResponse<typeof society> = {
     success: true,
@@ -72,7 +85,7 @@ export async function handleGetSociety(req: Request, res: Response): Promise<voi
 }
 
 export async function handleUpdateSociety(req: Request, res: Response): Promise<void> {
-  const society = await societyService.updateSociety(Number(req.params.id), req.body, {
+  const society = await societyService.updateSociety(routeParam(req, "publicId"), req.body, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -80,7 +93,7 @@ export async function handleUpdateSociety(req: Request, res: Response): Promise<
     {
       action: "society.update",
       targetType: "society",
-      targetId: req.params.id,
+      targetId: routeParam(req, "publicId"),
       summary: {
         changedFields: Object.keys(req.body as Record<string, unknown>),
       },
@@ -99,7 +112,7 @@ export async function handleUpdateSociety(req: Request, res: Response): Promise<
 
 export async function handleSubmitJoinRequest(req: Request, res: Response): Promise<void> {
   const joinRequest = await societyService.submitJoinRequest(
-    Number(req.params.id),
+    routeParam(req, "publicId"),
     req.user!.id
   );
 
@@ -115,7 +128,7 @@ export async function handleSubmitJoinRequest(req: Request, res: Response): Prom
 export async function handleListJoinRequests(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await societyService.listJoinRequests(
-    Number(req.params.id),
+    routeParam(req, "publicId"),
     {
       status: query.status as "PENDING" | "APPROVED" | "REJECTED" | undefined,
       page: query.page ? Number(query.page) : undefined,
@@ -135,7 +148,7 @@ export async function handleListJoinRequests(req: Request, res: Response): Promi
 
 export async function handleReviewJoinRequest(req: Request, res: Response): Promise<void> {
   const result = await societyService.reviewJoinRequest(
-    Number(req.params.id),
+    routeParam(req, "publicId"),
     Number(req.params.requestId),
     req.body.status,
     { id: req.user!.id, userType: req.user!.userType }
@@ -144,7 +157,7 @@ export async function handleReviewJoinRequest(req: Request, res: Response): Prom
     {
       action: "society.join_request.review",
       targetType: "society",
-      targetId: req.params.id,
+      targetId: routeParam(req, "publicId"),
       summary: { requestId: req.params.requestId, status: req.body.status },
     },
     auditContextFromRequest(req)
@@ -161,16 +174,16 @@ export async function handleReviewJoinRequest(req: Request, res: Response): Prom
 
 export async function handleAddMember(req: Request, res: Response): Promise<void> {
   const member = await societyService.addMember(
-    Number(req.params.id),
-    req.body.userId,
+    routeParam(req, "publicId"),
+    req.body.userPublicId,
     { id: req.user!.id, userType: req.user!.userType }
   );
   await recordAuditLog(
     {
       action: "society.member.add",
       targetType: "society",
-      targetId: req.params.id,
-      summary: { userId: req.body.userId },
+      targetId: routeParam(req, "publicId"),
+      summary: { userPublicId: req.body.userPublicId },
     },
     auditContextFromRequest(req)
   );
@@ -186,16 +199,16 @@ export async function handleAddMember(req: Request, res: Response): Promise<void
 
 export async function handleRemoveMember(req: Request, res: Response): Promise<void> {
   await societyService.removeMember(
-    Number(req.params.id),
-    Number(req.params.userId),
+    routeParam(req, "publicId"),
+    routeParam(req, "userPublicId"),
     { id: req.user!.id, userType: req.user!.userType }
   );
   await recordAuditLog(
     {
       action: "society.member.remove",
       targetType: "society",
-      targetId: req.params.id,
-      summary: { userId: req.params.userId },
+      targetId: routeParam(req, "publicId"),
+      summary: { userPublicId: routeParam(req, "userPublicId") },
     },
     auditContextFromRequest(req)
   );
@@ -211,7 +224,7 @@ export async function handleRemoveMember(req: Request, res: Response): Promise<v
 
 export async function handleListMembers(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
-  const result = await societyService.listMembers(Number(req.params.id), {
+  const result = await societyService.listMembers(routeParam(req, "publicId"), {
     page: query.page ? Number(query.page) : undefined,
     limit: query.limit ? Number(query.limit) : undefined,
   }, {
@@ -229,7 +242,7 @@ export async function handleListMembers(req: Request, res: Response): Promise<vo
 }
 
 export async function handleGetMyMembershipStatus(req: Request, res: Response): Promise<void> {
-  const result = await societyService.getMyMembershipStatus(Number(req.params.id), req.user!.id);
+  const result = await societyService.getMyMembershipStatus(routeParam(req, "publicId"), req.user!.id);
 
   const response: ApiResponse<typeof result> = {
     success: true,
@@ -242,7 +255,7 @@ export async function handleGetMyMembershipStatus(req: Request, res: Response): 
 export async function handleListMemberCandidates(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await societyService.listMemberCandidates(
-    Number(req.params.id),
+    routeParam(req, "publicId"),
     {
       search: query.search,
       page: query.page ? Number(query.page) : undefined,
@@ -260,6 +273,61 @@ export async function handleListMemberCandidates(req: Request, res: Response): P
     pagination: result.pagination,
   };
 
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleGetSocietyDeletionImpact(req: Request, res: Response): Promise<void> {
+  const impact = await societyService.getSocietyDeletionImpact(routeParam(req, "publicId"), {
+    id: req.user!.id,
+    userType: req.user!.userType,
+  });
+  const response: ApiResponse<typeof impact> = { success: true, data: impact };
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleUpdateSocietyStatus(req: Request, res: Response): Promise<void> {
+  const society = await societyService.updateSocietyStatus(
+    routeParam(req, "publicId"),
+    req.body.status,
+    { id: req.user!.id, userType: req.user!.userType },
+    auditContextFromRequest(req),
+    req.body.reason,
+  );
+  const response: ApiResponse<typeof society> = {
+    success: true,
+    data: society,
+    message: "Society status updated successfully",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleDeleteSociety(req: Request, res: Response): Promise<void> {
+  const society = await societyService.deleteSociety(
+    routeParam(req, "publicId"),
+    { id: req.user!.id, userType: req.user!.userType },
+    auditContextFromRequest(req),
+    req.body.reason,
+  );
+  const response: ApiResponse<typeof society> = {
+    success: true,
+    data: society,
+    message: "Society deleted successfully",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleRestoreSociety(req: Request, res: Response): Promise<void> {
+  const society = await societyService.restoreSociety(
+    routeParam(req, "publicId"),
+    { id: req.user!.id, userType: req.user!.userType },
+    auditContextFromRequest(req),
+    req.body.reason,
+  );
+  const response: ApiResponse<typeof society> = {
+    success: true,
+    data: society,
+    message: "Society restored successfully",
+  };
   res.status(StatusCodes.OK).json(response);
 }
 

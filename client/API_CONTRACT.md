@@ -2086,6 +2086,8 @@ GET /api/societies
   page?: number;
   limit?: number;
   departmentId?: number;
+  status?: 'ACTIVE' | 'SUSPENDED';
+  lifecycle?: 'live' | 'deleted' | 'all';
 }
 ```
 
@@ -2095,32 +2097,34 @@ GET /api/societies
 {
   success: true;
   data: Array<{
-    id: number;
+    publicId: string;
     name: string;
     description: string | null;
     departmentId: number;
-    isActive: boolean;
+    status: 'ACTIVE' | 'SUSPENDED';
+    isDeleted: boolean;
+    deletedAt: string | null;
     createdAt: string;
     department: {
       id: number;
       name: string;
-      serverId: number;
     };
     president: {
       user: {
-        id: number;
+        publicId: string;
         fullName: string;
         email: string;
       };
     };
     convenor: {
       user: {
-        id: number;
+        publicId: string;
         fullName: string;
         email: string;
       };
     };
     server: {
+      publicId: string;
       _count: {
         memberships: number;
       };
@@ -2130,22 +2134,24 @@ GET /api/societies
 }
 ```
 
+**Visibility:** Ordinary browsing returns live active societies. Suspended societies remain
+visible to authorized admins, own-department HODs, and members. Deleted rows are returned
+only to admins or own-department HODs when `lifecycle=deleted|all`.
+
 #### Get Society
 
 ```
-GET /api/societies/:id
+GET /api/societies/:publicId
 ```
 
 **Auth:** Required
 
-**Response:** Same shape as list item, plus `serverId`, `server.id`, viewer status, and caller-specific permissions:
+**Response:** Same shape as list item, plus viewer status and caller-specific permissions:
 
 ```typescript
 {
   success: true;
   data: SocietyListItem & {
-    serverId: number;
-    server: { id: number; _count: { memberships: number } };
     viewer: {
       isMember: boolean;
       requestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
@@ -2160,6 +2166,7 @@ GET /api/societies/:id
       canManageChannels: boolean;
       canAssignModerators: boolean;
       canSubmitJoinRequest: boolean;
+      canManageLifecycle: boolean;
     };
   };
 }
@@ -2172,7 +2179,7 @@ permissions so expected lack of access does not produce 403-driven UI states.
 #### Get My Membership Status
 
 ```
-GET /api/societies/:id/my-membership
+GET /api/societies/:publicId/my-membership
 ```
 
 **Auth:** Required
@@ -2206,8 +2213,8 @@ POST /api/societies
   name: string;            // 1-100 chars
   description?: string;    // Max 500 chars
   departmentId: number;
-  presidentId: number;     // Student ID
-  convenorId: number;      // Teacher ID
+  presidentPublicId: string;
+  convenorPublicId: string;
 }
 ```
 
@@ -2216,7 +2223,7 @@ POST /api/societies
 #### Update Society
 
 ```
-PATCH /api/societies/:id
+PATCH /api/societies/:publicId
 ```
 
 **Auth:** Info-only changes require admin, HOD for the department, convenor, or president.
@@ -2228,18 +2235,75 @@ Leadership changes require admin or HOD for the department.
 {
   name?: string;
   description?: string;
-  presidentId?: number;    // Admin or department HOD only
-  convenorId?: number;     // Admin or department HOD only
+  presidentPublicId?: string; // Admin or department HOD only
+  convenorPublicId?: string;  // Admin or department HOD only
 }
 ```
 
 **Response:**
 Updated `SocietyListItem`
 
+#### Get Deletion Impact
+
+```
+GET /api/societies/:publicId/deletion-impact
+```
+
+**Auth:** Admin or HOD for the society department
+
+```typescript
+{
+  success: true;
+  data: {
+    canDelete: boolean;
+    activeMemberCount: number;
+    liveChannelCount: number;
+    pendingRequestCount: number;
+    preservedPostCount: number;
+    preservedPlatformRoleAssignmentCount: number;
+  };
+}
+```
+
+#### Suspend or Activate Society
+
+```
+PATCH /api/societies/:publicId/status
+```
+
+**Auth:** Admin or HOD for the society department
+
+```typescript
+{
+  status: 'ACTIVE' | 'SUSPENDED';
+  reason?: string;
+}
+```
+
+#### Delete or Restore Society
+
+```
+DELETE /api/societies/:publicId
+PATCH /api/societies/:publicId/restore
+```
+
+**Auth:** Admin or HOD for the society department
+
+```typescript
+{
+  reason?: string;
+}
+```
+
+**Lifecycle note:** Suspended societies are fully frozen for writes. Delete soft-deletes the
+owned server and live channels with one cascade ID, removes pending requests, and preserves
+memberships, history, posts, preferences, and platform-role assignments. Restore preserves
+the previous active/suspended status and restores only descendants marked by that cascade.
+
 #### Submit Join Request (Student)
 
 ```
-POST /api/societies/:id/join-request
+POST /api/societies/:publicId/join-request
 ```
 
 **Auth:** Student only
@@ -2259,7 +2323,7 @@ POST /api/societies/:id/join-request
 #### List Join Requests
 
 ```
-GET /api/societies/:id/join-requests
+GET /api/societies/:publicId/join-requests
 ```
 
 **Auth:** Admin, convenor, or president
@@ -2281,18 +2345,22 @@ GET /api/societies/:id/join-requests
   success: true;
   data: Array<{
     id: number;
-    societyId: number;
-    userId: number;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
     requestedAt: string;
-    reviewedBy: number | null;
     reviewedAt: string | null;
+    society: {
+      publicId: string;
+    };
     user: {
-      id: number;
+      publicId: string;
       fullName: string;
       email: string;
       profilePictureUrl: string | null;
     };
+    reviewer: {
+      publicId: string;
+      fullName: string;
+    } | null;
   }>;
   pagination: { ... };
 }
@@ -2301,7 +2369,7 @@ GET /api/societies/:id/join-requests
 #### Review Join Request
 
 ```
-PATCH /api/societies/:id/join-requests/:requestId
+PATCH /api/societies/:publicId/join-requests/:requestId
 ```
 
 **Auth:** Admin, convenor, or president
@@ -2330,7 +2398,7 @@ rejection create a `SOCIETY_REQUEST_REVIEWED` notification for the requester.
 #### Add Member Directly
 
 ```
-POST /api/societies/:id/members
+POST /api/societies/:publicId/members
 ```
 
 **Auth:** Admin, convenor, or president
@@ -2339,7 +2407,7 @@ POST /api/societies/:id/members
 
 ```typescript
 {
-  userId: number; // Student ID
+  userPublicId: string;
 }
 ```
 
@@ -2356,7 +2424,7 @@ POST /api/societies/:id/members
 #### Remove Member
 
 ```
-DELETE /api/societies/:id/members/:userId
+DELETE /api/societies/:publicId/members/:userPublicId
 ```
 
 **Auth:** Admin, convenor, or president
@@ -2374,7 +2442,7 @@ DELETE /api/societies/:id/members/:userId
 #### List Members
 
 ```
-GET /api/societies/:id/members
+GET /api/societies/:publicId/members
 ```
 
 **Auth:** Admin, society president/convenor, or existing society member.
@@ -2395,11 +2463,10 @@ Department HODs cannot view members unless they also satisfy one of those states
 {
   success: true;
   data: Array<{
-    userId: number;
     joinedAt: string;
     isAutoJoined: boolean;
     user: {
-      id: number;
+      publicId: string;
       fullName: string;
       email: string;
       userType: string;
@@ -2414,7 +2481,7 @@ Department HODs cannot view members unless they also satisfy one of those states
 #### List Member Candidates
 
 ```
-GET /api/societies/:id/member-candidates
+GET /api/societies/:publicId/member-candidates
 ```
 
 **Auth:** Admin, convenor, or president
@@ -2438,7 +2505,7 @@ server. Ordinary society membership is not department-limited.
 {
   success: true;
   data: Array<{
-    id: number;
+    publicId: string;
     fullName: string;
     email: string;
     userType: 'STUDENT';
@@ -3191,7 +3258,14 @@ GET /api/notifications
 {
   page?: number;
   limit?: number;
-  type?: 'NEW_POST' | 'ROLE_ASSIGNED' | 'SOCIETY_REQUEST_REVIEWED';
+  type?:
+    | 'NEW_POST'
+    | 'ROLE_ASSIGNED'
+    | 'SOCIETY_REQUEST_REVIEWED'
+    | 'SOCIETY_SUSPENDED'
+    | 'SOCIETY_ACTIVATED'
+    | 'SOCIETY_DELETED'
+    | 'SOCIETY_RESTORED';
   unreadOnly?: boolean;  // Default: false
 }
 ```
@@ -3203,7 +3277,14 @@ GET /api/notifications
   success: true;
   data: Array<{
     id: number;
-    type: 'NEW_POST' | 'ROLE_ASSIGNED' | 'SOCIETY_REQUEST_REVIEWED';
+    type:
+      | 'NEW_POST'
+      | 'ROLE_ASSIGNED'
+      | 'SOCIETY_REQUEST_REVIEWED'
+      | 'SOCIETY_SUSPENDED'
+      | 'SOCIETY_ACTIVATED'
+      | 'SOCIETY_DELETED'
+      | 'SOCIETY_RESTORED';
     title: string;
     message: string | null;
     readAt: string | null;
@@ -3216,6 +3297,11 @@ GET /api/notifications
         name: string;
         serverId: number;
       };
+    } | null;
+    society?: {
+      publicId: string;
+      name: string;
+      isDeleted: boolean;
     } | null;
   }>;
   pagination: { ... };
@@ -3324,8 +3410,8 @@ GET /api/notification-preferences
 
 **Note:** Default behavior: users are subscribed unless explicitly unsubscribed. `NEW_POST`
 preferences support `SERVER` and `CHANNEL` scope. `ROLE_ASSIGNED` preferences support
-`SERVER` scope only. `SOCIETY_REQUEST_REVIEWED` is a transactional user notification and
-does not use notification preferences.
+`SERVER` scope only. Society-request and society-lifecycle notifications are transactional
+user notifications and do not use notification preferences.
 
 #### Update Preference
 

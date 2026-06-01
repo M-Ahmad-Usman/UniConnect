@@ -40,6 +40,8 @@ function uid(): string {
   return (++uidCounter).toString(36);
 }
 
+const UNKNOWN_PUBLIC_ID = "0198f1f0-0000-7000-8000-000000000000";
+
 beforeAll(async () => {
   await resetDB();
 });
@@ -78,21 +80,21 @@ describe("Module 6 - Society Management", () => {
           name: `Tech Society ${uid()}`,
           description: "A tech society",
           departmentId: dept.id,
-          presidentId: student.id,
-          convenorId: teacher.id,
+          presidentPublicId: student.publicId,
+          convenorPublicId: teacher.publicId,
         });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.id).toBeDefined();
+      expect(res.body.data.publicId).toBeDefined();
       expect(res.body.data.department.id).toBe(dept.id);
-      expect(res.body.data.president.user.id).toBe(student.id);
-      expect(res.body.data.convenor.user.id).toBe(teacher.id);
+      expect(res.body.data.president.user.publicId).toBe(student.publicId);
+      expect(res.body.data.convenor.user.publicId).toBe(teacher.publicId);
       expect(res.body.message).toBe("Society created successfully");
 
       // Verify server and channels were created
       const society = await prisma.society.findUnique({
-        where: { id: res.body.data.id },
+        where: { publicId: res.body.data.publicId },
         select: { serverId: true },
       });
       const channels = await prisma.channel.findMany({
@@ -138,8 +140,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `HOD Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: student.id,
-          convenorId: convenor.id,
+          presidentPublicId: student.publicId,
+          convenorPublicId: convenor.publicId,
         });
 
       expect(res.status).toBe(201);
@@ -168,8 +170,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `Unauthorized Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: student.id,
-          convenorId: convenor.id,
+          presidentPublicId: student.publicId,
+          convenorPublicId: convenor.publicId,
         });
 
       expect(res.status).toBe(403);
@@ -192,8 +194,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `Student Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: student.id,
-          convenorId: 999999,
+          presidentPublicId: student.publicId,
+          convenorPublicId: UNKNOWN_PUBLIC_ID,
         });
 
       expect(res.status).toBe(403);
@@ -214,8 +216,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `No Dept Society ${uid()}`,
           departmentId: 999999,
-          presidentId: 1,
-          convenorId: 1,
+          presidentPublicId: UNKNOWN_PUBLIC_ID,
+          convenorPublicId: UNKNOWN_PUBLIC_ID,
         });
 
       expect(res.status).toBe(404);
@@ -240,8 +242,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `No Pres Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: 999999,
-          convenorId: teacher.id,
+          presidentPublicId: UNKNOWN_PUBLIC_ID,
+          convenorPublicId: teacher.publicId,
         });
 
       expect(res.status).toBe(404);
@@ -268,8 +270,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `No Conv Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: student.id,
-          convenorId: 999999,
+          presidentPublicId: student.publicId,
+          convenorPublicId: UNKNOWN_PUBLIC_ID,
         });
 
       expect(res.status).toBe(404);
@@ -300,8 +302,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `No StudentInfo Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: studentNoInfo.id,
-          convenorId: convenor.id,
+          presidentPublicId: studentNoInfo.publicId,
+          convenorPublicId: convenor.publicId,
         });
 
       expect(res.status).toBe(404);
@@ -334,8 +336,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `No TeacherInfo Society ${uid()}`,
           departmentId: dept.id,
-          presidentId: president.id,
-          convenorId: teacherNoInfo.id,
+          presidentPublicId: president.publicId,
+          convenorPublicId: teacherNoInfo.publicId,
         });
 
       expect(res.status).toBe(404);
@@ -368,8 +370,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `Cross President Society ${uid()}`,
           departmentId: dept1.id,
-          presidentId: studentFromOtherDept.id,
-          convenorId: convenor.id,
+          presidentPublicId: studentFromOtherDept.publicId,
+          convenorPublicId: convenor.publicId,
         });
 
       expect(res.status).toBe(403);
@@ -400,8 +402,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: `Cross Convenor Society ${uid()}`,
           departmentId: dept1.id,
-          presidentId: student.id,
-          convenorId: teacherFromOtherDept.id,
+          presidentPublicId: student.publicId,
+          convenorPublicId: teacherFromOtherDept.publicId,
         });
 
       expect(res.status).toBe(403);
@@ -439,8 +441,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: socName,
           departmentId: dept.id,
-          presidentId: student1.id,
-          convenorId: teacher1.id,
+          presidentPublicId: student1.publicId,
+          convenorPublicId: teacher1.publicId,
         });
 
       const res = await request(app)
@@ -449,8 +451,8 @@ describe("Module 6 - Society Management", () => {
         .send({
           name: socName,
           departmentId: dept.id,
-          presidentId: student2.id,
-          convenorId: teacher2.id,
+          presidentPublicId: student2.publicId,
+          convenorPublicId: teacher2.publicId,
         });
 
       expect(res.status).toBe(409);
@@ -584,9 +586,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── GET /api/societies/:id ──────────────────────────────────────────
+  // ─── GET /api/societies/:publicId ──────────────────────────────────────────
 
-  describe("GET /api/societies/:id", () => {
+  describe("GET /api/societies/:publicId", () => {
     it("should return society details with member count", async () => {
       const admin = await createUser({
         email: `admin-soc-get-${uid()}@test.com`,
@@ -610,12 +612,12 @@ describe("Module 6 - Society Management", () => {
       });
 
       const res = await request(app)
-        .get(`/api/societies/${society.id}`)
+        .get(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.id).toBe(society.id);
+      expect(res.body.data.publicId).toBe(society.publicId);
       expect(res.body.data.department).toBeDefined();
       expect(res.body.data.president).toBeDefined();
       expect(res.body.data.convenor).toBeDefined();
@@ -631,7 +633,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/societies/999999")
+        .get(`/api/societies/${UNKNOWN_PUBLIC_ID}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -639,9 +641,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── PATCH /api/societies/:id ────────────────────────────────────────
+  // ─── PATCH /api/societies/:publicId ────────────────────────────────────────
 
-  describe("PATCH /api/societies/:id", () => {
+  describe("PATCH /api/societies/:publicId", () => {
     it("should allow convenor to update name and description → 200", async () => {
       const admin = await createUser({
         email: `admin-soc-upd-${uid()}@test.com`,
@@ -666,7 +668,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}`)
+        .patch(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies)
         .send({ name: "Updated Name", description: "Updated desc" });
 
@@ -701,7 +703,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(president.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}`)
+        .patch(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies)
         .send({ name: "President Updated" });
 
@@ -742,12 +744,12 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}`)
+        .patch(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies)
-        .send({ presidentId: newPresident.id });
+        .send({ presidentPublicId: newPresident.publicId });
 
       expect(res.status).toBe(200);
-      expect(res.body.data.president.user.id).toBe(newPresident.id);
+      expect(res.body.data.president.user.publicId).toBe(newPresident.publicId);
 
       // Verify new president was added to server
       const membership = await prisma.serverMembership.findUnique({
@@ -789,9 +791,9 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}`)
+        .patch(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies)
-        .send({ presidentId: newPres.id });
+        .send({ presidentPublicId: newPres.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -823,7 +825,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(randomStudent.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}`)
+        .patch(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies)
         .send({ name: "Hacked Name" });
 
@@ -857,9 +859,9 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/members`)
+        .post(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies)
-        .send({ userId: teacherTarget.id });
+        .send({ userPublicId: teacherTarget.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -874,7 +876,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .patch("/api/societies/999999")
+        .patch(`/api/societies/${UNKNOWN_PUBLIC_ID}`)
         .set("Cookie", cookies)
         .send({ name: "Ghost Society" });
 
@@ -922,7 +924,7 @@ describe("Module 6 - Society Management", () => {
 
       const newName = `Renamed Society ${uid()}`;
       await request(app)
-        .patch(`/api/societies/${society.id}`)
+        .patch(`/api/societies/${society.publicId}`)
         .set("Cookie", cookies)
         .send({ name: newName });
 
@@ -933,9 +935,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── POST /api/societies/:id/join-request ────────────────────────────
+  // ─── POST /api/societies/:publicId/join-request ────────────────────────────
 
-  describe("POST /api/societies/:id/join-request", () => {
+  describe("POST /api/societies/:publicId/join-request", () => {
     it("should allow student to submit join request → 201", async () => {
       const admin = await createUser({
         email: `admin-soc-jr-${uid()}@test.com`,
@@ -962,13 +964,13 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(requester.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/join-request`)
+        .post(`/api/societies/${society.publicId}/join-request`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.status).toBe("PENDING");
-      expect(res.body.data.userId).toBe(requester.id);
+      expect(res.body.data.user.publicId).toBe(requester.publicId);
       expect(res.body.message).toBe("Join request submitted successfully");
     });
 
@@ -998,11 +1000,11 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(requester.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/societies/${society.id}/join-request`)
+        .post(`/api/societies/${society.publicId}/join-request`)
         .set("Cookie", cookies);
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/join-request`)
+        .post(`/api/societies/${society.publicId}/join-request`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(409);
@@ -1033,7 +1035,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(president.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/join-request`)
+        .post(`/api/societies/${society.publicId}/join-request`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(409);
@@ -1069,7 +1071,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(requester.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/join-request`)
+        .post(`/api/societies/${society.publicId}/join-request`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(201);
@@ -1092,9 +1094,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── GET /api/societies/:id/join-requests ────────────────────────────
+  // ─── GET /api/societies/:publicId/join-requests ────────────────────────────
 
-  describe("GET /api/societies/:id/join-requests", () => {
+  describe("GET /api/societies/:publicId/join-requests", () => {
     it("should allow convenor to list join requests", async () => {
       const admin = await createUser({
         email: `admin-soc-ljr-${uid()}@test.com`,
@@ -1127,7 +1129,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/societies/${society.id}/join-requests`)
+        .get(`/api/societies/${society.publicId}/join-requests`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1168,7 +1170,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/societies/${society.id}/join-requests`)
+        .get(`/api/societies/${society.publicId}/join-requests`)
         .query({ status: "PENDING" })
         .set("Cookie", cookies);
 
@@ -1203,7 +1205,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(randomStudent.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/societies/${society.id}/join-requests`)
+        .get(`/api/societies/${society.publicId}/join-requests`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -1211,9 +1213,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── PATCH /api/societies/:id/join-requests/:requestId ───────────────
+  // ─── PATCH /api/societies/:publicId/join-requests/:requestId ───────────────
 
-  describe("PATCH /api/societies/:id/join-requests/:requestId", () => {
+  describe("PATCH /api/societies/:publicId/join-requests/:requestId", () => {
     it("should approve a join request and create server membership → 200", async () => {
       const admin = await createUser({
         email: `admin-soc-approve-${uid()}@test.com`,
@@ -1241,7 +1243,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}/join-requests/${jr.id}`)
+        .patch(`/api/societies/${society.publicId}/join-requests/${jr.id}`)
         .set("Cookie", cookies)
         .send({ status: "APPROVED" });
 
@@ -1288,7 +1290,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}/join-requests/${jr.id}`)
+        .patch(`/api/societies/${society.publicId}/join-requests/${jr.id}`)
         .set("Cookie", cookies)
         .send({ status: "REJECTED" });
 
@@ -1334,7 +1336,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}/join-requests/${jr.id}`)
+        .patch(`/api/societies/${society.publicId}/join-requests/${jr.id}`)
         .set("Cookie", cookies)
         .send({ status: "APPROVED" });
 
@@ -1365,7 +1367,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}/join-requests/999999`)
+        .patch(`/api/societies/${society.publicId}/join-requests/999999`)
         .set("Cookie", cookies)
         .send({ status: "APPROVED" });
 
@@ -1400,7 +1402,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(requester.email, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/societies/${society.id}/join-requests/${jr.id}`)
+        .patch(`/api/societies/${society.publicId}/join-requests/${jr.id}`)
         .set("Cookie", cookies)
         .send({ status: "APPROVED" });
 
@@ -1409,9 +1411,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── POST /api/societies/:id/members ─────────────────────────────────
+  // ─── POST /api/societies/:publicId/members ─────────────────────────────────
 
-  describe("POST /api/societies/:id/members", () => {
+  describe("POST /api/societies/:publicId/members", () => {
     it("should allow convenor to add a member → 201", async () => {
       const admin = await createUser({
         email: `admin-soc-addm-${uid()}@test.com`,
@@ -1438,13 +1440,13 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/members`)
+        .post(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies)
-        .send({ userId: newMember.id });
+        .send({ userPublicId: newMember.publicId });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.userId).toBe(newMember.id);
+      expect(res.body.data.user.publicId).toBe(newMember.publicId);
       expect(res.body.message).toBe("Member added successfully");
     });
 
@@ -1472,9 +1474,9 @@ describe("Module 6 - Society Management", () => {
 
       // President is already a member
       const res = await request(app)
-        .post(`/api/societies/${society.id}/members`)
+        .post(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies)
-        .send({ userId: president.id });
+        .send({ userPublicId: president.publicId });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
@@ -1507,9 +1509,9 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/societies/${society.id}/members`)
+        .post(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies)
-        .send({ userId: student.id });
+        .send({ userPublicId: student.publicId });
 
       // Verify the pending request was auto-approved
       const jr = await prisma.societyMembershipRequest.findUnique({
@@ -1544,18 +1546,18 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(randomStudent.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/societies/${society.id}/members`)
+        .post(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies)
-        .send({ userId: randomStudent.id });
+        .send({ userPublicId: randomStudent.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
     });
   });
 
-  // ─── DELETE /api/societies/:id/members/:userId ───────────────────────
+  // ─── DELETE /api/societies/:publicId/members/:userPublicId ───────────────────────
 
-  describe("DELETE /api/societies/:id/members/:userId", () => {
+  describe("DELETE /api/societies/:publicId/members/:userPublicId", () => {
     it("should allow convenor to remove a member → 200", async () => {
       const admin = await createUser({
         email: `admin-soc-rmm-${uid()}@test.com`,
@@ -1586,7 +1588,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/societies/${society.id}/members/${member.id}`)
+        .delete(`/api/societies/${society.publicId}/members/${member.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1632,7 +1634,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/societies/${society.id}/members/${member.id}`)
+        .delete(`/api/societies/${society.publicId}/members/${member.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1662,7 +1664,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/societies/${society.id}/members/${president.id}`)
+        .delete(`/api/societies/${society.publicId}/members/${president.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -1692,7 +1694,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(president.email, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/societies/${society.id}/members/${convenor.id}`)
+        .delete(`/api/societies/${society.publicId}/members/${convenor.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -1725,7 +1727,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(convenor.email, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/societies/${society.id}/members/${nonMember.id}`)
+        .delete(`/api/societies/${society.publicId}/members/${nonMember.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -1733,9 +1735,9 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  // ─── GET /api/societies/:id/members ──────────────────────────────────
+  // ─── GET /api/societies/:publicId/members ──────────────────────────────────
 
-  describe("GET /api/societies/:id/members", () => {
+  describe("GET /api/societies/:publicId/members", () => {
     it("should return paginated list of members", async () => {
       const admin = await createUser({
         email: `admin-soc-lm-${uid()}@test.com`,
@@ -1758,7 +1760,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/societies/${society.id}/members`)
+        .get(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1789,7 +1791,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/societies/${society.id}/members`)
+        .get(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1809,7 +1811,7 @@ describe("Module 6 - Society Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/societies/999999/members")
+        .get(`/api/societies/${UNKNOWN_PUBLIC_ID}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -1842,7 +1844,7 @@ describe("Module 6 - Society Management", () => {
 
       const cookies = await loginAs(outsider.email, "Pass@1234");
       const res = await request(app)
-        .get(`/api/societies/${society.id}/members`)
+        .get(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -1878,12 +1880,16 @@ describe("Module 6 - Society Management", () => {
 
       const cookies = await loginAs(member.email, "Pass@1234");
       const res = await request(app)
-        .get(`/api/societies/${society.id}/members`)
+        .get(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.some((item: { userId: number }) => item.userId === member.id)).toBe(true);
+      expect(
+        res.body.data.some(
+          (item: { user: { publicId: string } }) => item.user.publicId === member.publicId,
+        ),
+      ).toBe(true);
     });
 
     it("should keep HOD member-list access private unless they are a member or leader", async () => {
@@ -1913,7 +1919,7 @@ describe("Module 6 - Society Management", () => {
 
       const cookies = await loginAs(hod.email, "Pass@1234");
       const res = await request(app)
-        .get(`/api/societies/${society.id}/members`)
+        .get(`/api/societies/${society.publicId}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -1922,7 +1928,7 @@ describe("Module 6 - Society Management", () => {
     });
   });
 
-  describe("GET /api/societies/:id/member-candidates", () => {
+  describe("GET /api/societies/:publicId/member-candidates", () => {
     it("should return university-wide active students who are not already members", async () => {
       const admin = await createUser({
         email: `admin-soc-cand-${uid()}@test.com`,
@@ -1958,15 +1964,15 @@ describe("Module 6 - Society Management", () => {
 
       const cookies = await loginAs(convenor.email, "Pass@1234");
       const res = await request(app)
-        .get(`/api/societies/${society.id}/member-candidates`)
+        .get(`/api/societies/${society.publicId}/member-candidates`)
         .query({ search: "cand", limit: 50 })
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      const ids = res.body.data.map((candidate: { id: number }) => candidate.id);
-      expect(ids).toContain(crossDepartmentStudent.id);
-      expect(ids).not.toContain(existingMember.id);
+      const ids = res.body.data.map((candidate: { publicId: string }) => candidate.publicId);
+      expect(ids).toContain(crossDepartmentStudent.publicId);
+      expect(ids).not.toContain(existingMember.publicId);
     });
   });
 
@@ -2009,15 +2015,15 @@ describe("Module 6 - Society Management", () => {
         .set("Cookie", cookies);
 
       expect(presidentRes.status).toBe(200);
-      expect(presidentRes.body.data.map((candidate: { id: number }) => candidate.id)).toContain(
-        departmentStudent.id
+      expect(presidentRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).toContain(
+        departmentStudent.publicId
       );
-      expect(presidentRes.body.data.map((candidate: { id: number }) => candidate.id)).not.toContain(
-        crossDepartmentStudent.id
+      expect(presidentRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).not.toContain(
+        crossDepartmentStudent.publicId
       );
       expect(convenorRes.status).toBe(200);
-      expect(convenorRes.body.data.map((candidate: { id: number }) => candidate.id)).toContain(
-        departmentTeacher.id
+      expect(convenorRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).toContain(
+        departmentTeacher.publicId
       );
     });
 

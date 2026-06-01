@@ -130,13 +130,13 @@ describe("Module 1 - Permission Policy Foundation", () => {
   it("returns caller-specific society viewer state and permissions", async () => {
     const fixture = await createPermissionFixture();
 
-    const admin = await getSocietyDetail(fixture.society.id, fixture.admin.email);
+    const admin = await getSocietyDetail(fixture.society.publicId, fixture.admin.email);
     expect(admin.viewer.isMember).toBe(false);
     expect(admin.permissions.canViewMembers).toBe(true);
     expect(admin.permissions.canChangeLeadership).toBe(true);
     expect(admin.permissions.canSubmitJoinRequest).toBe(false);
 
-    const hod = await getSocietyDetail(fixture.society.id, fixture.hod.email);
+    const hod = await getSocietyDetail(fixture.society.publicId, fixture.hod.email);
     expect(hod.viewer.isMember).toBe(false);
     expect(hod.permissions.canChangeLeadership).toBe(true);
     expect(hod.permissions.canEditInfo).toBe(true);
@@ -144,29 +144,35 @@ describe("Module 1 - Permission Policy Foundation", () => {
     expect(hod.permissions.canViewMembers).toBe(false);
     expect(hod.permissions.canViewJoinRequests).toBe(false);
 
-    const president = await getSocietyDetail(fixture.society.id, fixture.president.email);
+    const president = await getSocietyDetail(fixture.society.publicId, fixture.president.email);
     expect(president.viewer.isMember).toBe(true);
     expect(president.permissions.canManageMembers).toBe(true);
     expect(president.permissions.canReviewJoinRequests).toBe(true);
     expect(president.permissions.canManageChannels).toBe(true);
 
-    const convenor = await getSocietyDetail(fixture.society.id, fixture.convenor.email);
+    const convenor = await getSocietyDetail(fixture.society.publicId, fixture.convenor.email);
     expect(convenor.viewer.isMember).toBe(true);
     expect(convenor.permissions.canManageMembers).toBe(true);
     expect(convenor.permissions.canAssignModerators).toBe(true);
 
-    const member = await getSocietyDetail(fixture.society.id, fixture.member.email);
+    const member = await getSocietyDetail(fixture.society.publicId, fixture.member.email);
     expect(member.viewer.isMember).toBe(true);
     expect(member.permissions.canViewMembers).toBe(true);
     expect(member.permissions.canManageMembers).toBe(false);
     expect(member.permissions.canViewJoinRequests).toBe(false);
 
-    const nonMemberStudent = await getSocietyDetail(fixture.society.id, fixture.nonMemberStudent.email);
+    const nonMemberStudent = await getSocietyDetail(
+      fixture.society.publicId,
+      fixture.nonMemberStudent.email,
+    );
     expect(nonMemberStudent.viewer).toEqual({ isMember: false, requestStatus: "PENDING" });
     expect(nonMemberStudent.permissions.canSubmitJoinRequest).toBe(false);
     expect(nonMemberStudent.permissions.canViewMembers).toBe(false);
 
-    const unrelatedTeacher = await getSocietyDetail(fixture.society.id, fixture.unrelatedTeacher.email);
+    const unrelatedTeacher = await getSocietyDetail(
+      fixture.society.publicId,
+      fixture.unrelatedTeacher.email,
+    );
     expect(unrelatedTeacher.viewer.isMember).toBe(false);
     expect(unrelatedTeacher.permissions.canViewMembers).toBe(false);
     expect(unrelatedTeacher.permissions.canSubmitJoinRequest).toBe(false);
@@ -292,9 +298,9 @@ async function getClassDetail(classId: number, email: string) {
   return res.body.data;
 }
 
-async function getSocietyDetail(societyId: number, email: string) {
+async function getSocietyDetail(societyPublicId: string, email: string) {
   const cookies = await loginAs(email, "Pass@1234");
-  const res = await request(app).get(`/api/societies/${societyId}`).set("Cookie", cookies);
+  const res = await request(app).get(`/api/societies/${societyPublicId}`).set("Cookie", cookies);
 
   expect(res.status).toBe(200);
   expect(res.body.success).toBe(true);

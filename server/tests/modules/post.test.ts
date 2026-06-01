@@ -310,6 +310,7 @@ describe("Module 9 - Posts & Announcements", () => {
         .spyOn(cloudinaryService, "uploadImage")
         .mockResolvedValue({
           url: "https://cloudinary.com/post-attachments/test.jpg",
+          publicId: "post-attachments/test",
         });
 
       const res = await request(app)
@@ -1388,6 +1389,7 @@ describe("Module 9 - Posts & Announcements", () => {
         .spyOn(cloudinaryService, "uploadImage")
         .mockResolvedValue({
           url: "https://cloudinary.com/post-attachments/new.jpg",
+          publicId: "post-attachments/new",
         });
 
       const cookies = await loginAs(`hod-aa-${u}@test.com`, "Pass@1234");
@@ -1428,6 +1430,7 @@ describe("Module 9 - Posts & Announcements", () => {
         .spyOn(cloudinaryService, "uploadImage")
         .mockResolvedValue({
           url: "https://cloudinary.com/post-attachments/extra.jpg",
+          publicId: "post-attachments/extra",
         });
 
       const cookies = await loginAs(`hod-aamx-${u}@test.com`, "Pass@1234");
@@ -1469,6 +1472,7 @@ describe("Module 9 - Posts & Announcements", () => {
         .spyOn(cloudinaryService, "uploadImage")
         .mockResolvedValue({
           url: "https://cloudinary.com/post-attachments/x.jpg",
+          publicId: "post-attachments/x",
         });
 
       const cookies = await loginAs(`oth-aana-${u}@test.com`, "Pass@1234");

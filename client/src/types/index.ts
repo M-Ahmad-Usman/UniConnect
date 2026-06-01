@@ -157,6 +157,9 @@ export type {
   SocietyLeadershipCandidateParams,
   CreateSocietyRequest,
   UpdateSocietyRequest,
+  SocietyLifecycleReasonRequest,
+  UpdateSocietyStatusRequest,
+  SocietyDeletionImpact,
 } from './society.types';
 
 // Admin

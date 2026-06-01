@@ -2,6 +2,10 @@ import { prisma } from "../../config/prisma.js";
 import { ApiErrorCode, NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { getUserRoles } from "../../middleware/authorize.js";
 import type { UserRole } from "../../shared/types/index.js";
+import {
+  assertServerAcceptsWrites,
+  type PrismaTransaction,
+} from "../../shared/lifecycle/society.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -32,8 +36,11 @@ const channelDetailSelect = {
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
-async function findActiveChannelOrThrow(channelId: number) {
-  const channel = await prisma.channel.findUnique({
+async function findActiveChannelOrThrow(
+  channelId: number,
+  client: PrismaTransaction = prisma,
+) {
+  const channel = await client.channel.findUnique({
     where: { id: channelId },
     select: {
       id: true,
@@ -80,78 +87,63 @@ export async function updateChannel(
   data: UpdateChannelInput,
   _caller: CallerInfo
 ) {
-  await findActiveChannelOrThrow(channelId);
-
-  const channel = await prisma.channel.update({
-    where: { id: channelId },
-    data: {
-      ...(data.name !== undefined ? { name: data.name } : {}),
-      ...(data.description !== undefined ? { description: data.description } : {}),
-    },
-    select: channelDetailSelect,
+  return prisma.$transaction(async (tx) => {
+    const channel = await findActiveChannelOrThrow(channelId, tx);
+    await assertServerAcceptsWrites(channel.serverId, tx);
+    return tx.channel.update({
+      where: { id: channelId },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+      },
+      select: channelDetailSelect,
+    });
   });
-
-  return channel;
 }
 
 export async function lockChannel(channelId: number, caller: CallerInfo) {
-  const channel = await findActiveChannelOrThrow(channelId);
-
-  if (channel.isLocked) {
-    throw new ValidationError("Channel is already locked", undefined, ApiErrorCode.CHANNEL_LOCKED);
-  }
-
-  const updated = await prisma.channel.update({
-    where: { id: channelId },
-    data: {
-      isLocked: true,
-      lockedBy: caller.id,
-      lockedAt: new Date(),
-    },
-    select: channelDetailSelect,
+  return prisma.$transaction(async (tx) => {
+    const channel = await findActiveChannelOrThrow(channelId, tx);
+    await assertServerAcceptsWrites(channel.serverId, tx);
+    if (channel.isLocked) {
+      throw new ValidationError("Channel is already locked", undefined, ApiErrorCode.CHANNEL_LOCKED);
+    }
+    return tx.channel.update({
+      where: { id: channelId },
+      data: { isLocked: true, lockedBy: caller.id, lockedAt: new Date() },
+      select: channelDetailSelect,
+    });
   });
-
-  return updated;
 }
 
 export async function unlockChannel(channelId: number, _caller: CallerInfo) {
-  const channel = await findActiveChannelOrThrow(channelId);
-
-  if (!channel.isLocked) {
-    throw new ValidationError("Channel is not locked");
-  }
-
-  const updated = await prisma.channel.update({
-    where: { id: channelId },
-    data: {
-      isLocked: false,
-      lockedBy: null,
-      lockedAt: null,
-    },
-    select: channelDetailSelect,
+  return prisma.$transaction(async (tx) => {
+    const channel = await findActiveChannelOrThrow(channelId, tx);
+    await assertServerAcceptsWrites(channel.serverId, tx);
+    if (!channel.isLocked) {
+      throw new ValidationError("Channel is not locked");
+    }
+    return tx.channel.update({
+      where: { id: channelId },
+      data: { isLocked: false, lockedBy: null, lockedAt: null },
+      select: channelDetailSelect,
+    });
   });
-
-  return updated;
 }
 
 export async function deleteChannel(channelId: number, caller: CallerInfo) {
-  const channel = await findActiveChannelOrThrow(channelId);
-
-  if (channel.isAutoCreated) {
-    throw new ValidationError("Auto-created channels cannot be deleted");
-  }
-
-  const updated = await prisma.channel.update({
-    where: { id: channelId },
-    data: {
-      isDeleted: true,
-      deletedBy: caller.id,
-      deletedAt: new Date(),
-    },
-    select: channelDetailSelect,
+  return prisma.$transaction(async (tx) => {
+    const channel = await findActiveChannelOrThrow(channelId, tx);
+    await assertServerAcceptsWrites(channel.serverId, tx);
+    if (channel.isAutoCreated) {
+      throw new ValidationError("Auto-created channels cannot be deleted");
+    }
+    return tx.channel.update({
+      where: { id: channelId },
+      data: { isDeleted: true, deletedBy: caller.id, deletedAt: new Date() },
+      select: channelDetailSelect,
+    });
   });
-
-  return updated;
 }
 
 // ─── Posting Rights ────────────────────────────────────────────────────────
@@ -166,10 +158,7 @@ export async function canPostInChannel(
   channelId: number,
   preloadedRoles?: UserRole[]
 ): Promise<boolean> {
-  // 1. Admin can post anywhere
-  if (userType === "ADMIN") return true;
-
-  // 2. Fetch channel + server + membership in one round-trip
+  // 1. Fetch channel + server + membership in one round-trip
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
     select: {
@@ -184,18 +173,35 @@ export async function canPostInChannel(
       server: {
         select: {
           type: true,
+          isActive: true,
+          isDeleted: true,
           memberships: {
             where: { userId },
             select: { userId: true },
             take: 1,
           },
           class: { select: { id: true } },
+          society: { select: { status: true, isActive: true, isDeleted: true } },
         },
       },
     },
   });
 
   if (!channel || channel.isDeleted || channel.isArchived) return false;
+  if (!channel.server.isActive || channel.server.isDeleted) return false;
+  if (
+    channel.server.society &&
+    (
+      channel.server.society.status !== "ACTIVE" ||
+      !channel.server.society.isActive ||
+      channel.server.society.isDeleted
+    )
+  ) {
+    return false;
+  }
+
+  // 2. Admin bypasses membership and role checks, but not lifecycle state.
+  if (userType === "ADMIN") return true;
 
   // 3. Must be a server member (derived from the single query above)
   if (channel.server.memberships.length === 0) return false;

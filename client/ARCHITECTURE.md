@@ -880,7 +880,7 @@ Permission-sensitive UI now prefers backend-provided grouped capability payloads
 - `/academics/*` is guarded by `global.canAccessAcademicWorkspace`; legacy admin class
   and curriculum routes redirect into the academic workspace.
 - `GET /api/classes/:id` returns `permissions` for class-detail actions.
-- `GET /api/societies/:id` returns `viewer` and `permissions` for society-detail tabs, queries, and actions.
+- `GET /api/societies/:publicId` returns `viewer` and `permissions` for society-detail tabs, queries, and actions.
 - Local role helpers remain only for lightweight optimistic rendering and legacy channel affordances.
 - Mutations never trust frontend booleans; backend services recompute authorization.
 
@@ -891,8 +891,14 @@ tabs are normalized back to overview before protected requests run. Ordinary
 member candidates are university-wide active students, while president/convenor
 candidate lookups use the typed `/api/societies/leadership-candidates` endpoint
 and remain department-scoped for admin/HOD society creation and leadership edits.
+Society URLs and society-facing user references use UUIDv7 public IDs. Admins and
+own-department HODs can discover deleted societies through lifecycle filters and run
+impact-aware suspend, activate, delete, and restore actions. Suspended societies remain
+readable to authorized viewers but all write affordances are disabled.
 
-When `auth:roles-updated` arrives, the socket client refreshes `/api/users/me` and invalidates permissions, class, society, server, and role query keys before permission-sensitive UI is reused.
+When `auth:roles-updated` or `society:lifecycle-updated` arrives, the socket client
+refreshes or invalidates permissions, class, society, server, and role query keys before
+permission-sensitive UI is reused.
 
 Academic class screens derive UI state through `getClassDetailActionState()`, which
 combines backend class capabilities with read-only graduation rules. Student rosters,

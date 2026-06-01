@@ -91,6 +91,10 @@ export function connectSocket(): void {
     });
   });
 
+  socket.on('society:lifecycle-updated', () => {
+    invalidateRoleSensitiveQueries();
+  });
+
   socket.on('auth:expired', () => {
     disconnectSocket();
     useAuthStore.getState().clearUser();

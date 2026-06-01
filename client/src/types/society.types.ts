@@ -1,32 +1,26 @@
-import type { MembershipRequestStatus, UserType } from './enums';
+import type { MembershipRequestStatus, SocietyStatus, UserType } from './enums';
 import type { PaginationParams } from './api.types';
 import type { SocietyPermissions } from './permission.types';
 
-// ─── Society List Item ──────────────────────────────────────────────────────
-
 export interface SocietyListItem {
-  id: number;
+  publicId: string;
   name: string;
   description: string | null;
   departmentId: number;
-  isActive: boolean;
+  status: SocietyStatus;
+  isDeleted: boolean;
+  deletedAt: string | null;
   createdAt: string;
-  department: { id: number; name: string; serverId: number };
-  president: { user: { id: number; fullName: string; email: string } };
-  convenor: { user: { id: number; fullName: string; email: string } };
+  department: { id: number; name: string };
+  president: { user: { publicId: string; fullName: string; email: string } };
+  convenor: { user: { publicId: string; fullName: string; email: string } };
   server: {
+    publicId: string;
     _count: { memberships: number };
   };
 }
 
-// ─── Society Detail ─────────────────────────────────────────────────────────
-
 export interface SocietyDetail extends SocietyListItem {
-  serverId: number;
-  server: {
-    id: number;
-    _count: { memberships: number };
-  };
   viewer: {
     isMember: boolean;
     requestStatus: MembershipRequestStatus | null;
@@ -34,26 +28,22 @@ export interface SocietyDetail extends SocietyListItem {
   permissions: SocietyPermissions;
 }
 
-// ─── Society Membership Request ─────────────────────────────────────────────
-
 export interface SocietyMembershipRequest {
   id: number;
-  societyId: number;
-  userId: number;
   status: MembershipRequestStatus;
   requestedAt: string;
   reviewedAt: string | null;
-  user: { id: number; fullName: string; email: string; profilePictureUrl: string | null };
-  reviewer: { id: number; fullName: string } | null;
+  society: { publicId: string };
+  user: { publicId: string; fullName: string; email: string; profilePictureUrl: string | null };
+  reviewer: { publicId: string; fullName: string } | null;
 }
 
 export interface SocietyMember {
-  userId: number;
   joinedAt: string;
   isAutoJoined: boolean;
   badges: string[];
   user: {
-    id: number;
+    publicId: string;
     fullName: string;
     email: string;
     userType: UserType;
@@ -70,6 +60,8 @@ export interface SocietyMembershipStatus {
 
 export interface SocietyListParams extends PaginationParams {
   departmentId?: number;
+  status?: SocietyStatus;
+  lifecycle?: 'live' | 'deleted' | 'all';
 }
 
 export interface SocietyRequestListParams extends PaginationParams {
@@ -86,19 +78,34 @@ export interface SocietyLeadershipCandidateParams extends PaginationParams {
   search?: string;
 }
 
-// ─── Create / Update Society ────────────────────────────────────────────────
-
 export interface CreateSocietyRequest {
   name: string;
   description?: string;
   departmentId: number;
-  presidentId: number;
-  convenorId: number;
+  presidentPublicId: string;
+  convenorPublicId: string;
 }
 
 export interface UpdateSocietyRequest {
   name?: string;
   description?: string;
-  presidentId?: number;
-  convenorId?: number;
+  presidentPublicId?: string;
+  convenorPublicId?: string;
+}
+
+export interface SocietyLifecycleReasonRequest {
+  reason?: string;
+}
+
+export interface UpdateSocietyStatusRequest extends SocietyLifecycleReasonRequest {
+  status: SocietyStatus;
+}
+
+export interface SocietyDeletionImpact {
+  canDelete: boolean;
+  activeMemberCount: number;
+  liveChannelCount: number;
+  pendingRequestCount: number;
+  preservedPostCount: number;
+  preservedPlatformRoleAssignmentCount: number;
 }
