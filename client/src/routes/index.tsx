@@ -211,10 +211,10 @@ export const router = createBrowserRouter([
                     children: [
                       { index: true, element: <ServersPage /> },
                       {
-                        path: ':serverId',
+                        path: ':serverPublicId',
                         children: [
                           { index: true, element: <ServerPage /> },
-                          { path: 'channels/:channelId', element: <ChannelPage /> },
+                          { path: 'channels/:channelPublicId', element: <ChannelPage /> },
                           { path: 'members', element: <MemberListPage /> },
                           {
                             path: 'settings/notifications',

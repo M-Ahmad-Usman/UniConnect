@@ -3,13 +3,13 @@ import { serversApi } from '@/api/endpoints/servers.api';
 import { queryKeys } from '@/lib/constants';
 import type { PaginatedResponse, ServerDetail, ServerListItem } from '@/types';
 
-export function useUpdateServerIcon(serverId: number) {
+export function useUpdateServerIcon(serverPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (file: File) => serversApi.updateIcon(serverId, file),
+    mutationFn: (file: File) => serversApi.updateIcon(serverPublicId, file),
     onSuccess: (updated) => {
-      queryClient.setQueryData<ServerDetail>(queryKeys.servers.detail(serverId), (current) =>
+      queryClient.setQueryData<ServerDetail>(queryKeys.servers.detail(serverPublicId), (current) =>
         current ? { ...current, iconUrl: updated.iconUrl } : current,
       );
 
@@ -23,14 +23,14 @@ export function useUpdateServerIcon(serverId: number) {
           return {
             ...current,
             data: current.data.map((server) =>
-              server.id === serverId ? { ...server, iconUrl: updated.iconUrl } : server,
+              server.publicId === serverPublicId ? { ...server, iconUrl: updated.iconUrl } : server,
             ),
           };
         },
       );
 
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.detail(serverId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.detail(serverPublicId) });
     },
   });
 }

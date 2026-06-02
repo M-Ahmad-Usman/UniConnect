@@ -16,6 +16,6 @@ export function useServers(options?: UseServersOptions) {
   });
 }
 
-export function getServerFromList(servers: ServerListItem[] | undefined, serverId: number) {
-  return servers?.find((server) => server.id === serverId) ?? null;
+export function getServerFromList(servers: ServerListItem[] | undefined, serverPublicId: string) {
+  return servers?.find((server) => server.publicId === serverPublicId) ?? null;
 }

@@ -6,11 +6,11 @@ import { queryClient } from '@/lib/query-client';
 import type { CreatePostRequest, PaginatedResponse, PostListItem } from '@/types';
 import { detailToListItem, upsertPostInInfiniteData } from '../utils';
 
-export function useCreatePost(channelId: number) {
-  const channelPostQueryKey = ['posts', channelId] as const;
+export function useCreatePost(channelPublicId: string) {
+  const channelPostQueryKey = ['posts', channelPublicId] as const;
 
   return useMutation({
-    mutationFn: (payload: CreatePostRequest) => postsApi.create(channelId, payload),
+    mutationFn: (payload: CreatePostRequest) => postsApi.create(channelPublicId, payload),
     meta: {
       suppressErrorToast: true,
     },
@@ -21,7 +21,7 @@ export function useCreatePost(channelId: number) {
         { queryKey: channelPostQueryKey },
         (current) => upsertPostInInfiniteData(current, listItem),
       );
-      queryClient.setQueryData(['posts', 'detail', post.id], post);
+      queryClient.setQueryData(['posts', 'detail', post.publicId], post);
 
       void queryClient.invalidateQueries({ queryKey: channelPostQueryKey });
       toast.success('Post published');

@@ -1,8 +1,8 @@
 # UniConnect API Contract Reference
 
-**Version:** 1.3
+**Version:** 1.4
 **Backend API Version:** 1.0.0
-**Last Updated:** 2026-05-29
+**Last Updated:** 2026-06-02
 
 This document provides a complete reference for all API endpoints available to the UniConnect frontend. It includes request/response examples, error handling patterns, and integration notes.
 
@@ -293,6 +293,7 @@ in `src/lib/api-error.ts`.
 | `INTERNAL_ERROR`           | 500         | Server error                                         | Show generic error, log to error tracking                |
 | `SCOPE_FORBIDDEN`          | 403         | Role exists but not for this scope                   | Hide/disable scoped action                               |
 | `PASSWORD_CHANGE_REQUIRED` | 403         | Temporary password must be changed                   | Redirect to change-password flow                         |
+| `CHANNEL_ARCHIVED`         | 409         | Archived channel history is read-only                | Keep history visible and disable write actions           |
 | Domain-specific codes      | 400/403/409 | Duplicate, upload, class, society, post state errors | Use `src/lib/api-error.ts` mapping                       |
 
 ### Validation Error Example
@@ -368,7 +369,7 @@ try {
 ### Example Request
 
 ```typescript
-const response = await apiClient.get('/servers/1/members', {
+const response = await apiClient.get(`/servers/${serverPublicId}/members`, {
   params: { page: 2, limit: 30 },
 });
 
@@ -379,11 +380,11 @@ const response = await apiClient.get('/servers/1/members', {
 ### TanStack Query Pattern
 
 ```typescript
-function useServerMembers(serverId: number, page: number = 1) {
+function useServerMembers(serverPublicId: string, page: number = 1) {
   return useQuery({
-    queryKey: ['servers', serverId, 'members', { page }],
+    queryKey: ['servers', serverPublicId, 'members', { page }],
     queryFn: () =>
-      apiClient.get(`/servers/${serverId}/members`, {
+      apiClient.get(`/servers/${serverPublicId}/members`, {
         params: { page, limit: 20 },
       }),
   });
@@ -414,7 +415,7 @@ files.forEach((file) => {
   formData.append('attachments', file);
 });
 
-const response = await apiClient.post(`/channels/${channelId}/posts`, formData, {
+const response = await apiClient.post(`/channels/${channelPublicId}/posts`, formData, {
   headers: {
     'Content-Type': 'multipart/form-data',
   },
@@ -510,6 +511,24 @@ const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
 - If `mustChangePassword === true`, connection is **rejected**
 - On successful connection, the **server** joins the socket to room `user:{userId}`
 
+### Channel Room Subscriptions
+
+- Client emits `channel:join` and `channel:leave` with `{ channelPublicId }`.
+- Public UUIDv7 IDs are required; numeric channel IDs are rejected.
+- Archived, deleted, inactive, and unauthorized channels do not join rooms.
+- Client feed hooks must skip realtime joins for archived channels.
+- Backend caps each socket at 32 joined channel rooms and 60 join attempts per
+  minute.
+
+Channel feed events use public identifiers:
+
+```typescript
+socket.on('post:created', ({ channelPublicId, post }) => {});
+socket.on('post:updated', ({ channelPublicId, post }) => {});
+socket.on('post:pinned', ({ channelPublicId, post }) => {});
+socket.on('post:deleted', ({ channelPublicId, postPublicId }) => {});
+```
+
 ### Server-to-Client Events
 
 #### `notification:new`
@@ -524,12 +543,12 @@ const socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
   message: string | null;
   readAt: string | null;
   createdAt: string;
-  postId: number | null;
+  postPublicId: string | null;
   post?: {
-    channelId: number;
+    channelPublicId: string;
     channel: {
       name: string;
-      serverId: number;
+      serverPublicId: string;
       server?: {
         name: string;
       };
@@ -566,7 +585,7 @@ Emitted when notifications are removed because their source post was deleted.
 
 ```typescript
 {
-  postId: number;
+  postPublicId: string;
   notificationIds: number[];
 }
 ```
@@ -678,11 +697,6 @@ GET /api/permissions/me
     };
     scopes: {
       hodDepartmentIds: number[];
-      directedProgramIds: number[];
-      crClassIds: number[];
-      societyLeadershipIds: number[];
-      moderatorServerIds: number[];
-      moderatorChannelIds: number[];
     };
   };
 }
@@ -948,8 +962,8 @@ GET /api/users/me
         | 'society_convenor'
         | 'server_moderator'
         | 'channel_moderator';
-      serverId: number;
-      channelId?: number | null;
+      serverPublicId: string;
+      channelPublicId?: string | null;
       scopeType: 'server' | 'channel';
     }>;
     studentInfo?: {
@@ -1331,7 +1345,7 @@ GET /api/departments
     name: string;
     code: string;
     hodId: number | null;
-    serverId: number;
+    serverPublicId: string;
     createdAt: string;
   }>;
 }
@@ -1355,16 +1369,12 @@ GET /api/departments/:id
     name: string;
     code: string;
     hodId: number | null;
-    serverId: number;
+    serverPublicId: string;
     createdAt: string;
     hod?: {
       id: number;
       fullName: string;
     } | null;
-    server: {
-      id: number;
-      name: string;
-    };
   };
 }
 ```
@@ -1395,7 +1405,7 @@ POST /api/departments
     id: number;
     name: string;
     code: string;
-    serverId: number; // Auto-created server
+    serverPublicId: string; // Auto-created server
   }
   message: 'Department created successfully';
 }
@@ -1718,7 +1728,7 @@ GET /api/classes
     admissionYear: number;
     section: 'A' | 'B';
     crId: number | null;
-    serverId: number;
+    serverPublicId: string;
     status: 'ACTIVE' | 'GRADUATED';
     graduatedAt: string | null;
     graduatedBy: number | null;
@@ -1794,7 +1804,7 @@ POST /api/classes
   success: true;
   data: {
     id: number;
-    serverId: number; // Auto-created server
+    serverPublicId: string; // Auto-created server
   }
   message: 'Class created successfully';
 }
@@ -2729,7 +2739,7 @@ GET /api/servers
 #### Get Server
 
 ```
-GET /api/servers/:id
+GET /api/servers/:publicId
 ```
 
 **Auth:** Required
@@ -2740,7 +2750,7 @@ GET /api/servers/:id
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     name: string;
     description: string | null;
     type: 'DEPARTMENT' | 'CLASS' | 'SOCIETY';
@@ -2753,7 +2763,7 @@ GET /api/servers/:id
       code: string;
     } | null;
     class?: {
-      id: number;
+      publicId: string;
       currentSemester: number;
       section: 'A' | 'B';
       program: {
@@ -2764,7 +2774,7 @@ GET /api/servers/:id
       };
     } | null;
     society?: {
-      id: number;
+      publicId: string;
       name: string;
     } | null;
     _count: {
@@ -2778,7 +2788,7 @@ GET /api/servers/:id
 #### List Server Channels
 
 ```
-GET /api/servers/:id/channels
+GET /api/servers/:publicId/channels
 ```
 
 **Auth:** Required
@@ -2797,7 +2807,7 @@ GET /api/servers/:id/channels
 {
   success: true;
   data: Array<{
-    id: number;
+    publicId: string;
     name: string;
     description: string | null;
     type: 'ANNOUNCEMENT' | 'COURSE' | 'GENERAL' | 'PROGRAM';
@@ -2814,7 +2824,7 @@ GET /api/servers/:id/channels
 #### List Server Members
 
 ```
-GET /api/servers/:id/members
+GET /api/servers/:publicId/members
 ```
 
 **Auth:** Required
@@ -2834,11 +2844,10 @@ GET /api/servers/:id/members
 {
   success: true;
   data: Array<{
-    userId: number;
     joinedAt: string;
     isAutoJoined: boolean;
     user: {
-      id: number;
+      publicId: string;
       fullName: string;
       email: string;
       userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
@@ -2853,7 +2862,7 @@ GET /api/servers/:id/members
 #### Create Channel
 
 ```
-POST /api/servers/:id/channels
+POST /api/servers/:publicId/channels
 ```
 
 **Auth:** Requires `create:channel` permission on this server
@@ -2873,7 +2882,7 @@ POST /api/servers/:id/channels
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     name: string;
   }
   message: 'Channel created successfully';
@@ -2883,7 +2892,7 @@ POST /api/servers/:id/channels
 #### Update Server Icon
 
 ```
-PATCH /api/servers/:id/icon
+PATCH /api/servers/:publicId/icon
 ```
 
 **Auth:** Requires `create:channel` permission on this server
@@ -2902,7 +2911,7 @@ PATCH /api/servers/:id/icon
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     iconUrl: string;
   }
   message: 'Server icon updated successfully';
@@ -2916,7 +2925,7 @@ PATCH /api/servers/:id/icon
 #### Update Channel
 
 ```
-PATCH /api/channels/:id
+PATCH /api/channels/:publicId
 ```
 
 **Auth:** Requires `create:channel` permission on this channel's server
@@ -2943,7 +2952,7 @@ PATCH /api/channels/:id
 #### Lock Channel
 
 ```
-PATCH /api/channels/:id/lock
+PATCH /api/channels/:publicId/lock
 ```
 
 **Auth:** Requires `lock:channel` permission
@@ -2963,7 +2972,7 @@ PATCH /api/channels/:id/lock
 #### Unlock Channel
 
 ```
-PATCH /api/channels/:id/unlock
+PATCH /api/channels/:publicId/unlock
 ```
 
 **Auth:** Requires `lock:channel` permission
@@ -2981,7 +2990,7 @@ PATCH /api/channels/:id/unlock
 #### Delete Channel
 
 ```
-DELETE /api/channels/:id
+DELETE /api/channels/:publicId
 ```
 
 **Auth:** Requires `delete:channel` permission
@@ -2996,7 +3005,10 @@ DELETE /api/channels/:id
 }
 ```
 
-**Note:** Soft delete (sets `isDeleted = true`, channel hidden from API responses)
+**Note:** Soft delete sets `isDeleted = true`. Archived channels are different:
+authorized users can browse their post history, but channel/post/preference writes
+return `CHANNEL_ARCHIVED`, realtime joins stop, and clients present them separately
+from active channels.
 
 ---
 
@@ -3005,7 +3017,7 @@ DELETE /api/channels/:id
 #### Create Post
 
 ```
-POST /api/channels/:id/posts
+POST /api/channels/:publicId/posts
 ```
 
 **Auth:** Required
@@ -3024,7 +3036,7 @@ POST /api/channels/:id/posts
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     title: string;
   }
   message: 'Post created successfully';
@@ -3036,7 +3048,7 @@ POST /api/channels/:id/posts
 #### List Posts in Channel
 
 ```
-GET /api/channels/:id/posts
+GET /api/channels/:publicId/posts
 ```
 
 **Auth:** Required
@@ -3060,7 +3072,7 @@ GET /api/channels/:id/posts
 {
   success: true;
   data: Array<{
-    id: number;
+    publicId: string;
     title: string;
     content: string;  // HTML
     priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
@@ -3069,7 +3081,7 @@ GET /api/channels/:id/posts
     createdAt: string;
     updatedAt: string | null;
     author: {
-      id: number;
+      publicId: string;
       fullName: string;
       email: string;
       userType: string;
@@ -3093,10 +3105,14 @@ GET /api/channels/:id/posts
 
 **Note:** Pinned posts appear first, then sorted by creation date desc
 
+**Archived channel behavior:** Authorized users may list posts and open post
+detail for history. Create, update, delete, pin, and attachment writes return
+`CHANNEL_ARCHIVED`.
+
 #### Get Single Post
 
 ```
-GET /api/posts/:id
+GET /api/posts/:publicId
 ```
 
 **Auth:** Required
@@ -3107,7 +3123,7 @@ GET /api/posts/:id
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     title: string;
     content: string;
     priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
@@ -3116,7 +3132,7 @@ GET /api/posts/:id
     createdAt: string;
     updatedAt: string | null;
     author: {
-      id: number;
+      publicId: string;
       fullName: string;
       email: string;
       userType: string;
@@ -3131,7 +3147,7 @@ GET /api/posts/:id
       uploadedAt: string;
     }>;
     pinner?: {
-      id: number;
+      publicId: string;
       fullName: string;
     } | null;
   };
@@ -3141,7 +3157,7 @@ GET /api/posts/:id
 #### Update Post
 
 ```
-PATCH /api/posts/:id
+PATCH /api/posts/:publicId
 ```
 
 **Auth:** Author only
@@ -3157,7 +3173,7 @@ PATCH /api/posts/:id
 }
 ```
 
-**Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+**Response:** Same `PostDetail` data shape as `GET /api/posts/:publicId`
 
 ```typescript
 {
@@ -3172,7 +3188,7 @@ PATCH /api/posts/:id
 #### Delete Post
 
 ```
-DELETE /api/posts/:id
+DELETE /api/posts/:publicId
 ```
 
 **Auth:** Author or Admin
@@ -3192,7 +3208,7 @@ DELETE /api/posts/:id
 #### Pin/Unpin Post
 
 ```
-PATCH /api/posts/:id/pin
+PATCH /api/posts/:publicId/pin
 ```
 
 **Auth:** Requires `lock:channel` permission
@@ -3205,7 +3221,7 @@ PATCH /api/posts/:id/pin
 }
 ```
 
-**Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+**Response:** Same `PostDetail` data shape as `GET /api/posts/:publicId`
 
 ```typescript
 {
@@ -3218,7 +3234,7 @@ PATCH /api/posts/:id/pin
 #### Add Attachments to Existing Post
 
 ```
-POST /api/posts/:id/attachments
+POST /api/posts/:publicId/attachments
 ```
 
 **Auth:** Author only
@@ -3228,7 +3244,7 @@ POST /api/posts/:id/attachments
 
 - `attachments` (file[], max 3 additional files)
 
-**Response:** Same `PostDetail` data shape as `GET /api/posts/:id`
+**Response:** Same `PostDetail` data shape as `GET /api/posts/:publicId`
 
 ```typescript
 {
@@ -3289,13 +3305,13 @@ GET /api/notifications
     message: string | null;
     readAt: string | null;
     createdAt: string;
-    postId: number | null;
+    postPublicId: string | null;
     post?: {
-      channelId: number;
+      channelPublicId: string;
       priority: 'NORMAL' | 'IMPORTANT' | 'URGENT';
       channel: {
         name: string;
-        serverId: number;
+        serverPublicId: string;
       };
     } | null;
     society?: {
@@ -3379,7 +3395,7 @@ GET /api/notification-preferences
 
 ```typescript
 {
-  serverId?: number;
+  serverPublicId?: string;
   notificationType?: 'NEW_POST' | 'ROLE_ASSIGNED';
 }
 ```
@@ -3393,8 +3409,8 @@ GET /api/notification-preferences
     id: number;
     notificationType: 'NEW_POST' | 'ROLE_ASSIGNED';
     scopeType: 'SERVER' | 'CHANNEL';
-    serverId: number;
-    channelId: number | null;
+    serverPublicId: string;
+    channelPublicId: string | null;
     isSubscribed: boolean;
     updatedAt: string;
     server: {
@@ -3427,8 +3443,8 @@ PATCH /api/notification-preferences
 {
   notificationType: 'NEW_POST' | 'ROLE_ASSIGNED'; // Defaults to NEW_POST for backward compatibility
   scopeType: 'SERVER' | 'CHANNEL';
-  serverId: number;
-  channelId?: number;      // Required for NEW_POST + CHANNEL
+  serverPublicId: string;
+  channelPublicId?: string; // Required for NEW_POST + CHANNEL
   isSubscribed: boolean;
 }
 ```
@@ -3535,10 +3551,10 @@ const {
 
 ```typescript
 const createPostMutation = useMutation({
-  mutationFn: (data) => apiClient.post(`/channels/${channelId}/posts`, data),
+  mutationFn: (data) => apiClient.post(`/channels/${channelPublicId}/posts`, data),
   onSuccess: () => {
     // Invalidate posts query to trigger refetch
-    queryClient.invalidateQueries({ queryKey: ['posts', channelId] });
+    queryClient.invalidateQueries({ queryKey: ['posts', channelPublicId] });
     toast.success('Post created successfully');
   },
 });
@@ -3552,7 +3568,7 @@ useQuery({ queryKey: ['posts'], ... });
 
 // GOOD: Specific query key with filters
 useQuery({
-  queryKey: ['posts', channelId, { search, priority, page }],
+  queryKey: ['posts', channelPublicId, { search, priority, page }],
   ...
 });
 ```

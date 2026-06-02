@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { e2eUsers } from './helpers/auth';
 import {
-  findChannelIdByName,
+  findChannelPublicIdByName,
   findPostIdByTitle,
-  findServerIdByName,
+  findServerPublicIdByName,
   module4Fixtures,
 } from './helpers/module4';
 
@@ -25,16 +25,16 @@ test.describe('Module 4 posts and announcements', () => {
   test('feed search, filters, detail view, pin, edit, and delete work for an authorized publisher', async ({
     page,
   }) => {
-    const serverId = await findServerIdByName(module4Fixtures.serverName);
-    expect(serverId).not.toBeNull();
+    const serverPublicId = await findServerPublicIdByName(module4Fixtures.serverName);
+    expect(serverPublicId).not.toBeNull();
 
-    const channelId = serverId
-      ? await findChannelIdByName(serverId, module4Fixtures.announcementChannelName)
+    const channelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module4Fixtures.announcementChannelName)
       : null;
-    expect(channelId).not.toBeNull();
+    expect(channelPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
-    await page.goto(`/servers/${serverId}/channels/${channelId}`);
+    await page.goto(`/servers/${serverPublicId}/channels/${channelPublicId}`);
 
     await expect(
       page.getByRole('heading', { name: module4Fixtures.announcementChannelName, exact: true }),
@@ -103,26 +103,26 @@ test.describe('Module 4 posts and announcements', () => {
   });
 
   test('unauthorized and locked channels hide the publishing affordance', async ({ page }) => {
-    const serverId = await findServerIdByName(module4Fixtures.serverName);
-    expect(serverId).not.toBeNull();
+    const serverPublicId = await findServerPublicIdByName(module4Fixtures.serverName);
+    expect(serverPublicId).not.toBeNull();
 
-    const announcementChannelId = serverId
-      ? await findChannelIdByName(serverId, module4Fixtures.announcementChannelName)
+    const announcementChannelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module4Fixtures.announcementChannelName)
       : null;
-    const lockedCourseChannelId = serverId
-      ? await findChannelIdByName(serverId, module4Fixtures.lockedCourseChannelName)
+    const lockedCourseChannelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module4Fixtures.lockedCourseChannelName)
       : null;
-    expect(announcementChannelId).not.toBeNull();
-    expect(lockedCourseChannelId).not.toBeNull();
+    expect(announcementChannelPublicId).not.toBeNull();
+    expect(lockedCourseChannelPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleViewer.email, e2eUsers.moduleViewer.password);
-    await page.goto(`/servers/${serverId}/channels/${announcementChannelId}`);
+    await page.goto(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}`);
     await expect(page.getByRole('button', { name: 'New post' })).toHaveCount(0);
 
     await page.context().clearCookies();
     const managerPage = await page.context().newPage();
     await signIn(managerPage, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
-    await managerPage.goto(`/servers/${serverId}/channels/${lockedCourseChannelId}`);
+    await managerPage.goto(`/servers/${serverPublicId}/channels/${lockedCourseChannelPublicId}`);
     await expect(managerPage.getByRole('button', { name: 'New post' })).toHaveCount(0);
     await managerPage.close();
   });

@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 5 complete
+- Status: Module 6 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -25,7 +25,7 @@
 | 3 | User Lifecycle and Auth | Complete | 2026-05-29 | 2026-05-29 | User public-ID routes, deletion impact, status/delete/restore, auth/session invalidation, and frontend admin lifecycle UI added |
 | 4 | Platform RBAC Refactor | Complete | 2026-05-30 | 2026-05-30 | Append-only platform role assignments, expiry, public role-workspace IDs, canonical academic writes, and admin history added |
 | 5 | Society Lifecycle and Notifications | Complete | 2026-06-01 | 2026-06-01 | Society UUIDv7 API migration, frozen suspension state, audited delete/restore cascade, transactional lifecycle notifications, and frontend lifecycle UI added |
-| 6 | Server, Channel, and Post Public-ID Migration | Not started | - | - | Migrates communication routes and URLs to public IDs |
+| 6 | Server, Channel, and Post Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict public communication IDs, archived read-only history, lifecycle-safe writes, and socket room hardening added |
 | 7 | Class and Academic Public-ID Migration | Not started | - | - | Migrates class routes and academic workflows to public IDs |
 | 8 | Rare Entity Impact Reports | Not started | - | - | Adds read-only blocker reports for rare destructive entities |
 | 9 | Cleanup, Squash, and Final Contract | Not started | - | - | Removes transitional compatibility and squashes migrations |
@@ -295,3 +295,74 @@
   post routes and frontend URLs to UUIDv7 public IDs.
 - Preserve the SQL-only Module 5 preference and lifecycle safeguards in future
   Prisma-generated migrations.
+
+## Module 6 Checklist
+
+### Implementation
+
+- [x] Added request-local communication target resolution middleware for strict
+  UUIDv7 `:publicId` server, channel, and post routes while keeping numeric IDs
+  internal to services, Prisma relations, internal events, and Socket.IO rooms.
+- [x] Removed numeric communication IDs from public server, channel, post,
+  notification, preference, profile-role, permission-bootstrap, department,
+  program, and linked class DTOs.
+- [x] Migrated frontend communication URLs, endpoint functions, types, query
+  keys, realtime payloads, notification deep links, linked admin navigation,
+  and Playwright route helpers to public IDs.
+- [x] Made archived channels authorized read-only history: feeds and post detail
+  remain readable, archived channels render in a separate collapsed sidebar
+  section, realtime room joins are skipped, and write controls are hidden.
+- [x] Added typed `CHANNEL_ARCHIVED` conflicts and blocked archived channel
+  metadata, lock, unlock, delete, post, pin, attachment, and preference writes.
+- [x] Serialized channel and post mutations with row locks and repeated
+  lifecycle checks inside transactions.
+- [x] Revalidated current membership for author post update, delete, and
+  attachment writes. Attachment addition rejects former members before invoking
+  Cloudinary and repeats the check transactionally to cover races.
+- [x] Changed Socket.IO channel subscriptions to `{ channelPublicId }`, mapped
+  authorized public IDs to internal rooms, rejected malformed, unauthorized,
+  archived, deleted, and inactive targets without target-existence responses,
+  capped joined rooms at 32 per socket, and capped join attempts at 60/minute.
+- [x] Fixed a concurrent Socket.IO room-cap bypass by reserving pending joins
+  before asynchronous database resolution.
+
+### Verification
+
+- [x] Backend build
+- [x] Targeted backend server/channel/post/notification-socket/society-lifecycle/
+  public-ID/department/class/role/permission/user suites
+- [x] Full backend Jest suite, 495/495
+- [x] Frontend lint
+- [x] Frontend type-check
+- [x] Full frontend Vitest suite, 131/131
+- [x] Frontend production build
+- [x] Focused communication Playwright suite, 8/8
+- [x] Full Playwright suite, 36/36
+
+### Deferred Risk Register for Modules 7 and 8
+
+- Module 7 must complete academic public-ID migration: class primary routes,
+  class/user references, and graduation actor references can still expose or
+  accept numeric IDs on academic surfaces.
+- Module 8 must reconcile communication impact reporting for rare destructive
+  department, program, class, and course workflows before adding deletes.
+- Generic scoped-role middleware authorization can race with authority changes
+  between middleware execution and transaction commit. Module 6 revalidates
+  communication lifecycle and membership where writes naturally require it;
+  later modules must audit commit-time authority checks for broader scoped
+  mutations.
+- Role-assigned notifications do not persist related server/channel references,
+  so deep-link quality remains limited to notification fallback routing. A
+  future notification-model enhancement should add durable public-safe scope
+  context if direct navigation is required.
+- Preserve the SQL-only Module 4 role-assignment constraints and Module 5
+  notification-preference constraints in all later migration generation and
+  final squash work.
+
+### Follow-Up for Module 7
+
+- Keep external communication contracts strict public-ID only; do not add
+  numeric compatibility routes while migrating academic surfaces.
+- Preserve graduated-class behavior: course channels archive as read-only
+  history while general and announcement channels remain governed by existing
+  authorization rules.

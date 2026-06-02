@@ -47,11 +47,6 @@ export interface RoleWorkspacePermissions {
 
 export interface PermissionScopeSummary {
   hodDepartmentIds: number[];
-  directedProgramIds: number[];
-  crClassIds: number[];
-  societyLeadershipIds: number[];
-  moderatorServerIds: number[];
-  moderatorChannelIds: number[];
 }
 
 export interface MyPermissions {

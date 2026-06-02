@@ -178,12 +178,18 @@ export function ClassDetailPage() {
     <section className="space-y-5">
       <AdminPageHeader
         title={`${klass.program.code} · Semester ${klass.currentSemester}${klass.section}`}
-        description={`${klass.program.department.name} · Admission ${klass.admissionYear} · Server #${klass.serverId}`}
+        description={`${klass.program.department.name} · Admission ${klass.admissionYear} · Linked communication server`}
         actions={
           <>
             <Link to={ROUTES.ACADEMICS_CLASSES} className={buttonVariants({ variant: 'outline' })}>
               <ArrowLeft className="size-4" />
               Classes
+            </Link>
+            <Link
+              to={ROUTES.SERVER(klass.serverPublicId)}
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              Open server
             </Link>
             {canAssignCourses ? (
               <Button type="button" onClick={() => setAssignOpen(true)}>

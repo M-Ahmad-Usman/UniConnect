@@ -19,20 +19,20 @@ import { createChannelSchema, type CreateChannelFormValues } from '@/features/ch
 import { applyApiValidationErrors, getApiErrorMessage } from '@/features/auth/utils';
 
 interface CreateChannelDialogProps {
-  serverId: number;
+  serverPublicId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated?: (channelId: number) => void;
+  onCreated?: (channelPublicId: string) => void;
 }
 
 export function CreateChannelDialog({
-  serverId,
+  serverPublicId,
   open,
   onOpenChange,
   onCreated,
 }: CreateChannelDialogProps) {
   const [formError, setFormError] = useState<string | null>(null);
-  const createChannel = useCreateChannel(serverId);
+  const createChannel = useCreateChannel(serverPublicId);
   const {
     control,
     register,
@@ -71,7 +71,7 @@ export function CreateChannelDialog({
 
       toast.success('Channel created successfully.');
       handleOpenChange(false);
-      onCreated?.(channel.id);
+      onCreated?.(channel.publicId);
       reset({ name: '', description: '' });
     } catch (error) {
       if (applyApiValidationErrors(error, setError)) {

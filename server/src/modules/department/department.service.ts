@@ -30,6 +30,7 @@ const departmentListSelect = {
   name: true,
   code: true,
   serverId: true,
+  server: { select: { publicId: true } },
 } as const;
 
 const departmentDetailSelect = {
@@ -37,6 +38,7 @@ const departmentDetailSelect = {
   name: true,
   code: true,
   serverId: true,
+  server: { select: { publicId: true } },
   hod: {
     select: {
       teacherId: true,
@@ -75,6 +77,17 @@ const programSelect = {
   },
 } as const;
 
+function toPublicDepartment<T extends {
+  serverId: number;
+  server: { publicId: string };
+}>(department: T): Omit<T, "serverId" | "server"> & { serverPublicId: string } {
+  const { serverId: _serverId, server, ...departmentData } = department;
+  return {
+    ...departmentData,
+    serverPublicId: server.publicId,
+  };
+}
+
 // ─── Department Service Functions ──────────────────────────────────────────
 
 export async function createDepartment(data: CreateDepartmentInput, createdById: number) {
@@ -110,14 +123,15 @@ export async function createDepartment(data: CreateDepartmentInput, createdById:
   });
 
   invalidateSystemStatsCache();
-  return department;
+  return toPublicDepartment(department);
 }
 
 export async function listDepartments() {
-  return prisma.department.findMany({
+  const departments = await prisma.department.findMany({
     select: departmentListSelect,
     orderBy: { name: "asc" },
   });
+  return departments.map(toPublicDepartment);
 }
 
 export async function getDepartmentById(id: number) {
@@ -130,7 +144,7 @@ export async function getDepartmentById(id: number) {
     throw new NotFoundError("Department not found");
   }
 
-  return department;
+  return toPublicDepartment(department);
 }
 
 export async function updateDepartment(id: number, data: UpdateDepartmentInput) {
@@ -143,7 +157,7 @@ export async function updateDepartment(id: number, data: UpdateDepartmentInput) 
     throw new NotFoundError("Department not found");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     if (data.name) {
       await tx.server.update({
         where: { id: department.serverId },
@@ -157,6 +171,7 @@ export async function updateDepartment(id: number, data: UpdateDepartmentInput) 
       select: departmentListSelect,
     });
   });
+  return toPublicDepartment(updated);
 }
 
 // ─── Program Service Functions ─────────────────────────────────────────────

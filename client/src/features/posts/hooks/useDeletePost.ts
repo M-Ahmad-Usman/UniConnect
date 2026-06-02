@@ -7,20 +7,20 @@ import { queryKeys } from '@/lib/constants';
 import type { PaginatedResponse, PostListItem } from '@/types';
 import { removePostFromInfiniteData } from '../utils';
 
-export function useDeletePost(channelId: number) {
-  const channelPostQueryKey = ['posts', channelId] as const;
+export function useDeletePost(channelPublicId: string) {
+  const channelPostQueryKey = ['posts', channelPublicId] as const;
 
   return useMutation({
-    mutationFn: (postId: number) => postsApi.delete(postId).then(() => postId),
+    mutationFn: (postPublicId: string) => postsApi.delete(postPublicId).then(() => postPublicId),
     meta: {
       suppressErrorToast: true,
     },
-    onSuccess: (postId) => {
+    onSuccess: (postPublicId) => {
       queryClient.setQueriesData<InfiniteData<PaginatedResponse<PostListItem>>>(
         { queryKey: channelPostQueryKey },
-        (current) => removePostFromInfiniteData(current, postId),
+        (current) => removePostFromInfiniteData(current, postPublicId),
       );
-      queryClient.removeQueries({ queryKey: queryKeys.posts.detail(postId) });
+      queryClient.removeQueries({ queryKey: queryKeys.posts.detail(postPublicId) });
 
       void queryClient.invalidateQueries({ queryKey: channelPostQueryKey });
       toast.success('Post deleted');

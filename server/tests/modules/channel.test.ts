@@ -20,6 +20,7 @@ import {
   loginAs,
   seedRolesAndPermissions,
   createPlatformRoleAssignment,
+  apiId,
 } from "../helpers/factory.js";
 import { canPostInChannel } from "../../src/modules/channel/channel.service.js";
 
@@ -53,7 +54,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`hod-upd-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}`)
+        .patch(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies)
         .send({ name: `updated-${u}`, description: "Updated description" });
 
@@ -75,7 +76,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-upd-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}`)
+        .patch(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies)
         .send({ description: "Admin updated" });
 
@@ -96,7 +97,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-dupu-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}`)
+        .patch(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies)
         .send({ name: `existing-${u}` });
 
@@ -123,7 +124,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-delu-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}`)
+        .patch(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies)
         .send({ name: `new-name-${u}` });
 
@@ -141,7 +142,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`teacher-unau-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}`)
+        .patch(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies)
         .send({ name: `fail-${u}` });
 
@@ -160,11 +161,48 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-nofld-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}`)
+        .patch(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies)
         .send({});
 
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe("archived channel write protection", () => {
+    it("should reject channel metadata, lock, unlock, and delete mutations → 409", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `ARCH-${u}` });
+      const channel = await createChannel(dept.serverId, { name: `archived-${u}` });
+      await prisma.channel.update({
+        where: { id: channel.id },
+        data: { isArchived: true, archivedAt: new Date() },
+      });
+      const admin = await createUser({
+        email: `admin-arch-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const cookies = await loginAs(`admin-arch-${u}@test.com`, "Pass@1234");
+
+      const updateRes = await request(app)
+        .patch(`/api/channels/${apiId(channel)}`)
+        .set("Cookie", cookies)
+        .send({ description: "Blocked archived update" });
+      const lockRes = await request(app)
+        .patch(`/api/channels/${apiId(channel)}/lock`)
+        .set("Cookie", cookies);
+      const unlockRes = await request(app)
+        .patch(`/api/channels/${apiId(channel)}/unlock`)
+        .set("Cookie", cookies);
+      const deleteRes = await request(app)
+        .delete(`/api/channels/${apiId(channel)}`)
+        .set("Cookie", cookies);
+
+      for (const response of [updateRes, lockRes, unlockRes, deleteRes]) {
+        expect(response.status).toBe(409);
+        expect(response.body.error.code).toBe("CHANNEL_ARCHIVED");
+      }
     });
   });
 
@@ -182,7 +220,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`hod-lock-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/lock`)
+        .patch(`/api/channels/${apiId(channel)}/lock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -208,7 +246,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-lock-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/lock`)
+        .patch(`/api/channels/${apiId(channel)}/lock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -228,7 +266,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`cr-lock-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/lock`)
+        .patch(`/api/channels/${apiId(channel)}/lock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -256,7 +294,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-alrdl-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/lock`)
+        .patch(`/api/channels/${apiId(channel)}/lock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(400);
@@ -272,7 +310,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`teacher-lockun-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/lock`)
+        .patch(`/api/channels/${apiId(channel)}/lock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -302,7 +340,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`hod-unl-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/unlock`)
+        .patch(`/api/channels/${apiId(channel)}/unlock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -327,7 +365,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-notl-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/unlock`)
+        .patch(`/api/channels/${apiId(channel)}/unlock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(400);
@@ -351,7 +389,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`teacher-unlun-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/channels/${channel.id}/unlock`)
+        .patch(`/api/channels/${apiId(channel)}/unlock`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -372,7 +410,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`hod-del-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -398,7 +436,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-del-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -420,7 +458,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-auto-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(400);
@@ -445,7 +483,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-autopg-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(400);
@@ -471,7 +509,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`admin-alrdel-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -487,7 +525,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`teacher-delun-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -511,7 +549,7 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       const cookies = await loginAs(`pres-del-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/channels/${channel.id}`)
+        .delete(`/api/channels/${apiId(channel)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -796,6 +834,26 @@ describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
       });
       const result2 = await canPostInChannel(teacher.id, "TEACHER", channel.id);
       expect(result2).toBe(false);
+    });
+
+    it("should return false for archived channel", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CPC-AR-${u}` });
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-cpc-ar-${u}@test.com`,
+      });
+      const channel = await prisma.channel.create({
+        data: {
+          serverId: dept.serverId,
+          name: `cpc-archived-${u}`,
+          type: "GENERAL",
+          isArchived: true,
+          archivedAt: new Date(),
+        },
+      });
+
+      const result = await canPostInChannel(teacher.id, "TEACHER", channel.id);
+      expect(result).toBe(false);
     });
   });
 });

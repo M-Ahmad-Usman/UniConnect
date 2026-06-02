@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 2 complete, Module 3 not started
+- Status: Module 6 complete, Module 7 not started
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
 - Source references: `pulled-docs/`
@@ -316,11 +316,18 @@ Changes:
 - Keep internal channel restore only.
 - Do not add post restore.
 - Block posting in suspended society channels.
+- Keep archived channels as authorized read-only history: reads remain available,
+  realtime subscriptions stop, and writes return `CHANNEL_ARCHIVED`.
+- Use public Socket.IO channel envelopes while retaining internal numeric rooms.
+- Revalidate communication lifecycle and current membership at mutation commit
+  boundaries where author rights depend on current server membership.
 
 Acceptance:
 - Server/channel/post tests use public IDs.
 - Numeric IDs are rejected externally.
 - Existing channel/post deletion semantics remain intact.
+- Archived-channel reads and write rejection are covered.
+- Socket room caps remain effective during concurrent join bursts.
 
 ### Module 7: Class and Academic Public-ID Migration
 

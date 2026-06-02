@@ -57,6 +57,34 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-02 - Schema/Lifecycle Refactor Module 6 Complete
+- Migrated server, channel, and post routes, DTOs, frontend URLs, query keys,
+  realtime envelopes, notification links/preferences, linked admin navigation,
+  and Playwright route helpers to strict UUIDv7 public IDs.
+- Added request-local communication target resolution so routes parse and
+  resolve public IDs once while services, Prisma relations, JWT subjects,
+  internal events, and Socket.IO rooms retain efficient numeric keys.
+- Made archived channels authorized read-only history: clients group them in a
+  collapsed history section, suppress write controls and realtime joins, keep
+  post reads available, and receive typed `CHANNEL_ARCHIVED` conflicts for
+  attempted mutations.
+- Added transaction-time lifecycle locks and membership revalidation for
+  channel/post writes. Former post authors who lose server membership can no
+  longer edit, delete, or trigger Cloudinary attachment uploads.
+- Hardened Socket.IO channel joins with `{ channelPublicId }`, lifecycle and
+  membership checks, a 32-room cap, a 60-attempt/minute cap, and pending-join
+  reservations that prevent asynchronous burst joins from bypassing the room
+  limit.
+- Deferred to Module 7: remaining academic numeric class/user references and
+  graduation actor references. Deferred to Module 8: rare destructive lifecycle
+  impact reconciliation. Also recorded a later broad commit-time scoped-role
+  authorization audit and notification deep-link model enhancement.
+- Verification passed:
+  - backend build and full Jest suite, 495/495
+  - frontend lint, type-check, production build, and full Vitest suite, 131/131
+  - focused communication Playwright suite, 8/8, and full Playwright suite,
+    36/36
+
 ### 2026-06-01 - Schema/Lifecycle Refactor Module 5 Complete
 - Migrated society-facing routes, DTOs, frontend URLs, query keys, and related
   user references to UUIDv7 public IDs.

@@ -19,15 +19,22 @@ import { getEditWindowState } from '../utils';
 import { EditPostDialog } from './EditPostDialog';
 
 interface PostActionsProps {
-  channelId: number;
+  channelPublicId: string;
   post: PostDetail | PostListItem;
   canPin: boolean;
+  readOnly?: boolean;
   onDeleted?: () => void;
 }
 
-export function PostActions({ channelId, post, canPin, onDeleted }: PostActionsProps) {
-  const deletePost = useDeletePost(channelId);
-  const pinPost = usePinPost(channelId);
+export function PostActions({
+  channelPublicId,
+  post,
+  canPin,
+  readOnly = false,
+  onDeleted,
+}: PostActionsProps) {
+  const deletePost = useDeletePost(channelPublicId);
+  const pinPost = usePinPost(channelPublicId);
   const canEdit = useCanEditPost(post);
   const canDelete = useCanDeletePost(post);
   const [editOpen, setEditOpen] = useState(false);
@@ -38,7 +45,7 @@ export function PostActions({ channelId, post, canPin, onDeleted }: PostActionsP
 
   async function handleDelete() {
     try {
-      await deletePost.mutateAsync(post.id);
+      await deletePost.mutateAsync(post.publicId);
       onDeleted?.();
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Unable to delete this post right now.'));
@@ -47,13 +54,13 @@ export function PostActions({ channelId, post, canPin, onDeleted }: PostActionsP
 
   async function handlePinToggle() {
     try {
-      await pinPost.mutateAsync({ postId: post.id, isPinned: !post.isPinned });
+      await pinPost.mutateAsync({ postPublicId: post.publicId, isPinned: !post.isPinned });
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Unable to update this post pin right now.'));
     }
   }
 
-  if (!canEdit && !canDelete && !canPin) {
+  if (readOnly || (!canEdit && !canDelete && !canPin)) {
     return null;
   }
 
@@ -97,8 +104,8 @@ export function PostActions({ channelId, post, canPin, onDeleted }: PostActionsP
       </DropdownMenu>
 
       <EditPostDialog
-        key={`${post.id}-${editOpen ? 'open' : 'closed'}`}
-        channelId={channelId}
+        key={`${post.publicId}-${editOpen ? 'open' : 'closed'}`}
+        channelPublicId={channelPublicId}
         post={post}
         open={editOpen}
         onOpenChange={setEditOpen}

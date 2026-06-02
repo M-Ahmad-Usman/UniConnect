@@ -127,6 +127,11 @@ const ERROR_COPY: Record<string, ErrorCopy> = {
     message: 'This channel is locked and cannot accept this action.',
     retryable: false,
   },
+  CHANNEL_ARCHIVED: {
+    title: 'Channel archived',
+    message: 'Archived channels are read-only history.',
+    retryable: false,
+  },
   EDIT_WINDOW_EXPIRED: {
     title: 'Edit window expired',
     message: 'This post can no longer be edited.',

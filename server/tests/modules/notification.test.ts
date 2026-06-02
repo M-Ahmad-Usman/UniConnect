@@ -5,7 +5,7 @@ import { io as ioClient, type Socket as ClientSocket } from "socket.io-client";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/prisma.js";
 import { resetDB } from "../helpers/db.helper.js";
-import { initializeSocket, resetIO } from "../../src/socket/index.js";
+import { getIO, initializeSocket, resetIO } from "../../src/socket/index.js";
 import { appEvents, APP_EVENTS } from "../../src/shared/events.js";
 import {
   createUser,
@@ -22,12 +22,22 @@ import {
   loginAs,
   seedRolesAndPermissions,
   assignHOD,
+  apiId,
+  apiServerId,
 } from "../helpers/factory.js";
 
 /** Short unique suffix */
 let uidCounter = 0;
 function uid(): string {
   return (++uidCounter).toString(36);
+}
+
+async function internalPostId(publicId: string): Promise<number> {
+  const post = await prisma.post.findUniqueOrThrow({
+    where: { publicId },
+    select: { id: true },
+  });
+  return post.id;
 }
 
 beforeAll(async () => {
@@ -74,7 +84,7 @@ describe("Module 10 - Notifications", () => {
       const cookies = await loginAs(`hod-ntf-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Test Notification",
@@ -87,8 +97,9 @@ describe("Module 10 - Notifications", () => {
       await new Promise((r) => setTimeout(r, 500));
 
       // Verify notifications were created for student1 and student2
+      const postId = await internalPostId(res.body.data.publicId);
       const notifications = await prisma.notification.findMany({
-        where: { postId: res.body.data.id },
+        where: { postId },
         orderBy: { userId: "asc" },
       });
       const server = await prisma.server.findUnique({
@@ -134,7 +145,7 @@ describe("Module 10 - Notifications", () => {
       const cookies = await loginAs(`hod-urg-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Critical Update",
@@ -145,8 +156,9 @@ describe("Module 10 - Notifications", () => {
       expect(res.status).toBe(201);
       await new Promise((r) => setTimeout(r, 500));
 
+      const postId = await internalPostId(res.body.data.publicId);
       const notifications = await prisma.notification.findMany({
-        where: { postId: res.body.data.id },
+        where: { postId },
       });
       const server = await prisma.server.findUnique({
         where: { id: dept.serverId },
@@ -189,7 +201,7 @@ describe("Module 10 - Notifications", () => {
 
       const cookies = await loginAs(`hod-del-ntf-${u}@test.com`, "Pass@1234");
       const postRes = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Delete Notification",
@@ -199,19 +211,20 @@ describe("Module 10 - Notifications", () => {
       expect(postRes.status).toBe(201);
       await new Promise((r) => setTimeout(r, 500));
 
+      const postId = await internalPostId(postRes.body.data.publicId);
       const notificationBeforeDelete = await prisma.notification.findFirst({
-        where: { postId: postRes.body.data.id, userId: student.id },
+        where: { postId, userId: student.id },
       });
       expect(notificationBeforeDelete).not.toBeNull();
 
       const deleteRes = await request(app)
-        .delete(`/api/posts/${postRes.body.data.id}`)
+        .delete(`/api/posts/${postRes.body.data.publicId}`)
         .set("Cookie", cookies);
 
       expect(deleteRes.status).toBe(200);
 
       const notificationCount = await prisma.notification.count({
-        where: { postId: postRes.body.data.id },
+        where: { postId },
       });
       expect(notificationCount).toBe(0);
     });
@@ -256,7 +269,7 @@ describe("Module 10 - Notifications", () => {
       const cookies = await loginAs(`hod-unsch-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Test Unsub Channel",
@@ -266,8 +279,9 @@ describe("Module 10 - Notifications", () => {
       expect(res.status).toBe(201);
       await new Promise((r) => setTimeout(r, 500));
 
+      const postId = await internalPostId(res.body.data.publicId);
       const notifications = await prisma.notification.findMany({
-        where: { postId: res.body.data.id },
+        where: { postId },
       });
 
       const recipientIds = notifications.map((n) => n.userId);
@@ -314,7 +328,7 @@ describe("Module 10 - Notifications", () => {
       const cookies = await loginAs(`hod-unssv-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Test Unsub Server",
@@ -324,8 +338,9 @@ describe("Module 10 - Notifications", () => {
       expect(res.status).toBe(201);
       await new Promise((r) => setTimeout(r, 500));
 
+      const postId = await internalPostId(res.body.data.publicId);
       const notifications = await prisma.notification.findMany({
-        where: { postId: res.body.data.id },
+        where: { postId },
       });
 
       const recipientIds = notifications.map((n) => n.userId);
@@ -793,13 +808,13 @@ describe("Module 10 - Notifications", () => {
 
       const res = await request(app)
         .get(
-          `/api/notification-preferences?serverId=${dept.serverId}&notificationType=ROLE_ASSIGNED`,
+          `/api/notification-preferences?serverPublicId=${await apiServerId(dept.serverId)}&notificationType=ROLE_ASSIGNED`,
         )
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].serverId).toBe(dept.serverId);
+      expect(res.body.data[0].serverPublicId).toBe(await apiServerId(dept.serverId));
       expect(res.body.data[0].notificationType).toBe("ROLE_ASSIGNED");
     });
 
@@ -847,8 +862,8 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies)
         .send({
           scopeType: "CHANNEL",
-          serverId: dept.serverId,
-          channelId: channel.id,
+          serverPublicId: await apiServerId(dept.serverId),
+          channelPublicId: apiId(channel),
           isSubscribed: false,
         });
 
@@ -857,7 +872,7 @@ describe("Module 10 - Notifications", () => {
       expect(res.body.data.isSubscribed).toBe(false);
       expect(res.body.data.notificationType).toBe("NEW_POST");
       expect(res.body.data.scopeType).toBe("CHANNEL");
-      expect(res.body.data.channelId).toBe(channel.id);
+      expect(res.body.data.channelPublicId).toBe(channel.publicId);
     });
 
     it("should unsubscribe from a server → 200", async () => {
@@ -877,7 +892,7 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies)
         .send({
           scopeType: "SERVER",
-          serverId: dept.serverId,
+          serverPublicId: await apiServerId(dept.serverId),
           isSubscribed: false,
         });
 
@@ -906,7 +921,7 @@ describe("Module 10 - Notifications", () => {
         .send({
           notificationType: "ROLE_ASSIGNED",
           scopeType: "SERVER",
-          serverId: dept.serverId,
+          serverPublicId: await apiServerId(dept.serverId),
           isSubscribed: false,
         });
 
@@ -937,8 +952,8 @@ describe("Module 10 - Notifications", () => {
         .send({
           notificationType: "ROLE_ASSIGNED",
           scopeType: "CHANNEL",
-          serverId: dept.serverId,
-          channelId: channel.id,
+          serverPublicId: await apiServerId(dept.serverId),
+          channelPublicId: apiId(channel),
           isSubscribed: false,
         });
 
@@ -974,8 +989,8 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies)
         .send({
           scopeType: "CHANNEL",
-          serverId: dept.serverId,
-          channelId: channel.id,
+          serverPublicId: await apiServerId(dept.serverId),
+          channelPublicId: apiId(channel),
           isSubscribed: true,
         });
 
@@ -1002,7 +1017,7 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies)
         .send({
           scopeType: "SERVER",
-          serverId: dept.serverId,
+          serverPublicId: await apiServerId(dept.serverId),
           isSubscribed: false,
         });
 
@@ -1026,7 +1041,7 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies)
         .send({
           scopeType: "CHANNEL",
-          serverId: dept.serverId,
+          serverPublicId: await apiServerId(dept.serverId),
           isSubscribed: false,
         });
 
@@ -1056,12 +1071,44 @@ describe("Module 10 - Notifications", () => {
         .set("Cookie", cookies)
         .send({
           scopeType: "CHANNEL",
-          serverId: dept1.serverId,
-          channelId: channel.id,
+          serverPublicId: await apiServerId(dept1.serverId),
+          channelPublicId: apiId(channel),
           isSubscribed: false,
         });
 
       expect(res.status).toBe(404);
+    });
+
+    it("should reject preference mutations for archived channels → 409", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `PREF-AR-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const student = await createStudentWithInfo(cls.id, dept.id, {
+        email: `stu-pref-ar-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const channel = await createChannel(dept.serverId, {
+        name: `pref-archived-${u}`,
+      });
+      await prisma.channel.update({
+        where: { id: channel.id },
+        data: { isArchived: true, archivedAt: new Date() },
+      });
+      const cookies = await loginAs(`stu-pref-ar-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .patch("/api/notification-preferences")
+        .set("Cookie", cookies)
+        .send({
+          scopeType: "CHANNEL",
+          serverPublicId: await apiServerId(dept.serverId),
+          channelPublicId: apiId(channel),
+          isSubscribed: false,
+        });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe("CHANNEL_ARCHIVED");
     });
   });
 
@@ -1159,7 +1206,7 @@ describe("Module 10 - Notifications", () => {
       // Create a post (as HOD) — this should trigger notification for the student
       const hodCookies = await loginAs(`hod-sio-${u}@test.com`, "Pass@1234");
       await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", hodCookies)
         .send({
           title: "Socket Test Post",
@@ -1198,6 +1245,78 @@ describe("Module 10 - Notifications", () => {
         noAuthClient.disconnect();
         done();
       });
+    });
+
+    it("should enforce public-ID channel joins, archived rejection, leave, and burst room cap", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `SIO-ROOM-${u}` });
+      const student = await createTeacherWithInfo(dept.id, {
+        email: `student-sio-room-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const activeChannels = await Promise.all(
+        Array.from({ length: 33 }, (_, index) =>
+          createChannel(dept.serverId, { name: `room-${index}-${u}` }),
+        ),
+      );
+      const archivedChannel = await createChannel(dept.serverId, {
+        name: `archived-room-${u}`,
+      });
+      await prisma.channel.update({
+        where: { id: archivedChannel.id },
+        data: { isArchived: true, archivedAt: new Date() },
+      });
+      const cookies = await loginAs(`student-sio-room-${u}@test.com`, "Pass@1234");
+      const accessToken = cookies
+        .find((cookie: string) => cookie.startsWith("access_token="))
+        ?.split(";")[0]
+        ?.split("=")
+        .slice(1)
+        .join("=");
+
+      clientSocket = ioClient(`http://127.0.0.1:${serverPort}`, {
+        path: "/api/socket.io",
+        extraHeaders: {
+          cookie: `access_token=${accessToken}`,
+        },
+      });
+      await new Promise<void>((resolve, reject) => {
+        clientSocket.on("connect", () => resolve());
+        clientSocket.on("connect_error", reject);
+      });
+
+      clientSocket.emit("channel:join", { channelPublicId: String(activeChannels[0]!.id) });
+      clientSocket.emit("channel:join", { channelPublicId: archivedChannel.publicId });
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      for (const channel of activeChannels) {
+        clientSocket.emit("channel:join", { channelPublicId: channel.publicId });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const socketServer = getIO();
+      expect(socketServer).not.toBeNull();
+      const serverSocket = [...socketServer!.sockets.sockets.values()].find((socket) =>
+        socket.rooms.has(`user:${student.id}`),
+      );
+      expect(serverSocket).toBeDefined();
+      const channelRooms = [...serverSocket!.rooms].filter((room) =>
+        room.startsWith("channel:"),
+      );
+      expect(channelRooms).toHaveLength(32);
+      expect(serverSocket!.rooms.has(`channel:${archivedChannel.id}`)).toBe(false);
+      expect(serverSocket!.rooms.has(`channel:${activeChannels[32]!.id}`)).toBe(false);
+
+      clientSocket.emit("channel:leave", {
+        channelPublicId: activeChannels[0]!.publicId,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      clientSocket.emit("channel:join", {
+        channelPublicId: activeChannels[32]!.publicId,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      expect(serverSocket!.rooms.has(`channel:${activeChannels[0]!.id}`)).toBe(false);
+      expect(serverSocket!.rooms.has(`channel:${activeChannels[32]!.id}`)).toBe(true);
     });
   });
 });

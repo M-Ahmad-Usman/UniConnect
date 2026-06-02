@@ -4,7 +4,7 @@ import { groupChannels, insertChannel, removeChannelFromList, selectDefaultChann
 
 const channels: ChannelListItem[] = [
   {
-    id: 1,
+    publicId: 'channel-1',
     name: 'general',
     description: null,
     type: ChannelType.GENERAL,
@@ -16,7 +16,7 @@ const channels: ChannelListItem[] = [
     createdAt: '2026-03-10T00:00:00.000Z',
   },
   {
-    id: 2,
+    publicId: 'channel-2',
     name: 'announcements',
     description: null,
     type: ChannelType.ANNOUNCEMENT,
@@ -28,7 +28,7 @@ const channels: ChannelListItem[] = [
     createdAt: '2026-03-10T00:00:00.000Z',
   },
   {
-    id: 3,
+    publicId: 'channel-3',
     name: 'cs-401',
     description: null,
     type: ChannelType.COURSE,
@@ -55,7 +55,7 @@ describe('groupChannels', () => {
   it('omits empty groups', () => {
     const groupedChannels = groupChannels([
       {
-        id: 10,
+        publicId: 'channel-10',
         name: 'general',
         description: null,
         type: ChannelType.GENERAL,
@@ -75,18 +75,20 @@ describe('groupChannels', () => {
 
 describe('selectDefaultChannel', () => {
   it('prefers an announcement channel first', () => {
-    expect(selectDefaultChannel(channels)?.id).toBe(2);
+    expect(selectDefaultChannel(channels)?.publicId).toBe('channel-2');
   });
 
   it('falls back to a general channel when no announcement channel exists', () => {
-    const nextChannel = selectDefaultChannel(channels.filter((channel) => channel.id !== 2));
-    expect(nextChannel?.id).toBe(1);
+    const nextChannel = selectDefaultChannel(
+      channels.filter((channel) => channel.publicId !== 'channel-2'),
+    );
+    expect(nextChannel?.publicId).toBe('channel-1');
   });
 
   it('falls back to the first available channel when no announcement or general channel exists', () => {
     const nextChannel = selectDefaultChannel([
       {
-        id: 12,
+        publicId: 'channel-12',
         name: 'cs-401',
         description: null,
         type: ChannelType.COURSE,
@@ -99,7 +101,7 @@ describe('selectDefaultChannel', () => {
       },
     ]);
 
-    expect(nextChannel?.id).toBe(12);
+    expect(nextChannel?.publicId).toBe('channel-12');
   });
 
   it('returns null when there are no channels', () => {
@@ -110,8 +112,8 @@ describe('selectDefaultChannel', () => {
 describe('insertChannel', () => {
   it('adds a new channel and preserves created-at ordering', () => {
     const inserted = insertChannel(channels, {
-      id: 4,
-      serverId: 10,
+      publicId: 'channel-4',
+      serverPublicId: 'server-10',
       name: 'fresh-updates',
       description: null,
       type: ChannelType.GENERAL,
@@ -120,9 +122,14 @@ describe('insertChannel', () => {
       createdAt: '2026-03-10T01:00:00.000Z',
     });
 
-    expect(inserted.map((channel) => channel.id)).toEqual([1, 2, 3, 4]);
+    expect(inserted.map((channel) => channel.publicId)).toEqual([
+      'channel-1',
+      'channel-2',
+      'channel-3',
+      'channel-4',
+    ]);
     expect(inserted[3]).toMatchObject({
-      id: 4,
+      publicId: 'channel-4',
       isArchived: false,
       courseId: null,
       programId: null,
@@ -133,8 +140,8 @@ describe('insertChannel', () => {
 describe('updateChannelInList', () => {
   it('merges updated channel fields without losing list-only metadata', () => {
     const updated = updateChannelInList(channels, {
-      id: 3,
-      serverId: 10,
+      publicId: 'channel-3',
+      serverPublicId: 'server-10',
       name: 'cs-401-updated',
       description: 'Updated description',
       type: ChannelType.COURSE,
@@ -145,8 +152,8 @@ describe('updateChannelInList', () => {
       createdAt: '2026-03-10T00:00:00.000Z',
     });
 
-    expect(updated.find((channel) => channel.id === 3)).toMatchObject({
-      id: 3,
+    expect(updated.find((channel) => channel.publicId === 'channel-3')).toMatchObject({
+      publicId: 'channel-3',
       name: 'cs-401-updated',
       isLocked: false,
       courseId: 99,
@@ -156,6 +163,9 @@ describe('updateChannelInList', () => {
 
 describe('removeChannelFromList', () => {
   it('removes the deleted channel from the cache snapshot', () => {
-    expect(removeChannelFromList(channels, 2).map((channel) => channel.id)).toEqual([1, 3]);
+    expect(removeChannelFromList(channels, 'channel-2').map((channel) => channel.publicId)).toEqual([
+      'channel-1',
+      'channel-3',
+    ]);
   });
 });

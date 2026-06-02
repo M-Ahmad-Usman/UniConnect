@@ -6,16 +6,16 @@ import type { ChannelListItem } from '@/types';
 import type { ApiError, UpdateChannelRequest } from '@/types';
 
 interface UpdateChannelInput {
-  channelId: number;
+  channelPublicId: string;
   payload: UpdateChannelRequest;
 }
 
-export function useUpdateChannel(serverId: number) {
-  const channelQueryKey = ['servers', serverId, 'channels'] as const;
+export function useUpdateChannel(serverPublicId: string) {
+  const channelQueryKey = ['servers', serverPublicId, 'channels'] as const;
 
   return useMutation({
-    mutationFn: ({ channelId, payload }: UpdateChannelInput) =>
-      channelsApi.updateChannel(channelId, payload),
+    mutationFn: ({ channelPublicId, payload }: UpdateChannelInput) =>
+      channelsApi.updateChannel(channelPublicId, payload),
     meta: {
       suppressErrorToast: true,
     },

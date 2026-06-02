@@ -30,21 +30,21 @@ export const serversApi = {
     return response.data;
   },
 
-  async getById(serverId: number) {
-    const response = await apiClient.get<ServerDetail>(`/servers/${serverId}`);
+  async getById(serverPublicId: string) {
+    const response = await apiClient.get<ServerDetail>(`/servers/${serverPublicId}`);
     return response.data;
   },
 
-  async listChannels(serverId: number, params?: ListServerChannelsParams) {
-    const response = await apiClient.get<ChannelListItem[]>(`/servers/${serverId}/channels`, {
+  async listChannels(serverPublicId: string, params?: ListServerChannelsParams) {
+    const response = await apiClient.get<ChannelListItem[]>(`/servers/${serverPublicId}/channels`, {
       params,
     });
     return response.data;
   },
 
-  async listMembers(serverId: number, params?: ListServerMembersParams) {
+  async listMembers(serverPublicId: string, params?: ListServerMembersParams) {
     const response = await apiClient.get<PaginatedResponse<ServerMember>>(
-      `/servers/${serverId}/members`,
+      `/servers/${serverPublicId}/members`,
       {
         params,
       },
@@ -52,20 +52,20 @@ export const serversApi = {
     return response.data;
   },
 
-  async createChannel(serverId: number, payload: CreateChannelRequest) {
+  async createChannel(serverPublicId: string, payload: CreateChannelRequest) {
     const response = await apiClient.post<CreateChannelResponse>(
-      `/servers/${serverId}/channels`,
+      `/servers/${serverPublicId}/channels`,
       payload,
     );
     return response.data;
   },
 
-  async updateIcon(serverId: number, file: File) {
+  async updateIcon(serverPublicId: string, file: File) {
     const formData = new FormData();
     formData.append('serverIcon', file);
 
-    const response = await apiClient.patch<{ id: number; iconUrl: string }>(
-      `/servers/${serverId}/icon`,
+    const response = await apiClient.patch<{ publicId: string; iconUrl: string }>(
+      `/servers/${serverPublicId}/icon`,
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },

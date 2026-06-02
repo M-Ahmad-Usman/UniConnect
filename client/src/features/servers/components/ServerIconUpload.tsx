@@ -16,7 +16,7 @@ import { getApiErrorMessage } from '@/features/auth/utils';
 import { useUpdateServerIcon } from '../hooks/useUpdateServerIcon';
 
 interface ServerIconUploadProps {
-  serverId: number;
+  serverPublicId: string;
   serverName: string;
   iconUrl: string | null;
   canUpdate: boolean;
@@ -41,7 +41,7 @@ function validateServerIconFile(file: File) {
 }
 
 export function ServerIconUpload({
-  serverId,
+  serverPublicId,
   serverName,
   iconUrl,
   canUpdate,
@@ -50,7 +50,7 @@ export function ServerIconUpload({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const updateIcon = useUpdateServerIcon(serverId);
+  const updateIcon = useUpdateServerIcon(serverPublicId);
 
   useEffect(
     () => () => {

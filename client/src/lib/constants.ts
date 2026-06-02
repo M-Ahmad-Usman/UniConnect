@@ -20,12 +20,12 @@ export const ROUTES = {
   HOME: '/',
   SERVERS: '/servers',
   NOTIFICATIONS: '/notifications',
-  SERVER: (serverId: number | string) => `/servers/${serverId}`,
-  CHANNEL: (serverId: number | string, channelId: number | string) =>
-    `/servers/${serverId}/channels/${channelId}`,
-  MEMBERS: (serverId: number | string) => `/servers/${serverId}/members`,
-  SERVER_NOTIFICATION_SETTINGS: (serverId: number | string) =>
-    `/servers/${serverId}/settings/notifications`,
+  SERVER: (serverPublicId: string) => `/servers/${serverPublicId}`,
+  CHANNEL: (serverPublicId: string, channelPublicId: string) =>
+    `/servers/${serverPublicId}/channels/${channelPublicId}`,
+  MEMBERS: (serverPublicId: string) => `/servers/${serverPublicId}/members`,
+  SERVER_NOTIFICATION_SETTINGS: (serverPublicId: string) =>
+    `/servers/${serverPublicId}/settings/notifications`,
   SOCIETIES: '/societies',
   SOCIETY: (societyId: number | string) => `/societies/${societyId}`,
   ROLES: '/roles',
@@ -115,19 +115,19 @@ export const queryKeys = {
   servers: {
     all: () => ['servers'] as const,
     list: (params?: Record<string, unknown>) => ['servers', params] as const,
-    detail: (serverId: number) => ['servers', serverId] as const,
-    channels: (serverId: number, params?: Record<string, unknown>) =>
-      ['servers', serverId, 'channels', params] as const,
-    members: (serverId: number, params?: Record<string, unknown>) =>
-      ['servers', serverId, 'members', params] as const,
+    detail: (serverPublicId: string) => ['servers', serverPublicId] as const,
+    channels: (serverPublicId: string, params?: Record<string, unknown>) =>
+      ['servers', serverPublicId, 'channels', params] as const,
+    members: (serverPublicId: string, params?: Record<string, unknown>) =>
+      ['servers', serverPublicId, 'members', params] as const,
   },
   channels: {
-    detail: (channelId: number) => ['channels', channelId] as const,
+    detail: (channelPublicId: string) => ['channels', channelPublicId] as const,
   },
   posts: {
-    byChannel: (channelId: number, params?: Record<string, unknown>) =>
-      ['posts', channelId, params] as const,
-    detail: (postId: number) => ['posts', 'detail', postId] as const,
+    byChannel: (channelPublicId: string, params?: Record<string, unknown>) =>
+      ['posts', channelPublicId, params] as const,
+    detail: (postPublicId: string) => ['posts', 'detail', postPublicId] as const,
   },
   notifications: {
     all: () => ['notifications'] as const,

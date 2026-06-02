@@ -3,7 +3,7 @@ import type { ServerType, UserType } from './enums';
 // ─── Server List Item ───────────────────────────────────────────────────────
 
 export interface ServerListItem {
-  id: number;
+  publicId: string;
   name: string;
   description: string | null;
   type: ServerType;
@@ -15,7 +15,7 @@ export interface ServerListItem {
 // ─── Server Detail ──────────────────────────────────────────────────────────
 
 export interface ServerDetail {
-  id: number;
+  publicId: string;
   name: string;
   description: string | null;
   type: ServerType;
@@ -28,7 +28,7 @@ export interface ServerDetail {
     code: string;
   } | null;
   class: {
-    id: number;
+    publicId: string;
     currentSemester: number;
     section: string;
     program: {
@@ -39,7 +39,7 @@ export interface ServerDetail {
     };
   } | null;
   society: {
-    id: number;
+    publicId: string;
     name: string;
   } | null;
   _count: {
@@ -51,12 +51,11 @@ export interface ServerDetail {
 // ─── Server Member ──────────────────────────────────────────────────────────
 
 export interface ServerMember {
-  userId: number;
   joinedAt: string;
   isAutoJoined: boolean;
   badges: MemberBadge[];
   user: {
-    id: number;
+    publicId: string;
     fullName: string;
     email: string;
     userType: UserType;

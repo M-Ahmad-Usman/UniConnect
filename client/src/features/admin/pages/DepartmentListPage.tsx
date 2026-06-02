@@ -62,7 +62,14 @@ export function DepartmentListPage() {
                   <tr key={department.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{department.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{department.code}</td>
-                    <td className="px-4 py-3 text-muted-foreground">#{department.serverId}</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        to={ROUTES.SERVER(department.serverPublicId)}
+                        className="text-primary hover:underline"
+                      >
+                        Open server
+                      </Link>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         <Link

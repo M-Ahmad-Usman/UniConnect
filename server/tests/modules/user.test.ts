@@ -449,6 +449,10 @@ describe("Module 2 - User Management", () => {
 
       const cookies = await loginAs(teacher.email, "Pass@1234");
       const profileRes = await request(app).get("/api/users/me").set("Cookie", cookies);
+      const server = await prisma.server.findUniqueOrThrow({
+        where: { id: department.serverId },
+        select: { publicId: true },
+      });
 
       expect(profileRes.status).toBe(200);
       expect(profileRes.body.success).toBe(true);
@@ -456,14 +460,14 @@ describe("Module 2 - User Management", () => {
         expect.arrayContaining([
           {
             role: "hod",
-            serverId: department.serverId,
+            serverPublicId: server.publicId,
             scopeType: "server",
           },
           {
             assignmentPublicId: expect.any(String),
             role: "channel_moderator",
-            serverId: department.serverId,
-            channelId: channel.id,
+            serverPublicId: server.publicId,
+            channelPublicId: channel.publicId,
             scopeType: "channel",
             expiresAt: null,
           },

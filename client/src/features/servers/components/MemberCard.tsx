@@ -54,7 +54,9 @@ export function MemberCard({ member }: MemberCardProps) {
 
       <div className="mt-4 flex flex-wrap gap-2">
         {member.badges.length > 0 ? (
-          member.badges.map((badge) => <RoleBadge key={`${member.userId}-${badge}`} role={badge} />)
+          member.badges.map((badge) => (
+            <RoleBadge key={`${member.user.publicId}-${badge}`} role={badge} />
+          ))
         ) : (
           <Badge variant="outline" className="text-xs text-muted-foreground">
             Member

@@ -64,6 +64,7 @@ const classListSelect = {
   admissionYear: true,
   section: true,
   serverId: true,
+  server: { select: { publicId: true } },
   status: true,
   graduatedAt: true,
   graduatedBy: true,
@@ -112,6 +113,7 @@ const classDetailSelect = {
   admissionYear: true,
   section: true,
   serverId: true,
+  server: { select: { publicId: true } },
   status: true,
   graduatedAt: true,
   graduatedBy: true,
@@ -209,6 +211,17 @@ const teacherCandidateSelect = {
     },
   },
 } as const;
+
+function toPublicClass<T extends {
+  serverId: number;
+  server: { publicId: string };
+}>(classRecord: T): Omit<T, "serverId" | "server"> & { serverPublicId: string } {
+  const { serverId: _serverId, server, ...classData } = classRecord;
+  return {
+    ...classData,
+    serverPublicId: server.publicId,
+  };
+}
 
 // ─── Authorization Helpers ─────────────────────────────────────────────────
 
@@ -488,7 +501,7 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
   });
 
   invalidateSystemStatsCache();
-  return classRecord;
+  return toPublicClass(classRecord);
 }
 
 export async function listClasses(query: ListClassesQuery, callerUserId: number) {
@@ -508,7 +521,7 @@ export async function listClasses(query: ListClassesQuery, callerUserId: number)
   ]);
 
   return {
-    data: classes,
+    data: classes.map(toPublicClass),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
@@ -527,7 +540,7 @@ export async function getClassById(id: number, callerUserId: number) {
   const permissions = buildClassPermissions(context, buildClassPermissionTarget(classRecord));
 
   return {
-    ...classRecord,
+    ...toPublicClass(classRecord),
     permissions,
   };
 }

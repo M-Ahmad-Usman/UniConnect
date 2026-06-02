@@ -4,7 +4,7 @@ import { DEFAULT_PAGE_SIZE, queryKeys } from '@/lib/constants';
 import type { PostListParams } from '@/types';
 import { normalizePostListParams, toQueryParamsRecord } from '../utils';
 
-export function useChannelPosts(channelId: number | null, params?: PostListParams) {
+export function useChannelPosts(channelPublicId: string | null, params?: PostListParams) {
   const normalizedParams = normalizePostListParams({
     limit: DEFAULT_PAGE_SIZE,
     ...params,
@@ -12,11 +12,11 @@ export function useChannelPosts(channelId: number | null, params?: PostListParam
 
   return useInfiniteQuery({
     queryKey:
-      channelId !== null
-        ? queryKeys.posts.byChannel(channelId, toQueryParamsRecord(normalizedParams))
+      channelPublicId !== null
+        ? queryKeys.posts.byChannel(channelPublicId, toQueryParamsRecord(normalizedParams))
         : ['posts', 'idle'],
     queryFn: ({ pageParam }) =>
-      postsApi.listByChannel(channelId as number, {
+      postsApi.listByChannel(channelPublicId as string, {
         ...normalizedParams,
         page: pageParam,
       }),
@@ -28,7 +28,7 @@ export function useChannelPosts(channelId: number | null, params?: PostListParam
 
       return lastPage.pagination.page + 1;
     },
-    enabled: channelId !== null,
+    enabled: channelPublicId !== null,
     refetchOnMount: 'always',
   });
 }

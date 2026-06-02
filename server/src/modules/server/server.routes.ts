@@ -1,6 +1,11 @@
+import type { Request } from "express";
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
+import {
+  getResolvedServerTarget,
+  resolveServerTarget,
+} from "../../middleware/resolveCommunicationTarget.js";
 import { validate } from "../../middleware/validate.js";
 import { uploadLimiter } from "../../middleware/rateLimiter.js";
 import {
@@ -9,7 +14,7 @@ import {
 } from "../../middleware/upload.js";
 import {
   listServersSchema,
-  serverIdParamSchema,
+  serverPublicIdParamSchema,
   listServerChannelsSchema,
   listServerMembersSchema,
   createChannelSchema,
@@ -24,47 +29,53 @@ import {
 } from "./server.controller.js";
 
 const router = Router();
+const resolvedServerId = (req: Request) => getResolvedServerTarget(req).id;
 
 // ─── Server Endpoints ──────────────────────────────────────────────────────
 
 router.get("/", authenticate, validate(listServersSchema), handleListServers);
 
 router.get(
-  "/:id",
+  "/:publicId",
   authenticate,
-  validate(serverIdParamSchema),
+  validate(serverPublicIdParamSchema),
+  resolveServerTarget,
   handleGetServer,
 );
 
 router.get(
-  "/:id/channels",
+  "/:publicId/channels",
   authenticate,
   validate(listServerChannelsSchema),
+  resolveServerTarget,
   handleListServerChannels,
 );
 
 router.get(
-  "/:id/members",
+  "/:publicId/members",
   authenticate,
   validate(listServerMembersSchema),
+  resolveServerTarget,
   handleListServerMembers,
 );
 
 // ─── Channel Creation ──────────────────────────────────────────────────────
 
 router.post(
-  "/:id/channels",
+  "/:publicId/channels",
   authenticate,
   validate(createChannelSchema),
-  authorize({ permission: "create:channel", serverIdFrom: "id" }),
+  resolveServerTarget,
+  authorize({ permission: "create:channel", serverIdFrom: resolvedServerId }),
   handleCreateChannel,
 );
 
 router.patch(
-  "/:id/icon",
+  "/:publicId/icon",
   authenticate,
-  validate(serverIdParamSchema),
-  authorize({ permission: "create:channel", serverIdFrom: "id" }),
+  validate(serverPublicIdParamSchema),
+  resolveServerTarget,
+  authorize({ permission: "create:channel", serverIdFrom: resolvedServerId }),
   uploadLimiter,
   uploadServerIcon,
   validateImageMagicBytes,

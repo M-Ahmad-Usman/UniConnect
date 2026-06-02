@@ -20,20 +20,20 @@ import { applyApiValidationErrors, getApiErrorMessage } from '@/features/auth/ut
 import type { ChannelListItem } from '@/types';
 
 interface EditChannelDialogProps {
-  serverId: number;
+  serverPublicId: string;
   channel: ChannelListItem;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function EditChannelDialog({
-  serverId,
+  serverPublicId,
   channel,
   open,
   onOpenChange,
 }: EditChannelDialogProps) {
   const [formError, setFormError] = useState<string | null>(null);
-  const updateChannel = useUpdateChannel(serverId);
+  const updateChannel = useUpdateChannel(serverPublicId);
   const {
     control,
     register,
@@ -76,7 +76,7 @@ export function EditChannelDialog({
 
     try {
       await updateChannel.mutateAsync({
-        channelId: channel.id,
+        channelPublicId: channel.publicId,
         payload: {
           name: values.name.trim(),
           description: values.description?.trim() ? values.description.trim() : undefined,

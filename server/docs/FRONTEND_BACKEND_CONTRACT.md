@@ -132,6 +132,14 @@ available.
   - `notification:new`
   - `notification:unread-count`
   - `auth:expired` (client should logout and redirect to login)
+- Channel subscription envelope:
+  - client emits `channel:join` and `channel:leave` with `{ channelPublicId }`
+  - archived, deleted, inactive, malformed, and unauthorized targets do not
+    join rooms or reveal target existence
+  - clients must not subscribe to archived channels
+- Channel feed events carry public IDs:
+  - `post:created`, `post:updated`, `post:pinned`: `{ channelPublicId, post }`
+  - `post:deleted`: `{ channelPublicId, postPublicId }`
 
 ## Endpoint Catalog
 
@@ -161,7 +169,7 @@ available.
   - Multipart field: `file` (CSV)
 - `GET /me`
   - Returns profile plus scoped current-user roles for UI authorization:
-    - `roles: Array<{ role, serverId, channelId?, scopeType, assignmentPublicId?, expiresAt? }>`
+    - `roles: Array<{ role, serverPublicId, channelPublicId?, scopeType, assignmentPublicId?, expiresAt? }>`
     - Role values currently include `hod`, `program_director`, `cr`, `society_president`, `society_convenor`, `server_moderator`, `channel_moderator`
     - `scopeType` is `"server"` or `"channel"`
 - `PATCH /me`
@@ -363,47 +371,49 @@ Academic role writes use their owning modules:
 
 - `GET /`
   - Query: `page, limit, type?`
-- `GET /:id`
-- `GET /:id/channels`
+- `GET /:publicId`
+- `GET /:publicId/channels`
   - Query: `includeArchived` (`true|false`)
-- `GET /:id/members`
+- `GET /:publicId/members`
   - Query: `page, limit`
-- `POST /:id/channels`
+- `POST /:publicId/channels`
   - Body: `{ name, description? }`
-- `PATCH /:id/icon`
+- `PATCH /:publicId/icon`
   - Multipart field: `serverIcon`
   - Requires `create:channel` permission on the server
-  - Response: `{ id, iconUrl }`
+  - Response: `{ publicId, iconUrl }`
 
 ### Channels (`/api/channels`)
 
-- `PATCH /:id`
+- `PATCH /:publicId`
   - Body: `{ name?, description? }`
-- `PATCH /:id/lock`
-- `PATCH /:id/unlock`
-- `DELETE /:id`
+- `PATCH /:publicId/lock`
+- `PATCH /:publicId/unlock`
+- `DELETE /:publicId`
+- Archived channels remain readable history but reject all writes with
+  `CHANNEL_ARCHIVED`.
 
 ### Channel Posts (mounted under `/api/channels`)
 
-- `POST /:id/posts`
+- `POST /:publicId/posts`
   - Body: `{ title, content, priority? }`
   - Multipart field for attachments: `attachments`
   - General channels accept posts from any active server member unless locked.
   - New-post notification messages include both server and channel names.
-- `GET /:id/posts`
+- `GET /:publicId/posts`
   - Query: `page, limit, search?, priority?, startDate?, endDate?`
   - Response items include bounded `attachments[]` preview metadata plus `_count.attachments`
 
 ### Posts (`/api/posts`)
 
-- `GET /:id`
-- `PATCH /:id`
+- `GET /:publicId`
+- `PATCH /:publicId`
   - Body: `{ title?, content?, priority? }`
-- `DELETE /:id`
+- `DELETE /:publicId`
   - Soft-deletes the post and removes linked `NEW_POST` notifications.
-- `PATCH /:id/pin`
+- `PATCH /:publicId/pin`
   - Body: `{ isPinned: boolean }`
-- `POST /:id/attachments`
+- `POST /:publicId/attachments`
   - Multipart field: `attachments`
 
 ### Notifications (`/api/notifications`)
@@ -421,9 +431,9 @@ Academic role writes use their owning modules:
 ### Notification Preferences (`/api/notification-preferences`)
 
 - `GET /`
-  - Query: `serverId?, notificationType?`
+  - Query: `serverPublicId?, notificationType?`
 - `PATCH /`
-  - Body: `{ notificationType, scopeType, serverId, channelId?, isSubscribed }`
+  - Body: `{ notificationType, scopeType, serverPublicId, channelPublicId?, isSubscribed }`
   - `NEW_POST` supports server and channel scope.
   - `ROLE_ASSIGNED` supports server scope only.
   - Society-request and lifecycle notifications do not use notification preferences.

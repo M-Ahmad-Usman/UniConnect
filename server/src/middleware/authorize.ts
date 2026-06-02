@@ -203,6 +203,51 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
   return roles;
 }
 
+export async function getPublicUserRoles(userId: number) {
+  const roles = await getUserRoles(userId);
+  const serverIds = [...new Set(roles.map((role) => role.serverId))];
+  const channelIds = [
+    ...new Set(
+      roles.flatMap((role) => role.channelId === null || role.channelId === undefined
+        ? []
+        : [role.channelId]),
+    ),
+  ];
+  const [servers, channels] = await Promise.all([
+    prisma.server.findMany({
+      where: { id: { in: serverIds } },
+      select: { id: true, publicId: true },
+    }),
+    prisma.channel.findMany({
+      where: { id: { in: channelIds } },
+      select: { id: true, publicId: true },
+    }),
+  ]);
+  const serverPublicIds = new Map(servers.map((server) => [server.id, server.publicId]));
+  const channelPublicIds = new Map(channels.map((channel) => [channel.id, channel.publicId]));
+
+  return roles.map(({ serverId, channelId, ...role }) => {
+    const serverPublicId = serverPublicIds.get(serverId);
+    if (!serverPublicId) {
+      throw new Error("Role server public ID could not be resolved");
+    }
+
+    const channelPublicId =
+      channelId === null || channelId === undefined
+        ? null
+        : channelPublicIds.get(channelId);
+    if (channelId !== null && channelId !== undefined && !channelPublicId) {
+      throw new Error("Role channel public ID could not be resolved");
+    }
+
+    return {
+      ...role,
+      serverPublicId,
+      ...(channelPublicId === null ? {} : { channelPublicId }),
+    };
+  });
+}
+
 // ─── Middleware ────────────────────────────────────────────────────────────
 
 export function authorize(options: AuthorizeOptions) {

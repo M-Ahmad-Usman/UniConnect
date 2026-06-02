@@ -1,18 +1,19 @@
 import { z } from "zod";
 import { MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH } from "../../shared/constants.js";
+import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 // ─── Param Schemas ─────────────────────────────────────────────────────────
 
-export const channelIdParamSchema = {
+export const channelPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Channel ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
 
-export const postIdParamSchema = {
+export const postPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Post ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
 
@@ -20,7 +21,7 @@ export const postIdParamSchema = {
 
 export const createPostSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Channel ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
     title: z
@@ -43,7 +44,7 @@ export const createPostSchema = {
 
 export const updatePostSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Post ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z
     .object({
@@ -77,7 +78,7 @@ export const updatePostSchema = {
 
 export const listPostsSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Channel ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: paginationQuerySchema
     .extend({
@@ -104,7 +105,7 @@ export const listPostsSchema = {
 
 export const pinPostSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Post ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
     isPinned: z.boolean({ error: "isPinned must be a boolean" }),

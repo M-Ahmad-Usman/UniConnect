@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse } from "../../shared/types/index.js";
+import { getResolvedChannelTarget } from "../../middleware/resolveCommunicationTarget.js";
 import * as channelService from "./channel.service.js";
 import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
 
@@ -16,7 +17,7 @@ function auditContextFromRequest(req: Request) {
 
 export async function handleUpdateChannel(req: Request, res: Response): Promise<void> {
   const channel = await channelService.updateChannel(
-    Number(req.params.id),
+    getResolvedChannelTarget(req).id,
     req.body,
     { id: req.user!.id, userType: req.user!.userType }
   );
@@ -24,7 +25,7 @@ export async function handleUpdateChannel(req: Request, res: Response): Promise<
     {
       action: "channel.update",
       targetType: "channel",
-      targetId: req.params.id,
+      targetId: getResolvedChannelTarget(req).publicId,
       summary: { changedFields: Object.keys(req.body as Record<string, unknown>) },
     },
     auditContextFromRequest(req)
@@ -40,7 +41,7 @@ export async function handleUpdateChannel(req: Request, res: Response): Promise<
 }
 
 export async function handleLockChannel(req: Request, res: Response): Promise<void> {
-  const channel = await channelService.lockChannel(Number(req.params.id), {
+  const channel = await channelService.lockChannel(getResolvedChannelTarget(req).id, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -48,7 +49,7 @@ export async function handleLockChannel(req: Request, res: Response): Promise<vo
     {
       action: "channel.lock",
       targetType: "channel",
-      targetId: req.params.id,
+      targetId: getResolvedChannelTarget(req).publicId,
       summary: { isLocked: { before: false, after: true } },
     },
     auditContextFromRequest(req)
@@ -64,7 +65,7 @@ export async function handleLockChannel(req: Request, res: Response): Promise<vo
 }
 
 export async function handleUnlockChannel(req: Request, res: Response): Promise<void> {
-  const channel = await channelService.unlockChannel(Number(req.params.id), {
+  const channel = await channelService.unlockChannel(getResolvedChannelTarget(req).id, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -72,7 +73,7 @@ export async function handleUnlockChannel(req: Request, res: Response): Promise<
     {
       action: "channel.unlock",
       targetType: "channel",
-      targetId: req.params.id,
+      targetId: getResolvedChannelTarget(req).publicId,
       summary: { isLocked: { before: true, after: false } },
     },
     auditContextFromRequest(req)
@@ -88,7 +89,7 @@ export async function handleUnlockChannel(req: Request, res: Response): Promise<
 }
 
 export async function handleDeleteChannel(req: Request, res: Response): Promise<void> {
-  await channelService.deleteChannel(Number(req.params.id), {
+  await channelService.deleteChannel(getResolvedChannelTarget(req).id, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -96,7 +97,7 @@ export async function handleDeleteChannel(req: Request, res: Response): Promise<
     {
       action: "channel.delete",
       targetType: "channel",
-      targetId: req.params.id,
+      targetId: getResolvedChannelTarget(req).publicId,
     },
     auditContextFromRequest(req)
   );

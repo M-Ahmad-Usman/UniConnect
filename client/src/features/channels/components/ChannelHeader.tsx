@@ -1,4 +1,4 @@
-import { BookMarked, Hash, Layers3, Lock, Megaphone, Unlock, Plus } from 'lucide-react';
+import { Archive, BookMarked, Hash, Layers3, Lock, Megaphone, Unlock, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Can } from '@/components/shared/Can';
@@ -11,7 +11,7 @@ import { ROUTES } from '@/lib/constants';
 import { ChannelType, type ChannelListItem } from '@/types';
 
 interface ChannelHeaderProps {
-  serverId: number;
+  serverPublicId: string;
   channel: ChannelListItem;
 }
 
@@ -29,9 +29,9 @@ function getChannelMeta(type: ChannelListItem['type']) {
   }
 }
 
-export function ChannelHeader({ serverId, channel }: ChannelHeaderProps) {
+export function ChannelHeader({ serverPublicId, channel }: ChannelHeaderProps) {
   const navigate = useNavigate();
-  const permissions = usePermissions(serverId);
+  const permissions = usePermissions(serverPublicId);
   const [createOpen, setCreateOpen] = useState(false);
   const meta = getChannelMeta(channel.type);
   const ChannelTypeIcon = meta.icon;
@@ -47,7 +47,12 @@ export function ChannelHeader({ serverId, channel }: ChannelHeaderProps) {
                 <ChannelTypeIcon className="mr-1 size-3.5" />
                 {meta.label}
               </Badge>
-              {channel.isLocked ? (
+              {channel.isArchived ? (
+                <Badge variant="outline" className="gap-1">
+                  <Archive className="size-3" />
+                  Archived read-only
+                </Badge>
+              ) : channel.isLocked ? (
                 <Badge variant="outline" className="gap-1">
                   <Lock className="size-3" />
                   Locked
@@ -67,22 +72,26 @@ export function ChannelHeader({ serverId, channel }: ChannelHeaderProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Can when={permissions.canCreateChannels}>
+            <Can when={permissions.canCreateChannels && !channel.isArchived}>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(true)}>
                 <Plus className="size-4" />
                 New channel
               </Button>
             </Can>
-            <ChannelActions serverId={serverId} channel={channel} />
+            {!channel.isArchived ? (
+              <ChannelActions serverPublicId={serverPublicId} channel={channel} />
+            ) : null}
           </div>
         </div>
       </section>
 
       <CreateChannelDialog
-        serverId={serverId}
+        serverPublicId={serverPublicId}
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={(channelId) => navigate(ROUTES.CHANNEL(serverId, channelId))}
+        onCreated={(channelPublicId) =>
+          navigate(ROUTES.CHANNEL(serverPublicId, channelPublicId))
+        }
       />
     </>
   );

@@ -59,6 +59,7 @@ const programDetailSelect = {
       name: true,
       code: true,
       serverId: true,
+      server: { select: { publicId: true } },
     },
   },
   programDirector: {
@@ -94,6 +95,27 @@ const curriculumSelect = {
     },
   },
 } as const;
+
+function toPublicProgramDetail<T extends {
+  department: {
+    serverId: number;
+    server: { publicId: string };
+  };
+}>(program: T) {
+  const { department, ...programData } = program;
+  const {
+    serverId: _serverId,
+    server,
+    ...departmentData
+  } = department;
+  return {
+    ...programData,
+    department: {
+      ...departmentData,
+      serverPublicId: server.publicId,
+    },
+  };
+}
 
 async function assertHodOrAdmin(
   userId: number,
@@ -143,7 +165,7 @@ export async function listPrograms(query: ListProgramsQuery) {
   ]);
 
   return {
-    data: programs,
+    data: programs.map(toPublicProgramDetail),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
@@ -158,7 +180,7 @@ export async function getProgramById(id: number) {
     throw new NotFoundError("Program not found");
   }
 
-  return program;
+  return toPublicProgramDetail(program);
 }
 
 export async function updateProgram(id: number, data: UpdateProgramInput) {

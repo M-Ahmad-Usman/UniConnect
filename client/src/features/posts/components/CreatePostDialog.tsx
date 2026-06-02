@@ -23,7 +23,7 @@ import { useCreatePost } from '../hooks/useCreatePost';
 import { PostEditor } from './PostEditor';
 
 interface CreatePostDialogProps {
-  channelId: number;
+  channelPublicId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
@@ -32,12 +32,12 @@ interface CreatePostDialogProps {
 const priorities = [PostPriority.NORMAL, PostPriority.IMPORTANT, PostPriority.URGENT] as const;
 
 export function CreatePostDialog({
-  channelId,
+  channelPublicId,
   open,
   onOpenChange,
   onCreated,
 }: CreatePostDialogProps) {
-  const createPost = useCreatePost(channelId);
+  const createPost = useCreatePost(channelPublicId);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [plainText, setPlainText] = useState('');

@@ -10,6 +10,8 @@ export async function getMyPermissions(userId: number) {
   return {
     global: buildGlobalPermissions(context),
     roleWorkspace: buildRoleWorkspacePermissions(context),
-    scopes: context.scopes,
+    scopes: {
+      hodDepartmentIds: context.scopes.hodDepartmentIds,
+    },
   };
 }

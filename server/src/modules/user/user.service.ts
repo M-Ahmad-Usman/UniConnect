@@ -22,7 +22,7 @@ import { buildPaginationResponse, parsePagination } from "../../shared/utils/pag
 import type { AuthUser, PaginatedResponse } from "../../shared/types/index.js";
 import { mapUserPublicDto, resolveUserPublicId } from "../../shared/ids/index.js";
 import { disconnectUserSockets } from "../../socket/index.js";
-import { getUserRoles } from "../../middleware/authorize.js";
+import { getPublicUserRoles } from "../../middleware/authorize.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { AuditContext } from "../audit/audit.service.js";
 import { recordAuditLog } from "../audit/audit.service.js";
@@ -512,7 +512,7 @@ export async function getProfile(userId: number) {
     throw new NotFoundError("User not found");
   }
 
-  const roles = await getUserRoles(userId);
+  const roles = await getPublicUserRoles(userId);
 
   return {
     ...mapLifecycleUser(user),

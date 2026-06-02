@@ -52,6 +52,14 @@ are now captured here and in `docs/security.md`:
 - Added standardized frontend-facing API error codes and request IDs.
 - Added optional Sentry telemetry for unexpected server failures, disabled unless
   `SENTRY_DSN` is configured.
+- Migrated server, channel, and post HTTP contracts to strict UUIDv7 public IDs
+  with request-local target resolution while keeping numeric database keys
+  internal.
+- Kept archived channels readable as history while rejecting writes with
+  `CHANNEL_ARCHIVED`; communication writes use transaction-time lifecycle and
+  membership revalidation where required.
+- Hardened Socket.IO channel subscriptions with public-ID envelopes, lifecycle
+  checks, bounded join attempts, and a concurrency-safe 32-room cap.
 
 ## Current Maintenance Rules
 - Run backend commands inside `server/`.

@@ -20,21 +20,23 @@ import { PostActions } from './PostActions';
 import { PriorityBadge } from './PriorityBadge';
 
 interface PostDetailDialogProps {
-  channelId: number;
-  postId: number | null;
+  channelPublicId: string;
+  postPublicId: string | null;
   open: boolean;
   canPin: boolean;
+  readOnly?: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function PostDetailDialog({
-  channelId,
-  postId,
+  channelPublicId,
+  postPublicId,
   open,
   canPin,
+  readOnly = false,
   onOpenChange,
 }: PostDetailDialogProps) {
-  const postQuery = usePost(open ? postId : null);
+  const postQuery = usePost(open ? postPublicId : null);
   const post = postQuery.data ?? null;
 
   return (
@@ -79,9 +81,10 @@ export function PostDetailDialog({
                   </DialogDescription>
                 </div>
                 <PostActions
-                  channelId={channelId}
+                  channelPublicId={channelPublicId}
                   post={post}
                   canPin={canPin}
+                  readOnly={readOnly}
                   onDeleted={() => onOpenChange(false)}
                 />
               </div>

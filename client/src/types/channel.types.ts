@@ -3,11 +3,11 @@ import type { ChannelType } from './enums';
 // ─── Channel ────────────────────────────────────────────────────────────────
 
 export interface Channel {
-  id: number;
+  publicId: string;
   name: string;
   description: string | null;
   type: ChannelType;
-  serverId: number;
+  serverPublicId: string;
   isLocked: boolean;
   isArchived: boolean;
   isAutoCreated: boolean;
@@ -20,7 +20,7 @@ export interface Channel {
 // ─── Channel List Item (from server channels list) ──────────────────────────
 
 export interface ChannelListItem {
-  id: number;
+  publicId: string;
   name: string;
   description: string | null;
   type: ChannelType;
@@ -40,8 +40,8 @@ export interface CreateChannelRequest {
 }
 
 export interface CreateChannelResponse {
-  id: number;
-  serverId: number;
+  publicId: string;
+  serverPublicId: string;
   name: string;
   description: string | null;
   type: ChannelType;
@@ -58,8 +58,8 @@ export interface UpdateChannelRequest {
 }
 
 export interface UpdateChannelResponse {
-  id: number;
-  serverId: number;
+  publicId: string;
+  serverPublicId: string;
   name: string;
   description: string | null;
   type: ChannelType;

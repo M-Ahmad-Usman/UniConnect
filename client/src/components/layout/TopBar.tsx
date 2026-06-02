@@ -10,7 +10,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
 import { parseSearchParam } from '@/features/posts/utils';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { UserDropdown } from './UserDropdown';
@@ -24,14 +24,14 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const serverId = parseRouteParamId(params.serverId);
-  const channelId = parseRouteParamId(params.channelId);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
+  const channelPublicId = parseRouteParamPublicId(params.channelPublicId);
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
   const isAcademicRoute = location.pathname.startsWith('/academics');
   const isWorkspaceRoute = isAdminRoute || isAcademicRoute;
-  const isChannelRoute = serverId !== null && channelId !== null && !isWorkspaceRoute;
-  const serverQuery = useServerDetail(serverId);
-  const channelQuery = useServerChannels(serverId, false);
+  const isChannelRoute = serverPublicId !== null && channelPublicId !== null && !isWorkspaceRoute;
+  const serverQuery = useServerDetail(serverPublicId);
+  const channelQuery = useServerChannels(serverPublicId, true);
   const searchParamValue = parseSearchParam(searchParams.get('search'));
   const [searchInput, setSearchInput] = useState(() => searchParamValue);
   const debouncedSearchInput = useDebouncedValue(searchInput, 500);
@@ -65,8 +65,8 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
   }, [debouncedSearchInput, isChannelRoute, searchParams, setSearchParams]);
 
   const activeChannel = useMemo(
-    () => channelQuery.data?.find((channel) => channel.id === channelId) ?? null,
-    [channelId, channelQuery.data],
+    () => channelQuery.data?.find((channel) => channel.publicId === channelPublicId) ?? null,
+    [channelPublicId, channelQuery.data],
   );
   const hasNavigationError = serverQuery.isError || channelQuery.isError;
 

@@ -6,11 +6,12 @@ import { insertChannel } from '@/features/channels/utils';
 import type { ChannelListItem, ServerDetail } from '@/types';
 import type { ApiError, CreateChannelRequest } from '@/types';
 
-export function useCreateChannel(serverId: number) {
-  const channelQueryKey = ['servers', serverId, 'channels'] as const;
+export function useCreateChannel(serverPublicId: string) {
+  const channelQueryKey = ['servers', serverPublicId, 'channels'] as const;
 
   return useMutation({
-    mutationFn: (payload: CreateChannelRequest) => serversApi.createChannel(serverId, payload),
+    mutationFn: (payload: CreateChannelRequest) =>
+      serversApi.createChannel(serverPublicId, payload),
     meta: {
       suppressErrorToast: true,
     },
@@ -18,7 +19,7 @@ export function useCreateChannel(serverId: number) {
       queryClient.setQueriesData<ChannelListItem[]>({ queryKey: channelQueryKey }, (current) =>
         current ? insertChannel(current, channel) : current,
       );
-      queryClient.setQueryData<ServerDetail>(queryKeys.servers.detail(serverId), (current) =>
+      queryClient.setQueryData<ServerDetail>(queryKeys.servers.detail(serverPublicId), (current) =>
         current
           ? {
               ...current,
@@ -31,7 +32,7 @@ export function useCreateChannel(serverId: number) {
       );
 
       void queryClient.invalidateQueries({ queryKey: channelQueryKey });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.detail(serverId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.detail(serverPublicId) });
     },
   });
 }

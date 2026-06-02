@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { e2eUsers } from './helpers/auth';
-import { findChannelIdByName, findServerIdByName, module3Fixtures } from './helpers/module3';
+import {
+  findChannelPublicIdByName,
+  findServerPublicIdByName,
+  module3Fixtures,
+} from './helpers/module3';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -12,16 +16,16 @@ async function signIn(page: Page, email: string, password: string) {
 
 test.describe('Module 3 server and channel flows', () => {
   test('authorized manager can create, edit, lock, unlock, and delete a channel', async ({ page }) => {
-    const serverId = await findServerIdByName(module3Fixtures.serverName);
-    expect(serverId).not.toBeNull();
+    const serverPublicId = await findServerPublicIdByName(module3Fixtures.serverName);
+    expect(serverPublicId).not.toBeNull();
 
-    const announcementChannelId = serverId
-      ? await findChannelIdByName(serverId, module3Fixtures.announcementChannelName)
+    const announcementChannelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module3Fixtures.announcementChannelName)
       : null;
-    expect(announcementChannelId).not.toBeNull();
+    expect(announcementChannelPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
-    await page.goto(`/servers/${serverId}/channels/${announcementChannelId}`);
+    await page.goto(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}`);
 
     await expect(page.getByRole('button', { name: 'New channel' })).toBeVisible();
 
@@ -34,18 +38,21 @@ test.describe('Module 3 server and channel flows', () => {
       (input as HTMLInputElement).form?.requestSubmit();
     });
 
-    let createdChannelId: number | null = null;
+    let createdChannelPublicId: string | null = null;
     await expect
       .poll(
         async () => {
-          createdChannelId = await findChannelIdByName(serverId as number, module3Fixtures.createdChannelName);
-          return createdChannelId;
+          createdChannelPublicId = await findChannelPublicIdByName(
+            serverPublicId as string,
+            module3Fixtures.createdChannelName,
+          );
+          return createdChannelPublicId;
         },
         { timeout: 15000 },
       )
       .not.toBeNull();
 
-    await page.goto(`/servers/${serverId}/channels/${createdChannelId}`);
+    await page.goto(`/servers/${serverPublicId}/channels/${createdChannelPublicId}`);
     await expect(page.getByRole('heading', { name: module3Fixtures.createdChannelName })).toBeVisible();
 
     await page.getByRole('button', { name: 'Open channel actions' }).click();
@@ -74,34 +81,36 @@ test.describe('Module 3 server and channel flows', () => {
     await page.getByRole('button', { name: 'Delete' }).focus();
     await page.keyboard.press('Enter');
 
-    await expect(page).toHaveURL(new RegExp(`/servers/${serverId}/channels/\\d+$`));
+    await expect(page).toHaveURL(
+      new RegExp(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}$`),
+    );
     await expect(
       page.getByRole('heading', { name: module3Fixtures.announcementChannelName, exact: true }),
     ).toBeVisible();
   });
 
   test('viewer does not see channel management controls', async ({ page }) => {
-    const serverId = await findServerIdByName(module3Fixtures.serverName);
-    expect(serverId).not.toBeNull();
+    const serverPublicId = await findServerPublicIdByName(module3Fixtures.serverName);
+    expect(serverPublicId).not.toBeNull();
 
-    const announcementChannelId = serverId
-      ? await findChannelIdByName(serverId, module3Fixtures.announcementChannelName)
+    const announcementChannelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module3Fixtures.announcementChannelName)
       : null;
-    expect(announcementChannelId).not.toBeNull();
+    expect(announcementChannelPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleViewer.email, e2eUsers.moduleViewer.password);
-    await page.goto(`/servers/${serverId}/channels/${announcementChannelId}`);
+    await page.goto(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}`);
 
     await expect(page.getByRole('button', { name: 'New channel' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Open channel actions' })).toHaveCount(0);
   });
 
   test('members route renders paginated cards with role badges', async ({ page }) => {
-    const serverId = await findServerIdByName(module3Fixtures.serverName);
-    expect(serverId).not.toBeNull();
+    const serverPublicId = await findServerPublicIdByName(module3Fixtures.serverName);
+    expect(serverPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
-    await page.goto(`/servers/${serverId}/members`);
+    await page.goto(`/servers/${serverPublicId}/members`);
 
     await expect(page.getByRole('heading', { name: 'Server members' })).toBeVisible();
     await expect(page.getByText('Showing 1-20 of 24')).toBeVisible();
@@ -109,7 +118,7 @@ test.describe('Module 3 server and channel flows', () => {
     await expect(page.locator('article')).toHaveCount(20);
 
     await page.getByRole('button', { name: 'Next' }).click();
-    await expect(page).toHaveURL(/\/servers\/\d+\/members\?page=2$/);
+    await expect(page).toHaveURL(new RegExp(`/servers/${serverPublicId}/members\\?page=2$`));
     await expect(page.getByText('Showing 21-24 of 24')).toBeVisible();
     await expect(page.locator('article')).toHaveCount(4);
   });

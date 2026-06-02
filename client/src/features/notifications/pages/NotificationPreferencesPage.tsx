@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/lib/constants';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 import { NotificationScopeType, NotificationType, type UpdatePreferenceRequest } from '@/types';
 import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
@@ -27,8 +27,8 @@ function isSamePreference(
   return (
     left?.notificationType === right.notificationType &&
     left.scopeType === right.scopeType &&
-    left.serverId === right.serverId &&
-    (left.channelId ?? null) === (right.channelId ?? null)
+    left.serverPublicId === right.serverPublicId &&
+    (left.channelPublicId ?? null) === (right.channelPublicId ?? null)
   );
 }
 
@@ -42,15 +42,15 @@ function isPendingPreference(
 
 export function NotificationPreferencesPage() {
   const params = useParams();
-  const serverId = parseRouteParamId(params.serverId);
-  const serverQuery = useServerDetail(serverId);
-  const channelsQuery = useServerChannels(serverId, false);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
+  const serverQuery = useServerDetail(serverPublicId);
+  const channelsQuery = useServerChannels(serverPublicId, false);
   const preferencesQuery = useNotificationPreferences(
-    serverId ? { serverId } : undefined,
+    serverPublicId ? { serverPublicId } : undefined,
   );
   const updatePreference = useUpdateNotificationPreference();
 
-  if (serverId === null) {
+  if (serverPublicId === null) {
     return (
       <EmptyState
         icon={Bell}
@@ -92,8 +92,8 @@ export function NotificationPreferencesPage() {
   const server = serverQuery.data;
   const channels = (channelsQuery.data ?? []).filter((channel) => !channel.isArchived);
   const preferences = preferencesQuery.data;
-  const postServerPreference = getPostServerPreference(preferences, serverId);
-  const roleServerPreference = getRoleServerPreference(preferences, serverId);
+  const postServerPreference = getPostServerPreference(preferences, serverPublicId);
+  const roleServerPreference = getRoleServerPreference(preferences, serverPublicId);
   const postServerSubscribed = isSubscribed(postServerPreference);
   const roleServerSubscribed = isSubscribed(roleServerPreference);
 
@@ -139,7 +139,7 @@ export function NotificationPreferencesPage() {
               {
                 notificationType: NotificationType.NEW_POST,
                 scopeType: NotificationScopeType.SERVER,
-                serverId,
+                serverPublicId,
               },
               updatePreference.isPending,
             )}
@@ -147,7 +147,7 @@ export function NotificationPreferencesPage() {
               mutatePreference({
                 notificationType: NotificationType.NEW_POST,
                 scopeType: NotificationScopeType.SERVER,
-                serverId,
+                serverPublicId,
                 isSubscribed: isSubscribedValue,
               })
             }
@@ -159,11 +159,15 @@ export function NotificationPreferencesPage() {
             <p className="text-muted-foreground px-4 py-6 text-sm">No visible channels in this server.</p>
           ) : (
             channels.map((channel) => {
-              const preference = getPostChannelPreference(preferences, serverId, channel.id);
+              const preference = getPostChannelPreference(
+                preferences,
+                serverPublicId,
+                channel.publicId,
+              );
               const checked = isSubscribed(preference);
 
               return (
-                <div key={channel.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                <div key={channel.publicId} className="flex items-center justify-between gap-4 px-4 py-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <Hash className="text-muted-foreground size-4 shrink-0" />
                     <div className="min-w-0">
@@ -182,8 +186,8 @@ export function NotificationPreferencesPage() {
                       {
                         notificationType: NotificationType.NEW_POST,
                         scopeType: NotificationScopeType.CHANNEL,
-                        serverId,
-                        channelId: channel.id,
+                        serverPublicId,
+                        channelPublicId: channel.publicId,
                       },
                       updatePreference.isPending,
                     )}
@@ -191,8 +195,8 @@ export function NotificationPreferencesPage() {
                       mutatePreference({
                         notificationType: NotificationType.NEW_POST,
                         scopeType: NotificationScopeType.CHANNEL,
-                        serverId,
-                        channelId: channel.id,
+                        serverPublicId,
+                        channelPublicId: channel.publicId,
                         isSubscribed: isSubscribedValue,
                       })
                     }
@@ -225,7 +229,7 @@ export function NotificationPreferencesPage() {
               {
                 notificationType: NotificationType.ROLE_ASSIGNED,
                 scopeType: NotificationScopeType.SERVER,
-                serverId,
+                serverPublicId,
               },
               updatePreference.isPending,
             )}
@@ -233,7 +237,7 @@ export function NotificationPreferencesPage() {
               mutatePreference({
                 notificationType: NotificationType.ROLE_ASSIGNED,
                 scopeType: NotificationScopeType.SERVER,
-                serverId,
+                serverPublicId,
                 isSubscribed: isSubscribedValue,
               })
             }

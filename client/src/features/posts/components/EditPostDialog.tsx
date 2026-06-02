@@ -22,7 +22,7 @@ import { useUpdatePost } from '../hooks/useUpdatePost';
 import { PostEditor } from './PostEditor';
 
 interface EditPostDialogProps {
-  channelId: number;
+  channelPublicId: string;
   post: PostDetail | PostListItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,8 +30,8 @@ interface EditPostDialogProps {
 
 const priorities = [PostPriority.NORMAL, PostPriority.IMPORTANT, PostPriority.URGENT] as const;
 
-export function EditPostDialog({ channelId, post, open, onOpenChange }: EditPostDialogProps) {
-  const updatePost = useUpdatePost(channelId);
+export function EditPostDialog({ channelPublicId, post, open, onOpenChange }: EditPostDialogProps) {
+  const updatePost = useUpdatePost(channelPublicId);
   const [title, setTitle] = useState(() => post?.title ?? '');
   const [content, setContent] = useState(() => post?.content ?? '');
   const [plainText, setPlainText] = useState(() => post?.content.replace(/<[^>]*>/g, ' ').trim() ?? '');
@@ -64,7 +64,7 @@ export function EditPostDialog({ channelId, post, open, onOpenChange }: EditPost
     setErrors([]);
     try {
       await updatePost.mutateAsync({
-        postId: post.id,
+        postPublicId: post.publicId,
         payload: parsed.data,
       });
       onOpenChange(false);

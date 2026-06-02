@@ -6,19 +6,19 @@ import { removeChannelFromList } from '@/features/channels/utils';
 import type { ChannelListItem, ServerDetail } from '@/types';
 import type { ApiError } from '@/types';
 
-export function useDeleteChannel(serverId: number) {
-  const channelQueryKey = ['servers', serverId, 'channels'] as const;
+export function useDeleteChannel(serverPublicId: string) {
+  const channelQueryKey = ['servers', serverPublicId, 'channels'] as const;
 
   return useMutation({
-    mutationFn: (channelId: number) => channelsApi.deleteChannel(channelId),
+    mutationFn: (channelPublicId: string) => channelsApi.deleteChannel(channelPublicId),
     meta: {
       suppressErrorToast: true,
     },
-    onSuccess: (_, channelId) => {
+    onSuccess: (_, channelPublicId) => {
       queryClient.setQueriesData<ChannelListItem[]>({ queryKey: channelQueryKey }, (current) =>
-        current ? removeChannelFromList(current, channelId) : current,
+        current ? removeChannelFromList(current, channelPublicId) : current,
       );
-      queryClient.setQueryData<ServerDetail>(queryKeys.servers.detail(serverId), (current) =>
+      queryClient.setQueryData<ServerDetail>(queryKeys.servers.detail(serverPublicId), (current) =>
         current
           ? {
               ...current,
@@ -31,8 +31,8 @@ export function useDeleteChannel(serverId: number) {
       );
 
       void queryClient.invalidateQueries({ queryKey: channelQueryKey });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.detail(serverId) });
-      void queryClient.removeQueries({ queryKey: ['posts', channelId] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.detail(serverPublicId) });
+      void queryClient.removeQueries({ queryKey: ['posts', channelPublicId] });
     },
   });
 }

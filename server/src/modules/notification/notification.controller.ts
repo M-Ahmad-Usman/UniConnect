@@ -64,7 +64,9 @@ export async function handleGetPreferences(req: Request, res: Response): Promise
   const preferences = await notificationService.getPreferences(
     req.user!.id,
     {
-      serverId: req.query.serverId ? Number(req.query.serverId) : undefined,
+      serverPublicId: req.query.serverPublicId
+        ? String(req.query.serverPublicId)
+        : undefined,
       notificationType: req.query.notificationType as "NEW_POST" | "ROLE_ASSIGNED" | undefined,
     }
   );

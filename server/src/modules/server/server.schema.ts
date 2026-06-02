@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
-export const serverIdParamSchema = {
+export const serverPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Server ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
 
@@ -25,7 +26,7 @@ export const listServersSchema = {
 
 export const listServerChannelsSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Server ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: z.object({
     includeArchived: z
@@ -39,7 +40,7 @@ export const listServerChannelsSchema = {
 
 export const listServerMembersSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Server ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: paginationQuerySchema,
 };
@@ -48,7 +49,7 @@ export const listServerMembersSchema = {
 
 export const createChannelSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Server ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
     name: z

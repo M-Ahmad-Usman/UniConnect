@@ -1,12 +1,16 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js";
+import {
+  getResolvedChannelTarget,
+  getResolvedPostTarget,
+} from "../../middleware/resolveCommunicationTarget.js";
 import * as postService from "./post.service.js";
 
 // ─── Channel-Scoped Handlers ───────────────────────────────────────────────
 
 export async function handleCreatePost(req: Request, res: Response): Promise<void> {
-  const channelId = Number(req.params.id);
+  const channelId = getResolvedChannelTarget(req).id;
   const files = (req.files as Express.Multer.File[] | undefined) ?? [];
   const uploadedFiles = files.map((f) => ({
     buffer: f.buffer,
@@ -30,7 +34,7 @@ export async function handleCreatePost(req: Request, res: Response): Promise<voi
 }
 
 export async function handleListPosts(req: Request, res: Response): Promise<void> {
-  const channelId = Number(req.params.id);
+  const channelId = getResolvedChannelTarget(req).id;
   const result = await postService.listPosts(channelId, req.query as Record<string, unknown>, {
     id: req.user!.id,
     userType: req.user!.userType,
@@ -48,7 +52,7 @@ export async function handleListPosts(req: Request, res: Response): Promise<void
 // ─── Post-Scoped Handlers ──────────────────────────────────────────────────
 
 export async function handleGetPost(req: Request, res: Response): Promise<void> {
-  const post = await postService.getPost(Number(req.params.id), {
+  const post = await postService.getPost(getResolvedPostTarget(req).id, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -62,7 +66,7 @@ export async function handleGetPost(req: Request, res: Response): Promise<void> 
 }
 
 export async function handleUpdatePost(req: Request, res: Response): Promise<void> {
-  const post = await postService.updatePost(Number(req.params.id), req.body, {
+  const post = await postService.updatePost(getResolvedPostTarget(req).id, req.body, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -77,7 +81,7 @@ export async function handleUpdatePost(req: Request, res: Response): Promise<voi
 }
 
 export async function handleDeletePost(req: Request, res: Response): Promise<void> {
-  await postService.deletePost(Number(req.params.id), {
+  await postService.deletePost(getResolvedPostTarget(req).id, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -92,7 +96,7 @@ export async function handleDeletePost(req: Request, res: Response): Promise<voi
 }
 
 export async function handlePinPost(req: Request, res: Response): Promise<void> {
-  const post = await postService.pinPost(Number(req.params.id), req.body, {
+  const post = await postService.pinPost(getResolvedPostTarget(req).id, req.body, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -114,7 +118,7 @@ export async function handleAddAttachments(req: Request, res: Response): Promise
     size: f.size,
   }));
 
-  const post = await postService.addAttachments(Number(req.params.id), uploadedFiles, {
+  const post = await postService.addAttachments(getResolvedPostTarget(req).id, uploadedFiles, {
     id: req.user!.id,
     userType: req.user!.userType,
   });

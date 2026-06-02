@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 // ─── Param Schemas ─────────────────────────────────────────────────────────
@@ -36,11 +37,7 @@ export const listNotificationsSchema = {
 
 export const listPreferencesSchema = {
   query: z.object({
-    serverId: z.coerce
-      .number()
-      .int()
-      .positive({ error: "Server ID must be a positive integer" })
-      .optional(),
+    serverPublicId: publicIdSchema.optional(),
     notificationType: z.enum(["NEW_POST", "ROLE_ASSIGNED"]).optional(),
   }),
 };
@@ -54,39 +51,32 @@ export const updatePreferenceSchema = {
       scopeType: z.enum(["SERVER", "CHANNEL"], {
         error: "Scope type must be SERVER or CHANNEL",
       }),
-      serverId: z.coerce
-        .number()
-        .int()
-        .positive({ error: "Server ID must be a positive integer" }),
-      channelId: z.coerce
-        .number()
-        .int()
-        .positive({ error: "Channel ID must be a positive integer" })
-        .optional(),
+      serverPublicId: publicIdSchema,
+      channelPublicId: publicIdSchema.optional(),
       isSubscribed: z.boolean({ error: "isSubscribed must be a boolean" }),
     })
     .refine(
       (data) => {
-        if (data.scopeType === "CHANNEL" && !data.channelId) {
+        if (data.scopeType === "CHANNEL" && !data.channelPublicId) {
           return false;
         }
         return true;
       },
       {
-        error: "channelId is required when scopeType is CHANNEL",
-        path: ["channelId"],
+        error: "channelPublicId is required when scopeType is CHANNEL",
+        path: ["channelPublicId"],
       }
     )
     .refine(
       (data) => {
-        if (data.scopeType === "SERVER" && data.channelId) {
+        if (data.scopeType === "SERVER" && data.channelPublicId) {
           return false;
         }
         return true;
       },
       {
-        error: "channelId must not be provided when scopeType is SERVER",
-        path: ["channelId"],
+        error: "channelPublicId must not be provided when scopeType is SERVER",
+        path: ["channelPublicId"],
       }
     )
     .refine(

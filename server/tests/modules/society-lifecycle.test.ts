@@ -20,6 +20,7 @@ import {
   createTeacherWithInfo,
   createUser,
   loginAs,
+  apiId,
 } from "../helpers/factory.js";
 
 let uidCounter = 0;
@@ -117,14 +118,14 @@ describe("Module 5 - Society Lifecycle and Notifications", () => {
     );
 
     const blockedChannel = await request(app)
-      .post(`/api/servers/${fixture.server.id}/channels`)
+      .post(`/api/servers/${apiId(fixture.server)}/channels`)
       .set("Cookie", fixture.adminCookies)
       .send({ name: "blocked-channel" });
     expect(blockedChannel.status).toBe(409);
     expect(blockedChannel.body.error.code).toBe("SOCIETY_SUSPENDED");
 
     const blockedPost = await request(app)
-      .post(`/api/channels/${fixture.general.id}/posts`)
+      .post(`/api/channels/${apiId(fixture.general)}/posts`)
       .set("Cookie", fixture.adminCookies)
       .send({ title: "Blocked", content: "This write must not pass." });
     expect(blockedPost.status).toBe(409);

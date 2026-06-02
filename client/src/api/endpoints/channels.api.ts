@@ -7,23 +7,23 @@ import type {
 } from '@/types';
 
 export const channelsApi = {
-  async updateChannel(channelId: number, payload: UpdateChannelRequest) {
-    const response = await apiClient.patch<UpdateChannelResponse>(`/channels/${channelId}`, payload);
+  async updateChannel(channelPublicId: string, payload: UpdateChannelRequest) {
+    const response = await apiClient.patch<UpdateChannelResponse>(`/channels/${channelPublicId}`, payload);
     return response.data;
   },
 
-  async lockChannel(channelId: number) {
-    const response = await apiClient.patch<LockChannelResponse>(`/channels/${channelId}/lock`);
+  async lockChannel(channelPublicId: string) {
+    const response = await apiClient.patch<LockChannelResponse>(`/channels/${channelPublicId}/lock`);
     return response.data;
   },
 
-  async unlockChannel(channelId: number) {
-    const response = await apiClient.patch<UnlockChannelResponse>(`/channels/${channelId}/unlock`);
+  async unlockChannel(channelPublicId: string) {
+    const response = await apiClient.patch<UnlockChannelResponse>(`/channels/${channelPublicId}/unlock`);
     return response.data;
   },
 
-  async deleteChannel(channelId: number) {
-    const response = await apiClient.delete<null>(`/channels/${channelId}`);
+  async deleteChannel(channelPublicId: string) {
+    const response = await apiClient.delete<null>(`/channels/${channelPublicId}`);
     return response.data;
   },
 };

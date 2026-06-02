@@ -7,17 +7,17 @@ describe('role expiry scheduling', () => {
     expect(
       getNearestRoleExpiryDelay(
         [
-          { role: 'hod', serverId: 1, scopeType: 'server' },
+          { role: 'hod', serverPublicId: 'server-1', scopeType: 'server' },
           {
             role: 'server_moderator',
-            serverId: 1,
+            serverPublicId: 'server-1',
             scopeType: 'server',
             expiresAt: '2026-05-30T12:02:00.000Z',
           },
           {
             role: 'channel_moderator',
-            serverId: 1,
-            channelId: 2,
+            serverPublicId: 'server-1',
+            channelPublicId: 'channel-2',
             scopeType: 'channel',
             expiresAt: '2026-05-30T12:01:00.000Z',
           },
@@ -32,11 +32,11 @@ describe('role expiry scheduling', () => {
     expect(
       getNearestRoleExpiryDelay(
         [
-          { role: 'server_moderator', serverId: 1, scopeType: 'server', expiresAt: null },
-          { role: 'server_moderator', serverId: 1, scopeType: 'server', expiresAt: 'invalid' },
+          { role: 'server_moderator', serverPublicId: 'server-1', scopeType: 'server', expiresAt: null },
+          { role: 'server_moderator', serverPublicId: 'server-1', scopeType: 'server', expiresAt: 'invalid' },
           {
             role: 'channel_moderator',
-            serverId: 1,
+            serverPublicId: 'server-1',
             scopeType: 'channel',
             expiresAt: '2026-05-30T11:59:00.000Z',
           },

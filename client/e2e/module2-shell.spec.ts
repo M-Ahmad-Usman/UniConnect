@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { e2eUsers } from './helpers/auth';
-import { findChannelIdByName, findServerIdByName, module2Fixtures } from './helpers/module2';
+import {
+  findChannelPublicIdByName,
+  findServerPublicIdByName,
+  module2Fixtures,
+} from './helpers/module2';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -14,18 +18,20 @@ test.describe('Module 2 shell flows', () => {
   test('server routes redirect to the default announcement channel and channel search syncs with the URL', async ({
     page,
   }) => {
-    const serverId = await findServerIdByName(module2Fixtures.shellServerName);
-    const announcementChannelId = serverId
-      ? await findChannelIdByName(serverId, module2Fixtures.announcementChannelName)
+    const serverPublicId = await findServerPublicIdByName(module2Fixtures.shellServerName);
+    const announcementChannelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module2Fixtures.announcementChannelName)
       : null;
 
-    expect(serverId).not.toBeNull();
-    expect(announcementChannelId).not.toBeNull();
+    expect(serverPublicId).not.toBeNull();
+    expect(announcementChannelPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleShell.email, e2eUsers.moduleShell.password);
-    await page.goto(`/servers/${serverId}`);
+    await page.goto(`/servers/${serverPublicId}`);
 
-    await expect(page).toHaveURL(new RegExp(`/servers/${serverId}/channels/${announcementChannelId}$`));
+    await expect(page).toHaveURL(
+      new RegExp(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}$`),
+    );
     await expect(
       page.getByRole('heading', { name: module2Fixtures.announcementChannelName, exact: true }),
     ).toBeVisible();
@@ -58,13 +64,13 @@ test.describe('Module 2 shell flows', () => {
   });
 
   test('notification preview shows unread count and routes into the linked channel', async ({ page }) => {
-    const serverId = await findServerIdByName(module2Fixtures.notificationServerName);
-    const channelId = serverId
-      ? await findChannelIdByName(serverId, module2Fixtures.notificationChannelName)
+    const serverPublicId = await findServerPublicIdByName(module2Fixtures.notificationServerName);
+    const channelPublicId = serverPublicId
+      ? await findChannelPublicIdByName(serverPublicId, module2Fixtures.notificationChannelName)
       : null;
 
-    expect(serverId).not.toBeNull();
-    expect(channelId).not.toBeNull();
+    expect(serverPublicId).not.toBeNull();
+    expect(channelPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleNotifications.email, e2eUsers.moduleNotifications.password);
     await expect(page.getByRole('button', { name: 'Notifications' })).toContainText('2');
@@ -75,7 +81,9 @@ test.describe('Module 2 shell flows', () => {
 
     await page.getByRole('button', { name: new RegExp(module2Fixtures.notificationTitle) }).first().click();
 
-    await expect(page).toHaveURL(new RegExp(`/servers/${serverId}/channels/${channelId}$`));
+    await expect(page).toHaveURL(
+      new RegExp(`/servers/${serverPublicId}/channels/${channelPublicId}$`),
+    );
     await expect(
       page.getByRole('heading', { name: module2Fixtures.notificationChannelName, exact: true }),
     ).toBeVisible();

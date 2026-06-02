@@ -3,7 +3,7 @@ import type { PostPriority } from './enums';
 // ─── Post Author ────────────────────────────────────────────────────────────
 
 export interface PostAuthor {
-  id: number;
+  publicId: string;
   fullName: string;
   email: string;
   userType: string;
@@ -24,7 +24,7 @@ export interface PostAttachment {
 // ─── Post List Item (feed) ──────────────────────────────────────────────────
 
 export interface PostListItem {
-  id: number;
+  publicId: string;
   title: string;
   content: string;
   priority: PostPriority;
@@ -42,7 +42,7 @@ export interface PostListItem {
 // ─── Post Detail ────────────────────────────────────────────────────────────
 
 export interface PostDetail {
-  id: number;
+  publicId: string;
   title: string;
   content: string;
   priority: PostPriority;
@@ -52,7 +52,7 @@ export interface PostDetail {
   updatedAt: string | null;
   author: PostAuthor;
   attachments: PostAttachment[];
-  pinner: { id: number; fullName: string } | null;
+  pinner: { publicId: string; fullName: string } | null;
 }
 
 // ─── Create / Update Post ───────────────────────────────────────────────────
@@ -84,11 +84,11 @@ export interface PostListParams {
 // ─── Socket Event Payloads ────────────────────────────────────────────────
 
 export interface PostRealtimePayload {
-  channelId: number;
+  channelPublicId: string;
   post: PostDetail;
 }
 
 export interface PostDeletedPayload {
-  channelId: number;
-  postId: number;
+  channelPublicId: string;
+  postPublicId: string;
 }

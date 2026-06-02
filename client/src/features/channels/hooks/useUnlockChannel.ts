@@ -5,11 +5,11 @@ import { updateChannelInList } from '@/features/channels/utils';
 import type { ChannelListItem } from '@/types';
 import type { ApiError } from '@/types';
 
-export function useUnlockChannel(serverId: number) {
-  const channelQueryKey = ['servers', serverId, 'channels'] as const;
+export function useUnlockChannel(serverPublicId: string) {
+  const channelQueryKey = ['servers', serverPublicId, 'channels'] as const;
 
   return useMutation({
-    mutationFn: (channelId: number) => channelsApi.unlockChannel(channelId),
+    mutationFn: (channelPublicId: string) => channelsApi.unlockChannel(channelPublicId),
     meta: {
       suppressErrorToast: true,
     },

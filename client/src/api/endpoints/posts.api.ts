@@ -22,22 +22,22 @@ function buildPostFormData(payload: CreatePostRequest) {
 }
 
 export const postsApi = {
-  async listByChannel(channelId: number, params?: PostListParams) {
+  async listByChannel(channelPublicId: string, params?: PostListParams) {
     const response = await apiClient.get<PaginatedResponse<PostListItem>>(
-      `/channels/${channelId}/posts`,
+      `/channels/${channelPublicId}/posts`,
       { params },
     );
     return response.data;
   },
 
-  async get(postId: number) {
-    const response = await apiClient.get<PostDetail>(`/posts/${postId}`);
+  async get(postPublicId: string) {
+    const response = await apiClient.get<PostDetail>(`/posts/${postPublicId}`);
     return response.data;
   },
 
-  async create(channelId: number, payload: CreatePostRequest) {
+  async create(channelPublicId: string, payload: CreatePostRequest) {
     const response = await apiClient.post<PostDetail>(
-      `/channels/${channelId}/posts`,
+      `/channels/${channelPublicId}/posts`,
       buildPostFormData(payload),
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -46,17 +46,17 @@ export const postsApi = {
     return response.data;
   },
 
-  async update(postId: number, payload: UpdatePostRequest) {
-    const response = await apiClient.patch<PostDetail>(`/posts/${postId}`, payload);
+  async update(postPublicId: string, payload: UpdatePostRequest) {
+    const response = await apiClient.patch<PostDetail>(`/posts/${postPublicId}`, payload);
     return response.data;
   },
 
-  async delete(postId: number) {
-    await apiClient.delete<null>(`/posts/${postId}`);
+  async delete(postPublicId: string) {
+    await apiClient.delete<null>(`/posts/${postPublicId}`);
   },
 
-  async pin(postId: number, isPinned: boolean) {
-    const response = await apiClient.patch<PostDetail>(`/posts/${postId}/pin`, { isPinned });
+  async pin(postPublicId: string, isPinned: boolean) {
+    const response = await apiClient.patch<PostDetail>(`/posts/${postPublicId}/pin`, { isPinned });
     return response.data;
   },
 };

@@ -30,6 +30,14 @@ export function apiId(entity: CoreFixtureRecord): string {
   return entity.publicId;
 }
 
+export async function apiServerId(serverId: number): Promise<string> {
+  const server = await prisma.server.findUniqueOrThrow({
+    where: { id: serverId },
+    select: { publicId: true },
+  });
+  return server.publicId;
+}
+
 export function entityIds(entity: CoreFixtureRecord): {
   internalId: number;
   publicId: string;

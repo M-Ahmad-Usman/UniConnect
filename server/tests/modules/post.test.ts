@@ -21,6 +21,7 @@ import {
   addServerMembership,
   loginAs,
   seedRolesAndPermissions,
+  apiId,
 } from "../helpers/factory.js";
 
 /** Short unique suffix */
@@ -28,6 +29,9 @@ let uidCounter = 0;
 function uid(): string {
   return (++uidCounter).toString(36);
 }
+
+const UNKNOWN_CHANNEL_PUBLIC_ID = "0198f1f0-0000-7000-8000-000000000991";
+const UNKNOWN_POST_PUBLIC_ID = "0198f1f0-0000-7000-8000-000000000992";
 
 beforeAll(async () => {
   await resetDB();
@@ -60,7 +64,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-cp-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Important Announcement",
@@ -72,7 +76,8 @@ describe("Module 9 - Posts & Announcements", () => {
       expect(res.body.data.title).toBe("Important Announcement");
       expect(res.body.data.content).toBe("Please read carefully.");
       expect(res.body.data.priority).toBe("NORMAL");
-      expect(res.body.data.author.id).toBe(hod.id);
+      expect(res.body.data.author.publicId).toBe(hod.publicId);
+      expect(res.body.data.author.id).toBeUndefined();
       expect(res.body.data.author.badges).toContain("hod");
     });
 
@@ -91,7 +96,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`stu-gen-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({ title: "Hello Everyone", content: "General discussion." });
 
@@ -117,7 +122,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`stu-ann-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Unauthorized Post",
@@ -153,7 +158,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`tch-crs-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({
           title: "Lecture Notes",
@@ -186,7 +191,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`tch-no-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({ title: "Wrong Course", content: "Should be denied." });
 
@@ -214,7 +219,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-lk-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({ title: "Locked", content: "Cannot post here." });
 
@@ -237,7 +242,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`tch-nm-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({ title: "No Access", content: "Not a member." });
 
@@ -260,7 +265,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-val-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({ title: "" });
 
@@ -284,7 +289,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`admin-cp-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .send({ title: "Admin Post", content: "Admin can post anywhere." });
 
@@ -314,7 +319,7 @@ describe("Module 9 - Posts & Announcements", () => {
         });
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .field("title", "Post With Images")
         .field("content", "Check these images")
@@ -353,7 +358,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-at3-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .field("title", "Too Many Images")
         .field("content", "Overflow")
@@ -393,7 +398,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-ft-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/channels/${channel.id}/posts`)
+        .post(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies)
         .field("title", "Bad File")
         .field("content", "Not an image")
@@ -417,12 +422,31 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-ne-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post("/api/channels/999999/posts")
+        .post(`/api/channels/${UNKNOWN_CHANNEL_PUBLIC_ID}/posts`)
         .set("Cookie", cookies)
         .send({ title: "Ghost Channel", content: "Does not exist." });
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
+    });
+
+    it("should reject numeric channel identifiers at the public API boundary → 400", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `CP-ID-${u}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-id-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+      const cookies = await loginAs(`hod-id-${u}@test.com`, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/channels/999999/posts")
+        .set("Cookie", cookies)
+        .send({ title: "Numeric Channel", content: "Must be rejected." });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
     });
   });
 
@@ -463,7 +487,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-lp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts`)
+        .get(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -502,7 +526,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-att-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts`)
+        .get(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -533,7 +557,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-src-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts?search=Exam`)
+        .get(`/api/channels/${apiId(channel)}/posts?search=Exam`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -571,7 +595,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-pri-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts?priority=URGENT`)
+        .get(`/api/channels/${apiId(channel)}/posts?priority=URGENT`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -608,7 +632,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-dr-${u}@test.com`, "Pass@1234");
       const res = await request(app)
         .get(
-          `/api/channels/${channel.id}/posts?startDate=2026-02-01&endDate=2026-02-28`,
+          `/api/channels/${apiId(channel)}/posts?startDate=2026-02-01&endDate=2026-02-28`,
         )
         .set("Cookie", cookies);
 
@@ -641,7 +665,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-del-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts`)
+        .get(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -664,7 +688,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`tch-lnm-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts`)
+        .get(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -691,7 +715,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-dc-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts`)
+        .get(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -718,7 +742,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-pg-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts?page=2&limit=2`)
+        .get(`/api/channels/${apiId(channel)}/posts?page=2&limit=2`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -745,7 +769,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-bdg-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/channels/${channel.id}/posts`)
+        .get(`/api/channels/${apiId(channel)}/posts`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -777,7 +801,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-gp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/posts/${post.id}`)
+        .get(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -810,7 +834,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-gpdl-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/posts/${post.id}`)
+        .get(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -840,7 +864,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`nm-gp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .get(`/api/posts/${post.id}`)
+        .get(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -858,7 +882,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`hod-gp404-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/posts/999999")
+        .get(`/api/posts/${UNKNOWN_POST_PUBLIC_ID}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -886,7 +910,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`admin-gp-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/posts/${post.id}`)
+        .get(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -917,7 +941,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-up-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}`)
+        .patch(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies)
         .send({ title: `Edited ${u}`, content: "Updated content" });
 
@@ -948,7 +972,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-exp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}`)
+        .patch(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies)
         .send({ title: `Expired Edit ${u}` });
 
@@ -978,7 +1002,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`tch-upna-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}`)
+        .patch(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies)
         .send({ title: `Hijacked ${u}` });
 
@@ -1004,7 +1028,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-eb-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}`)
+        .patch(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies)
         .send({});
 
@@ -1034,7 +1058,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-updl-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}`)
+        .patch(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies)
         .send({ title: `Edit Deleted ${u}` });
 
@@ -1060,7 +1084,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-uppri-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}`)
+        .patch(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies)
         .send({ priority: "URGENT" });
 
@@ -1092,7 +1116,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-dlau-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .delete(`/api/posts/${post.id}`)
+        .delete(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1128,7 +1152,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`admin-dl-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/posts/${post.id}`)
+        .delete(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1155,7 +1179,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`oth-dlna-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .delete(`/api/posts/${post.id}`)
+        .delete(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -1184,7 +1208,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-dlad-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .delete(`/api/posts/${post.id}`)
+        .delete(`/api/posts/${apiId(post)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -1215,7 +1239,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-pn-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}/pin`)
+        .patch(`/api/posts/${apiId(post)}/pin`)
         .set("Cookie", cookies)
         .send({ isPinned: true });
 
@@ -1246,7 +1270,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-unp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}/pin`)
+        .patch(`/api/posts/${apiId(post)}/pin`)
         .set("Cookie", cookies)
         .send({ isPinned: false });
 
@@ -1272,7 +1296,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`tch-pnnmg-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}/pin`)
+        .patch(`/api/posts/${apiId(post)}/pin`)
         .set("Cookie", cookies)
         .send({ isPinned: true });
 
@@ -1302,7 +1326,7 @@ describe("Module 9 - Posts & Announcements", () => {
       const cookies = await loginAs(`admin-pn-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .patch(`/api/posts/${post.id}/pin`)
+        .patch(`/api/posts/${apiId(post)}/pin`)
         .set("Cookie", cookies)
         .send({ isPinned: true });
 
@@ -1330,7 +1354,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`cr-pn-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/posts/${post.id}/pin`)
+        .patch(`/api/posts/${apiId(post)}/pin`)
         .set("Cookie", cookies)
         .send({ isPinned: true });
 
@@ -1362,7 +1386,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-aaemp-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .post(`/api/posts/${post.id}/attachments`)
+        .post(`/api/posts/${apiId(post)}/attachments`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(400);
@@ -1394,7 +1418,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-aa-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .post(`/api/posts/${post.id}/attachments`)
+        .post(`/api/posts/${apiId(post)}/attachments`)
         .set("Cookie", cookies)
         .attach("attachments", VALID_JPEG_BUFFER, {
           filename: "test.jpg",
@@ -1435,7 +1459,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`hod-aamx-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .post(`/api/posts/${post.id}/attachments`)
+        .post(`/api/posts/${apiId(post)}/attachments`)
         .set("Cookie", cookies)
         .attach("attachments", VALID_JPEG_BUFFER, {
           filename: "a.jpg",
@@ -1477,7 +1501,7 @@ describe("Module 9 - Posts & Announcements", () => {
 
       const cookies = await loginAs(`oth-aana-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .post(`/api/posts/${post.id}/attachments`)
+        .post(`/api/posts/${apiId(post)}/attachments`)
         .set("Cookie", cookies)
         .attach("attachments", VALID_JPEG_BUFFER, {
           filename: "x.jpg",
@@ -1486,6 +1510,124 @@ describe("Module 9 - Posts & Announcements", () => {
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe("archived channel write protection", () => {
+    it("should keep history readable while rejecting every post mutation → 409", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `AR-RO-${u}` });
+      const hod = await createTeacherWithInfo(dept.id, {
+        email: `hod-ar-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(dept.id, hod.id);
+      const channel = await createChannel(dept.serverId, {
+        name: `archive-${u}`,
+        type: "GENERAL",
+      });
+      const post = await createPost(channel.id, hod.id, {
+        title: `Archived history ${u}`,
+      });
+      await prisma.channel.update({
+        where: { id: channel.id },
+        data: { isArchived: true, archivedAt: new Date(), archivedBy: hod.id },
+      });
+      const uploadSpy = jest
+        .spyOn(cloudinaryService, "uploadImage")
+        .mockResolvedValue({
+          url: "https://cloudinary.com/post-attachments/archived.jpg",
+          publicId: "post-attachments/archived",
+        });
+      const cookies = await loginAs(`hod-ar-${u}@test.com`, "Pass@1234");
+
+      const listRes = await request(app)
+        .get(`/api/channels/${apiId(channel)}/posts`)
+        .set("Cookie", cookies);
+      const detailRes = await request(app)
+        .get(`/api/posts/${apiId(post)}`)
+        .set("Cookie", cookies);
+      const createRes = await request(app)
+        .post(`/api/channels/${apiId(channel)}/posts`)
+        .set("Cookie", cookies)
+        .send({ title: "Blocked create", content: "Archived channels are read-only." });
+      const updateRes = await request(app)
+        .patch(`/api/posts/${apiId(post)}`)
+        .set("Cookie", cookies)
+        .send({ title: "Blocked update" });
+      const deleteRes = await request(app)
+        .delete(`/api/posts/${apiId(post)}`)
+        .set("Cookie", cookies);
+      const pinRes = await request(app)
+        .patch(`/api/posts/${apiId(post)}/pin`)
+        .set("Cookie", cookies)
+        .send({ isPinned: true });
+      const attachmentRes = await request(app)
+        .post(`/api/posts/${apiId(post)}/attachments`)
+        .set("Cookie", cookies)
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "archived.jpg",
+          contentType: "image/jpeg",
+        });
+
+      expect(listRes.status).toBe(200);
+      expect(listRes.body.data[0].publicId).toBe(post.publicId);
+      expect(detailRes.status).toBe(200);
+      expect(detailRes.body.data.publicId).toBe(post.publicId);
+      for (const response of [createRes, updateRes, deleteRes, pinRes, attachmentRes]) {
+        expect(response.status).toBe(409);
+        expect(response.body.error.code).toBe("CHANNEL_ARCHIVED");
+      }
+      expect(uploadSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("former member write protection", () => {
+    it("should reject author mutations before attachment provider side effects → 403", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `FM-WR-${u}` });
+      const author = await createTeacherWithInfo(dept.id, {
+        email: `author-fm-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const channel = await createChannel(dept.serverId, {
+        name: `former-member-${u}`,
+        type: "GENERAL",
+      });
+      const post = await createPost(channel.id, author.id, {
+        title: `Former member ${u}`,
+      });
+      await prisma.serverMembership.delete({
+        where: { userId_serverId: { userId: author.id, serverId: dept.serverId } },
+      });
+      const uploadSpy = jest
+        .spyOn(cloudinaryService, "uploadImage")
+        .mockResolvedValue({
+          url: "https://cloudinary.com/post-attachments/former-member.jpg",
+          publicId: "post-attachments/former-member",
+        });
+      const cookies = await loginAs(`author-fm-${u}@test.com`, "Pass@1234");
+
+      const updateRes = await request(app)
+        .patch(`/api/posts/${apiId(post)}`)
+        .set("Cookie", cookies)
+        .send({ title: "Blocked former member update" });
+      const deleteRes = await request(app)
+        .delete(`/api/posts/${apiId(post)}`)
+        .set("Cookie", cookies);
+      const attachmentRes = await request(app)
+        .post(`/api/posts/${apiId(post)}/attachments`)
+        .set("Cookie", cookies)
+        .attach("attachments", VALID_JPEG_BUFFER, {
+          filename: "former-member.jpg",
+          contentType: "image/jpeg",
+        });
+
+      for (const response of [updateRes, deleteRes, attachmentRes]) {
+        expect(response.status).toBe(403);
+        expect(response.body.error.code).toBe("FORBIDDEN");
+      }
+      expect(uploadSpy).not.toHaveBeenCalled();
     });
   });
 });

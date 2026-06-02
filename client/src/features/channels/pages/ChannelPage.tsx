@@ -8,23 +8,23 @@ import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import { PostFeed } from '@/features/posts/components/PostFeed';
 import { useChannelPostRealtime } from '@/features/posts/hooks/useChannelPostRealtime';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 
 export function ChannelPage() {
   const params = useParams();
-  const serverId = parseRouteParamId(params.serverId);
-  const channelId = parseRouteParamId(params.channelId);
-  const serverQuery = useServerDetail(serverId);
-  const channelQuery = useServerChannels(serverId, false);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
+  const channelPublicId = parseRouteParamPublicId(params.channelPublicId);
+  const serverQuery = useServerDetail(serverPublicId);
+  const channelQuery = useServerChannels(serverPublicId, true);
 
   const activeChannel = useMemo(
-    () => channelQuery.data?.find((channel) => channel.id === channelId) ?? null,
-    [channelId, channelQuery.data],
+    () => channelQuery.data?.find((channel) => channel.publicId === channelPublicId) ?? null,
+    [channelPublicId, channelQuery.data],
   );
 
-  useChannelPostRealtime(activeChannel?.id ?? null);
+  useChannelPostRealtime(activeChannel?.isArchived ? null : (activeChannel?.publicId ?? null));
 
-  if (serverId === null || channelId === null) {
+  if (serverPublicId === null || channelPublicId === null) {
     return (
       <EmptyState
         icon={Hash}
@@ -67,8 +67,8 @@ export function ChannelPage() {
 
   return (
     <div className="space-y-6">
-      {serverId !== null ? <ChannelHeader serverId={serverId} channel={activeChannel} /> : null}
-      <PostFeed serverId={serverId} server={serverQuery.data} channel={activeChannel} />
+      <ChannelHeader serverPublicId={serverPublicId} channel={activeChannel} />
+      <PostFeed serverPublicId={serverPublicId} server={serverQuery.data} channel={activeChannel} />
     </div>
   );
 }

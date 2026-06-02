@@ -2,56 +2,77 @@ import type { Request } from "express";
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
+import {
+  getResolvedChannelTarget,
+  resolveChannelTarget,
+} from "../../middleware/resolveCommunicationTarget.js";
 import { validate } from "../../middleware/validate.js";
-import { channelIdParamSchema, updateChannelSchema } from "./channel.schema.js";
+import { channelPublicIdParamSchema, updateChannelSchema } from "./channel.schema.js";
 import {
   handleUpdateChannel,
   handleLockChannel,
   handleUnlockChannel,
   handleDeleteChannel,
 } from "./channel.controller.js";
-import { resolveServerIdFromChannel } from "./channel.service.js";
 
 const router = Router();
 
 // ─── Async Server ID Resolver ──────────────────────────────────────────────
 
-const serverIdFromChannel = async (req: Request) => {
-  const channelId = Number(req.params.id);
-  return resolveServerIdFromChannel(channelId);
-};
+const serverIdFromChannel = (req: Request) => getResolvedChannelTarget(req).serverId;
+const channelIdFromTarget = (req: Request) => getResolvedChannelTarget(req).id;
 
 // ─── Channel Endpoints ─────────────────────────────────────────────────────
 
 router.patch(
-  "/:id",
+  "/:publicId",
   authenticate,
   validate(updateChannelSchema),
-  authorize({ permission: "create:channel", serverIdFrom: serverIdFromChannel }),
+  resolveChannelTarget,
+  authorize({
+    permission: "create:channel",
+    serverIdFrom: serverIdFromChannel,
+    channelIdFrom: channelIdFromTarget,
+  }),
   handleUpdateChannel
 );
 
 router.patch(
-  "/:id/lock",
+  "/:publicId/lock",
   authenticate,
-  validate(channelIdParamSchema),
-  authorize({ permission: "lock:channel", serverIdFrom: serverIdFromChannel }),
+  validate(channelPublicIdParamSchema),
+  resolveChannelTarget,
+  authorize({
+    permission: "lock:channel",
+    serverIdFrom: serverIdFromChannel,
+    channelIdFrom: channelIdFromTarget,
+  }),
   handleLockChannel
 );
 
 router.patch(
-  "/:id/unlock",
+  "/:publicId/unlock",
   authenticate,
-  validate(channelIdParamSchema),
-  authorize({ permission: "lock:channel", serverIdFrom: serverIdFromChannel }),
+  validate(channelPublicIdParamSchema),
+  resolveChannelTarget,
+  authorize({
+    permission: "lock:channel",
+    serverIdFrom: serverIdFromChannel,
+    channelIdFrom: channelIdFromTarget,
+  }),
   handleUnlockChannel
 );
 
 router.delete(
-  "/:id",
+  "/:publicId",
   authenticate,
-  validate(channelIdParamSchema),
-  authorize({ permission: "delete:channel", serverIdFrom: serverIdFromChannel }),
+  validate(channelPublicIdParamSchema),
+  resolveChannelTarget,
+  authorize({
+    permission: "delete:channel",
+    serverIdFrom: serverIdFromChannel,
+    channelIdFrom: channelIdFromTarget,
+  }),
   handleDeleteChannel
 );
 

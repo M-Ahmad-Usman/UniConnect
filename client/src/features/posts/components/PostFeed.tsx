@@ -19,15 +19,15 @@ import { PostDetailDialog } from './PostDetailDialog';
 import { PostFilters } from './PostFilters';
 
 interface PostFeedProps {
-  serverId: number;
+  serverPublicId: string;
   server: ServerDetail | null | undefined;
   channel: ChannelListItem;
 }
 
-export function PostFeed({ serverId, server, channel }: PostFeedProps) {
+export function PostFeed({ serverPublicId, server, channel }: PostFeedProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [selectedPostPublicId, setSelectedPostPublicId] = useState<string | null>(null);
   const feedTopRef = useRef<HTMLDivElement | null>(null);
   const latestSearchParamsRef = useRef(searchParams);
   const search = parseSearchParam(searchParams.get('search'));
@@ -38,7 +38,8 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
   const startDate = normalizeDateParam(searchParams.get('startDate'));
   const endDate = normalizeDateParam(searchParams.get('endDate'));
   const canPost = useCanPostInChannel(server, channel);
-  const canPin = useCanManagePostPin(serverId);
+  const canManagePin = useCanManagePostPin(serverPublicId);
+  const canPin = !channel.isArchived && canManagePin;
 
   const params: PostListParams = {
     limit: 20,
@@ -48,20 +49,20 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
     ...(endDate ? { endDate } : {}),
   };
 
-  const postsQuery = useChannelPosts(channel.id, params);
+  const postsQuery = useChannelPosts(channel.publicId, params);
 
   useEffect(() => {
     latestSearchParamsRef.current = searchParams;
   }, [searchParams]);
 
   const posts = useMemo(() => {
-    const seen = new Set<number>();
+    const seen = new Set<string>();
     return (postsQuery.data?.pages ?? []).flatMap((page) =>
       page.data.filter((post) => {
-        if (seen.has(post.id)) {
+        if (seen.has(post.publicId)) {
           return false;
         }
-        seen.add(post.id);
+        seen.add(post.publicId);
         return true;
       }),
     );
@@ -136,11 +137,12 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
         <div className="space-y-3">
           {posts.map((post) => (
             <PostCard
-              key={post.id}
+              key={post.publicId}
               post={post}
-              channelId={channel.id}
+              channelPublicId={channel.publicId}
               canPin={canPin}
-              onOpen={setSelectedPostId}
+              readOnly={channel.isArchived}
+              onOpen={setSelectedPostPublicId}
             />
           ))}
         </div>
@@ -173,20 +175,21 @@ export function PostFeed({ serverId, server, channel }: PostFeedProps) {
       ) : null}
 
       <CreatePostDialog
-        channelId={channel.id}
+        channelPublicId={channel.publicId}
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={() => feedTopRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })}
       />
 
       <PostDetailDialog
-        channelId={channel.id}
-        postId={selectedPostId}
-        open={selectedPostId !== null}
+        channelPublicId={channel.publicId}
+        postPublicId={selectedPostPublicId}
+        open={selectedPostPublicId !== null}
         canPin={canPin}
+        readOnly={channel.isArchived}
         onOpenChange={(open) => {
           if (!open) {
-            setSelectedPostId(null);
+            setSelectedPostPublicId(null);
           }
         }}
       />

@@ -7,6 +7,7 @@ import {
 } from "../../config/cloudinary.js";
 import {
   ApiErrorCode,
+  ConflictError,
   ForbiddenError,
   NotFoundError,
   ValidationError,
@@ -24,6 +25,7 @@ import { appEvents, APP_EVENTS } from "../../shared/events.js";
 import { emitToChannel } from "../../socket/index.js";
 import type { UserRole } from "../../shared/types/index.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
+import { getUserRoles } from "../../middleware/authorize.js";
 import {
   assertServerAcceptsWrites,
   type PrismaTransaction,
@@ -72,6 +74,7 @@ type UploadedFile = {
 
 const postListSelect = {
   id: true,
+  publicId: true,
   title: true,
   content: true,
   priority: true,
@@ -82,6 +85,7 @@ const postListSelect = {
   author: {
     select: {
       id: true,
+      publicId: true,
       fullName: true,
       email: true,
       userType: true,
@@ -106,6 +110,7 @@ const postListSelect = {
 
 const postDetailSelect = {
   id: true,
+  publicId: true,
   title: true,
   content: true,
   priority: true,
@@ -116,6 +121,7 @@ const postDetailSelect = {
   author: {
     select: {
       id: true,
+      publicId: true,
       fullName: true,
       email: true,
       userType: true,
@@ -132,13 +138,13 @@ const postDetailSelect = {
     },
   },
   pinner: {
-    select: { id: true, fullName: true },
+    select: { id: true, publicId: true, fullName: true },
   },
 } as const;
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
 
-async function findActivePostOrThrow(
+async function findWritablePostOrThrow(
   postId: number,
   client: PrismaTransaction = prisma,
 ) {
@@ -146,6 +152,7 @@ async function findActivePostOrThrow(
     where: { id: postId },
     select: {
       id: true,
+      publicId: true,
       authorId: true,
       channelId: true,
       createdAt: true,
@@ -153,21 +160,30 @@ async function findActivePostOrThrow(
       channel: {
         select: {
           serverId: true,
+          publicId: true,
           isDeleted: true,
+          isArchived: true,
           server: { select: { type: true } },
         },
       },
     },
   });
 
-  if (!post || post.isDeleted) {
+  if (!post || post.isDeleted || post.channel.isDeleted) {
     throw new NotFoundError("Post not found");
+  }
+
+  if (post.channel.isArchived) {
+    throw new ConflictError(
+      "Archived channels are read-only",
+      ApiErrorCode.CHANNEL_ARCHIVED,
+    );
   }
 
   return post;
 }
 
-async function findActiveChannelForPostsOrThrow(
+async function findReadableChannelForPostsOrThrow(
   channelId: number,
   client: PrismaTransaction = prisma,
 ) {
@@ -175,6 +191,7 @@ async function findActiveChannelForPostsOrThrow(
     where: { id: channelId },
     select: {
       id: true,
+      publicId: true,
       serverId: true,
       isDeleted: true,
       isArchived: true,
@@ -183,14 +200,29 @@ async function findActiveChannelForPostsOrThrow(
     },
   });
 
-  if (!channel || channel.isDeleted || channel.isArchived) {
+  if (!channel || channel.isDeleted) {
     throw new NotFoundError("Channel not found");
   }
 
   return channel;
 }
 
-async function lockActiveChannelForPostsOrThrow(
+async function findWritableChannelForPostsOrThrow(
+  channelId: number,
+  client: PrismaTransaction = prisma,
+) {
+  const channel = await findReadableChannelForPostsOrThrow(channelId, client);
+  if (channel.isArchived) {
+    throw new ConflictError(
+      "Archived channels are read-only",
+      ApiErrorCode.CHANNEL_ARCHIVED,
+    );
+  }
+
+  return channel;
+}
+
+async function lockWritableChannelForPostsOrThrow(
   channelId: number,
   client: PrismaTransaction,
 ) {
@@ -199,25 +231,69 @@ async function lockActiveChannelForPostsOrThrow(
     FROM "channels"
     WHERE "id" = ${channelId}
       AND "is_deleted" = FALSE
-      AND "is_archived" = FALSE
     FOR UPDATE
   `;
   if (rows.length === 0) {
     throw new NotFoundError("Channel not found");
   }
-  return findActiveChannelForPostsOrThrow(channelId, client);
+  return findWritableChannelForPostsOrThrow(channelId, client);
 }
 
-async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
+async function lockWritablePostOrThrow(
+  postId: number,
+  client: PrismaTransaction,
+) {
+  const rows = await client.$queryRaw<Array<{ id: number }>>`
+    SELECT "id"
+    FROM "posts"
+    WHERE "id" = ${postId}
+      AND "is_deleted" = FALSE
+    FOR UPDATE
+  `;
+  if (rows.length === 0) {
+    throw new NotFoundError("Post not found");
+  }
+
+  return findWritablePostOrThrow(postId, client);
+}
+
+async function assertMembershipOrAdmin(
+  serverId: number,
+  caller: CallerInfo,
+  client: PrismaTransaction = prisma,
+) {
   if (caller.userType === "ADMIN") return;
 
-  const membership = await prisma.serverMembership.findUnique({
+  const membership = await client.serverMembership.findUnique({
     where: { userId_serverId: { userId: caller.id, serverId } },
   });
 
   if (!membership) {
     throw new ForbiddenError("You are not a member of this server");
   }
+}
+
+function toPublicUser<T extends { id: number }>(user: T): Omit<T, "id"> {
+  const { id: _id, ...publicUser } = user;
+  return publicUser;
+}
+
+function toPublicPost<T extends {
+  id: number;
+  author: { id: number };
+  pinner?: ({ id: number } | null);
+}>(post: T): Omit<T, "id" | "author" | "pinner"> & {
+  author: Omit<T["author"], "id">;
+  pinner?: Omit<NonNullable<T["pinner"]>, "id"> | null;
+} {
+  const { id: _id, author, pinner, ...publicPost } = post;
+  return {
+    ...publicPost,
+    author: toPublicUser(author),
+    ...(pinner === undefined
+      ? {}
+      : { pinner: pinner === null ? null : toPublicUser(pinner) }),
+  };
 }
 
 /**
@@ -380,25 +456,23 @@ async function createAttachmentRecords(
 
 async function uploadAttachments(
   postId: number,
+  channelId: number,
   serverId: number,
   files: UploadedFile[],
+  caller: CallerInfo,
   enforceLimit = false,
 ): Promise<void> {
   const uploaded = await uploadAttachmentImages(files);
   try {
     await prisma.$transaction(async (tx) => {
       await assertServerAcceptsWrites(serverId, tx);
+      await lockWritableChannelForPostsOrThrow(channelId, tx);
+      const post = await lockWritablePostOrThrow(postId, tx);
+      if (post.authorId !== caller.id) {
+        throw new ForbiddenError("Only the author can add attachments to this post");
+      }
+      await assertMembershipOrAdmin(serverId, caller, tx);
       if (enforceLimit) {
-        const rows = await tx.$queryRaw<Array<{ id: number }>>`
-          SELECT "id"
-          FROM "posts"
-          WHERE "id" = ${postId}
-            AND "is_deleted" = FALSE
-          FOR UPDATE
-        `;
-        if (rows.length === 0) {
-          throw new NotFoundError("Post not found");
-        }
         const existingCount = await tx.postAttachment.count({ where: { postId } });
         if (existingCount + files.length > MAX_ATTACHMENTS) {
           throw new ValidationError(
@@ -444,7 +518,7 @@ export async function createPost(
   files: UploadedFile[],
   caller: CallerInfo,
 ) {
-  const channel = await findActiveChannelForPostsOrThrow(channelId);
+  const channel = await findWritableChannelForPostsOrThrow(channelId);
 
   if (channel.isLocked) {
     throw new ForbiddenError("Channel is locked", ApiErrorCode.CHANNEL_LOCKED);
@@ -453,11 +527,12 @@ export async function createPost(
   await prisma.$transaction((tx) => assertServerAcceptsWrites(channel.serverId, tx));
 
   // Check posting rights
+  const userRoles = caller.userRoles ?? await getUserRoles(caller.id);
   const allowed = await canPostInChannel(
     caller.id,
     caller.userType,
     channelId,
-    caller.userRoles,
+    userRoles,
   );
   if (!allowed) {
     throw new ForbiddenError(
@@ -471,9 +546,19 @@ export async function createPost(
     // Serialize the insert and attachment records with society lifecycle transitions.
     post = await prisma.$transaction(async (tx) => {
       await assertServerAcceptsWrites(channel.serverId, tx);
-      const lockedChannel = await lockActiveChannelForPostsOrThrow(channelId, tx);
+      const lockedChannel = await lockWritableChannelForPostsOrThrow(channelId, tx);
       if (lockedChannel.isLocked) {
         throw new ForbiddenError("Channel is locked", ApiErrorCode.CHANNEL_LOCKED);
+      }
+      const stillAllowed = await canPostInChannel(
+        caller.id,
+        caller.userType,
+        channelId,
+        userRoles,
+        tx,
+      );
+      if (!stillAllowed) {
+        throw new ForbiddenError("You do not have permission to post in this channel");
       }
       const created = await tx.post.create({
         data: {
@@ -515,15 +600,18 @@ export async function createPost(
     serverType: channel.server.type,
   });
 
-  const response = {
+  const response = toPublicPost({
     ...post,
     author: {
       ...post.author,
       badges: badgeMap.get(post.author.id) ?? [],
     },
-  };
+  });
 
-  emitToChannel(channelId, "post:created", { channelId, post: response });
+  emitToChannel(channelId, "post:created", {
+    channelPublicId: channel.publicId,
+    post: response,
+  });
 
   invalidateSystemStatsCache();
   return response;
@@ -534,7 +622,7 @@ export async function listPosts(
   query: ListPostsQuery,
   caller: CallerInfo,
 ) {
-  const channel = await findActiveChannelForPostsOrThrow(channelId);
+  const channel = await findReadableChannelForPostsOrThrow(channelId);
 
   await assertMembershipOrAdmin(channel.serverId, caller);
 
@@ -588,7 +676,7 @@ export async function listPosts(
     authorIds,
   );
 
-  const data = posts.map((p) => ({
+  const data = posts.map((p) => toPublicPost({
     ...p,
     author: {
       ...p.author,
@@ -611,7 +699,9 @@ export async function getPost(postId: number, caller: CallerInfo) {
       channel: {
         select: {
           serverId: true,
+          publicId: true,
           isDeleted: true,
+          isArchived: true,
           server: { select: { type: true } },
         },
       },
@@ -639,13 +729,13 @@ export async function getPost(postId: number, caller: CallerInfo) {
     ...postData
   } = post;
 
-  return {
+  return toPublicPost({
     ...postData,
     author: {
       ...postData.author,
       badges: badgeMap.get(postData.author.id) ?? [],
     },
-  };
+  });
 }
 
 export async function updatePost(
@@ -653,7 +743,7 @@ export async function updatePost(
   data: UpdatePostInput,
   caller: CallerInfo,
 ) {
-  const post = await findActivePostOrThrow(postId);
+  const post = await findWritablePostOrThrow(postId);
 
   // Only the author can edit
   if (post.authorId !== caller.id) {
@@ -669,6 +759,16 @@ export async function updatePost(
 
   const updated = await prisma.$transaction(async (tx) => {
     await assertServerAcceptsWrites(post.channel.serverId, tx);
+    await lockWritableChannelForPostsOrThrow(post.channelId, tx);
+    const currentPost = await lockWritablePostOrThrow(postId, tx);
+    if (currentPost.authorId !== caller.id) {
+      throw new ForbiddenError("Only the author can edit this post");
+    }
+    await assertMembershipOrAdmin(post.channel.serverId, caller, tx);
+    const currentElapsed = Date.now() - currentPost.createdAt.getTime();
+    if (currentElapsed > editWindowMs) {
+      throw new ForbiddenError("Edit window has expired", ApiErrorCode.EDIT_WINDOW_EXPIRED);
+    }
     return tx.post.update({
       where: { id: postId },
       data: {
@@ -689,16 +789,16 @@ export async function updatePost(
     [updated.author.id],
   );
 
-  const response = {
+  const response = toPublicPost({
     ...updated,
     author: {
       ...updated.author,
       badges: badgeMap.get(updated.author.id) ?? [],
     },
-  };
+  });
 
   emitToChannel(post.channelId, "post:updated", {
-    channelId: post.channelId,
+    channelPublicId: post.channel.publicId,
     post: response,
   });
 
@@ -706,7 +806,7 @@ export async function updatePost(
 }
 
 export async function deletePost(postId: number, caller: CallerInfo) {
-  const post = await findActivePostOrThrow(postId);
+  const post = await findWritablePostOrThrow(postId);
 
   // Only author or admin can delete
   if (post.authorId !== caller.id && caller.userType !== "ADMIN") {
@@ -715,6 +815,12 @@ export async function deletePost(postId: number, caller: CallerInfo) {
 
   const deletedNotifications = await prisma.$transaction(async (tx) => {
     await assertServerAcceptsWrites(post.channel.serverId, tx);
+    await lockWritableChannelForPostsOrThrow(post.channelId, tx);
+    const currentPost = await lockWritablePostOrThrow(postId, tx);
+    if (currentPost.authorId !== caller.id && caller.userType !== "ADMIN") {
+      throw new ForbiddenError("You do not have permission to delete this post");
+    }
+    await assertMembershipOrAdmin(post.channel.serverId, caller, tx);
     await tx.post.update({
       where: { id: postId },
       data: {
@@ -736,11 +842,11 @@ export async function deletePost(postId: number, caller: CallerInfo) {
     return notifications;
   });
 
-  await emitPostNotificationsDeleted(postId, deletedNotifications);
+  await emitPostNotificationsDeleted(post.publicId, deletedNotifications);
 
   emitToChannel(post.channelId, "post:deleted", {
-    channelId: post.channelId,
-    postId,
+    channelPublicId: post.channel.publicId,
+    postPublicId: post.publicId,
   });
 
   invalidateSystemStatsCache();
@@ -752,10 +858,12 @@ export async function pinPost(
   data: PinPostInput,
   caller: CallerInfo,
 ) {
-  const post = await findActivePostOrThrow(postId);
+  const post = await findWritablePostOrThrow(postId);
 
   const updated = await prisma.$transaction(async (tx) => {
     await assertServerAcceptsWrites(post.channel.serverId, tx);
+    await lockWritableChannelForPostsOrThrow(post.channelId, tx);
+    await lockWritablePostOrThrow(postId, tx);
     return tx.post.update({
       where: { id: postId },
       data: data.isPinned
@@ -771,16 +879,16 @@ export async function pinPost(
     [updated.author.id],
   );
 
-  const response = {
+  const response = toPublicPost({
     ...updated,
     author: {
       ...updated.author,
       badges: badgeMap.get(updated.author.id) ?? [],
     },
-  };
+  });
 
   emitToChannel(post.channelId, "post:pinned", {
-    channelId: post.channelId,
+    channelPublicId: post.channel.publicId,
     post: response,
   });
 
@@ -796,7 +904,7 @@ export async function addAttachments(
     throw new ValidationError("At least one attachment is required");
   }
 
-  const post = await findActivePostOrThrow(postId);
+  const post = await findWritablePostOrThrow(postId);
 
   // Only the author can add attachments
   if (post.authorId !== caller.id) {
@@ -804,6 +912,10 @@ export async function addAttachments(
       "Only the author can add attachments to this post",
     );
   }
+
+  // Reject former members before invoking the external upload provider. The
+  // transaction below repeats this check to cover concurrent membership changes.
+  await assertMembershipOrAdmin(post.channel.serverId, caller);
 
   // Check total attachment count
   const existingCount = await prisma.postAttachment.count({
@@ -816,7 +928,14 @@ export async function addAttachments(
     );
   }
 
-  await uploadAttachments(postId, post.channel.serverId, files, true);
+  await uploadAttachments(
+    postId,
+    post.channelId,
+    post.channel.serverId,
+    files,
+    caller,
+    true,
+  );
 
   // Return updated post with attachments
   const updated = await prisma.post.findUnique({
@@ -834,16 +953,16 @@ export async function addAttachments(
     [updated.author.id],
   );
 
-  const response = {
+  const response = toPublicPost({
     ...updated,
     author: {
       ...updated.author,
       badges: badgeMap.get(updated.author.id) ?? [],
     },
-  };
+  });
 
   emitToChannel(post.channelId, "post:updated", {
-    channelId: post.channelId,
+    channelPublicId: post.channel.publicId,
     post: response,
   });
 

@@ -19,8 +19,10 @@ export function toNotificationQueryParamsRecord(params?: NotificationListParams)
 
 export function getNotificationTarget(notification: Notification) {
   if (notification.type === NotificationType.ROLE_ASSIGNED) {
-    const serverId = notification.post?.channel.serverId;
-    return serverId ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId) : ROUTES.PROFILE;
+    const serverPublicId = notification.post?.channel.serverPublicId;
+    return serverPublicId
+      ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverPublicId)
+      : ROUTES.PROFILE;
   }
 
   if (
@@ -35,11 +37,11 @@ export function getNotificationTarget(notification: Notification) {
       : ROUTES.SOCIETIES;
   }
 
-  const serverId = notification.post?.channel.serverId;
-  const channelId = notification.post?.channelId;
+  const serverPublicId = notification.post?.channel.serverPublicId;
+  const channelPublicId = notification.post?.channelPublicId;
 
-  if (serverId && channelId) {
-    return ROUTES.CHANNEL(serverId, channelId);
+  if (serverPublicId && channelPublicId) {
+    return ROUTES.CHANNEL(serverPublicId, channelPublicId);
   }
 
   return ROUTES.NOTIFICATIONS;
@@ -50,8 +52,8 @@ export function findPreference(
   match: {
     notificationType: NotificationPreferenceType;
     scopeType: NotificationScopeType;
-    serverId: number;
-    channelId?: number | null;
+    serverPublicId: string;
+    channelPublicId?: string | null;
   },
 ) {
   return (
@@ -59,8 +61,8 @@ export function findPreference(
       (preference) =>
         preference.notificationType === match.notificationType &&
         preference.scopeType === match.scopeType &&
-        preference.serverId === match.serverId &&
-        preference.channelId === (match.channelId ?? null),
+        preference.serverPublicId === match.serverPublicId &&
+        preference.channelPublicId === (match.channelPublicId ?? null),
     ) ?? null
   );
 }
@@ -71,35 +73,35 @@ export function isSubscribed(preference: NotificationPreference | null) {
 
 export function getPostServerPreference(
   preferences: NotificationPreference[] | undefined,
-  serverId: number,
+  serverPublicId: string,
 ) {
   return findPreference(preferences, {
     notificationType: NotificationType.NEW_POST,
     scopeType: NotificationScopeType.SERVER,
-    serverId,
+    serverPublicId,
   });
 }
 
 export function getPostChannelPreference(
   preferences: NotificationPreference[] | undefined,
-  serverId: number,
-  channelId: number,
+  serverPublicId: string,
+  channelPublicId: string,
 ) {
   return findPreference(preferences, {
     notificationType: NotificationType.NEW_POST,
     scopeType: NotificationScopeType.CHANNEL,
-    serverId,
-    channelId,
+    serverPublicId,
+    channelPublicId,
   });
 }
 
 export function getRoleServerPreference(
   preferences: NotificationPreference[] | undefined,
-  serverId: number,
+  serverPublicId: string,
 ) {
   return findPreference(preferences, {
     notificationType: NotificationType.ROLE_ASSIGNED,
     scopeType: NotificationScopeType.SERVER,
-    serverId,
+    serverPublicId,
   });
 }

@@ -105,7 +105,7 @@ export function ProfilePage() {
               <div className="flex flex-wrap gap-2">
                 {profile.roles.map((assignment) => (
                   <RoleBadge
-                    key={`${assignment.role}-${assignment.serverId}-${assignment.channelId ?? 'server'}`}
+                    key={`${assignment.role}-${assignment.serverPublicId}-${assignment.channelPublicId ?? 'server'}`}
                     role={assignment.role}
                   />
                 ))}

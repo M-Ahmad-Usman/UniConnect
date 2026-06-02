@@ -39,6 +39,7 @@ type CallerInfo = {
 
 const serverListSelect = {
   id: true,
+  publicId: true,
   name: true,
   description: true,
   type: true,
@@ -49,6 +50,7 @@ const serverListSelect = {
 
 const serverDetailSelect = {
   id: true,
+  publicId: true,
   name: true,
   description: true,
   type: true,
@@ -61,6 +63,7 @@ const serverDetailSelect = {
   class: {
     select: {
       id: true,
+      publicId: true,
       currentSemester: true,
       section: true,
       program: {
@@ -74,7 +77,7 @@ const serverDetailSelect = {
     },
   },
   society: {
-    select: { id: true, name: true },
+    select: { id: true, publicId: true, name: true },
   },
   _count: {
     select: { memberships: true, channels: true },
@@ -83,6 +86,7 @@ const serverDetailSelect = {
 
 const channelListSelect = {
   id: true,
+  publicId: true,
   name: true,
   description: true,
   type: true,
@@ -101,6 +105,7 @@ const memberSelect = {
   user: {
     select: {
       id: true,
+      publicId: true,
       fullName: true,
       email: true,
       userType: true,
@@ -111,7 +116,9 @@ const memberSelect = {
 
 const channelCreatedSelect = {
   id: true,
+  publicId: true,
   serverId: true,
+  server: { select: { publicId: true } },
   name: true,
   description: true,
   type: true,
@@ -121,6 +128,20 @@ const channelCreatedSelect = {
 } as const;
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
+
+function toPublicServerListItem<T extends { id: number }>(
+  server: T,
+): Omit<T, "id"> {
+  const { id: _id, ...publicServer } = server;
+  return publicServer;
+}
+
+function toPublicChannel<T extends { id: number }>(
+  channel: T,
+): Omit<T, "id"> {
+  const { id: _id, ...publicChannel } = channel;
+  return publicChannel;
+}
 
 async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
   if (caller.userType === "ADMIN") return;
@@ -335,7 +356,7 @@ export async function listServers(query: ListServersQuery, caller: CallerInfo) {
   ]);
 
   return {
-    data: servers,
+    data: servers.map(toPublicServerListItem),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
@@ -352,7 +373,16 @@ export async function getServer(serverId: number, caller: CallerInfo) {
 
   await assertMembershipOrAdmin(serverId, caller);
 
-  return server;
+  const { id: _id, class: classRecord, society, ...publicServer } = server;
+  return {
+    ...publicServer,
+    class: classRecord
+      ? (({ id: _classId, ...publicClass }) => publicClass)(classRecord)
+      : null,
+    society: society
+      ? (({ id: _societyId, ...publicSociety }) => publicSociety)(society)
+      : null,
+  };
 }
 
 export async function listServerChannels(
@@ -378,7 +408,7 @@ export async function listServerChannels(
     orderBy: { createdAt: "asc" },
   });
 
-  return channels;
+  return channels.map(toPublicChannel);
 }
 
 export async function listServerMembers(
@@ -421,7 +451,9 @@ export async function listServerMembers(
   );
 
   const data = memberships.map((m) => ({
-    ...m,
+    joinedAt: m.joinedAt,
+    isAutoJoined: m.isAutoJoined,
+    user: (({ id: _userId, ...publicUser }) => publicUser)(m.user),
     badges: badgeMap.get(m.userId) ?? [],
   }));
 
@@ -445,7 +477,7 @@ export async function createChannel(
     if (existing) {
       throw new ConflictError("A channel with this name already exists in this server");
     }
-    return tx.channel.create({
+    const channel = await tx.channel.create({
       data: {
         serverId,
         name: data.name,
@@ -456,6 +488,16 @@ export async function createChannel(
       },
       select: channelCreatedSelect,
     });
+    const {
+      id: _channelId,
+      serverId: _serverId,
+      server,
+      ...publicChannel
+    } = channel;
+    return {
+      ...publicChannel,
+      serverPublicId: server.publicId,
+    };
   });
 }
 
@@ -470,14 +512,17 @@ export async function updateServerIcon(serverId: number, fileBuffer: Buffer) {
   try {
     return await prisma.$transaction(async (tx) => {
       await assertServerAcceptsWrites(serverId, tx);
-      return tx.server.update({
+      const updated = await tx.server.update({
         where: { id: serverId },
         data: { iconUrl: uploaded.url },
         select: {
           id: true,
+          publicId: true,
           iconUrl: true,
         },
       });
+      const { id: _serverId, ...publicServer } = updated;
+      return publicServer;
     });
   } catch (error) {
     await cleanupCloudinaryUploads([uploaded]);

@@ -13,12 +13,11 @@ export type ModerationRoleName = 'server_moderator' | 'channel_moderator';
 export type RevokableRoleName = Exclude<RoleName, 'society_president' | 'society_convenor'>;
 export type AssignableRoleName = Exclude<RoleName, 'society_president' | 'society_convenor'>;
 
-// Transitional profile contract: server/channel IDs migrate in Module 6.
 export interface ScopedRoleAssignment {
   assignmentPublicId?: string;
   role: RoleName;
-  serverId: number;
-  channelId?: number | null;
+  serverPublicId: string;
+  channelPublicId?: string | null;
   scopeType: 'server' | 'channel';
   expiresAt?: string | null;
 }

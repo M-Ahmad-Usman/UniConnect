@@ -6,6 +6,8 @@ import type {
 } from "../../generated/prisma/enums.js";
 import { prisma } from "../../config/prisma.js";
 import {
+  ApiErrorCode,
+  ConflictError,
   ForbiddenError,
   NotFoundError,
   ValidationError,
@@ -16,6 +18,7 @@ import {
 } from "../../shared/utils/pagination.js";
 import { getIO } from "../../socket/index.js";
 import type { PrismaTransaction } from "../../shared/lifecycle/society.js";
+import { resolveServerPublicId } from "../../shared/ids/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -37,15 +40,15 @@ type ListNotificationsQuery = {
 };
 
 type ListPreferencesQuery = {
-  serverId?: number;
+  serverPublicId?: string;
   notificationType?: NotificationType;
 };
 
 type UpdatePreferenceInput = {
   notificationType?: NotificationType;
   scopeType: NotificationScopeType;
-  serverId: number;
-  channelId?: number;
+  serverPublicId: string;
+  channelPublicId?: string;
   isSubscribed: boolean;
 };
 
@@ -86,17 +89,17 @@ const notificationListSelect = {
   message: true,
   readAt: true,
   createdAt: true,
-  postId: true,
   post: {
     select: {
-      channelId: true,
+      publicId: true,
       priority: true,
       channel: {
         select: {
+          publicId: true,
           name: true,
-          serverId: true,
           server: {
             select: {
+              publicId: true,
               name: true,
             },
           },
@@ -117,24 +120,67 @@ const preferenceListSelect = {
   id: true,
   notificationType: true,
   scopeType: true,
-  serverId: true,
-  channelId: true,
   isSubscribed: true,
   updatedAt: true,
   server: {
     select: {
+      publicId: true,
       name: true,
       type: true,
     },
   },
   channel: {
     select: {
+      publicId: true,
       name: true,
     },
   },
 } as const;
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────
+
+function toPublicNotification<T extends {
+  post: null | {
+    publicId: string;
+    priority: PostPriority;
+    channel: {
+      publicId: string;
+      name: string;
+      server: { publicId: string; name: string };
+    };
+  };
+}>(notification: T) {
+  const { post, ...notificationData } = notification;
+  return {
+    ...notificationData,
+    postPublicId: post?.publicId ?? null,
+    post: post
+      ? {
+          channelPublicId: post.channel.publicId,
+          priority: post.priority,
+          channel: {
+            name: post.channel.name,
+            serverPublicId: post.channel.server.publicId,
+            server: { name: post.channel.server.name },
+          },
+        }
+      : null,
+  };
+}
+
+function toPublicPreference<T extends {
+  server: { publicId: string };
+  channel: { publicId: string } | null;
+}>(preference: T) {
+  const { server, channel, ...preferenceData } = preference;
+  return {
+    ...preferenceData,
+    serverPublicId: server.publicId,
+    channelPublicId: channel?.publicId ?? null,
+    server,
+    channel,
+  };
+}
 
 /**
  * Get the list of user IDs who are subscribed to receive notifications
@@ -303,16 +349,8 @@ export async function createPostNotifications(
 
   // Emit real-time events using pre-computed counts — no per-user DB queries
   for (const notification of notifications) {
-    emitToUser(notification.userId, "notification:new", {
-      id: notification.id,
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      readAt: notification.readAt,
-      createdAt: notification.createdAt,
-      postId: notification.postId,
-      post: notification.post,
-    });
+    const { userId, ...notificationData } = notification;
+    emitToUser(userId, "notification:new", toPublicNotification(notificationData));
     emitToUser(notification.userId, "notification:unread-count", {
       count: unreadCountMap.get(notification.userId) ?? 0,
     });
@@ -320,7 +358,7 @@ export async function createPostNotifications(
 }
 
 export async function emitPostNotificationsDeleted(
-  postId: number,
+  postPublicId: string,
   notifications: Array<{ id: number; userId: number }>,
 ): Promise<void> {
   if (notifications.length === 0) {
@@ -348,7 +386,7 @@ export async function emitPostNotificationsDeleted(
 
   for (const userId of userIds) {
     emitToUser(userId, "notification:deleted", {
-      postId,
+      postPublicId,
       notificationIds: notificationIdsByUserId.get(userId) ?? [],
     });
     emitToUser(userId, "notification:unread-count", {
@@ -404,7 +442,7 @@ export async function createRoleAssignedNotification(
     select: notificationListSelect,
   });
 
-  emitToUser(input.userId, "notification:new", notification);
+  emitToUser(input.userId, "notification:new", toPublicNotification(notification));
   await emitUnreadCount(input.userId);
 }
 
@@ -427,7 +465,7 @@ export async function createSocietyRequestReviewedNotification(
     select: notificationListSelect,
   });
 
-  emitToUser(input.userId, "notification:new", notification);
+  emitToUser(input.userId, "notification:new", toPublicNotification(notification));
   await emitUnreadCount(input.userId);
 }
 
@@ -518,7 +556,7 @@ export async function emitCreatedNotifications(notificationIds: number[]): Promi
     unreadCounts.map((row) => [row.userId, row._count._all]),
   );
   for (const { userId, ...notification } of notifications) {
-    emitToUser(userId, "notification:new", notification);
+    emitToUser(userId, "notification:new", toPublicNotification(notification));
     emitToUser(userId, "notification:unread-count", {
       count: unreadCountMap.get(userId) ?? 0,
     });
@@ -557,7 +595,7 @@ export async function listNotifications(
   ]);
 
   return {
-    data: notifications,
+    data: notifications.map(toPublicNotification),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
@@ -614,10 +652,13 @@ export async function getPreferences(
   userId: number,
   query: ListPreferencesQuery = {},
 ) {
+  const server = query.serverPublicId
+    ? await resolveServerPublicId(query.serverPublicId)
+    : undefined;
   const preferences = await prisma.notificationPreference.findMany({
     where: {
       userId,
-      serverId: query.serverId,
+      serverId: server?.id,
       notificationType: query.notificationType,
     },
     select: preferenceListSelect,
@@ -629,7 +670,7 @@ export async function getPreferences(
     ],
   });
 
-  return preferences;
+  return preferences.map(toPublicPreference);
 }
 
 export async function updatePreference(
@@ -637,7 +678,15 @@ export async function updatePreference(
   input: UpdatePreferenceInput,
 ) {
   const notificationType = input.notificationType ?? "NEW_POST";
-  const { scopeType, serverId, channelId, isSubscribed } = input;
+  const {
+    scopeType,
+    serverPublicId,
+    channelPublicId,
+    isSubscribed,
+  } = input;
+  const server = await resolveServerPublicId(serverPublicId);
+  const serverId = server.id;
+  let channelId: number | undefined;
 
   if (notificationType === "ROLE_ASSIGNED" && scopeType !== "SERVER") {
     throw new ValidationError(
@@ -645,9 +694,9 @@ export async function updatePreference(
     );
   }
 
-  if (notificationType === "ROLE_ASSIGNED" && channelId) {
+  if (notificationType === "ROLE_ASSIGNED" && channelPublicId) {
     throw new ValidationError(
-      "channelId is not supported for role assignment notifications",
+      "channelPublicId is not supported for role assignment notifications",
     );
   }
 
@@ -661,15 +710,22 @@ export async function updatePreference(
   }
 
   // If channel-level, validate channel belongs to server
-  if (scopeType === "CHANNEL" && channelId) {
+  if (scopeType === "CHANNEL" && channelPublicId) {
     const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: { serverId: true, isDeleted: true },
+      where: { publicId: channelPublicId },
+      select: { id: true, serverId: true, isDeleted: true, isArchived: true },
     });
 
     if (!channel || channel.isDeleted || channel.serverId !== serverId) {
       throw new NotFoundError("Channel not found in this server");
     }
+    if (channel.isArchived) {
+      throw new ConflictError(
+        "Archived channels are read-only",
+        ApiErrorCode.CHANNEL_ARCHIVED,
+      );
+    }
+    channelId = channel.id;
   }
 
   // The SQL-only null-safe unique index covers server and channel scopes.
@@ -712,8 +768,9 @@ export async function updatePreference(
   if (!preference) {
     throw new NotFoundError("Notification preference could not be saved");
   }
-  return prisma.notificationPreference.findUniqueOrThrow({
+  const savedPreference = await prisma.notificationPreference.findUniqueOrThrow({
     where: { id: preference.id },
     select: preferenceListSelect,
   });
+  return toPublicPreference(savedPreference);
 }

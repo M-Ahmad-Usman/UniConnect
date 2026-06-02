@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { prisma } from "../config/prisma.js";
 import type { AuthUser } from "../shared/types/index.js";
+import { isPublicId, parsePublicId } from "../shared/ids/index.js";
 
 interface AccessTokenPayload {
   sub: string;
@@ -20,6 +21,8 @@ let io: SocketIOServer | null = null;
 
 const connectionCounts = new Map<string, { count: number; resetAt: number }>();
 const MAX_CONNECTIONS_PER_MINUTE = 10;
+const MAX_JOINED_CHANNEL_ROOMS = 32;
+const MAX_CHANNEL_JOIN_ATTEMPTS_PER_MINUTE = 60;
 let cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
@@ -141,6 +144,9 @@ export function initializeSocket(server: http.Server): SocketIOServer {
   // ─── Connection Handler ────────────────────────────────────────────────
   io.on("connection", (socket) => {
     const user = socket.data.user as AuthUser;
+    const joinedChannelIds = new Map<string, number>();
+    const pendingChannelPublicIds = new Set<string>();
+    let joinAttemptWindow = { count: 0, resetAt: Date.now() + 60_000 };
 
     // Join user-specific room for targeted notification delivery
     socket.join(`user:${user.id}`);
@@ -155,37 +161,64 @@ export function initializeSocket(server: http.Server): SocketIOServer {
 
     socket.on("disconnect", () => {
       clearTimeout(disconnectTimer);
+      joinedChannelIds.clear();
+      pendingChannelPublicIds.clear();
     });
 
-    socket.on("channel:join", async (rawChannelId) => {
-      const channelId = Number(rawChannelId);
-      if (!Number.isInteger(channelId) || channelId <= 0) {
+    socket.on("channel:join", async (rawEnvelope: unknown) => {
+      const now = Date.now();
+      if (now > joinAttemptWindow.resetAt) {
+        joinAttemptWindow = { count: 0, resetAt: now + 60_000 };
+      }
+      joinAttemptWindow.count++;
+      if (joinAttemptWindow.count > MAX_CHANNEL_JOIN_ATTEMPTS_PER_MINUTE) {
         return;
       }
 
+      const channelPublicId = getChannelPublicId(rawEnvelope);
+      if (
+        !channelPublicId ||
+        joinedChannelIds.has(channelPublicId) ||
+        pendingChannelPublicIds.has(channelPublicId)
+      ) {
+        return;
+      }
+      if (joinedChannelIds.size + pendingChannelPublicIds.size >= MAX_JOINED_CHANNEL_ROOMS) {
+        return;
+      }
+
+      pendingChannelPublicIds.add(channelPublicId);
       try {
-        const allowed = await canJoinChannel(user, channelId);
-        if (!allowed) {
+        const channelId = await resolveJoinableChannelId(user, channelPublicId);
+        if (!channelId) {
           return;
         }
 
         socket.join(`channel:${channelId}`);
+        joinedChannelIds.set(channelPublicId, channelId);
       } catch (error) {
         console.warn("[Socket] Failed to join channel", {
           userId: user.id,
-          channelId,
+          channelPublicId,
           error: error instanceof Error ? error.message : String(error),
         });
+      } finally {
+        pendingChannelPublicIds.delete(channelPublicId);
       }
     });
 
-    socket.on("channel:leave", (rawChannelId) => {
-      const channelId = Number(rawChannelId);
-      if (!Number.isInteger(channelId) || channelId <= 0) {
+    socket.on("channel:leave", (rawEnvelope: unknown) => {
+      const channelPublicId = getChannelPublicId(rawEnvelope);
+      if (!channelPublicId) {
         return;
       }
 
+      const channelId = joinedChannelIds.get(channelPublicId);
+      if (!channelId) {
+        return;
+      }
       socket.leave(`channel:${channelId}`);
+      joinedChannelIds.delete(channelPublicId);
     });
   });
 
@@ -273,23 +306,63 @@ function parseCookie(cookieHeader: string, name: string): string | undefined {
   return undefined;
 }
 
-async function canJoinChannel(user: AuthUser, channelId: number): Promise<boolean> {
+function getChannelPublicId(envelope: unknown): string | undefined {
+  if (
+    typeof envelope !== "object" ||
+    envelope === null ||
+    !("channelPublicId" in envelope)
+  ) {
+    return undefined;
+  }
+
+  const value = envelope.channelPublicId;
+  return isPublicId(value) ? parsePublicId(value) : undefined;
+}
+
+async function resolveJoinableChannelId(
+  user: AuthUser,
+  channelPublicId: string,
+): Promise<number | undefined> {
   const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-    select: { id: true, serverId: true, isDeleted: true, isArchived: true },
+    where: { publicId: channelPublicId },
+    select: {
+      id: true,
+      serverId: true,
+      isDeleted: true,
+      isArchived: true,
+      server: {
+        select: {
+          isActive: true,
+          isDeleted: true,
+          society: {
+            select: { status: true, isActive: true, isDeleted: true },
+          },
+        },
+      },
+    },
   });
 
-  if (!channel || channel.isDeleted || channel.isArchived) {
-    return false;
+  if (
+    !channel ||
+    channel.isDeleted ||
+    channel.isArchived ||
+    channel.server.isDeleted ||
+    !channel.server.isActive ||
+    (channel.server.society &&
+      (channel.server.society.status !== "ACTIVE" ||
+        !channel.server.society.isActive ||
+        channel.server.society.isDeleted))
+  ) {
+    return undefined;
   }
 
   if (user.userType === "ADMIN") {
-    return true;
+    return channel.id;
   }
 
   const membership = await prisma.serverMembership.findUnique({
     where: { userId_serverId: { userId: user.id, serverId: channel.serverId } },
   });
 
-  return Boolean(membership);
+  return membership ? channel.id : undefined;
 }

@@ -84,7 +84,7 @@ export function DepartmentDetailPage() {
     <section className="space-y-5">
       <AdminPageHeader
         title={department.name}
-        description={`Department code ${department.code}. Linked server #${department.serverId}.`}
+        description={`Department code ${department.code}. Linked communication server available.`}
         actions={
           <>
             <Link to={ROUTES.ADMIN_DEPARTMENTS} className={buttonVariants({ variant: 'outline' })}>
@@ -124,8 +124,13 @@ export function DepartmentDetailPage() {
             <p className="mt-1 text-sm font-medium">{department._count.programs}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Server ID</p>
-            <p className="mt-1 text-sm font-medium">{department.serverId}</p>
+            <p className="text-xs uppercase text-muted-foreground">Communication server</p>
+            <Link
+              to={ROUTES.SERVER(department.serverPublicId)}
+              className="mt-1 inline-flex text-sm font-medium text-primary hover:underline"
+            >
+              Open server
+            </Link>
           </div>
         </div>
       </div>

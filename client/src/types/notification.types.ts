@@ -11,13 +11,13 @@ export interface Notification {
   message: string;
   readAt: string | null;
   createdAt: string;
-  postId: number | null;
+  postPublicId: string | null;
   post: {
-    channelId: number;
+    channelPublicId: string;
     priority: PostPriority;
     channel: {
       name: string;
-      serverId: number;
+      serverPublicId: string;
       server?: {
         name: string;
       };
@@ -36,15 +36,17 @@ export interface NotificationPreference {
   id: number;
   notificationType: NotificationPreferenceType;
   scopeType: NotificationScopeType;
-  serverId: number;
-  channelId: number | null;
+  serverPublicId: string;
+  channelPublicId: string | null;
   isSubscribed: boolean;
   updatedAt: string;
   server: {
+    publicId: string;
     name: string;
     type: ServerType;
   };
   channel: {
+    publicId: string;
     name: string;
   } | null;
 }
@@ -52,8 +54,8 @@ export interface NotificationPreference {
 export interface UpdatePreferenceRequest {
   notificationType: NotificationPreferenceType;
   scopeType: NotificationScopeType;
-  serverId: number;
-  channelId?: number;
+  serverPublicId: string;
+  channelPublicId?: string;
   isSubscribed: boolean;
 }
 
@@ -65,7 +67,7 @@ export interface NotificationListParams {
 }
 
 export interface NotificationPreferenceListParams {
-  serverId?: number;
+  serverPublicId?: string;
   notificationType?: NotificationPreferenceType;
 }
 
@@ -83,14 +85,14 @@ export interface NewNotificationPayload {
   title: string;
   message: string;
   readAt: string | null;
-  postId: number | null;
+  postPublicId: string | null;
   createdAt: string;
   post: {
-    channelId: number;
+    channelPublicId: string;
     priority: PostPriority;
     channel: {
       name: string;
-      serverId: number;
+      serverPublicId: string;
       server?: {
         name: string;
       };
@@ -108,6 +110,6 @@ export interface UnreadCountPayload {
 }
 
 export interface DeletedNotificationPayload {
-  postId: number;
+  postPublicId: string;
   notificationIds: number[];
 }

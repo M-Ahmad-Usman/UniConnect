@@ -16,8 +16,8 @@ export function useCanPostInChannel(
   );
 }
 
-export function useCanManagePostPin(serverId: number | null) {
-  const permissions = usePermissions(serverId);
+export function useCanManagePostPin(serverPublicId: string | null) {
+  const permissions = usePermissions(serverPublicId);
   return permissions.canLockChannels;
 }
 

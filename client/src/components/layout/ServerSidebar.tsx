@@ -10,7 +10,7 @@ import { ROUTES } from '@/lib/constants';
 import { useServers } from '@/features/servers/hooks/useServers';
 
 interface ServerSidebarProps {
-  activeServerId: number | null;
+  activeServerPublicId: string | null;
   onSelectServer?: () => void;
   variant?: 'rail' | 'drawer';
 }
@@ -20,7 +20,7 @@ function getServerInitial(name: string) {
 }
 
 export function ServerSidebar({
-  activeServerId,
+  activeServerPublicId,
   onSelectServer,
   variant = 'rail',
 }: ServerSidebarProps) {
@@ -88,13 +88,13 @@ export function ServerSidebar({
           <div className="grid gap-2 p-3">
             {servers.map((server) => (
               <NavLink
-                key={server.id}
-                to={ROUTES.SERVER(server.id)}
+                key={server.publicId}
+                to={ROUTES.SERVER(server.publicId)}
                 onClick={onSelectServer}
                 aria-label={server.name}
                 className={cn(
                   'flex min-w-0 items-center gap-3 rounded-xl border border-transparent px-3 py-2 transition-colors hover:border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  activeServerId === server.id &&
+                  activeServerPublicId === server.publicId &&
                     'border-primary/30 bg-primary/10 text-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_18%,transparent)]',
                 )}
               >
@@ -118,22 +118,22 @@ export function ServerSidebar({
         ) : (
           <div className="flex flex-col items-center gap-3 px-2 py-4">
             {servers.map((server) => (
-              <Tooltip key={server.id}>
+              <Tooltip key={server.publicId}>
                 <TooltipTrigger render={<div />}>
                   <NavLink
-                    to={ROUTES.SERVER(server.id)}
+                    to={ROUTES.SERVER(server.publicId)}
                     onClick={onSelectServer}
                     aria-label={server.name}
                     className={cn(
                       'group relative flex size-14 items-center justify-center rounded-2xl border border-transparent transition-all hover:-translate-y-0.5 hover:border-border hover:bg-accent',
-                      activeServerId === server.id &&
+                      activeServerPublicId === server.publicId &&
                         'border-primary/30 bg-primary/10 text-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_20%,transparent)]',
                     )}
                   >
                     <span
                       className={cn(
                         'absolute -left-2 h-9 w-1 rounded-full bg-primary opacity-0 transition-opacity',
-                        activeServerId === server.id && 'opacity-100',
+                        activeServerPublicId === server.publicId && 'opacity-100',
                       )}
                       aria-hidden="true"
                     />

@@ -236,11 +236,11 @@ describe("Module 3 - Department & Program Management", () => {
       expect(res.body.data.id).toBeDefined();
       expect(res.body.data.name).toBe("Computer Science");
       expect(res.body.data.code).toBe("CS-M3-1");
-      expect(res.body.data.serverId).toBeDefined();
+      expect(res.body.data.serverPublicId).toBeDefined();
 
       // Verify server auto-created
       const server = await prisma.server.findUnique({
-        where: { id: res.body.data.serverId },
+        where: { publicId: res.body.data.serverPublicId },
       });
       expect(server).not.toBeNull();
       expect(server!.type).toBe("DEPARTMENT");
@@ -249,7 +249,7 @@ describe("Module 3 - Department & Program Management", () => {
       // Verify #announcements channel auto-created
       const channel = await prisma.channel.findFirst({
         where: {
-          serverId: res.body.data.serverId,
+          serverId: server!.id,
           name: "announcements",
         },
       });

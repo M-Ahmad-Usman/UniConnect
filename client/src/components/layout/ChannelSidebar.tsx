@@ -1,4 +1,4 @@
-import { Bell, Hash, Lock, Plus, Users2 } from 'lucide-react';
+import { Archive, Bell, Hash, Lock, Plus, Users2 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -16,23 +16,23 @@ import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import { usePermissions } from '@/hooks/usePermissions';
 
 interface ChannelSidebarProps {
-  serverId: number | null;
-  activeChannelId: number | null;
+  serverPublicId: string | null;
+  activeChannelPublicId: string | null;
   onSelectChannel?: () => void;
 }
 
 export function ChannelSidebar({
-  serverId,
-  activeChannelId,
+  serverPublicId,
+  activeChannelPublicId,
   onSelectChannel,
 }: ChannelSidebarProps) {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
-  const permissions = usePermissions(serverId);
-  const serverQuery = useServerDetail(serverId);
-  const channelQuery = useServerChannels(serverId, true);
+  const permissions = usePermissions(serverPublicId);
+  const serverQuery = useServerDetail(serverPublicId);
+  const channelQuery = useServerChannels(serverPublicId, true);
 
-  if (serverId === null) {
+  if (serverPublicId === null) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Select a server to browse its channels.
@@ -74,6 +74,7 @@ export function ChannelSidebar({
 
   const server = serverQuery.data;
   const channels = (channelQuery.data ?? []).filter((channel) => !channel.isArchived);
+  const archivedChannels = (channelQuery.data ?? []).filter((channel) => channel.isArchived);
   const groupedChannels = groupChannels(channels);
 
   return (
@@ -84,7 +85,7 @@ export function ChannelSidebar({
             <div className="flex min-w-0 items-start gap-3">
               {server ? (
                 <ServerIconUpload
-                  serverId={serverId}
+                  serverPublicId={serverPublicId}
                   serverName={server.name}
                   iconUrl={server.iconUrl}
                   canUpdate={permissions.canCreateChannels}
@@ -112,7 +113,7 @@ export function ChannelSidebar({
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-1">
             <NavLink
-              to={ROUTES.MEMBERS(serverId)}
+              to={ROUTES.MEMBERS(serverPublicId)}
               onClick={onSelectChannel}
               className={({ isActive }) =>
                 cn(
@@ -127,7 +128,7 @@ export function ChannelSidebar({
               Members
             </NavLink>
             <NavLink
-              to={ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId)}
+              to={ROUTES.SERVER_NOTIFICATION_SETTINGS(serverPublicId)}
               onClick={onSelectChannel}
               className={({ isActive }) =>
                 cn(
@@ -153,12 +154,12 @@ export function ChannelSidebar({
                 <div className="space-y-1">
                   {group.channels.map((channel) => (
                     <NavLink
-                      key={channel.id}
-                      to={ROUTES.CHANNEL(serverId, channel.id)}
+                      key={channel.publicId}
+                      to={ROUTES.CHANNEL(serverPublicId, channel.publicId)}
                       onClick={onSelectChannel}
                       className={cn(
                         'hover:bg-accent flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors',
-                        activeChannelId === channel.id
+                        activeChannelPublicId === channel.publicId
                           ? 'bg-accent text-foreground font-medium'
                           : 'text-muted-foreground',
                       )}
@@ -176,15 +177,43 @@ export function ChannelSidebar({
                 No visible channels in this server.
               </p>
             ) : null}
+            {archivedChannels.length > 0 ? (
+              <details className="rounded-lg border border-border/70 px-2 py-2">
+                <summary className="flex cursor-pointer list-none items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  <Archive className="size-3.5" />
+                  Archived history
+                </summary>
+                <div className="mt-2 space-y-1">
+                  {archivedChannels.map((channel) => (
+                    <NavLink
+                      key={channel.publicId}
+                      to={ROUTES.CHANNEL(serverPublicId, channel.publicId)}
+                      onClick={onSelectChannel}
+                      className={cn(
+                        'hover:bg-accent flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors',
+                        activeChannelPublicId === channel.publicId
+                          ? 'bg-accent text-foreground font-medium'
+                          : 'text-muted-foreground',
+                      )}
+                    >
+                      <Archive className="size-4 shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">{channel.name}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </details>
+            ) : null}
           </div>
         </ScrollArea>
       </div>
-      {serverId !== null ? (
+      {serverPublicId !== null ? (
         <CreateChannelDialog
-          serverId={serverId}
+          serverPublicId={serverPublicId}
           open={createOpen}
           onOpenChange={setCreateOpen}
-          onCreated={(channelId) => navigate(ROUTES.CHANNEL(serverId, channelId))}
+          onCreated={(channelPublicId) =>
+            navigate(ROUTES.CHANNEL(serverPublicId, channelPublicId))
+          }
         />
       ) : null}
     </>

@@ -72,7 +72,7 @@ describe("Module 1 - Permission Policy Foundation", () => {
     const convenorPermissions = await getMyPermissions(fixture.convenor.email);
     expect(convenorPermissions.global.canAccessRoleManagement).toBe(true);
     expect(convenorPermissions.roleWorkspace.canAssignServerModerator).toBe(true);
-    expect(convenorPermissions.scopes.societyLeadershipIds).toContain(fixture.society.id);
+    expect(convenorPermissions.scopes.societyLeadershipIds).toBeUndefined();
 
     const studentPermissions = await getMyPermissions(fixture.nonMemberStudent.email);
     expect(studentPermissions.global.canAccessAdminDashboard).toBe(false);

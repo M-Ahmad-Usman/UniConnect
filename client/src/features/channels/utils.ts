@@ -75,7 +75,7 @@ export function insertChannel(channels: ChannelListItem[], channel: CreateChanne
     programId: null,
   };
 
-  const withoutExisting = channels.filter((current) => current.id !== channel.id);
+  const withoutExisting = channels.filter((current) => current.publicId !== channel.publicId);
   return sortChannelsByCreatedAt([...withoutExisting, nextChannel]);
 }
 
@@ -84,7 +84,7 @@ export function updateChannelInList(
   channel: UpdateChannelResponse,
 ) {
   return channels.map((current) =>
-    current.id === channel.id
+    current.publicId === channel.publicId
       ? {
           ...current,
           ...channel,
@@ -93,6 +93,6 @@ export function updateChannelInList(
   );
 }
 
-export function removeChannelFromList(channels: ChannelListItem[], channelId: number) {
-  return channels.filter((channel) => channel.id !== channelId);
+export function removeChannelFromList(channels: ChannelListItem[], channelPublicId: string) {
+  return channels.filter((channel) => channel.publicId !== channelPublicId);
 }

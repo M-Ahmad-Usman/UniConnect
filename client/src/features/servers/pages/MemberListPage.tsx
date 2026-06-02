@@ -4,7 +4,7 @@ import { useSearchParams, useParams } from 'react-router-dom';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Button } from '@/components/ui/button';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import { useServerMembers } from '@/features/servers/hooks/useServerMembers';
 import { MemberCard } from '@/features/servers/components/MemberCard';
@@ -27,11 +27,11 @@ function parsePageParam(raw: string | null) {
 export function MemberListPage() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const serverId = parseRouteParamId(params.serverId);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
   const page = parsePageParam(searchParams.get('page'));
 
-  const serverQuery = useServerDetail(serverId);
-  const membersQuery = useServerMembers(serverId, { page, limit: PAGE_SIZE });
+  const serverQuery = useServerDetail(serverPublicId);
+  const membersQuery = useServerMembers(serverPublicId, { page, limit: PAGE_SIZE });
 
   const members = membersQuery.data?.data ?? [];
   const pagination = membersQuery.data?.pagination;
@@ -58,7 +58,7 @@ export function MemberListPage() {
     setSearchParams(nextParams, { replace: true });
   }
 
-  if (serverId === null) {
+  if (serverPublicId === null) {
     return (
       <EmptyState
         icon={Users2}
@@ -112,7 +112,7 @@ export function MemberListPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
           {members.map((member) => (
-            <MemberCard key={`${member.userId}-${member.joinedAt}`} member={member} />
+            <MemberCard key={`${member.user.publicId}-${member.joinedAt}`} member={member} />
           ))}
         </div>
       )}

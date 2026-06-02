@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { publicIdSchema } from "../../shared/ids/index.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
-export const channelIdParamSchema = {
+export const channelPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Channel ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
 
@@ -12,7 +13,7 @@ export const channelIdParamSchema = {
 
 export const updateChannelSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Channel ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z
     .object({

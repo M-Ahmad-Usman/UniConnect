@@ -51,10 +51,10 @@ export function NotificationSettingsServerPickerPage() {
         <div className="overflow-hidden rounded-lg border bg-background">
           {servers.map((server) => (
             <Button
-              key={server.id}
+              key={server.publicId}
               variant="ghost"
               className="h-auto w-full justify-between rounded-none border-b px-4 py-4 last:border-b-0"
-              render={<Link to={ROUTES.SERVER_NOTIFICATION_SETTINGS(server.id)} />}
+              render={<Link to={ROUTES.SERVER_NOTIFICATION_SETTINGS(server.publicId)} />}
             >
               <span className="flex min-w-0 items-center gap-3 text-left">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

@@ -55,7 +55,7 @@ export function ServersPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {servers.map((server) => (
-          <Card key={server.id} className="border-border/80 bg-card/90">
+          <Card key={server.publicId} className="border-border/80 bg-card/90">
             <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
               <div className="space-y-1">
                 <CardTitle className="text-lg">{server.name}</CardTitle>
@@ -76,7 +76,7 @@ export function ServersPage() {
                   'Open this server to browse its channels and recent activity.'}
               </p>
               <Button
-                onClick={() => navigate(ROUTES.SERVER(server.id))}
+                onClick={() => navigate(ROUTES.SERVER(server.publicId))}
                 className="w-full justify-between"
               >
                 Open server

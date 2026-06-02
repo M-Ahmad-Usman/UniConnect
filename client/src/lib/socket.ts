@@ -49,9 +49,9 @@ export function connectSocket(): void {
       refetchType: 'inactive',
     });
 
-    if (payload.post?.channelId) {
+    if (payload.post?.channelPublicId) {
       void queryClient.invalidateQueries({
-        queryKey: ['posts', payload.post.channelId],
+        queryKey: ['posts', payload.post.channelPublicId],
         refetchType: 'active',
       });
     }
@@ -62,10 +62,10 @@ export function connectSocket(): void {
         action: {
           label: 'View',
           onClick: () => {
-            const serverId = payload.post?.channel.serverId;
-            const channelId = payload.post?.channelId;
-            if (serverId && channelId) {
-              window.location.href = ROUTES.CHANNEL(serverId, channelId);
+            const serverPublicId = payload.post?.channel.serverPublicId;
+            const channelPublicId = payload.post?.channelPublicId;
+            if (serverPublicId && channelPublicId) {
+              window.location.href = ROUTES.CHANNEL(serverPublicId, channelPublicId);
             }
           },
         },

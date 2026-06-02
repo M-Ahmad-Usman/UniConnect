@@ -44,6 +44,8 @@ Servers:
 
 Channels and posts:
 - Channels and posts already use soft-delete behavior.
+- `channels.isArchived = true` keeps authorized history readable but makes the
+  channel operationally read-only.
 - Channel restore is internal only for lifecycle cascade restore.
 - Post restore is deferred.
 
@@ -229,6 +231,15 @@ Preserved during owner soft-delete:
 
 ## Channel Policy
 
+Channel archive:
+- Is distinct from soft-delete.
+- Keeps authorized channel history and post detail readable.
+- Blocks channel metadata changes, lock/unlock, delete, posting, pinning,
+  attachment changes, notification-preference changes, and realtime room joins.
+- Returns the stable `CHANNEL_ARCHIVED` conflict code for attempted writes.
+- Appears separately from active channels in clients and must not be selected as
+  a default live channel.
+
 Channel soft-delete:
 - Sets soft-delete metadata.
 - Leaves posts intact.
@@ -320,6 +331,9 @@ Blockers:
 Special rule:
 - `crId` is nullable to resolve creation/deletion cycles, but CR business rules
   must prevent cross-class CR assignment.
+- Graduation archives course channels as read-only history. General and
+  announcement channels retain their existing authorization behavior until a
+  later product decision explicitly changes it.
 
 ### Courses
 

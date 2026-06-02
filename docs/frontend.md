@@ -39,6 +39,9 @@ society management, and role management.
 - Society leadership changes stay in society workflows; generic role management
   handles HOD, Program Director, CR, and moderator roles.
 - Post feeds use paginated APIs with load-more/infinite-style interaction.
+- Server, channel, and post navigation uses UUIDv7 public IDs end to end.
+- Archived channels appear in a separate collapsed history section. Their feeds
+  remain readable, while write controls and realtime subscriptions are disabled.
 - Playwright owns critical runtime verification for cookies, redirects, CSRF,
   guarded routes, and responsive/accessibility smoke flows.
 

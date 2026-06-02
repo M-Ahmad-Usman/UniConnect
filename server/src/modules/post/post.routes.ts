@@ -2,13 +2,18 @@ import type { Request } from "express";
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import { authorize } from "../../middleware/authorize.js";
+import {
+  getResolvedPostTarget,
+  resolveChannelTarget,
+  resolvePostTarget,
+} from "../../middleware/resolveCommunicationTarget.js";
 import { validate } from "../../middleware/validate.js";
 import { uploadPostAttachments, validateImageMagicBytes } from "../../middleware/upload.js";
 import { uploadLimiter } from "../../middleware/rateLimiter.js";
 import {
   createPostSchema,
   listPostsSchema,
-  postIdParamSchema,
+  postPublicIdParamSchema,
   updatePostSchema,
   pinPostSchema,
 } from "./post.schema.js";
@@ -21,22 +26,20 @@ import {
   handlePinPost,
   handleAddAttachments,
 } from "./post.controller.js";
-import { resolveServerIdFromPost } from "./post.service.js";
 
 // ─── Async Server ID Resolver ──────────────────────────────────────────────
 
-const serverIdFromPost = async (req: Request) => {
-  const postId = Number(req.params.id);
-  return resolveServerIdFromPost(postId);
-};
+const serverIdFromPost = (req: Request) => getResolvedPostTarget(req).serverId;
+const channelIdFromPost = (req: Request) => getResolvedPostTarget(req).channelId;
 
 // ─── Channel-Scoped Post Routes (mounted under /api/channels) ──────────────
 
 export const channelPostRoutes = Router();
 
 channelPostRoutes.post(
-  "/:id/posts",
+  "/:publicId/posts",
   authenticate,
+  resolveChannelTarget,
   uploadLimiter,
   uploadPostAttachments,
   validateImageMagicBytes,
@@ -45,9 +48,10 @@ channelPostRoutes.post(
 );
 
 channelPostRoutes.get(
-  "/:id/posts",
+  "/:publicId/posts",
   authenticate,
   validate(listPostsSchema),
+  resolveChannelTarget,
   handleListPosts
 );
 
@@ -56,38 +60,47 @@ channelPostRoutes.get(
 export const postRoutes = Router();
 
 postRoutes.get(
-  "/:id",
+  "/:publicId",
   authenticate,
-  validate(postIdParamSchema),
+  validate(postPublicIdParamSchema),
+  resolvePostTarget,
   handleGetPost
 );
 
 postRoutes.patch(
-  "/:id",
+  "/:publicId",
   authenticate,
   validate(updatePostSchema),
+  resolvePostTarget,
   handleUpdatePost
 );
 
 postRoutes.delete(
-  "/:id",
+  "/:publicId",
   authenticate,
-  validate(postIdParamSchema),
+  validate(postPublicIdParamSchema),
+  resolvePostTarget,
   handleDeletePost
 );
 
 postRoutes.patch(
-  "/:id/pin",
+  "/:publicId/pin",
   authenticate,
   validate(pinPostSchema),
-  authorize({ permission: "lock:channel", serverIdFrom: serverIdFromPost }),
+  resolvePostTarget,
+  authorize({
+    permission: "lock:channel",
+    serverIdFrom: serverIdFromPost,
+    channelIdFrom: channelIdFromPost,
+  }),
   handlePinPost
 );
 
 postRoutes.post(
-  "/:id/attachments",
+  "/:publicId/attachments",
   authenticate,
-  validate(postIdParamSchema),
+  validate(postPublicIdParamSchema),
+  resolvePostTarget,
   uploadLimiter,
   uploadPostAttachments,
   validateImageMagicBytes,

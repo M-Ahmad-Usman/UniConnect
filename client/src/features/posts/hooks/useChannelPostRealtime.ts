@@ -11,9 +11,9 @@ import {
   upsertPostInInfiniteData,
 } from '../utils';
 
-export function useChannelPostRealtime(channelId: number | null) {
+export function useChannelPostRealtime(channelPublicId: string | null) {
   useEffect(() => {
-    if (channelId === null) {
+    if (channelPublicId === null) {
       return;
     }
 
@@ -23,7 +23,7 @@ export function useChannelPostRealtime(channelId: number | null) {
       return;
     }
 
-    const channelQueryKey = ['posts', channelId] as const;
+    const channelQueryKey = ['posts', channelPublicId] as const;
 
     const updateChannelQueries = (
       updater: (
@@ -55,30 +55,30 @@ export function useChannelPostRealtime(channelId: number | null) {
     };
 
     const joinChannel = () => {
-      socket.emit('channel:join', channelId);
+      socket.emit('channel:join', { channelPublicId });
     };
 
     joinChannel();
     socket.on('connect', joinChannel);
 
     const handleCreated = (payload: PostRealtimePayload) => {
-      if (payload.channelId !== channelId) {
+      if (payload.channelPublicId !== channelPublicId) {
         return;
       }
 
       const listItem = detailToListItem(payload.post);
       updateChannelQueries((current) => upsertPostInInfiniteData(current, listItem));
-      queryClient.setQueryData(queryKeys.posts.detail(payload.post.id), payload.post);
+      queryClient.setQueryData(queryKeys.posts.detail(payload.post.publicId), payload.post);
     };
 
     const handleUpdated = (payload: PostRealtimePayload) => {
-      if (payload.channelId !== channelId) {
+      if (payload.channelPublicId !== channelPublicId) {
         return;
       }
 
       const listItem = detailToListItem(payload.post);
       updateChannelQueries((current) => replacePostInInfiniteData(current, listItem));
-      queryClient.setQueryData(queryKeys.posts.detail(payload.post.id), payload.post);
+      queryClient.setQueryData(queryKeys.posts.detail(payload.post.publicId), payload.post);
     };
 
     const handlePinned = (payload: PostRealtimePayload) => {
@@ -86,12 +86,14 @@ export function useChannelPostRealtime(channelId: number | null) {
     };
 
     const handleDeleted = (payload: PostDeletedPayload) => {
-      if (payload.channelId !== channelId) {
+      if (payload.channelPublicId !== channelPublicId) {
         return;
       }
 
-      updateChannelQueries((current) => removePostFromInfiniteData(current, payload.postId));
-      queryClient.removeQueries({ queryKey: queryKeys.posts.detail(payload.postId) });
+      updateChannelQueries((current) =>
+        removePostFromInfiniteData(current, payload.postPublicId),
+      );
+      queryClient.removeQueries({ queryKey: queryKeys.posts.detail(payload.postPublicId) });
     };
 
     socket.on('post:created', handleCreated);
@@ -105,7 +107,7 @@ export function useChannelPostRealtime(channelId: number | null) {
       socket.off('post:updated', handleUpdated);
       socket.off('post:pinned', handlePinned);
       socket.off('post:deleted', handleDeleted);
-      socket.emit('channel:leave', channelId);
+      socket.emit('channel:leave', { channelPublicId });
     };
-  }, [channelId]);
+  }, [channelPublicId]);
 }

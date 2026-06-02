@@ -20,6 +20,8 @@ import {
   addServerMembership,
   loginAs,
   seedRolesAndPermissions,
+  apiId,
+  apiServerId,
 } from "../helpers/factory.js";
 
 /** Short unique suffix */
@@ -27,6 +29,8 @@ let uidCounter = 0;
 function uid(): string {
   return (++uidCounter).toString(36);
 }
+
+const UNKNOWN_SERVER_PUBLIC_ID = "0198f1f0-0000-7000-8000-000000000999";
 
 beforeAll(async () => {
   await resetDB();
@@ -62,9 +66,9 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBeGreaterThanOrEqual(2); // dept + class
       // All returned servers should include ones the student is a member of
-      const serverIds = res.body.data.map((s: { id: number }) => s.id);
-      expect(serverIds).toContain(dept.serverId);
-      expect(serverIds).toContain(cls.serverId);
+      const serverPublicIds = res.body.data.map((s: { publicId: string }) => s.publicId);
+      expect(serverPublicIds).toContain(await apiServerId(dept.serverId));
+      expect(serverPublicIds).toContain(await apiServerId(cls.serverId));
     });
 
     it("should allow admin to list all servers → 200", async () => {
@@ -125,12 +129,12 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-det-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.id).toBe(dept.serverId);
+      expect(res.body.data.publicId).toBe(await apiServerId(dept.serverId));
       expect(res.body.data.type).toBe("DEPARTMENT");
       expect(res.body.data.department).toBeDefined();
       expect(res.body.data.department.id).toBe(dept.id);
@@ -146,7 +150,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-nm-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -162,7 +166,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`admin-ne-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/servers/999999")
+        .get(`/api/servers/${UNKNOWN_SERVER_PUBLIC_ID}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -179,11 +183,11 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`admin-any-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.id).toBe(dept.serverId);
+      expect(res.body.data.publicId).toBe(await apiServerId(dept.serverId));
     });
   });
 
@@ -210,7 +214,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-ch-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/channels`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -254,7 +258,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-del-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/channels`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -274,7 +278,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-chnm-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/channels`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -316,7 +320,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-arch-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/channels?includeArchived=true`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/channels?includeArchived=true`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -356,7 +360,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-archd-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/channels`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -386,7 +390,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`hod-mem-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/members`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -395,14 +399,14 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       // Find the HOD member and check badges
       const hodMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === hodTeacher.id,
+        (m: { user: { publicId: string } }) => m.user.publicId === hodTeacher.publicId,
       );
       expect(hodMember).toBeDefined();
       expect(hodMember.badges).toContain("hod");
 
       // Find the PD member and check badges
       const pdMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === pdTeacher.id,
+        (m: { user: { publicId: string } }) => m.user.publicId === pdTeacher.publicId,
       );
       expect(pdMember).toBeDefined();
       expect(pdMember.badges).toContain("program_director");
@@ -422,12 +426,12 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`cr-cmb-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${cls.serverId}/members`)
+        .get(`/api/servers/${await apiServerId(cls.serverId)}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       const crMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === student1.id,
+        (m: { user: { publicId: string } }) => m.user.publicId === student1.publicId,
       );
       expect(crMember).toBeDefined();
       expect(crMember.badges).toContain("cr");
@@ -458,18 +462,18 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`pres-smb-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${socServer.id}/members`)
+        .get(`/api/servers/${apiId(socServer)}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       const presMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === president.id,
+        (m: { user: { publicId: string } }) => m.user.publicId === president.publicId,
       );
       expect(presMember).toBeDefined();
       expect(presMember.badges).toContain("president");
 
       const convMember = res.body.data.find(
-        (m: { user: { id: number } }) => m.user.id === convenor.id,
+        (m: { user: { publicId: string } }) => m.user.publicId === convenor.publicId,
       );
       expect(convMember).toBeDefined();
       expect(convMember.badges).toContain("convenor");
@@ -485,7 +489,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`teacher-memnm-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/members`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/members`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(403);
@@ -509,7 +513,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`admin-page-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/servers/${dept.serverId}/members?page=1&limit=2`)
+        .get(`/api/servers/${await apiServerId(dept.serverId)}/members?page=1&limit=2`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -533,7 +537,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`hod-cr-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${dept.serverId}/channels`)
+        .post(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `test-channel-${u}`, description: "A test channel" });
 
@@ -563,7 +567,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`cr-cr-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${cls.serverId}/channels`)
+        .post(`/api/servers/${await apiServerId(cls.serverId)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `cr-channel-${u}` });
 
@@ -593,7 +597,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`pres-cr-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${socServer.id}/channels`)
+        .post(`/api/servers/${apiId(socServer)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `soc-channel-${u}` });
 
@@ -623,7 +627,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`conv-conv-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${socServer.id}/channels`)
+        .post(`/api/servers/${apiId(socServer)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `conv-channel-${u}` });
 
@@ -642,7 +646,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`hod-other-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${dept2.serverId}/channels`)
+        .post(`/api/servers/${await apiServerId(dept2.serverId)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `should-fail-${u}` });
 
@@ -660,7 +664,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`stu-nrole-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${dept.serverId}/channels`)
+        .post(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `should-fail-${u}` });
 
@@ -678,7 +682,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`admin-cr-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${dept.serverId}/channels`)
+        .post(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `admin-channel-${u}` });
 
@@ -698,7 +702,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`admin-dup-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/servers/${dept.serverId}/channels`)
+        .post(`/api/servers/${await apiServerId(dept.serverId)}/channels`)
         .set("Cookie", cookies)
         .send({ name: `dup-channel-${u}` });
 
@@ -715,7 +719,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
       const cookies = await loginAs(`admin-ne-srv-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)
-        .post("/api/servers/999999/channels")
+        .post(`/api/servers/${UNKNOWN_SERVER_PUBLIC_ID}/channels`)
         .set("Cookie", cookies)
         .send({ name: `channel-${u}` });
 
@@ -742,7 +746,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       const cookies = await loginAs(`hod-icon-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/servers/${dept.serverId}/icon`)
+        .patch(`/api/servers/${await apiServerId(dept.serverId)}/icon`)
         .set("Cookie", cookies)
         .attach("serverIcon", VALID_JPEG_BUFFER, {
           filename: "server.jpg",
@@ -775,7 +779,7 @@ describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
 
       const cookies = await loginAs(`stu-icon-deny-${u}@test.com`, "Pass@1234");
       const res = await request(app)
-        .patch(`/api/servers/${dept.serverId}/icon`)
+        .patch(`/api/servers/${await apiServerId(dept.serverId)}/icon`)
         .set("Cookie", cookies)
         .attach("serverIcon", VALID_JPEG_BUFFER, {
           filename: "server.jpg",

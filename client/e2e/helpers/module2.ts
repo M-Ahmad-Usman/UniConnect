@@ -16,25 +16,31 @@ export const module2Fixtures = {
   graduationServerName: 'Academic Graduation Class',
 } as const;
 
-export async function findServerIdByName(name: string) {
+export async function findServerPublicIdByName(name: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number }>(
-      'SELECT id FROM servers WHERE name = $1 LIMIT 1',
+    const result = await pool.query<{ public_id: string }>(
+      'SELECT public_id FROM servers WHERE name = $1 LIMIT 1',
       [name],
     );
 
-    return result.rows[0]?.id ?? null;
+    return result.rows[0]?.public_id ?? null;
   });
 }
 
-export async function findChannelIdByName(serverId: number, name: string) {
+export async function findChannelPublicIdByName(serverPublicId: string, name: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number }>(
-      'SELECT id FROM channels WHERE server_id = $1 AND name = $2 LIMIT 1',
-      [serverId, name],
+    const result = await pool.query<{ public_id: string }>(
+      `
+        SELECT channel.public_id
+        FROM channels channel
+        INNER JOIN servers server ON server.id = channel.server_id
+        WHERE server.public_id = $1 AND channel.name = $2
+        LIMIT 1
+      `,
+      [serverPublicId, name],
     );
 
-    return result.rows[0]?.id ?? null;
+    return result.rows[0]?.public_id ?? null;
   });
 }
 

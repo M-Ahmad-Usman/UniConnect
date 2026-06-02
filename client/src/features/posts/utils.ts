@@ -221,20 +221,22 @@ export function formatRemainingEditWindow(remainingMs: number) {
   return `${hours}h ${minutes}m left`;
 }
 
-function hasServerRole(roles: ScopedRoleAssignment[], serverId: number, accepted: string[]) {
-  return roles.some((role) => role.serverId === serverId && accepted.includes(role.role));
+function hasServerRole(roles: ScopedRoleAssignment[], serverPublicId: string, accepted: string[]) {
+  return roles.some(
+    (role) => role.serverPublicId === serverPublicId && accepted.includes(role.role),
+  );
 }
 
 function hasChannelModeratorRole(
   roles: ScopedRoleAssignment[],
-  serverId: number,
-  channelId: number,
+  serverPublicId: string,
+  channelPublicId: string,
 ) {
   return roles.some(
     (role) =>
-      role.serverId === serverId &&
+      role.serverPublicId === serverPublicId &&
       role.role === 'channel_moderator' &&
-      role.channelId === channelId,
+      role.channelPublicId === channelPublicId,
   );
 }
 
@@ -259,8 +261,8 @@ export function canPostInChannelClient({
   const elevatedRoles = ['hod', 'cr', 'society_president', 'society_convenor', 'server_moderator'];
 
   if (
-    hasServerRole(roles, server.id, elevatedRoles) ||
-    hasChannelModeratorRole(roles, server.id, channel.id)
+    hasServerRole(roles, server.publicId, elevatedRoles) ||
+    hasChannelModeratorRole(roles, server.publicId, channel.publicId)
   ) {
     return true;
   }
@@ -271,7 +273,7 @@ export function canPostInChannelClient({
 
   if (
     channel.type === ChannelType.PROGRAM &&
-    hasServerRole(roles, server.id, ['program_director'])
+    hasServerRole(roles, server.publicId, ['program_director'])
   ) {
     return true;
   }
@@ -300,7 +302,7 @@ export function canDeletePostClient(
 
 export function detailToListItem(post: PostDetail): PostListItem {
   return {
-    id: post.id,
+    publicId: post.publicId,
     title: post.title,
     content: post.content,
     priority: post.priority,
@@ -327,8 +329,8 @@ export function sortPostsForFeed(posts: PostListItem[]) {
 }
 
 export function upsertPostInPage(page: PaginatedResponse<PostListItem>, post: PostListItem) {
-  const hasExisting = page.data.some((current) => current.id === post.id);
-  const withoutExisting = page.data.filter((current) => current.id !== post.id);
+  const hasExisting = page.data.some((current) => current.publicId === post.publicId);
+  const withoutExisting = page.data.filter((current) => current.publicId !== post.publicId);
   return {
     ...page,
     data: sortPostsForFeed([post, ...withoutExisting]),
@@ -342,16 +344,18 @@ export function upsertPostInPage(page: PaginatedResponse<PostListItem>, post: Po
 export function replacePostInPage(page: PaginatedResponse<PostListItem>, post: PostListItem) {
   return {
     ...page,
-    data: sortPostsForFeed(page.data.map((current) => (current.id === post.id ? post : current))),
+    data: sortPostsForFeed(
+      page.data.map((current) => (current.publicId === post.publicId ? post : current)),
+    ),
   };
 }
 
-export function removePostFromPage(page: PaginatedResponse<PostListItem>, postId: number) {
-  const hasPost = page.data.some((current) => current.id === postId);
+export function removePostFromPage(page: PaginatedResponse<PostListItem>, postPublicId: string) {
+  const hasPost = page.data.some((current) => current.publicId === postPublicId);
 
   return {
     ...page,
-    data: page.data.filter((current) => current.id !== postId),
+    data: page.data.filter((current) => current.publicId !== postPublicId),
     pagination: {
       ...page.pagination,
       total: hasPost ? Math.max(0, page.pagination.total - 1) : page.pagination.total,
@@ -371,7 +375,9 @@ export function upsertPostInInfiniteData(
   return {
     ...current,
     pages: current.pages.map((page, index) =>
-      index === firstPageIndex ? upsertPostInPage(page, post) : removePostFromPage(page, post.id),
+      index === firstPageIndex
+        ? upsertPostInPage(page, post)
+        : removePostFromPage(page, post.publicId),
     ),
   };
 }
@@ -392,7 +398,7 @@ export function replacePostInInfiniteData(
 
 export function removePostFromInfiniteData(
   current: InfiniteData<PaginatedResponse<PostListItem>> | undefined,
-  postId: number,
+  postPublicId: string,
 ) {
   if (!current) {
     return current;
@@ -400,7 +406,7 @@ export function removePostFromInfiniteData(
 
   return {
     ...current,
-    pages: current.pages.map((page) => removePostFromPage(page, postId)),
+    pages: current.pages.map((page) => removePostFromPage(page, postPublicId)),
   };
 }
 

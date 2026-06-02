@@ -6,16 +6,16 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ROUTES } from '@/lib/constants';
 import { useServerChannels } from '@/features/channels/hooks/useServerChannels';
 import { selectDefaultChannel } from '@/features/channels/utils';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 
 export function ServerPage() {
   const navigate = useNavigate();
   const params = useParams();
-  const serverId = parseRouteParamId(params.serverId);
-  const channelsQuery = useServerChannels(serverId, false);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
+  const channelsQuery = useServerChannels(serverPublicId, false);
 
   useEffect(() => {
-    if (serverId === null || !channelsQuery.data) {
+    if (serverPublicId === null || !channelsQuery.data) {
       return;
     }
 
@@ -24,8 +24,8 @@ export function ServerPage() {
       return;
     }
 
-    navigate(ROUTES.CHANNEL(serverId, nextChannel.id), { replace: true });
-  }, [channelsQuery.data, navigate, serverId]);
+    navigate(ROUTES.CHANNEL(serverPublicId, nextChannel.publicId), { replace: true });
+  }, [channelsQuery.data, navigate, serverPublicId]);
 
   if (channelsQuery.isLoading) {
     return <LoadingSpinner fullPage />;

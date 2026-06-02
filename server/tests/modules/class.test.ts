@@ -105,12 +105,12 @@ describe("Module 4 - Class Management", () => {
       expect(res.body.data.academicYear).toBe(2026);
       expect(res.body.data.admissionYear).toBe(2026);
       expect(res.body.data.section).toBe("A");
-      expect(res.body.data.serverId).toBeDefined();
+      expect(res.body.data.serverPublicId).toBeDefined();
       expect(res.body.data.program.id).toBe(program.id);
 
       // Verify server auto-created
       const server = await prisma.server.findUnique({
-        where: { id: res.body.data.serverId },
+        where: { publicId: res.body.data.serverPublicId },
       });
       expect(server).not.toBeNull();
       expect(server!.type).toBe("CLASS");
@@ -118,7 +118,7 @@ describe("Module 4 - Class Management", () => {
 
       // Verify #announcements and #general channels auto-created
       const channels = await prisma.channel.findMany({
-        where: { serverId: res.body.data.serverId },
+        where: { serverId: server!.id },
         orderBy: { name: "asc" },
       });
       expect(channels.length).toBe(2);

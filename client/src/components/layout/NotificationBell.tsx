@@ -15,13 +15,13 @@ import { useMarkNotificationRead } from '@/features/notifications/hooks/useMarkN
 import { useMarkAllNotificationsRead } from '@/features/notifications/hooks/useMarkAllNotificationsRead';
 import { NotificationPanel } from '@/features/notifications/components/NotificationPanel';
 import { getNotificationTarget } from '@/features/notifications/utils';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 import type { Notification } from '@/types';
 
 export function NotificationBell() {
   const navigate = useNavigate();
   const params = useParams();
-  const serverId = parseRouteParamId(params.serverId);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const [open, setOpen] = useState(false);
   const unreadCountQuery = useUnreadCount();
@@ -49,7 +49,11 @@ export function NotificationBell() {
 
   const handleOpenSettings = () => {
     setOpen(false);
-    navigate(serverId ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId) : ROUTES.SETTINGS_NOTIFICATIONS);
+    navigate(
+      serverPublicId
+        ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverPublicId)
+        : ROUTES.SETTINGS_NOTIFICATIONS,
+    );
   };
 
   return (

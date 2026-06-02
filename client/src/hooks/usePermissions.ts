@@ -11,13 +11,13 @@ const CHANNEL_MANAGEMENT_ROLE_MAP: Record<(typeof ServerType)[keyof typeof Serve
 };
 
 function hasMatchingRole(
-  serverId: number,
+  serverPublicId: string,
   userRoles: ScopedRoleAssignment[],
   acceptedRoles: string[],
 ) {
   return userRoles.some(
     (roleAssignment) =>
-      roleAssignment.serverId === serverId && acceptedRoles.includes(roleAssignment.role),
+      roleAssignment.serverPublicId === serverPublicId && acceptedRoles.includes(roleAssignment.role),
   );
 }
 
@@ -63,7 +63,7 @@ export function getSocietyPermissions(
 }
 
 export function canManageChannelsInServer(
-  serverId: number | null,
+  serverPublicId: string | null,
   serverType: (typeof ServerType)[keyof typeof ServerType] | null,
   userType: (typeof UserType)[keyof typeof UserType] | null,
   userRoles: ScopedRoleAssignment[],
@@ -72,21 +72,21 @@ export function canManageChannelsInServer(
     return true;
   }
 
-  if (!serverType || serverId === null) {
+  if (!serverType || serverPublicId === null) {
     return false;
   }
 
   const allowedRoles = CHANNEL_MANAGEMENT_ROLE_MAP[serverType] ?? [];
-  return hasMatchingRole(serverId, userRoles, allowedRoles);
+  return hasMatchingRole(serverPublicId, userRoles, allowedRoles);
 }
 
-export function usePermissions(serverId: number | null) {
+export function usePermissions(serverPublicId: string | null) {
   const user = useAuthStore((state) => state.user);
-  const serverQuery = useServerDetail(serverId);
+  const serverQuery = useServerDetail(serverPublicId);
 
   return useMemo(() => {
     const canManage = canManageChannelsInServer(
-      serverId,
+      serverPublicId,
       serverQuery.data?.type ?? null,
       user?.userType ?? null,
       user?.roles ?? [],
@@ -104,7 +104,7 @@ export function usePermissions(serverId: number | null) {
 
     if (!serverQuery.data?.type) {
       return {
-        isPermissionsLoading: serverId !== null && serverQuery.isLoading,
+        isPermissionsLoading: serverPublicId !== null && serverQuery.isLoading,
         canCreateChannels: false,
         canEditChannels: false,
         canLockChannels: false,
@@ -119,5 +119,5 @@ export function usePermissions(serverId: number | null) {
       canLockChannels: canManage,
       canDeleteChannels: canManage,
     };
-  }, [serverId, serverQuery.data?.type, serverQuery.isLoading, user?.roles, user?.userType]);
+  }, [serverPublicId, serverQuery.data?.type, serverQuery.isLoading, user?.roles, user?.userType]);
 }

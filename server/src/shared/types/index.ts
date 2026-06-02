@@ -46,12 +46,42 @@ export interface UserRole {
   expiresAt?: Date | null;
 }
 
+export interface ResolvedServerTarget {
+  id: number;
+  publicId: string;
+}
+
+export interface ResolvedChannelTarget {
+  id: number;
+  publicId: string;
+  serverId: number;
+  serverPublicId: string;
+  isArchived: boolean;
+}
+
+export interface ResolvedPostTarget {
+  id: number;
+  publicId: string;
+  channelId: number;
+  channelPublicId: string;
+  serverId: number;
+  serverPublicId: string;
+  channelIsArchived: boolean;
+}
+
+export interface ResolvedCommunicationTarget {
+  server: ResolvedServerTarget;
+  channel?: ResolvedChannelTarget;
+  post?: ResolvedPostTarget;
+}
+
 declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
       userRoles?: UserRole[];
       requestId?: string;
+      communicationTarget?: ResolvedCommunicationTarget;
     }
   }
 }

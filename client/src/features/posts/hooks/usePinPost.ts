@@ -8,15 +8,15 @@ import type { PaginatedResponse, PostListItem } from '@/types';
 import { detailToListItem, replacePostInInfiniteData } from '../utils';
 
 interface PinPostInput {
-  postId: number;
+  postPublicId: string;
   isPinned: boolean;
 }
 
-export function usePinPost(channelId: number) {
-  const channelPostQueryKey = ['posts', channelId] as const;
+export function usePinPost(channelPublicId: string) {
+  const channelPostQueryKey = ['posts', channelPublicId] as const;
 
   return useMutation({
-    mutationFn: ({ postId, isPinned }: PinPostInput) => postsApi.pin(postId, isPinned),
+    mutationFn: ({ postPublicId, isPinned }: PinPostInput) => postsApi.pin(postPublicId, isPinned),
     meta: {
       suppressErrorToast: true,
     },
@@ -27,7 +27,7 @@ export function usePinPost(channelId: number) {
         { queryKey: channelPostQueryKey },
         (current) => replacePostInInfiniteData(current, listItem),
       );
-      queryClient.setQueryData(queryKeys.posts.detail(post.id), post);
+      queryClient.setQueryData(queryKeys.posts.detail(post.publicId), post);
 
       void queryClient.invalidateQueries({ queryKey: channelPostQueryKey });
       toast.success(post.isPinned ? 'Post pinned' : 'Post unpinned');

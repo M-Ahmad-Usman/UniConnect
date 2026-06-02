@@ -5,15 +5,15 @@ import { MobileDrawer } from '@/components/layout/MobileDrawer';
 import { ServerSidebar } from '@/components/layout/ServerSidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { ROUTES } from '@/lib/constants';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 
 type DrawerView = 'servers' | 'channels';
 
 export function AppShell() {
   const location = useLocation();
   const params = useParams();
-  const serverId = parseRouteParamId(params.serverId);
-  const channelId = parseRouteParamId(params.channelId);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
+  const channelPublicId = parseRouteParamPublicId(params.channelPublicId);
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
   const isAcademicRoute = location.pathname.startsWith('/academics');
   const isWorkspaceRoute = isAdminRoute || isAcademicRoute;
@@ -21,29 +21,32 @@ export function AppShell() {
   const [drawerView, setDrawerView] = useState<DrawerView>('servers');
 
   const drawerTitle = useMemo(() => {
-    if (drawerView === 'channels' && serverId !== null) {
+    if (drawerView === 'channels' && serverPublicId !== null) {
       return 'Channels';
     }
 
     return 'Servers';
-  }, [drawerView, serverId]);
+  }, [drawerView, serverPublicId]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {!isWorkspaceRoute ? (
         <aside className="hidden h-full w-20 shrink-0 lg:block">
-          <ServerSidebar activeServerId={serverId} />
+          <ServerSidebar activeServerPublicId={serverPublicId} />
         </aside>
       ) : null}
       {!isWorkspaceRoute ? (
         <aside className="hidden h-full w-72 shrink-0 lg:block">
-          <ChannelSidebar serverId={serverId} activeChannelId={channelId} />
+          <ChannelSidebar
+            serverPublicId={serverPublicId}
+            activeChannelPublicId={channelPublicId}
+          />
         </aside>
       ) : null}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TopBar
           onOpenNavigation={() => {
-            setDrawerView(serverId !== null ? 'channels' : 'servers');
+            setDrawerView(serverPublicId !== null ? 'channels' : 'servers');
             setDrawerOpen(true);
           }}
         />
@@ -56,12 +59,12 @@ export function AppShell() {
           open={drawerOpen}
           onOpenChange={setDrawerOpen}
           title={drawerTitle}
-          showBackButton={drawerView === 'channels' && serverId !== null}
+          showBackButton={drawerView === 'channels' && serverPublicId !== null}
           onBack={() => setDrawerView('servers')}
         >
           {drawerView === 'servers' ? (
             <ServerSidebar
-              activeServerId={serverId}
+              activeServerPublicId={serverPublicId}
               variant="drawer"
               onSelectServer={() => {
                 setDrawerView('channels');
@@ -69,8 +72,8 @@ export function AppShell() {
             />
           ) : (
             <ChannelSidebar
-              serverId={serverId}
-              activeChannelId={channelId}
+              serverPublicId={serverPublicId}
+              activeChannelPublicId={channelPublicId}
               onSelectChannel={() => setDrawerOpen(false)}
             />
           )}

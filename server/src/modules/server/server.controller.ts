@@ -5,6 +5,7 @@ import type {
   PaginatedResponse,
 } from "../../shared/types/index.js";
 import { ValidationError } from "../../shared/errors/index.js";
+import { getResolvedServerTarget } from "../../middleware/resolveCommunicationTarget.js";
 import * as serverService from "./server.service.js";
 import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
 
@@ -45,7 +46,7 @@ export async function handleGetServer(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const server = await serverService.getServer(Number(req.params.id), {
+  const server = await serverService.getServer(getResolvedServerTarget(req).id, {
     id: req.user!.id,
     userType: req.user!.userType,
   });
@@ -64,7 +65,7 @@ export async function handleListServerChannels(
 ): Promise<void> {
   const query = req.query as { includeArchived?: boolean };
   const channels = await serverService.listServerChannels(
-    Number(req.params.id),
+    getResolvedServerTarget(req).id,
     { id: req.user!.id, userType: req.user!.userType },
     { includeArchived: query.includeArchived ?? false },
   );
@@ -83,7 +84,7 @@ export async function handleListServerMembers(
 ): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await serverService.listServerMembers(
-    Number(req.params.id),
+    getResolvedServerTarget(req).id,
     {
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
@@ -105,7 +106,7 @@ export async function handleCreateChannel(
   res: Response,
 ): Promise<void> {
   const channel = await serverService.createChannel(
-    Number(req.params.id),
+    getResolvedServerTarget(req).id,
     req.body,
     { id: req.user!.id, userType: req.user!.userType },
   );
@@ -113,9 +114,9 @@ export async function handleCreateChannel(
     {
       action: "channel.create",
       targetType: "channel",
-      targetId: channel.id,
+      targetId: channel.publicId,
       summary: {
-        serverId: req.params.id,
+        serverPublicId: getResolvedServerTarget(req).publicId,
         name: channel.name,
         type: channel.type,
       },
@@ -141,16 +142,16 @@ export async function handleUpdateServerIcon(
   }
 
   const updated = await serverService.updateServerIcon(
-    Number(req.params.id),
+    getResolvedServerTarget(req).id,
     req.file.buffer,
   );
   await recordAuditLog(
     {
       action: "server.icon.update",
       targetType: "server",
-      targetId: updated.id,
+      targetId: getResolvedServerTarget(req).publicId,
       summary: {
-        serverId: req.params.id,
+        serverPublicId: getResolvedServerTarget(req).publicId,
       },
     },
     auditContextFromRequest(req),

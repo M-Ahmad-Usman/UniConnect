@@ -47,7 +47,7 @@
 - Backend emits stable codes documented in `server/docs/API_ERROR_CODES.md`.
 - Safe domain cases use specific codes such as duplicate entity codes,
   `SCOPE_FORBIDDEN`, `PASSWORD_CHANGE_REQUIRED`, `CLASS_GRADUATED`,
-  `CHANNEL_LOCKED`, and upload-specific codes.
+  `CHANNEL_LOCKED`, `CHANNEL_ARCHIVED`, and upload-specific codes.
 - Auth enumeration and unexpected server failures remain generic.
 - Every response receives `X-Request-ID`; error payloads include `requestId`
   when available.
@@ -84,3 +84,7 @@
   data.
 - Revisit cross-origin runtime support only if deployment actually separates the
   frontend and API origins.
+- Audit broader scoped-role writes for authority changes between middleware
+  authorization and transaction commit. Communication lifecycle and
+  membership-sensitive writes already revalidate their critical state inside
+  Module 6 transactions.

@@ -1,5 +1,10 @@
 import { prisma } from "../../config/prisma.js";
-import { ApiErrorCode, NotFoundError, ValidationError } from "../../shared/errors/index.js";
+import {
+  ApiErrorCode,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from "../../shared/errors/index.js";
 import { getUserRoles } from "../../middleware/authorize.js";
 import type { UserRole } from "../../shared/types/index.js";
 import {
@@ -23,7 +28,9 @@ type CallerInfo = {
 
 const channelDetailSelect = {
   id: true,
+  publicId: true,
   serverId: true,
+  server: { select: { publicId: true } },
   name: true,
   description: true,
   type: true,
@@ -60,7 +67,45 @@ async function findActiveChannelOrThrow(
     throw new NotFoundError("Channel not found");
   }
 
+  if (channel.isArchived) {
+    throw new ConflictError(
+      "Archived channels are read-only",
+      ApiErrorCode.CHANNEL_ARCHIVED,
+    );
+  }
+
   return channel;
+}
+
+async function lockActiveChannelOrThrow(
+  channelId: number,
+  client: PrismaTransaction,
+) {
+  const rows = await client.$queryRaw<Array<{ id: number }>>`
+    SELECT "id"
+    FROM "channels"
+    WHERE "id" = ${channelId}
+      AND "is_deleted" = FALSE
+    FOR UPDATE
+  `;
+
+  if (rows.length === 0) {
+    throw new NotFoundError("Channel not found");
+  }
+
+  return findActiveChannelOrThrow(channelId, client);
+}
+
+function toPublicChannel<T extends {
+  id: number;
+  serverId: number;
+  server: { publicId: string };
+}>(channel: T): Omit<T, "id" | "serverId" | "server"> & { serverPublicId: string } {
+  const { id: _id, serverId: _serverId, server, ...publicChannel } = channel;
+  return {
+    ...publicChannel,
+    serverPublicId: server.publicId,
+  };
 }
 
 /**
@@ -88,9 +133,9 @@ export async function updateChannel(
   _caller: CallerInfo
 ) {
   return prisma.$transaction(async (tx) => {
-    const channel = await findActiveChannelOrThrow(channelId, tx);
+    const channel = await lockActiveChannelOrThrow(channelId, tx);
     await assertServerAcceptsWrites(channel.serverId, tx);
-    return tx.channel.update({
+    const updated = await tx.channel.update({
       where: { id: channelId },
       data: {
         ...(data.name !== undefined ? { name: data.name } : {}),
@@ -98,51 +143,55 @@ export async function updateChannel(
       },
       select: channelDetailSelect,
     });
+    return toPublicChannel(updated);
   });
 }
 
 export async function lockChannel(channelId: number, caller: CallerInfo) {
   return prisma.$transaction(async (tx) => {
-    const channel = await findActiveChannelOrThrow(channelId, tx);
+    const channel = await lockActiveChannelOrThrow(channelId, tx);
     await assertServerAcceptsWrites(channel.serverId, tx);
     if (channel.isLocked) {
       throw new ValidationError("Channel is already locked", undefined, ApiErrorCode.CHANNEL_LOCKED);
     }
-    return tx.channel.update({
+    const updated = await tx.channel.update({
       where: { id: channelId },
       data: { isLocked: true, lockedBy: caller.id, lockedAt: new Date() },
       select: channelDetailSelect,
     });
+    return toPublicChannel(updated);
   });
 }
 
 export async function unlockChannel(channelId: number, _caller: CallerInfo) {
   return prisma.$transaction(async (tx) => {
-    const channel = await findActiveChannelOrThrow(channelId, tx);
+    const channel = await lockActiveChannelOrThrow(channelId, tx);
     await assertServerAcceptsWrites(channel.serverId, tx);
     if (!channel.isLocked) {
       throw new ValidationError("Channel is not locked");
     }
-    return tx.channel.update({
+    const updated = await tx.channel.update({
       where: { id: channelId },
       data: { isLocked: false, lockedBy: null, lockedAt: null },
       select: channelDetailSelect,
     });
+    return toPublicChannel(updated);
   });
 }
 
 export async function deleteChannel(channelId: number, caller: CallerInfo) {
   return prisma.$transaction(async (tx) => {
-    const channel = await findActiveChannelOrThrow(channelId, tx);
+    const channel = await lockActiveChannelOrThrow(channelId, tx);
     await assertServerAcceptsWrites(channel.serverId, tx);
     if (channel.isAutoCreated) {
       throw new ValidationError("Auto-created channels cannot be deleted");
     }
-    return tx.channel.update({
+    const updated = await tx.channel.update({
       where: { id: channelId },
       data: { isDeleted: true, deletedBy: caller.id, deletedAt: new Date() },
       select: channelDetailSelect,
     });
+    return toPublicChannel(updated);
   });
 }
 
@@ -156,10 +205,11 @@ export async function canPostInChannel(
   userId: number,
   userType: string,
   channelId: number,
-  preloadedRoles?: UserRole[]
+  preloadedRoles?: UserRole[],
+  client: PrismaTransaction = prisma,
 ): Promise<boolean> {
   // 1. Fetch channel + server + membership in one round-trip
-  const channel = await prisma.channel.findUnique({
+  const channel = await client.channel.findUnique({
     where: { id: channelId },
     select: {
       id: true,
@@ -223,7 +273,7 @@ export async function canPostInChannel(
       case "program_director": {
         // PD can post in their program channel (FR-23)
         if (channel.type === "PROGRAM" && channel.programId) {
-          const program = await prisma.program.findFirst({
+          const program = await client.program.findFirst({
             where: { id: channel.programId, programDirectorId: userId },
             select: { id: true },
           });
@@ -259,7 +309,7 @@ export async function canPostInChannel(
     const classRecord = channel.server.class;
 
     if (classRecord) {
-      const teaches = await prisma.teaches.findUnique({
+      const teaches = await client.teaches.findUnique({
         where: {
           teacherId_courseId_classId: {
             teacherId: userId,

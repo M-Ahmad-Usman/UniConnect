@@ -129,7 +129,7 @@ describe('validatePostAttachments', () => {
 
 describe('edit and permission helpers', () => {
   const author = {
-    id: 1,
+    publicId: 'user-1',
     fullName: 'Author One',
     email: 'author@example.com',
     userType: UserType.STUDENT,
@@ -137,7 +137,7 @@ describe('edit and permission helpers', () => {
     badges: [],
   };
   const post = {
-    id: 11,
+    publicId: 'post-11',
     title: 'Notice',
     content: '<p>Notice</p>',
     priority: PostPriority.NORMAL,
@@ -188,7 +188,7 @@ describe('edit and permission helpers', () => {
 
   it('mirrors core channel posting permissions from available frontend data', () => {
     const server = {
-      id: 5,
+      publicId: 'server-5',
       name: 'Server',
       description: null,
       type: ServerType.CLASS,
@@ -201,7 +201,7 @@ describe('edit and permission helpers', () => {
       _count: { memberships: 1, channels: 1 },
     };
     const channel = {
-      id: 9,
+      publicId: 'channel-9',
       name: 'announcements',
       description: null,
       type: ChannelType.ANNOUNCEMENT,
@@ -223,7 +223,7 @@ describe('edit and permission helpers', () => {
           email: 'cr@example.com',
           userType: UserType.STUDENT,
           mustChangePassword: false,
-          roles: [{ role: 'cr', serverId: 5, scopeType: 'server' }],
+          roles: [{ role: 'cr', serverPublicId: 'server-5', scopeType: 'server' }],
         },
       }),
     ).toBe(true);
@@ -238,7 +238,22 @@ describe('edit and permission helpers', () => {
           email: 'cr@example.com',
           userType: UserType.STUDENT,
           mustChangePassword: false,
-          roles: [{ role: 'cr', serverId: 5, scopeType: 'server' }],
+          roles: [{ role: 'cr', serverPublicId: 'server-5', scopeType: 'server' }],
+        },
+      }),
+    ).toBe(false);
+
+    expect(
+      canPostInChannelClient({
+        server,
+        channel: { ...channel, isArchived: true },
+        user: {
+          publicId: '0198f1f0-0000-7000-8000-000000000014',
+          fullName: 'CR',
+          email: 'cr@example.com',
+          userType: UserType.STUDENT,
+          mustChangePassword: false,
+          roles: [{ role: 'cr', serverPublicId: 'server-5', scopeType: 'server' }],
         },
       }),
     ).toBe(false);
@@ -247,7 +262,7 @@ describe('edit and permission helpers', () => {
 
 describe('post cache helpers', () => {
   const post = (id: number, title = `Post ${id}`): PostListItem => ({
-    id,
+    publicId: `post-${id}`,
     title,
     content: '<p>Body</p>',
     priority: PostPriority.NORMAL,
@@ -256,7 +271,7 @@ describe('post cache helpers', () => {
     createdAt: `2026-04-24T10:0${id}:00.000Z`,
     updatedAt: null,
     author: {
-      id: 1,
+      publicId: 'user-1',
       fullName: 'Author One',
       email: 'author@example.com',
       userType: UserType.STUDENT,
@@ -279,13 +294,15 @@ describe('post cache helpers', () => {
 
   it('upserts, replaces, and removes posts in infinite query pages', () => {
     const upserted = upsertPostInInfiniteData(infiniteData, post(3))!;
-    expect(upserted.pages[0]!.data.map((item) => item.id)).toContain(3);
+    expect(upserted.pages[0]!.data.map((item) => item.publicId)).toContain('post-3');
     expect(upserted.pages[0]!.pagination.total).toBe(3);
     expect(
       replacePostInInfiniteData(infiniteData, post(1, 'Updated'))!.pages[0]!.data[1]!.title,
     ).toBe('Updated');
     expect(
-      removePostFromInfiniteData(infiniteData, 1)!.pages[0]!.data.map((item) => item.id),
-    ).toEqual([2]);
+      removePostFromInfiniteData(infiniteData, 'post-1')!.pages[0]!.data.map(
+        (item) => item.publicId,
+      ),
+    ).toEqual(['post-2']);
   });
 });

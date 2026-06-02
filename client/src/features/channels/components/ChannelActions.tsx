@@ -21,16 +21,16 @@ import { usePermissions } from '@/hooks/usePermissions';
 import type { ChannelListItem } from '@/types';
 
 interface ChannelActionsProps {
-  serverId: number;
+  serverPublicId: string;
   channel: ChannelListItem;
 }
 
-export function ChannelActions({ serverId, channel }: ChannelActionsProps) {
+export function ChannelActions({ serverPublicId, channel }: ChannelActionsProps) {
   const navigate = useNavigate();
-  const permissions = usePermissions(serverId);
-  const lockChannel = useLockChannel(serverId);
-  const unlockChannel = useUnlockChannel(serverId);
-  const deleteChannel = useDeleteChannel(serverId);
+  const permissions = usePermissions(serverPublicId);
+  const lockChannel = useLockChannel(serverPublicId);
+  const unlockChannel = useUnlockChannel(serverPublicId);
+  const deleteChannel = useDeleteChannel(serverPublicId);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -42,12 +42,12 @@ export function ChannelActions({ serverId, channel }: ChannelActionsProps) {
   async function handleToggleLock() {
     try {
       if (channel.isLocked) {
-        await unlockChannel.mutateAsync(channel.id);
+        await unlockChannel.mutateAsync(channel.publicId);
         toast.success('Channel unlocked successfully.');
         return;
       }
 
-      await lockChannel.mutateAsync(channel.id);
+      await lockChannel.mutateAsync(channel.publicId);
       toast.success('Channel locked successfully.');
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Unable to update channel lock state right now.'));
@@ -56,9 +56,9 @@ export function ChannelActions({ serverId, channel }: ChannelActionsProps) {
 
   async function handleDelete() {
     try {
-      await deleteChannel.mutateAsync(channel.id);
+      await deleteChannel.mutateAsync(channel.publicId);
       toast.success('Channel deleted successfully.');
-      navigate(ROUTES.SERVER(serverId), { replace: true });
+      navigate(ROUTES.SERVER(serverPublicId), { replace: true });
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Unable to delete this channel right now.'));
     }
@@ -101,7 +101,7 @@ export function ChannelActions({ serverId, channel }: ChannelActionsProps) {
       </DropdownMenu>
 
       <EditChannelDialog
-        serverId={serverId}
+        serverPublicId={serverPublicId}
         channel={channel}
         open={editOpen}
         onOpenChange={setEditOpen}

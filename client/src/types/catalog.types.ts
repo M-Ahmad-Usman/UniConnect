@@ -6,7 +6,7 @@ export interface DepartmentListItem {
   id: number;
   name: string;
   code: string;
-  serverId: number;
+  serverPublicId: string;
 }
 
 export interface DepartmentDetail extends DepartmentListItem {
@@ -85,7 +85,7 @@ export interface ClassListItem {
   academicYear: number;
   admissionYear: number;
   section: Section;
-  serverId: number;
+  serverPublicId: string;
   status: ClassStatus;
   graduatedAt: string | null;
   graduatedBy: number | null;

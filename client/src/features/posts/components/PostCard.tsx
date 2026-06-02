@@ -12,12 +12,13 @@ import { PriorityBadge } from './PriorityBadge';
 
 interface PostCardProps {
   post: PostListItem;
-  channelId: number;
+  channelPublicId: string;
   canPin: boolean;
-  onOpen: (postId: number) => void;
+  readOnly?: boolean;
+  onOpen: (postPublicId: string) => void;
 }
 
-export function PostCard({ post, channelId, canPin, onOpen }: PostCardProps) {
+export function PostCard({ post, channelPublicId, canPin, readOnly = false, onOpen }: PostCardProps) {
   const edited = post.updatedAt !== null && post.updatedAt !== post.createdAt;
   const preview = getPlainTextPreview(post.content);
 
@@ -69,7 +70,7 @@ export function PostCard({ post, channelId, canPin, onOpen }: PostCardProps) {
           <button
             type="button"
             className="mt-2 block min-w-0 text-left"
-            onClick={() => onOpen(post.id)}
+            onClick={() => onOpen(post.publicId)}
           >
             <h2 className="line-clamp-2 text-base font-semibold tracking-tight">{post.title}</h2>
             {preview ? (
@@ -85,7 +86,12 @@ export function PostCard({ post, channelId, canPin, onOpen }: PostCardProps) {
         </div>
 
         <div className="-mr-1 -mt-1 shrink-0">
-          <PostActions channelId={channelId} post={post} canPin={canPin} />
+          <PostActions
+            channelPublicId={channelPublicId}
+            post={post}
+            canPin={canPin}
+            readOnly={readOnly}
+          />
         </div>
       </div>
     </article>

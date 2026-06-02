@@ -8,15 +8,16 @@ import type { PaginatedResponse, PostListItem, UpdatePostRequest } from '@/types
 import { detailToListItem, replacePostInInfiniteData } from '../utils';
 
 interface UpdatePostInput {
-  postId: number;
+  postPublicId: string;
   payload: UpdatePostRequest;
 }
 
-export function useUpdatePost(channelId: number) {
-  const channelPostQueryKey = ['posts', channelId] as const;
+export function useUpdatePost(channelPublicId: string) {
+  const channelPostQueryKey = ['posts', channelPublicId] as const;
 
   return useMutation({
-    mutationFn: ({ postId, payload }: UpdatePostInput) => postsApi.update(postId, payload),
+    mutationFn: ({ postPublicId, payload }: UpdatePostInput) =>
+      postsApi.update(postPublicId, payload),
     meta: {
       suppressErrorToast: true,
     },
@@ -27,7 +28,7 @@ export function useUpdatePost(channelId: number) {
         { queryKey: channelPostQueryKey },
         (current) => replacePostInInfiniteData(current, listItem),
       );
-      queryClient.setQueryData(queryKeys.posts.detail(post.id), post);
+      queryClient.setQueryData(queryKeys.posts.detail(post.publicId), post);
 
       void queryClient.invalidateQueries({ queryKey: channelPostQueryKey });
       toast.success('Post updated');

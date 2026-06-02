@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/lib/constants';
-import { parseRouteParamId } from '@/lib/route-params';
+import { parseRouteParamPublicId } from '@/lib/route-params';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
@@ -31,7 +31,7 @@ import { UserType } from '@/types';
 export function UserDropdown() {
   const navigate = useNavigate();
   const params = useParams();
-  const serverId = parseRouteParamId(params.serverId);
+  const serverPublicId = parseRouteParamPublicId(params.serverPublicId);
   const user = useAuthStore((state) => state.user);
   const logout = useLogout();
   const permissionsQuery = useMyPermissions();
@@ -104,8 +104,8 @@ export function UserDropdown() {
           <DropdownMenuItem
             onClick={() =>
               navigate(
-                serverId
-                  ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverId)
+                serverPublicId
+                  ? ROUTES.SERVER_NOTIFICATION_SETTINGS(serverPublicId)
                   : ROUTES.SETTINGS_NOTIFICATIONS,
               )
             }
