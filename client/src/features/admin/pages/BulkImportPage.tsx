@@ -11,7 +11,7 @@ import { validateCsvFile } from '../schemas';
 import type { BulkImportResult } from '@/types';
 
 const CSV_TEMPLATE =
-  'fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation\n' +
+  'fullName,email,phone,gender,userType,departmentId,classPublicId,rollNumber,designation\n' +
   'John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,22-NTU-CS-1184,\n' +
   'Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Lecturer\n';
 
@@ -132,7 +132,7 @@ export function BulkImportPage() {
         <aside className="space-y-3 rounded-lg border bg-background p-4">
           <h2 className="font-semibold">Required headers</h2>
           <p className="break-words text-xs text-muted-foreground">
-            fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation
+            fullName,email,phone,gender,userType,departmentId,classPublicId,rollNumber,designation
           </p>
           <p className="text-xs text-muted-foreground">
             Student roll numbers use NTU format, for example 22-NTU-CS-1184.

@@ -30,7 +30,8 @@ export const ROUTES = {
   SOCIETY: (societyId: number | string) => `/societies/${societyId}`,
   ROLES: '/roles',
   ACADEMICS_CLASSES: '/academics/classes',
-  ACADEMICS_CLASS: (classId: number | string) => `/academics/classes/${classId}`,
+  ACADEMICS_CLASS: (classPublicId: string) => `/academics/classes/${classPublicId}`,
+  ACADEMICS_COURSES: '/academics/courses',
   ACADEMICS_PROGRAM_CURRICULUM: (programId: number | string) =>
     `/academics/programs/${programId}/curriculum`,
   PROFILE: '/profile',
@@ -47,8 +48,7 @@ export const ROUTES = {
     `/admin/programs/${programId}/curriculum`,
   ADMIN_DISCIPLINES: '/admin/disciplines',
   ADMIN_CLASSES: '/admin/classes',
-  ADMIN_CLASS: (classId: number | string) => `/admin/classes/${classId}`,
-  ADMIN_COURSES: '/admin/courses',
+  ADMIN_CLASS: (classPublicId: string) => `/admin/classes/${classPublicId}`,
   ADMIN_SOCIETIES: '/admin/societies',
   ADMIN_ROLES: '/admin/roles',
   ADMIN: '/admin',
@@ -92,20 +92,20 @@ export const queryKeys = {
   classes: {
     all: () => ['classes'] as const,
     list: (params?: Record<string, unknown>) => ['classes', params] as const,
-    detail: (classId: number) => ['classes', classId] as const,
-    courses: (classId: number) => ['classes', classId, 'courses'] as const,
-    students: (classId: number, params?: Record<string, unknown>) =>
+    detail: (classPublicId: string) => ['classes', classPublicId] as const,
+    courses: (classPublicId: string) => ['classes', classPublicId, 'courses'] as const,
+    students: (classPublicId: string, params?: Record<string, unknown>) =>
       params
-        ? (['classes', classId, 'students', params] as const)
-        : (['classes', classId, 'students'] as const),
-    studentCandidates: (classId: number, params?: Record<string, unknown>) =>
+        ? (['classes', classPublicId, 'students', params] as const)
+        : (['classes', classPublicId, 'students'] as const),
+    studentCandidates: (classPublicId: string, params?: Record<string, unknown>) =>
       params
-        ? (['classes', classId, 'student-candidates', params] as const)
-        : (['classes', classId, 'student-candidates'] as const),
-    teacherCandidates: (classId: number, params?: Record<string, unknown>) =>
+        ? (['classes', classPublicId, 'student-candidates', params] as const)
+        : (['classes', classPublicId, 'student-candidates'] as const),
+    teacherCandidates: (classPublicId: string, params?: Record<string, unknown>) =>
       params
-        ? (['classes', classId, 'teacher-candidates', params] as const)
-        : (['classes', classId, 'teacher-candidates'] as const),
+        ? (['classes', classPublicId, 'teacher-candidates', params] as const)
+        : (['classes', classPublicId, 'teacher-candidates'] as const),
   },
   courses: {
     all: () => ['courses'] as const,

@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { Edit, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { parsePositiveInt } from '../utils';
+import { filterCourseDepartments, parsePositiveInt, resolveCourseDepartmentFilter } from '../utils';
 import { useDepartments } from '../hooks/useDepartments';
 import { useAdminCourses, useCreateCourse, useUpdateCourse } from '../hooks/useAcademicCatalog';
 import {
@@ -22,16 +23,33 @@ export function CourseListPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<CourseListItem | null>(null);
   const searchParamValue = searchParams.get('search') ?? '';
+  const permissionsQuery = useMyPermissions();
+  const permissions = permissionsQuery.data;
+  const canCreateCourse = permissions?.global.canCreateCourse ?? false;
+  const canUpdateCourse = permissions?.global.canUpdateCourse ?? false;
+  const hodDepartmentIds = useMemo(
+    () => permissions?.scopes.hodDepartmentIds ?? [],
+    [permissions?.scopes.hodDepartmentIds],
+  );
   const [searchValue, setSearchValue] = useState(searchParamValue);
   const debouncedSearch = useDebouncedValue(searchValue.trim(), 300);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
-  const departmentId = parsePositiveInt(searchParams.get('departmentId'));
+  const requestedDepartmentId = parsePositiveInt(searchParams.get('departmentId'));
+  const departmentId = resolveCourseDepartmentFilter(
+    canUpdateCourse,
+    hodDepartmentIds,
+    requestedDepartmentId,
+  );
   const search = searchParamValue.trim() || undefined;
   const coursesQuery = useAdminCourses({ page, limit: DEFAULT_PAGE_SIZE, departmentId, search });
   const departmentsQuery = useDepartments();
   const createCourse = useCreateCourse();
   const updateCourse = useUpdateCourse(editing?.id ?? 0);
-  const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
+  const departments = useMemo(
+    () =>
+      filterCourseDepartments(departmentsQuery.data ?? [], canUpdateCourse, hodDepartmentIds),
+    [canUpdateCourse, departmentsQuery.data, hodDepartmentIds],
+  );
   const departmentById = useMemo(
     () => new Map(departments.map((department) => [department.id, department])),
     [departments],
@@ -82,10 +100,10 @@ export function CourseListPage() {
         title="Courses"
         description="Manage department-owned course catalog records used by curriculum and class assignments."
         actions={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
+          canCreateCourse ? <Button type="button" onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" />
             Create course
-          </Button>
+          </Button> : null
         }
       />
       <div className="rounded-lg border bg-background p-3">
@@ -108,7 +126,7 @@ export function CourseListPage() {
               value={departmentId ?? ''}
               onChange={(event) => updateFilter({ departmentId: event.target.value })}
             >
-              <option value="">All departments</option>
+              {canUpdateCourse ? <option value="">All departments</option> : null}
               {departments.map((department) => (
                 <option key={department.id} value={department.id}>
                   {department.code}
@@ -146,10 +164,10 @@ export function CourseListPage() {
                       {departmentById.get(course.departmentId)?.code ?? course.departmentId}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button type="button" variant="ghost" size="icon-sm" onClick={() => setEditing(course)}>
+                      {canUpdateCourse ? <Button type="button" variant="ghost" size="icon-sm" onClick={() => setEditing(course)}>
                         <Edit className="size-4" />
                         <span className="sr-only">Edit course</span>
-                      </Button>
+                      </Button> : null}
                     </td>
                   </tr>
                 ))}
@@ -162,21 +180,21 @@ export function CourseListPage() {
         pagination={coursesQuery.data?.pagination}
         onPageChange={(nextPage) => updateFilter({ page: nextPage })}
       />
-      <CourseDialog
+      {canCreateCourse ? <CourseDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
         departments={departments}
         loading={createCourse.isPending}
         onSubmit={handleCreate}
-      />
-      <CourseDialog
+      /> : null}
+      {canUpdateCourse ? <CourseDialog
         open={editing !== null}
         onOpenChange={(open) => !open && setEditing(null)}
         initial={editing ?? undefined}
         departments={departments}
         loading={updateCourse.isPending}
         onSubmit={handleUpdate}
-      />
+      /> : null}
     </section>
   );
 }

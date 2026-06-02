@@ -9,6 +9,12 @@ import {
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import { buildClassPermissions, getPermissionContext } from "../../shared/permissions/index.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
+import { resolveUserPublicId } from "../../shared/ids/index.js";
+import {
+  lockClassForAcademicWrite,
+  lockProgramForHodOrAdmin,
+  lockStudentProfileForTransfer,
+} from "../../shared/lifecycle/academic.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import { disconnectUserSockets } from "../../socket/index.js";
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -27,7 +33,7 @@ type CreateClassInput = {
 
 type AssignCourseInput = {
   courseId: number;
-  teacherId: number;
+  teacherPublicId: string;
 };
 
 type ListClassesQuery = {
@@ -48,6 +54,11 @@ type CandidateQuery = {
 
 type TeacherAssignment = {
   courseId: number;
+  teacherPublicId: string;
+};
+
+type InternalTeacherAssignment = {
+  courseId: number;
   teacherId: number;
 };
 
@@ -59,6 +70,7 @@ type SemesterProgressionInput = {
 
 const classListSelect = {
   id: true,
+  publicId: true,
   currentSemester: true,
   academicYear: true,
   admissionYear: true,
@@ -67,7 +79,7 @@ const classListSelect = {
   server: { select: { publicId: true } },
   status: true,
   graduatedAt: true,
-  graduatedBy: true,
+  graduator: { select: { publicId: true } },
   program: {
     select: {
       id: true,
@@ -98,6 +110,7 @@ const classListSelect = {
       studentId: true,
       user: {
         select: {
+          publicId: true,
           fullName: true,
           email: true,
         },
@@ -108,6 +121,7 @@ const classListSelect = {
 
 const classDetailSelect = {
   id: true,
+  publicId: true,
   currentSemester: true,
   academicYear: true,
   admissionYear: true,
@@ -116,7 +130,7 @@ const classDetailSelect = {
   server: { select: { publicId: true } },
   status: true,
   graduatedAt: true,
-  graduatedBy: true,
+  graduator: { select: { publicId: true } },
   program: {
     select: {
       id: true,
@@ -136,6 +150,7 @@ const classDetailSelect = {
       studentId: true,
       user: {
         select: {
+          publicId: true,
           fullName: true,
           email: true,
         },
@@ -154,6 +169,7 @@ const courseAssignmentSelect = {
   courseId: true,
   teacherId: true,
   classId: true,
+  class: { select: { publicId: true } },
   course: {
     select: {
       id: true,
@@ -170,11 +186,35 @@ const courseAssignmentSelect = {
         select: {
           fullName: true,
           email: true,
+          publicId: true,
         },
       },
     },
   },
 } as const;
+
+const studentTransferSelect = {
+  studentId: true,
+  classId: true,
+  user: {
+    select: {
+      id: true,
+      isActive: true,
+      userType: true,
+      departmentId: true,
+    },
+  },
+  class: {
+    select: {
+      id: true,
+      serverId: true,
+      crId: true,
+      program: { select: { departmentId: true } },
+    },
+  },
+} as const;
+
+type TransferStudent = Prisma.StudentInfoGetPayload<{ select: typeof studentTransferSelect }>;
 
 const classStudentSelect = {
   studentId: true,
@@ -182,6 +222,7 @@ const classStudentSelect = {
   user: {
     select: {
       id: true,
+      publicId: true,
       fullName: true,
       email: true,
       departmentId: true,
@@ -191,6 +232,7 @@ const classStudentSelect = {
   class: {
     select: {
       id: true,
+      publicId: true,
       currentSemester: true,
       section: true,
       program: { select: { id: true, code: true } },
@@ -204,6 +246,7 @@ const teacherCandidateSelect = {
   user: {
     select: {
       id: true,
+      publicId: true,
       fullName: true,
       email: true,
       departmentId: true,
@@ -212,15 +255,83 @@ const teacherCandidateSelect = {
   },
 } as const;
 
+function omitStudentInternalId<T extends { studentId: number }>(student: T): Omit<T, "studentId"> {
+  const { studentId: _studentId, ...data } = student;
+  return data;
+}
+
 function toPublicClass<T extends {
+  id: number;
   serverId: number;
   server: { publicId: string };
-}>(classRecord: T): Omit<T, "serverId" | "server"> & { serverPublicId: string } {
-  const { serverId: _serverId, server, ...classData } = classRecord;
+  graduatedBy?: number | null;
+  graduator: { publicId: string } | null;
+  cr: ({ studentId: number; user: { publicId: string } } & Record<string, unknown>) | null;
+}>(
+  classRecord: T,
+): Omit<T, "id" | "serverId" | "server" | "graduatedBy" | "graduator" | "cr"> & {
+  serverPublicId: string;
+  graduatedByPublicId: string | null;
+  cr: Omit<NonNullable<T["cr"]>, "studentId"> | null;
+} {
+  const {
+    id: _id,
+    serverId: _serverId,
+    server,
+    graduatedBy: _graduatedBy,
+    graduator,
+    cr,
+    ...classData
+  } = classRecord;
+  const publicCr = cr ? omitStudentInternalId(cr) : null;
   return {
     ...classData,
     serverPublicId: server.publicId,
+    graduatedByPublicId: graduator?.publicId ?? null,
+    cr: publicCr,
   };
+}
+
+function toPublicCourseAssignment<T extends {
+  teacherId: number;
+  classId: number;
+  class: { publicId: string };
+  teacher: { teacherId: number; user: { publicId: string } };
+}>(assignment: T) {
+  const { teacherId: _teacherId, classId: _classId, class: classRecord, teacher, ...data } =
+    assignment;
+  const { teacherId: _nestedTeacherId, user, ...teacherData } = teacher;
+  return {
+    ...data,
+    classPublicId: classRecord.publicId,
+    teacherPublicId: user.publicId,
+    teacher: { ...teacherData, user },
+  };
+}
+
+function toPublicClassStudent<T extends {
+  studentId: number;
+  user: { id: number; publicId: string };
+  class: { id: number; publicId: string };
+}>(student: T) {
+  const { studentId: _studentId, user, class: classRecord, ...data } = student;
+  const { id: _userId, publicId: studentPublicId, ...userData } = user;
+  const { id: _classId, publicId: classPublicId, ...classData } = classRecord;
+  return {
+    ...data,
+    studentPublicId,
+    user: userData,
+    class: { ...classData, publicId: classPublicId },
+  };
+}
+
+function toPublicTeacherCandidate<T extends {
+  teacherId: number;
+  user: { id: number; publicId: string };
+}>(teacher: T) {
+  const { teacherId: _teacherId, user, ...data } = teacher;
+  const { id: _userId, publicId: teacherPublicId, ...userData } = user;
+  return { ...data, teacherPublicId, user: userData };
 }
 
 // ─── Authorization Helpers ─────────────────────────────────────────────────
@@ -272,6 +383,34 @@ async function assertHodOrPdOrAdmin(
 function assertClassIsActive(classRecord: { status: string }): void {
   if (classRecord.status === "GRADUATED") {
     throw new ConflictError("Graduated classes are read-only", ApiErrorCode.CLASS_GRADUATED);
+  }
+}
+
+function assertStudentCanTransfer(
+  student: TransferStudent | null,
+  targetClassId: number,
+  targetDepartmentId: number
+): asserts student is TransferStudent {
+  if (!student) {
+    throw new NotFoundError("Student not found");
+  }
+  if (!student.user.isActive || student.user.userType !== "STUDENT") {
+    throw new ValidationError("Student must be an active student user");
+  }
+  if (student.classId === targetClassId) {
+    throw new ConflictError("Student is already assigned to this class");
+  }
+  if (
+    student.user.departmentId !== targetDepartmentId ||
+    student.class.program.departmentId !== targetDepartmentId
+  ) {
+    throw new ForbiddenError(
+      "Student transfer is limited to the same department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+  if (student.class.crId === student.studentId) {
+    throw new ConflictError("Reassign or remove the class representative role before transfer");
   }
 }
 
@@ -356,6 +495,24 @@ async function assertCourseInCurrentCurriculum(classRecord: {
 
   if (!curriculumEntry) {
     throw new ValidationError("Course must belong to the class current-semester curriculum");
+  }
+}
+
+function assertCanReadManagedClass(
+  context: Awaited<ReturnType<typeof getPermissionContext>>,
+  classRecord: { program: { id: number; department: { id: number } } },
+): void {
+  const canRead =
+    context.user?.isActive &&
+    (context.user.userType === "ADMIN" ||
+      context.scopes.hodDepartmentIds.includes(classRecord.program.department.id) ||
+      context.scopes.directedProgramIds.includes(classRecord.program.id));
+
+  if (!canRead) {
+    throw new ForbiddenError(
+      "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
   }
 }
 
@@ -456,6 +613,7 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
   await assertHodOrAdmin(userId, userType, program.departmentId);
 
   const classRecord = await prisma.$transaction(async (tx) => {
+    await lockProgramForHodOrAdmin(data.programId, userId, userType, tx);
     const serverName = `${program.code} - S${data.currentSemester} - Section ${data.section}`;
 
     const server = await tx.server.create({
@@ -537,6 +695,7 @@ export async function getClassById(id: number, callerUserId: number) {
   }
 
   const context = await getPermissionContext(callerUserId);
+  assertCanReadManagedClass(context, classRecord);
   const permissions = buildClassPermissions(context, buildClassPermissionTarget(classRecord));
 
   return {
@@ -551,6 +710,7 @@ export async function assignCourseToClass(
   userId: number,
   userType: string
 ) {
+  const teacher = await resolveUserPublicId(data.teacherPublicId, { field: "teacherPublicId" });
   const classRecord = await getManagedClassOrThrow(classId);
   assertClassIsActive(classRecord);
 
@@ -575,7 +735,7 @@ export async function assignCourseToClass(
   }
 
   await assertCourseInCurrentCurriculum(classRecord, data.courseId);
-  await assertActiveTeacher(data.teacherId);
+  await assertActiveTeacher(teacher.id);
 
   const existingAssignment = await prisma.teaches.findUnique({
     where: {
@@ -588,7 +748,7 @@ export async function assignCourseToClass(
   });
 
   if (existingAssignment) {
-    if (existingAssignment.teacherId === data.teacherId) {
+    if (existingAssignment.teacherId === teacher.id) {
       throw new ConflictError("This course is already assigned to this teacher for this class");
     }
 
@@ -596,9 +756,20 @@ export async function assignCourseToClass(
   }
 
   return prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
+    const lockedAssignment = await tx.teaches.findUnique({
+      where: { classId_courseId: { classId, courseId: data.courseId } },
+      select: { teacherId: true },
+    });
+    if (lockedAssignment) {
+      if (lockedAssignment.teacherId === teacher.id) {
+        throw new ConflictError("This course is already assigned to this teacher for this class");
+      }
+      throw new ConflictError("Use teacher replacement for an already assigned class course");
+    }
     const assignment = await tx.teaches.create({
       data: {
-        teacherId: data.teacherId,
+        teacherId: teacher.id,
         courseId: data.courseId,
         classId,
       },
@@ -642,39 +813,41 @@ export async function assignCourseToClass(
     await tx.serverMembership.upsert({
       where: {
         userId_serverId: {
-          userId: data.teacherId,
+          userId: teacher.id,
           serverId: classRecord.serverId,
         },
       },
       create: {
-        userId: data.teacherId,
+        userId: teacher.id,
         serverId: classRecord.serverId,
         isAutoJoined: true,
       },
       update: {},
     });
 
-    return assignment;
+    return toPublicCourseAssignment(assignment);
   });
 }
 
 export async function listClassCourses(classId: number, callerUserId: number) {
   await getClassById(classId, callerUserId);
 
-  return prisma.teaches.findMany({
+  const assignments = await prisma.teaches.findMany({
     where: { classId },
     select: courseAssignmentSelect,
     orderBy: { course: { code: "asc" } },
   });
+  return assignments.map(toPublicCourseAssignment);
 }
 
 export async function replaceClassCourseTeacher(
   classId: number,
   courseId: number,
-  data: { teacherId: number },
+  data: { teacherPublicId: string },
   userId: number,
   userType: string
 ) {
+  const teacher = await resolveUserPublicId(data.teacherPublicId, { field: "teacherPublicId" });
   const classRecord = await getManagedClassOrThrow(classId);
   assertClassIsActive(classRecord);
 
@@ -685,7 +858,7 @@ export async function replaceClassCourseTeacher(
     classRecord.programId
   );
   await assertCourseInCurrentCurriculum(classRecord, courseId);
-  await assertActiveTeacher(data.teacherId);
+  await assertActiveTeacher(teacher.id);
 
   const existingAssignment = await prisma.teaches.findUnique({
     where: { classId_courseId: { classId, courseId } },
@@ -696,22 +869,33 @@ export async function replaceClassCourseTeacher(
     throw new NotFoundError("Course is not assigned to this class");
   }
 
-  if (existingAssignment.teacherId === data.teacherId) {
+  if (existingAssignment.teacherId === teacher.id) {
     throw new ConflictError("This course is already assigned to this teacher");
   }
 
   const { updated, removedUserIds } = await prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
+    const lockedAssignment = await tx.teaches.findUnique({
+      where: { classId_courseId: { classId, courseId } },
+      select: { teacherId: true },
+    });
+    if (!lockedAssignment) {
+      throw new NotFoundError("Course is not assigned to this class");
+    }
+    if (lockedAssignment.teacherId === teacher.id) {
+      throw new ConflictError("This course is already assigned to this teacher");
+    }
     const removedUserIds = new Set<number>();
     const updated = await tx.teaches.update({
       where: { classId_courseId: { classId, courseId } },
-      data: { teacherId: data.teacherId },
+      data: { teacherId: teacher.id },
       select: courseAssignmentSelect,
     });
 
     await tx.serverMembership.upsert({
-      where: { userId_serverId: { userId: data.teacherId, serverId: classRecord.serverId } },
+      where: { userId_serverId: { userId: teacher.id, serverId: classRecord.serverId } },
       create: {
-        userId: data.teacherId,
+        userId: teacher.id,
         serverId: classRecord.serverId,
         isAutoJoined: true,
       },
@@ -721,19 +905,19 @@ export async function replaceClassCourseTeacher(
     if (
       await cleanupAutoClassMembershipIfUnused(
         tx,
-        existingAssignment.teacherId,
+        lockedAssignment.teacherId,
         classId,
         classRecord.serverId
       )
     ) {
-      removedUserIds.add(existingAssignment.teacherId);
+      removedUserIds.add(lockedAssignment.teacherId);
     }
 
     return { updated, removedUserIds: Array.from(removedUserIds) };
   });
 
   removedUserIds.forEach(disconnectUserSockets);
-  return updated;
+  return toPublicCourseAssignment(updated);
 }
 
 export async function removeCourseFromClass(
@@ -762,6 +946,14 @@ export async function removeCourseFromClass(
   }
 
   const removedUserIds = await prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
+    const lockedAssignments = await tx.teaches.findMany({
+      where: { classId, courseId },
+      select: { teacherId: true },
+    });
+    if (lockedAssignments.length === 0) {
+      throw new NotFoundError("Course is not assigned to this class");
+    }
     const removedUserIds = new Set<number>();
     await tx.teaches.deleteMany({ where: { classId, courseId } });
 
@@ -779,7 +971,7 @@ export async function removeCourseFromClass(
       },
     });
 
-    for (const assignment of assignments) {
+    for (const assignment of lockedAssignments) {
       if (
         await cleanupAutoClassMembershipIfUnused(
           tx,
@@ -834,7 +1026,7 @@ export async function listClassStudents(
   ]);
 
   return {
-    data: students,
+    data: students.map(toPublicClassStudent),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
@@ -879,83 +1071,61 @@ export async function listStudentCandidates(
   ]);
 
   return {
-    data: students,
+    data: students.map(toPublicClassStudent),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
 
 export async function transferStudentToClass(
   classId: number,
-  data: { studentId: number },
+  data: { studentPublicId: string },
   userId: number,
   userType: string
 ) {
+  const resolvedStudent = await resolveUserPublicId(data.studentPublicId, {
+    field: "studentPublicId",
+  });
   const targetClass = await getManagedClassOrThrow(classId);
   assertClassIsActive(targetClass);
   await assertHodOrAdmin(userId, userType, targetClass.program.departmentId);
 
   const student = await prisma.studentInfo.findUnique({
-    where: { studentId: data.studentId },
-    select: {
-      studentId: true,
-      classId: true,
-      user: {
-        select: {
-          id: true,
-          isActive: true,
-          userType: true,
-          departmentId: true,
-        },
-      },
-      class: {
-        select: {
-          id: true,
-          serverId: true,
-          crId: true,
-          program: { select: { departmentId: true } },
-        },
-      },
-    },
+    where: { studentId: resolvedStudent.id },
+    select: studentTransferSelect,
   });
 
-  if (!student) {
-    throw new NotFoundError("Student not found");
-  }
-
-  if (!student.user.isActive || student.user.userType !== "STUDENT") {
-    throw new ValidationError("Student must be an active student user");
-  }
-
-  if (student.classId === classId) {
-    throw new ConflictError("Student is already assigned to this class");
-  }
-
-  if (
-    student.user.departmentId !== targetClass.program.departmentId ||
-    student.class.program.departmentId !== targetClass.program.departmentId
-  ) {
-    throw new ForbiddenError(
-      "Student transfer is limited to the same department",
-      ApiErrorCode.SCOPE_FORBIDDEN
-    );
-  }
-
-  if (student.class.crId === student.studentId) {
-    throw new ConflictError("Reassign or remove the class representative role before transfer");
-  }
+  assertStudentCanTransfer(student, classId, targetClass.program.departmentId);
 
   const { updatedStudent, removedUserIds } = await prisma.$transaction(async (tx) => {
+    await lockStudentProfileForTransfer(resolvedStudent.id, tx);
+    const lockedStudent = await tx.studentInfo.findUnique({
+      where: { studentId: resolvedStudent.id },
+      select: studentTransferSelect,
+    });
+    assertStudentCanTransfer(lockedStudent, classId, targetClass.program.departmentId);
+
+    for (const lockedClassId of [...new Set([lockedStudent.classId, classId])].sort(
+      (left, right) => left - right
+    )) {
+      await lockClassForAcademicWrite(lockedClassId, userId, userType, "HOD", tx);
+    }
+    const currentStudent = await tx.studentInfo.findUnique({
+      where: { studentId: resolvedStudent.id },
+      select: studentTransferSelect,
+    });
+    assertStudentCanTransfer(currentStudent, classId, targetClass.program.departmentId);
+
     const removedUserIds = new Set<number>();
     const updated = await tx.studentInfo.update({
-      where: { studentId: data.studentId },
+      where: { studentId: resolvedStudent.id },
       data: { classId },
       select: classStudentSelect,
     });
 
     await tx.serverMembership.upsert({
-      where: { userId_serverId: { userId: data.studentId, serverId: targetClass.serverId } },
+      where: { userId_serverId: { userId: resolvedStudent.id, serverId: targetClass.serverId } },
       create: {
-        userId: data.studentId,
+        userId: resolvedStudent.id,
         serverId: targetClass.serverId,
         isAutoJoined: true,
       },
@@ -965,19 +1135,19 @@ export async function transferStudentToClass(
     if (
       await cleanupAutoClassMembershipIfUnused(
         tx,
-        data.studentId,
-        student.classId,
-        student.class.serverId
+        resolvedStudent.id,
+        currentStudent.classId,
+        currentStudent.class.serverId
       )
     ) {
-      removedUserIds.add(data.studentId);
+      removedUserIds.add(resolvedStudent.id);
     }
 
     return { updatedStudent: updated, removedUserIds: Array.from(removedUserIds) };
   });
 
   removedUserIds.forEach(disconnectUserSockets);
-  return updatedStudent;
+  return toPublicClassStudent(updatedStudent);
 }
 
 export async function listTeacherCandidates(
@@ -1023,7 +1193,7 @@ export async function listTeacherCandidates(
   ]);
 
   return {
-    data: teachers,
+    data: teachers.map(toPublicTeacherCandidate),
     pagination: buildPaginationResponse(page, limit, total),
   };
 }
@@ -1036,6 +1206,14 @@ export async function advanceSemester(
   userId: number,
   userType: string
 ) {
+  const teacherAssignments: InternalTeacherAssignment[] = await Promise.all(
+    data.teacherAssignments.map(async (assignment) => ({
+      courseId: assignment.courseId,
+      teacherId: (
+        await resolveUserPublicId(assignment.teacherPublicId, { field: "teacherPublicId" })
+      ).id,
+    })),
+  );
   const classRecord = await getManagedClassOrThrow(classId);
   assertClassIsActive(classRecord);
 
@@ -1065,7 +1243,7 @@ export async function advanceSemester(
 
   if (curriculum.length > 0) {
     const curriculumCourseIds = curriculum.map((c) => c.courseId);
-    const assignedCourseIds = data.teacherAssignments.map((a) => a.courseId);
+    const assignedCourseIds = teacherAssignments.map((a) => a.courseId);
 
     const assignmentSet = new Set<number>();
     const duplicateAssignments: number[] = [];
@@ -1102,10 +1280,10 @@ export async function advanceSemester(
       );
     }
 
-    for (const teacherId of [...new Set(data.teacherAssignments.map((a) => a.teacherId))]) {
+    for (const teacherId of [...new Set(teacherAssignments.map((a) => a.teacherId))]) {
       await assertActiveTeacher(teacherId);
     }
-  } else if (data.teacherAssignments.length > 0) {
+  } else if (teacherAssignments.length > 0) {
     throw new ValidationError(
       "Teacher assignments were provided but no curriculum exists for the next semester"
     );
@@ -1118,6 +1296,10 @@ export async function advanceSemester(
   });
 
   const { advancedClass, removedUserIds } = await prisma.$transaction(async (tx) => {
+    const lockedClass = await lockClassForAcademicWrite(classId, userId, userType, "HOD", tx);
+    if (lockedClass.currentSemester !== classRecord.currentSemester) {
+      throw new ConflictError("Class semester changed; reload and try again");
+    }
     const removedUserIds = new Set<number>();
     await tx.channel.updateMany({
       where: {
@@ -1187,7 +1369,7 @@ export async function advanceSemester(
           });
         }
 
-        const assignment = data.teacherAssignments.find((a) => a.courseId === entry.courseId);
+        const assignment = teacherAssignments.find((a) => a.courseId === entry.courseId);
         if (assignment) {
           await tx.teaches.create({
             data: {
@@ -1234,7 +1416,7 @@ export async function advanceSemester(
   removedUserIds.forEach(disconnectUserSockets);
 
   return {
-    ...advancedClass,
+    ...toPublicClass(advancedClass),
     permissions: buildClassPermissions(
       await getPermissionContext(userId),
       buildClassPermissionTarget(advancedClass)
@@ -1256,6 +1438,10 @@ export async function graduateClass(classId: number, userId: number, userType: s
   }
 
   const graduatedClass = await prisma.$transaction(async (tx) => {
+    const lockedClass = await lockClassForAcademicWrite(classId, userId, userType, "HOD", tx);
+    if (lockedClass.currentSemester !== classRecord.currentSemester) {
+      throw new ConflictError("Class semester changed; reload and try again");
+    }
     const now = new Date();
     const updatedClass = await tx.class.update({
       where: { id: classId },
@@ -1299,10 +1485,48 @@ export async function graduateClass(classId: number, userId: number, userType: s
   });
 
   return {
-    ...graduatedClass,
+    ...toPublicClass(graduatedClass),
     permissions: buildClassPermissions(
       await getPermissionContext(userId),
       buildClassPermissionTarget(graduatedClass)
     ),
+  };
+}
+
+export async function getClassDeletionImpact(classId: number) {
+  const classRecord = await prisma.class.findUnique({
+    where: { id: classId },
+    select: {
+      publicId: true,
+      currentSemester: true,
+      admissionYear: true,
+      section: true,
+      status: true,
+      program: { select: { id: true, code: true } },
+      _count: { select: { students: true, teaches: true } },
+    },
+  });
+
+  if (!classRecord) {
+    throw new NotFoundError("Class not found");
+  }
+
+  return {
+    class: {
+      publicId: classRecord.publicId,
+      programId: classRecord.program.id,
+      programCode: classRecord.program.code,
+      section: classRecord.section,
+      currentSemester: classRecord.currentSemester,
+      admissionYear: classRecord.admissionYear,
+      status: classRecord.status,
+    },
+    canDelete: false,
+    checksComplete: false,
+    pendingChecks: ["COMMUNICATION_IMPACT"] as const,
+    blockers: {
+      enrolledStudents: { count: classRecord._count.students },
+      activeTeachingAssignments: { count: classRecord._count.teaches },
+    },
   };
 }

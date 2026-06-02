@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   buildBulkImportErrorCsv,
   getClassDetailActionState,
+  filterCourseDepartments,
   parsePositiveInt,
   parseUserLifecycle,
   parseUserStatus,
   parseUserType,
+  resolveCourseDepartmentFilter,
   userListParamsToRecord,
 } from '../utils';
 import { ClassStatus, UserStatus, UserType, type ClassDetail, type ClassPermissions } from '@/types';
@@ -30,6 +32,20 @@ describe('admin user filter helpers', () => {
     expect(userListParamsToRecord({ page: 1, search: '', userType: undefined })).toEqual({
       page: 1,
     });
+  });
+});
+
+describe('course workspace scope helpers', () => {
+  const departments = [{ id: 1 }, { id: 2 }, { id: 3 }];
+
+  it('keeps admin filtering unrestricted', () => {
+    expect(resolveCourseDepartmentFilter(true, [], 2)).toBe(2);
+    expect(filterCourseDepartments(departments, true, [])).toEqual(departments);
+  });
+
+  it('limits HOD filtering to owned departments', () => {
+    expect(resolveCourseDepartmentFilter(false, [2], 3)).toBe(2);
+    expect(filterCourseDepartments(departments, false, [2])).toEqual([{ id: 2 }]);
   });
 });
 

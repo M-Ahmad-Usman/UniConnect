@@ -5,7 +5,7 @@ import { validate } from "../../middleware/validate.js";
 import {
   createClassSchema,
   listClassesSchema,
-  classIdParamSchema,
+  classPublicIdParamSchema,
   assignCourseSchema,
   classCandidateQuerySchema,
   listClassCoursesSchema,
@@ -33,7 +33,9 @@ import {
   handleGraduateClass,
   handleAssignClassCr,
   handleRevokeClassCr,
+  handleGetClassDeletionImpact,
 } from "./class.controller.js";
+import { resolveClassTarget } from "../../middleware/resolveClassTarget.js";
 
 const router = Router();
 
@@ -50,14 +52,24 @@ router.post(
 router.get("/", authenticate, validate(listClassesSchema), handleListClasses);
 
 router.get(
-  "/:id",
+  "/:publicId/deletion-impact",
   authenticate,
-  validate(classIdParamSchema),
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(classPublicIdParamSchema),
+  resolveClassTarget,
+  handleGetClassDeletionImpact
+);
+
+router.get(
+  "/:publicId",
+  authenticate,
+  validate(classPublicIdParamSchema),
+  resolveClassTarget,
   handleGetClass
 );
 
 router.put(
-  "/:classPublicId/cr",
+  "/:publicId/cr",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(assignClassCrSchema),
@@ -65,7 +77,7 @@ router.put(
 );
 
 router.delete(
-  "/:classPublicId/cr",
+  "/:publicId/cr",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(classCrParamSchema),
@@ -75,83 +87,93 @@ router.delete(
 // ─── Course Assignment Routes ──────────────────────────────────────────────
 
 router.post(
-  "/:id/courses",
+  "/:publicId/courses",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(assignCourseSchema),
+  resolveClassTarget,
   handleAssignCourse
 );
 
 router.get(
-  "/:id/courses",
+  "/:publicId/courses",
   authenticate,
   validate(listClassCoursesSchema),
+  resolveClassTarget,
   handleListClassCourses
 );
 
 router.get(
-  "/:id/students",
+  "/:publicId/students",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(classCandidateQuerySchema),
+  resolveClassTarget,
   handleListClassStudents
 );
 
 router.get(
-  "/:id/student-candidates",
+  "/:publicId/student-candidates",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(classCandidateQuerySchema),
+  resolveClassTarget,
   handleListStudentCandidates
 );
 
 router.post(
-  "/:id/students",
+  "/:publicId/students",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(transferStudentSchema),
+  resolveClassTarget,
   handleTransferStudent
 );
 
 router.get(
-  "/:id/teacher-candidates",
+  "/:publicId/teacher-candidates",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(classCandidateQuerySchema),
+  resolveClassTarget,
   handleListTeacherCandidates
 );
 
 router.patch(
-  "/:id/courses/:courseId/teacher",
+  "/:publicId/courses/:courseId/teacher",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(replaceCourseTeacherSchema),
+  resolveClassTarget,
   handleReplaceCourseTeacher
 );
 
 router.delete(
-  "/:id/courses/:courseId",
+  "/:publicId/courses/:courseId",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(removeCourseSchema),
+  resolveClassTarget,
   handleRemoveCourse
 );
 
 // ─── Semester Progression Route ──────────────────────────────────────────
 
 router.post(
-  "/:id/semester-progression",
+  "/:publicId/semester-progression",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(semesterProgressionSchema),
+  resolveClassTarget,
   handleAdvanceSemester
 );
 
 router.post(
-  "/:id/graduation",
+  "/:publicId/graduation",
   authenticate,
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(graduationSchema),
+  resolveClassTarget,
   handleGraduateClass
 );
 

@@ -27,7 +27,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ROUTES } from '@/lib/constants';
 import type { ClassCourseAssignment, CourseListItem, TeacherAssignmentInput } from '@/types';
-import { getClassDetailActionState, parsePositiveInt } from '../utils';
+import { getClassDetailActionState } from '../utils';
 import {
   useAdminClass,
   useAdminClassCourses,
@@ -57,7 +57,7 @@ import {
 } from '../schemas';
 
 export function ClassDetailPage() {
-  const classId = parsePositiveInt(useParams().classId ?? null) ?? null;
+  const classPublicId = useParams().classPublicId ?? null;
   const [assignOpen, setAssignOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
@@ -66,9 +66,9 @@ export function ClassDetailPage() {
   const [replacingAssignment, setReplacingAssignment] = useState<ClassCourseAssignment | null>(
     null,
   );
-  const [teacherByCourse, setTeacherByCourse] = useState<Record<number, number>>({});
+  const [teacherByCourse, setTeacherByCourse] = useState<Record<number, string>>({});
 
-  const classQuery = useAdminClass(classId);
+  const classQuery = useAdminClass(classPublicId);
   const klass = classQuery.data;
   const {
     isGraduated,
@@ -81,24 +81,24 @@ export function ClassDetailPage() {
     canGraduate,
   } = getClassDetailActionState(klass);
 
-  const coursesQuery = useAdminClassCourses(classId);
-  const studentsQuery = useClassStudents(classId, { page: 1, limit: 50 }, canViewStudents);
+  const coursesQuery = useAdminClassCourses(classPublicId);
+  const studentsQuery = useClassStudents(classPublicId, { page: 1, limit: 50 }, canViewStudents);
   const studentCandidatesQuery = useStudentCandidates(
-    classId,
+    classPublicId,
     { page: 1, limit: 50 },
     transferOpen && canManageStudents,
   );
   const teacherCandidatesQuery = useTeacherCandidates(
-    classId,
+    classPublicId,
     { page: 1, limit: 50 },
     canAssignCourses || canReplaceCourseTeacher || canAdvanceSemester,
   );
-  const assignCourse = useAssignClassCourse(classId ?? 0);
-  const transferStudent = useTransferClassStudent(classId ?? 0);
-  const replaceTeacher = useReplaceCourseTeacher(classId ?? 0);
-  const removeCourse = useRemoveClassCourse(classId ?? 0);
-  const advanceSemester = useAdvanceSemester(classId ?? 0);
-  const graduateClass = useGraduateClass(classId ?? 0);
+  const assignCourse = useAssignClassCourse(classPublicId ?? '');
+  const transferStudent = useTransferClassStudent(classPublicId ?? '');
+  const replaceTeacher = useReplaceCourseTeacher(classPublicId ?? '');
+  const removeCourse = useRemoveClassCourse(classPublicId ?? '');
+  const advanceSemester = useAdvanceSemester(classPublicId ?? '');
+  const graduateClass = useGraduateClass(classPublicId ?? '');
 
   const departmentId = klass?.program.department.id;
   const currentCurriculumQuery = useCurriculum(
@@ -121,14 +121,14 @@ export function ClassDetailPage() {
   const teacherOptions = useMemo(
     () =>
       (teacherCandidatesQuery.data?.data ?? []).map((teacher) => ({
-        id: teacher.user.id,
+        publicId: teacher.teacherPublicId,
         fullName: teacher.user.fullName,
         email: teacher.user.email,
       })),
     [teacherCandidatesQuery.data],
   );
-  const validTeacherIds = useMemo(
-    () => new Set(teacherOptions.map((teacher) => teacher.id)),
+  const validTeacherPublicIds = useMemo(
+    () => new Set(teacherOptions.map((teacher) => teacher.publicId)),
     [teacherOptions],
   );
   const assignments = coursesQuery.data ?? [];
@@ -136,7 +136,7 @@ export function ClassDetailPage() {
   const studentCandidates = studentCandidatesQuery.data?.data ?? [];
   const nextCurriculum = nextCurriculumQuery.data ?? [];
 
-  if (!classId) {
+  if (!classPublicId) {
     return <EmptyState title="Invalid class" description="The requested class ID is invalid." />;
   }
 
@@ -148,7 +148,7 @@ export function ClassDetailPage() {
     return <EmptyState title="Class not found" description="The class could not be loaded." />;
   }
 
-  async function handleAssign(values: { courseId: number; teacherId: number }) {
+  async function handleAssign(values: { courseId: number; teacherPublicId: string }) {
     await assignCourse.mutateAsync(values);
   }
 
@@ -157,7 +157,7 @@ export function ClassDetailPage() {
 
     const teacherAssignments: TeacherAssignmentInput[] = nextCurriculum.map((entry) => ({
       courseId: entry.course.id,
-      teacherId: teacherByCourse[entry.course.id]!,
+      teacherPublicId: teacherByCourse[entry.course.id]!,
     }));
     await advanceSemester.mutateAsync(teacherAssignments);
     setProgressionOpen(false);
@@ -170,8 +170,8 @@ export function ClassDetailPage() {
     !nextCurriculumQuery.isError &&
     (nextCurriculum.length === 0 ||
       nextCurriculum.every((entry) => {
-        const teacherId = teacherByCourse[entry.course.id];
-        return typeof teacherId === 'number' && teacherId > 0 && validTeacherIds.has(teacherId);
+        const teacherPublicId = teacherByCourse[entry.course.id];
+        return typeof teacherPublicId === 'string' && validTeacherPublicIds.has(teacherPublicId);
       }));
 
   return (
@@ -274,7 +274,7 @@ export function ClassDetailPage() {
             </thead>
             <tbody className="divide-y">
               {assignments.map((assignment) => (
-                <tr key={`${assignment.courseId}-${assignment.teacherId}`}>
+                <tr key={`${assignment.courseId}-${assignment.teacherPublicId}`}>
                   <td className="px-4 py-3">
                     <p className="font-medium">{assignment.course.code}</p>
                     <p className="text-xs text-muted-foreground">{assignment.course.title}</p>
@@ -328,7 +328,7 @@ export function ClassDetailPage() {
         candidates={studentCandidates}
         loading={transferStudent.isPending || studentCandidatesQuery.isLoading}
         onSubmit={async (values) => {
-          await transferStudent.mutateAsync(values.studentId);
+          await transferStudent.mutateAsync(values.studentPublicId);
         }}
       />
       <ReplaceTeacherDialog
@@ -341,7 +341,7 @@ export function ClassDetailPage() {
           if (!replacingAssignment) return;
           await replaceTeacher.mutateAsync({
             courseId: replacingAssignment.courseId,
-            teacherId: values.teacherId,
+            teacherPublicId: values.teacherPublicId,
           });
           setReplacingAssignment(null);
         }}
@@ -397,10 +397,10 @@ export function ClassDetailPage() {
                   className={inputClassName}
                   value={teacherByCourse[entry.course.id] ?? ''}
                   onChange={(event) => {
-                    const selectedTeacherId = parsePositiveInt(event.target.value);
+                    const selectedTeacherPublicId = event.target.value;
                     setTeacherByCourse((current) => {
                       const next = { ...current };
-                      if (selectedTeacherId) next[entry.course.id] = selectedTeacherId;
+                      if (selectedTeacherPublicId) next[entry.course.id] = selectedTeacherPublicId;
                       else delete next[entry.course.id];
                       return next;
                     });
@@ -408,7 +408,7 @@ export function ClassDetailPage() {
                 >
                   <option value="">Select teacher</option>
                   {teacherOptions.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
+                    <option key={teacher.publicId} value={teacher.publicId}>
                       {teacher.fullName}
                     </option>
                   ))}
@@ -441,7 +441,7 @@ function ClassStudentsSection({
   isLoading: boolean;
   isError: boolean;
   students: Array<{
-    studentId: number;
+    studentPublicId: string;
     rollNumber: string;
     user: { fullName: string; email: string };
     class: { program: { code: string }; currentSemester: number; section: string };
@@ -474,7 +474,7 @@ function ClassStudentsSection({
           </thead>
           <tbody className="divide-y">
             {students.map((student) => (
-              <tr key={student.studentId}>
+              <tr key={student.studentPublicId}>
                 <td className="px-4 py-3 font-medium">{student.user.fullName}</td>
                 <td className="px-4 py-3">{student.rollNumber}</td>
                 <td className="px-4 py-3">{student.user.email}</td>
@@ -501,7 +501,7 @@ function TransferStudentDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   candidates: Array<{
-    studentId: number;
+    studentPublicId: string;
     rollNumber: string;
     user: { fullName: string; email: string };
     class: { program: { code: string }; currentSemester: number; section: string };
@@ -511,7 +511,7 @@ function TransferStudentDialog({
 }) {
   const form = useForm<z.input<typeof transferStudentSchema>, unknown, TransferStudentFormValues>({
     resolver: zodResolver(transferStudentSchema),
-    defaultValues: { studentId: 0 },
+    defaultValues: { studentPublicId: '' },
   });
 
   return (
@@ -528,35 +528,35 @@ function TransferStudentDialog({
           onSubmit={form.handleSubmit(async (values) => {
             await onSubmit(values);
             onOpenChange(false);
-            form.reset({ studentId: 0 });
+            form.reset({ studentPublicId: '' });
           })}
         >
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Student</span>
             <select
               className={inputClassName}
-              aria-invalid={form.formState.errors.studentId ? 'true' : undefined}
+              aria-invalid={form.formState.errors.studentPublicId ? 'true' : undefined}
               aria-describedby={
-                form.formState.errors.studentId ? 'transfer-student-error' : undefined
+                form.formState.errors.studentPublicId ? 'transfer-student-error' : undefined
               }
-              {...form.register('studentId')}
+              {...form.register('studentPublicId')}
             >
               <option value="">Select student</option>
               {candidates.map((student) => (
-                <option key={student.studentId} value={student.studentId}>
+                <option key={student.studentPublicId} value={student.studentPublicId}>
                   {student.user.fullName} · {student.rollNumber} · {student.class.program.code} S
                   {student.class.currentSemester}
                   {student.class.section}
                 </option>
               ))}
             </select>
-            {form.formState.errors.studentId ? (
+            {form.formState.errors.studentPublicId ? (
               <span
                 id="transfer-student-error"
                 className="block text-sm text-destructive"
                 role="alert"
               >
-                {form.formState.errors.studentId.message}
+                {form.formState.errors.studentPublicId.message}
               </span>
             ) : null}
           </label>
@@ -582,13 +582,13 @@ function ReplaceTeacherDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assignment: ClassCourseAssignment | null;
-  teachers: Array<{ id: number; fullName: string; email: string }>;
+  teachers: Array<{ publicId: string; fullName: string; email: string }>;
   loading: boolean;
   onSubmit: (values: ReplaceTeacherFormValues) => Promise<void>;
 }) {
   const form = useForm<z.input<typeof replaceTeacherSchema>, unknown, ReplaceTeacherFormValues>({
     resolver: zodResolver(replaceTeacherSchema),
-    defaultValues: { teacherId: 0 },
+    defaultValues: { teacherPublicId: '' },
   });
 
   return (
@@ -606,33 +606,33 @@ function ReplaceTeacherDialog({
           className="space-y-4"
           onSubmit={form.handleSubmit(async (values) => {
             await onSubmit(values);
-            form.reset({ teacherId: 0 });
+            form.reset({ teacherPublicId: '' });
           })}
         >
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Teacher</span>
             <select
               className={inputClassName}
-              aria-invalid={form.formState.errors.teacherId ? 'true' : undefined}
+              aria-invalid={form.formState.errors.teacherPublicId ? 'true' : undefined}
               aria-describedby={
-                form.formState.errors.teacherId ? 'replace-teacher-error' : undefined
+                form.formState.errors.teacherPublicId ? 'replace-teacher-error' : undefined
               }
-              {...form.register('teacherId')}
+              {...form.register('teacherPublicId')}
             >
               <option value="">Select teacher</option>
               {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
+                <option key={teacher.publicId} value={teacher.publicId}>
                   {teacher.fullName} · {teacher.email}
                 </option>
               ))}
             </select>
-            {form.formState.errors.teacherId ? (
+            {form.formState.errors.teacherPublicId ? (
               <span
                 id="replace-teacher-error"
                 className="block text-sm text-destructive"
                 role="alert"
               >
-                {form.formState.errors.teacherId.message}
+                {form.formState.errors.teacherPublicId.message}
               </span>
             ) : null}
           </label>

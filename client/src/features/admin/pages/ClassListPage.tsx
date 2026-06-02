@@ -178,7 +178,7 @@ export function ClassListPage() {
               </thead>
               <tbody className="divide-y">
                 {classes.map((klass) => (
-                  <tr key={klass.id}>
+                  <tr key={klass.publicId}>
                     <td className="px-4 py-3 font-medium">{klass.program.code}</td>
                     <td className="px-4 py-3">{klass.program.department.code}</td>
                     <td className="px-4 py-3">{klass.currentSemester}</td>
@@ -187,7 +187,7 @@ export function ClassListPage() {
                     <td className="px-4 py-3">{klass.status === ClassStatus.GRADUATED ? 'Graduated' : 'Active'}</td>
                     <td className="px-4 py-3">{klass.cr?.user.fullName ?? 'Not assigned'}</td>
                     <td className="px-4 py-3 text-right">
-                      <Link to={ROUTES.ACADEMICS_CLASS(klass.id)} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                      <Link to={ROUTES.ACADEMICS_CLASS(klass.publicId)} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
                         <Eye className="size-4" />
                         Open
                       </Link>

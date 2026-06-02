@@ -44,11 +44,11 @@ export async function findChannelPublicIdByName(serverPublicId: string, name: st
   });
 }
 
-export async function findClassIdByServerName(name: string) {
+export async function findClassByServerName(name: string) {
   return withDb(async (pool) => {
-    const result = await pool.query<{ id: number }>(
+    const result = await pool.query<{ id: number; public_id: string }>(
       `
-        SELECT c.id
+        SELECT c.id, c.public_id
         FROM classes c
         INNER JOIN servers s ON s.id = c.server_id
         WHERE s.name = $1
@@ -57,7 +57,7 @@ export async function findClassIdByServerName(name: string) {
       [name],
     );
 
-    return result.rows[0]?.id ?? null;
+    return result.rows[0] ?? null;
   });
 }
 

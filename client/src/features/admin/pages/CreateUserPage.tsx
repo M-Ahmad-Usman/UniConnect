@@ -29,7 +29,7 @@ const defaultValues = {
   userType: UserType.STUDENT,
   departmentId: '',
   programId: '',
-  classId: '',
+  classPublicId: '',
   rollNumber: '',
   designation: '',
 } satisfies CreateUserFormInput;
@@ -66,18 +66,18 @@ export function CreateUserPage() {
 
   useEffect(() => {
     setValue('programId', '');
-    setValue('classId', '');
+    setValue('classPublicId', '');
   }, [departmentId, setValue]);
 
   useEffect(() => {
-    setValue('classId', '');
+    setValue('classPublicId', '');
   }, [programId, setValue]);
 
   useEffect(() => {
     if (userType === UserType.ADMIN) {
       setValue('departmentId', '');
       setValue('programId', '');
-      setValue('classId', '');
+      setValue('classPublicId', '');
       setValue('rollNumber', '');
       setValue('designation', '');
     }
@@ -257,18 +257,18 @@ export function CreateUserPage() {
                   id="create-user-class"
                   disabled={createUser.isPending || !programId || classesQuery.isLoading}
                   className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                  {...register('classId')}
+                  {...register('classPublicId')}
                 >
                   <option value="">Select class</option>
                   {classOptions.map((klass) => (
-                    <option key={klass.id} value={klass.id}>
+                    <option key={klass.publicId} value={klass.publicId}>
                       Semester {klass.currentSemester} · Section {klass.section} ·{' '}
                       {klass.admissionYear}
                     </option>
                   ))}
                 </select>
-                {'classId' in errors && errors.classId ? (
-                  <p className="text-sm text-destructive">{errors.classId.message}</p>
+                {'classPublicId' in errors && errors.classPublicId ? (
+                  <p className="text-sm text-destructive">{errors.classPublicId.message}</p>
                 ) : null}
               </div>
               <div className="space-y-2">

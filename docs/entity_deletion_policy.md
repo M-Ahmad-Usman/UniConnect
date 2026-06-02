@@ -328,6 +328,14 @@ Blockers:
 - enrolled students.
 - active teaching assignments.
 
+Deletion-impact endpoint:
+- `GET /api/classes/:publicId/deletion-impact` is admin-only.
+- Module 7 returns bounded counts for the canonical blockers above.
+- The response remains provisional with `checksComplete: false`,
+  `pendingChecks: ["COMMUNICATION_IMPACT"]`, and `canDelete: false`.
+- Module 8 must add communication-descendant analysis before rare class cleanup
+  can be considered safe.
+
 Special rule:
 - `crId` is nullable to resolve creation/deletion cycles, but CR business rules
   must prevent cross-class CR assignment.

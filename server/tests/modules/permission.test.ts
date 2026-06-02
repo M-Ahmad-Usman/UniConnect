@@ -40,7 +40,9 @@ describe("Module 1 - Permission Policy Foundation", () => {
       canAccessAcademicWorkspace: true,
       canAccessRoleManagement: true,
       canManageUsers: true,
-      canManageCatalog: true,
+      canManageCurriculum: true,
+      canCreateCourse: true,
+      canUpdateCourse: true,
       canCreateClass: true,
       canCreateSociety: true,
     });
@@ -48,7 +50,9 @@ describe("Module 1 - Permission Policy Foundation", () => {
 
     const hodPermissions = await getMyPermissions(fixture.hod.email);
     expect(hodPermissions.global.canAccessAcademicWorkspace).toBe(true);
-    expect(hodPermissions.global.canManageCatalog).toBe(true);
+    expect(hodPermissions.global.canManageCurriculum).toBe(true);
+    expect(hodPermissions.global.canCreateCourse).toBe(true);
+    expect(hodPermissions.global.canUpdateCourse).toBe(false);
     expect(hodPermissions.global.canCreateClass).toBe(true);
     expect(hodPermissions.global.canCreateSociety).toBe(true);
     expect(hodPermissions.global.canManageUsers).toBe(false);
@@ -57,7 +61,8 @@ describe("Module 1 - Permission Policy Foundation", () => {
 
     const pdPermissions = await getMyPermissions(fixture.pd.email);
     expect(pdPermissions.global.canAccessAcademicWorkspace).toBe(true);
-    expect(pdPermissions.global.canManageCatalog).toBe(false);
+    expect(pdPermissions.global.canManageCurriculum).toBe(false);
+    expect(pdPermissions.global.canCreateCourse).toBe(false);
     expect(pdPermissions.global.canCreateClass).toBe(false);
     expect(pdPermissions.roleWorkspace.canOpenRoleManagement).toBe(true);
     expect(pdPermissions.roleWorkspace.canAssignCR).toBe(true);
@@ -84,18 +89,18 @@ describe("Module 1 - Permission Policy Foundation", () => {
   it("returns caller-specific class detail permissions", async () => {
     const fixture = await createPermissionFixture();
 
-    const admin = await getClassDetail(fixture.classRecord.id, fixture.admin.email);
+    const admin = await getClassDetail(fixture.classRecord.publicId, fixture.admin.email);
     expect(admin.permissions.canManageStudents).toBe(true);
     expect(admin.permissions.canAdvanceSemester).toBe(true);
     expect(admin.permissions.canManageChannels).toBe(true);
 
-    const hod = await getClassDetail(fixture.classRecord.id, fixture.hod.email);
+    const hod = await getClassDetail(fixture.classRecord.publicId, fixture.hod.email);
     expect(hod.permissions.canManageStudents).toBe(true);
     expect(hod.permissions.canAssignCourses).toBe(true);
     expect(hod.permissions.canAdvanceSemester).toBe(true);
     expect(hod.permissions.canAssignModerators).toBe(true);
 
-    const pd = await getClassDetail(fixture.classRecord.id, fixture.pd.email);
+    const pd = await getClassDetail(fixture.classRecord.publicId, fixture.pd.email);
     expect(pd.permissions.canAssignCourses).toBe(true);
     expect(pd.permissions.canRemoveCourses).toBe(true);
     expect(pd.permissions.canReplaceCourseTeacher).toBe(true);
@@ -103,28 +108,9 @@ describe("Module 1 - Permission Policy Foundation", () => {
     expect(pd.permissions.canAdvanceSemester).toBe(false);
     expect(pd.permissions.canGraduate).toBe(false);
 
-    const cr = await getClassDetail(fixture.classRecord.id, fixture.cr.email);
-    expect(cr.permissions.canManageChannels).toBe(true);
-    expect(cr.permissions.canAssignModerators).toBe(true);
-    expect(cr.permissions.canAssignCourses).toBe(false);
-    expect(cr.permissions.canManageStudents).toBe(false);
-
-    const assignedTeacher = await getClassDetail(fixture.classRecord.id, fixture.assignedTeacher.email);
-    expect(assignedTeacher.permissions.canAssignCourses).toBe(false);
-    expect(assignedTeacher.permissions.canManageChannels).toBe(false);
-
-    const unrelatedTeacher = await getClassDetail(fixture.classRecord.id, fixture.unrelatedTeacher.email);
-    expect(unrelatedTeacher.permissions).toEqual({
-      canViewStudents: false,
-      canManageStudents: false,
-      canAssignCourses: false,
-      canRemoveCourses: false,
-      canReplaceCourseTeacher: false,
-      canAdvanceSemester: false,
-      canGraduate: false,
-      canManageChannels: false,
-      canAssignModerators: false,
-    });
+    await expectClassDetailForbidden(fixture.classRecord.publicId, fixture.cr.email);
+    await expectClassDetailForbidden(fixture.classRecord.publicId, fixture.assignedTeacher.email);
+    await expectClassDetailForbidden(fixture.classRecord.publicId, fixture.unrelatedTeacher.email);
   });
 
   it("returns caller-specific society viewer state and permissions", async () => {
@@ -183,9 +169,9 @@ describe("Module 1 - Permission Policy Foundation", () => {
     const cookies = await loginAs(fixture.cr.email, "Pass@1234");
 
     const res = await request(app)
-      .post(`/api/classes/${fixture.classRecord.id}/courses`)
+      .post(`/api/classes/${fixture.classRecord.publicId}/courses`)
       .set("Cookie", cookies)
-      .send({ courseId: fixture.course.id, teacherId: fixture.assignedTeacher.id });
+      .send({ courseId: fixture.course.id, teacherPublicId: fixture.assignedTeacher.publicId });
 
     expect(res.status).toBe(403);
     expect(res.body.success).toBe(false);
@@ -288,14 +274,21 @@ async function getMyPermissions(email: string) {
   return res.body.data;
 }
 
-async function getClassDetail(classId: number, email: string) {
+async function getClassDetail(classPublicId: string, email: string) {
   const cookies = await loginAs(email, "Pass@1234");
-  const res = await request(app).get(`/api/classes/${classId}`).set("Cookie", cookies);
+  const res = await request(app).get(`/api/classes/${classPublicId}`).set("Cookie", cookies);
 
   expect(res.status).toBe(200);
   expect(res.body.success).toBe(true);
 
   return res.body.data;
+}
+
+async function expectClassDetailForbidden(classPublicId: string, email: string) {
+  const cookies = await loginAs(email, "Pass@1234");
+  const res = await request(app).get(`/api/classes/${classPublicId}`).set("Cookie", cookies);
+  expect(res.status).toBe(403);
+  expect(res.body.error.code).toBe("SCOPE_FORBIDDEN");
 }
 
 async function getSocietyDetail(societyPublicId: string, email: string) {

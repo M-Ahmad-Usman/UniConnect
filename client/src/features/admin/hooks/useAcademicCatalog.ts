@@ -85,67 +85,67 @@ export function useCurriculum(
   });
 }
 
-export function useAdminClass(classId: number | null) {
+export function useAdminClass(classPublicId: string | null) {
   return useQuery({
-    queryKey: classId ? queryKeys.classes.detail(classId) : ['classes', null],
-    queryFn: () => catalogApi.getClass(classId!),
-    enabled: classId !== null,
+    queryKey: classPublicId ? queryKeys.classes.detail(classPublicId) : ['classes', null],
+    queryFn: () => catalogApi.getClass(classPublicId!),
+    enabled: classPublicId !== null,
   });
 }
 
-export function useAdminClassCourses(classId: number | null) {
+export function useAdminClassCourses(classPublicId: string | null) {
   return useQuery({
-    queryKey: classId ? queryKeys.classes.courses(classId) : ['classes', null, 'courses'],
-    queryFn: () => catalogApi.listClassCourses(classId!),
-    enabled: classId !== null,
+    queryKey: classPublicId ? queryKeys.classes.courses(classPublicId) : ['classes', null, 'courses'],
+    queryFn: () => catalogApi.listClassCourses(classPublicId!),
+    enabled: classPublicId !== null,
   });
 }
 
 export function useClassStudents(
-  classId: number | null,
+  classPublicId: string | null,
   params: CandidateParams = {},
   enabled = true,
 ) {
   const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
-    queryKey: classId
-      ? queryKeys.classes.students(classId, normalized)
+    queryKey: classPublicId
+      ? queryKeys.classes.students(classPublicId, normalized)
       : ['classes', null, 'students'],
-    queryFn: () => catalogApi.listClassStudents(classId!, params),
-    enabled: classId !== null && enabled,
+    queryFn: () => catalogApi.listClassStudents(classPublicId!, params),
+    enabled: classPublicId !== null && enabled,
   });
 }
 
 export function useStudentCandidates(
-  classId: number | null,
+  classPublicId: string | null,
   params: CandidateParams = {},
   enabled = true,
 ) {
   const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
-    queryKey: classId
-      ? queryKeys.classes.studentCandidates(classId, normalized)
+    queryKey: classPublicId
+      ? queryKeys.classes.studentCandidates(classPublicId, normalized)
       : ['classes', null, 'student-candidates'],
-    queryFn: () => catalogApi.listStudentCandidates(classId!, params),
-    enabled: classId !== null && enabled,
+    queryFn: () => catalogApi.listStudentCandidates(classPublicId!, params),
+    enabled: classPublicId !== null && enabled,
   });
 }
 
 export function useTeacherCandidates(
-  classId: number | null,
+  classPublicId: string | null,
   params: CandidateParams = {},
   enabled = true,
 ) {
   const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
-    queryKey: classId
-      ? queryKeys.classes.teacherCandidates(classId, normalized)
+    queryKey: classPublicId
+      ? queryKeys.classes.teacherCandidates(classPublicId, normalized)
       : ['classes', null, 'teacher-candidates'],
-    queryFn: () => catalogApi.listTeacherCandidates(classId!, params),
-    enabled: classId !== null && enabled,
+    queryFn: () => catalogApi.listTeacherCandidates(classPublicId!, params),
+    enabled: classPublicId !== null && enabled,
   });
 }
 
@@ -286,30 +286,30 @@ export function useCreateClass() {
   });
 }
 
-export function useAssignClassCourse(classId: number) {
+export function useAssignClassCourse(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: TeacherAssignmentInput) => catalogApi.assignCourse(classId, payload),
+    mutationFn: (payload: TeacherAssignmentInput) => catalogApi.assignCourse(classPublicId, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
       toast.success('Course assigned');
     },
   });
 }
 
-export function useTransferClassStudent(classId: number) {
+export function useTransferClassStudent(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (studentId: number) => catalogApi.transferStudent(classId, studentId),
+    mutationFn: (studentPublicId: string) => catalogApi.transferStudent(classPublicId, studentPublicId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.students(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.students(classPublicId) });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.classes.studentCandidates(classId),
+        queryKey: queryKeys.classes.studentCandidates(classPublicId),
       });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Student transferred');
@@ -317,43 +317,43 @@ export function useTransferClassStudent(classId: number) {
   });
 }
 
-export function useReplaceCourseTeacher(classId: number) {
+export function useReplaceCourseTeacher(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, teacherId }: { courseId: number; teacherId: number }) =>
-      catalogApi.replaceCourseTeacher(classId, courseId, teacherId),
+    mutationFn: ({ courseId, teacherPublicId }: { courseId: number; teacherPublicId: string }) =>
+      catalogApi.replaceCourseTeacher(classPublicId, courseId, teacherPublicId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Teacher replaced');
     },
   });
 }
 
-export function useRemoveClassCourse(classId: number) {
+export function useRemoveClassCourse(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: number) => catalogApi.removeClassCourse(classId, courseId),
+    mutationFn: (courseId: number) => catalogApi.removeClassCourse(classPublicId, courseId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
       toast.success('Course removed');
     },
   });
 }
 
-export function useAdvanceSemester(classId: number) {
+export function useAdvanceSemester(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (teacherAssignments: TeacherAssignmentInput[]) =>
-      catalogApi.advanceSemester(classId, teacherAssignments),
+      catalogApi.advanceSemester(classPublicId, teacherAssignments),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Semester advanced');
@@ -361,14 +361,14 @@ export function useAdvanceSemester(classId: number) {
   });
 }
 
-export function useGraduateClass(classId: number) {
+export function useGraduateClass(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => catalogApi.graduateClass(classId),
+    mutationFn: () => catalogApi.graduateClass(classPublicId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Class graduated');

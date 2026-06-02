@@ -24,7 +24,7 @@ export const createUserBodySchema = z
     gender: genderEnum,
     userType: userTypeEnum,
     departmentId: z.number().int().positive().optional(),
-    classId: z.number().int().positive().optional(),
+    classPublicId: publicIdSchema.optional(),
     rollNumber: rollNumberSchema.optional(),
     designation: z.string().min(1, { error: "Designation is required" }).max(100).optional(),
   })
@@ -32,9 +32,9 @@ export const createUserBodySchema = z
     error: "departmentId is required for STUDENT and TEACHER",
     path: ["departmentId"],
   })
-  .refine((data) => data.userType !== "STUDENT" || data.classId !== undefined, {
-    error: "classId is required for STUDENT",
-    path: ["classId"],
+  .refine((data) => data.userType !== "STUDENT" || data.classPublicId !== undefined, {
+    error: "classPublicId is required for STUDENT",
+    path: ["classPublicId"],
   })
   .refine((data) => data.userType !== "STUDENT" || data.rollNumber !== undefined, {
     error: "rollNumber is required for STUDENT",

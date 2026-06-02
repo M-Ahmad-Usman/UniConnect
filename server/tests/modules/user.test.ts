@@ -58,7 +58,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "STUDENT",
           departmentId: dept.id,
-          classId: klass.id,
+          classPublicId: klass.publicId,
           rollNumber: "22-NTU-CS-2001",
         });
 
@@ -179,7 +179,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "STUDENT",
           departmentId: dept.id,
-          classId: klass.id,
+          classPublicId: klass.publicId,
           rollNumber: "22-NTU-CS-3001",
         });
 
@@ -193,7 +193,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "STUDENT",
           departmentId: dept.id,
-          classId: klass.id,
+          classPublicId: klass.publicId,
           rollNumber: "22-NTU-CS-3002",
         });
 
@@ -224,7 +224,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "STUDENT",
           departmentId: dept.id,
-          classId: klass.id,
+          classPublicId: klass.publicId,
         });
 
       expect(res.status).toBe(400);
@@ -254,7 +254,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "STUDENT",
           departmentId: dept.id,
-          classId: klass.id,
+          classPublicId: klass.publicId,
           rollNumber: "2022-CS-1184",
         });
 
@@ -285,7 +285,7 @@ describe("Module 2 - User Management", () => {
           gender: "FEMALE",
           userType: "STUDENT",
           departmentId: String(dept.id),
-          classId: String(klass.id),
+          classPublicId: klass.publicId,
           rollNumber: "22-NTU-CS-9901",
           designation: "",
         },
@@ -296,7 +296,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "TEACHER",
           departmentId: String(dept.id),
-          classId: "",
+          classPublicId: "",
           rollNumber: "",
           designation: "Lecturer",
         },
@@ -307,7 +307,7 @@ describe("Module 2 - User Management", () => {
           gender: "MALE",
           userType: "STUDENT",
           departmentId: String(dept.id),
-          classId: "",
+          classPublicId: "",
           rollNumber: "",
           designation: "",
         },
@@ -372,7 +372,7 @@ describe("Module 2 - User Management", () => {
           gender: "FEMALE",
           userType: "STUDENT",
           departmentId: String(dept.id),
-          classId: String(klass.id),
+          classPublicId: klass.publicId,
           rollNumber: "22-NTU-CS-9909",
           designation: "",
         },

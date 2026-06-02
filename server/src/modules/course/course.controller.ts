@@ -15,7 +15,7 @@ function auditContextFromRequest(req: Request) {
 // ─── Course Handlers ───────────────────────────────────────────────────────
 
 export async function handleCreateCourse(req: Request, res: Response): Promise<void> {
-  const course = await courseService.createCourse(req.body);
+  const course = await courseService.createCourse(req.body, req.user!.id, req.user!.userType);
   await recordAuditLog(
     {
       action: "course.create",

@@ -187,8 +187,8 @@ export const catalogApi = {
     return response.data;
   },
 
-  async getClass(classId: number) {
-    const response = await apiClient.get<ClassDetail>(`/classes/${classId}`);
+  async getClass(classPublicId: string) {
+    const response = await apiClient.get<ClassDetail>(`/classes/${classPublicId}`);
     return response.data;
   },
 
@@ -197,72 +197,72 @@ export const catalogApi = {
     return response.data;
   },
 
-  async listClassCourses(classId: number) {
-    const response = await apiClient.get<ClassCourseAssignment[]>(`/classes/${classId}/courses`);
+  async listClassCourses(classPublicId: string) {
+    const response = await apiClient.get<ClassCourseAssignment[]>(`/classes/${classPublicId}/courses`);
     return response.data;
   },
 
-  async listClassStudents(classId: number, params: CandidateParams = {}) {
+  async listClassStudents(classPublicId: string, params: CandidateParams = {}) {
     const response = await apiClient.get<PaginatedResponse<ClassStudent>>(
-      `/classes/${classId}/students`,
+      `/classes/${classPublicId}/students`,
       { params },
     );
     return response.data;
   },
 
-  async listStudentCandidates(classId: number, params: CandidateParams = {}) {
+  async listStudentCandidates(classPublicId: string, params: CandidateParams = {}) {
     const response = await apiClient.get<PaginatedResponse<ClassStudent>>(
-      `/classes/${classId}/student-candidates`,
+      `/classes/${classPublicId}/student-candidates`,
       { params },
     );
     return response.data;
   },
 
-  async transferStudent(classId: number, studentId: number) {
-    const response = await apiClient.post<ClassStudent>(`/classes/${classId}/students`, {
-      studentId,
+  async transferStudent(classPublicId: string, studentPublicId: string) {
+    const response = await apiClient.post<ClassStudent>(`/classes/${classPublicId}/students`, {
+      studentPublicId,
     });
     return response.data;
   },
 
-  async listTeacherCandidates(classId: number, params: CandidateParams = {}) {
+  async listTeacherCandidates(classPublicId: string, params: CandidateParams = {}) {
     const response = await apiClient.get<PaginatedResponse<TeacherCandidate>>(
-      `/classes/${classId}/teacher-candidates`,
+      `/classes/${classPublicId}/teacher-candidates`,
       { params },
     );
     return response.data;
   },
 
-  async assignCourse(classId: number, payload: TeacherAssignmentInput) {
+  async assignCourse(classPublicId: string, payload: TeacherAssignmentInput) {
     const response = await apiClient.post<ClassCourseAssignment>(
-      `/classes/${classId}/courses`,
+      `/classes/${classPublicId}/courses`,
       payload,
     );
     return response.data;
   },
 
-  async removeClassCourse(classId: number, courseId: number) {
-    const response = await apiClient.delete<null>(`/classes/${classId}/courses/${courseId}`);
+  async removeClassCourse(classPublicId: string, courseId: number) {
+    const response = await apiClient.delete<null>(`/classes/${classPublicId}/courses/${courseId}`);
     return response.data;
   },
 
-  async replaceCourseTeacher(classId: number, courseId: number, teacherId: number) {
+  async replaceCourseTeacher(classPublicId: string, courseId: number, teacherPublicId: string) {
     const response = await apiClient.patch<ClassCourseAssignment>(
-      `/classes/${classId}/courses/${courseId}/teacher`,
-      { teacherId },
+      `/classes/${classPublicId}/courses/${courseId}/teacher`,
+      { teacherPublicId },
     );
     return response.data;
   },
 
-  async advanceSemester(classId: number, teacherAssignments: TeacherAssignmentInput[]) {
-    const response = await apiClient.post<ClassDetail>(`/classes/${classId}/semester-progression`, {
+  async advanceSemester(classPublicId: string, teacherAssignments: TeacherAssignmentInput[]) {
+    const response = await apiClient.post<ClassDetail>(`/classes/${classPublicId}/semester-progression`, {
       teacherAssignments,
     });
     return response.data;
   },
 
-  async graduateClass(classId: number) {
-    const response = await apiClient.post<ClassDetail>(`/classes/${classId}/graduation`);
+  async graduateClass(classPublicId: string) {
+    const response = await apiClient.post<ClassDetail>(`/classes/${classPublicId}/graduation`);
     return response.data;
   },
 

@@ -2,12 +2,18 @@ import { BookOpen, GraduationCap } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
 
 const academicNavItems = [
   { label: 'Classes', to: ROUTES.ACADEMICS_CLASSES, icon: GraduationCap },
 ];
 
 export function AcademicLayout() {
+  const permissions = useMyPermissions().data?.global;
+  const navItems = permissions?.canCreateCourse
+    ? [...academicNavItems, { label: 'Courses', to: ROUTES.ACADEMICS_COURSES, icon: BookOpen }]
+    : academicNavItems;
+
   return (
     <div className="grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="rounded-lg border border-border bg-background p-3">
@@ -16,7 +22,7 @@ export function AcademicLayout() {
           <p className="text-muted-foreground text-xs">Delegated class and curriculum operations.</p>
         </div>
         <nav className="grid gap-1">
-          {academicNavItems.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
 
             return (

@@ -154,8 +154,8 @@ function NotFoundPage() {
 }
 
 function RedirectToAcademicClass() {
-  const { classId } = useParams();
-  return <Navigate to={ROUTES.ACADEMICS_CLASS(classId ?? '')} replace />;
+  const { classPublicId } = useParams();
+  return <Navigate to={ROUTES.ACADEMICS_CLASS(classPublicId ?? '')} replace />;
 }
 
 function RedirectToAcademicCurriculum() {
@@ -246,13 +246,14 @@ export const router = createBrowserRouter([
                             path: 'classes',
                             children: [
                               { index: true, element: <ClassListPage /> },
-                              { path: ':classId', element: <ClassDetailPage /> },
+                              { path: ':classPublicId', element: <ClassDetailPage /> },
                             ],
                           },
                           {
                             path: 'programs/:programId/curriculum',
                             element: <CurriculumPage />,
                           },
+                          { path: 'courses', element: <CourseListPage /> },
                         ],
                       },
                     ],
@@ -313,12 +314,11 @@ export const router = createBrowserRouter([
                                 element: <Navigate to={ROUTES.ACADEMICS_CLASSES} replace />,
                               },
                               {
-                                path: ':classId',
+                                path: ':classPublicId',
                                 element: <RedirectToAcademicClass />,
                               },
                             ],
                           },
-                          { path: 'courses', element: <CourseListPage /> },
                           { path: 'societies', element: <Navigate to={ROUTES.SOCIETIES} replace /> },
                           { path: 'roles', element: <Navigate to={ROUTES.ROLES} replace /> },
                         ],

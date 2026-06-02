@@ -1,7 +1,8 @@
 import { prisma } from "../../config/prisma.js";
-import { ApiErrorCode, ConflictError, NotFoundError } from "../../shared/errors/index.js";
+import { ApiErrorCode, ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
 import type { Prisma } from "../../generated/prisma/client.js";
+import { lockDepartmentForHodOrAdmin } from "../../shared/lifecycle/academic.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -51,16 +52,7 @@ const courseDetailSelect = {
 
 // ─── Service Functions ─────────────────────────────────────────────────────
 
-export async function createCourse(data: CreateCourseInput) {
-  const department = await prisma.department.findUnique({
-    where: { id: data.departmentId },
-    select: { id: true },
-  });
-
-  if (!department) {
-    throw new NotFoundError("Department not found");
-  }
-
+export async function createCourse(data: CreateCourseInput, userId: number, userType: string) {
   const existing = await prisma.course.findUnique({
     where: { code: data.code },
     select: { id: true },
@@ -70,14 +62,18 @@ export async function createCourse(data: CreateCourseInput) {
     throw new ConflictError("A course with this code already exists", ApiErrorCode.DUPLICATE_COURSE_CODE);
   }
 
-  return prisma.course.create({
-    data: {
-      title: data.title,
-      code: data.code,
-      creditHours: data.creditHours,
-      departmentId: data.departmentId,
-    },
-    select: courseListSelect,
+  return prisma.$transaction(async (tx) => {
+    await lockDepartmentForHodOrAdmin(data.departmentId, userId, userType, tx);
+
+    return tx.course.create({
+      data: {
+        title: data.title,
+        code: data.code,
+        creditHours: data.creditHours,
+        departmentId: data.departmentId,
+      },
+      select: courseListSelect,
+    });
   });
 }
 

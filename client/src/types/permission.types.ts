@@ -3,7 +3,9 @@ export interface GlobalPermissions {
   canAccessAcademicWorkspace: boolean;
   canAccessRoleManagement: boolean;
   canManageUsers: boolean;
-  canManageCatalog: boolean;
+  canManageCurriculum: boolean;
+  canCreateCourse: boolean;
+  canUpdateCourse: boolean;
   canCreateClass: boolean;
   canCreateSociety: boolean;
 }

@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 6 complete, Module 7 not started
+- Status: Module 7 complete, Module 8 not started
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
 - Source references: `pulled-docs/`
@@ -335,13 +335,20 @@ Goal: migrate academic workflows that involve classes while keeping catalog IDs
 numeric.
 
 Changes:
-- Migrate class routes and frontend URLs to public IDs.
-- Use `classPublicId` in user/class payloads.
+- Migrate class routes and frontend URLs to strict UUIDv7 public IDs.
+- Use `classPublicId`, `studentPublicId`, and `teacherPublicId` in external
+  academic payloads and public-safe DTOs.
 - Keep department, program, course, discipline, degree-level, and designation
   references numeric.
-- Add class deletion-impact endpoint.
+- Add the admin-only provisional class deletion-impact endpoint. It returns
+  canonical class blockers and explicitly marks communication impact incomplete
+  until Module 8.
 - Update class transfer, course assignment, semester progression, and graduation
   flows.
+- Revalidate delegated academic authority and class lifecycle under transaction
+  row locks before committing academic writes.
+- Allow HODs to create courses only for their own departments. Keep course
+  editing admin-only and expose granular frontend capabilities.
 
 Acceptance:
 - Class and academic tests use public IDs where appropriate.

@@ -6,7 +6,9 @@ export interface GlobalPermissions {
   canAccessAcademicWorkspace: boolean;
   canAccessRoleManagement: boolean;
   canManageUsers: boolean;
-  canManageCatalog: boolean;
+  canManageCurriculum: boolean;
+  canCreateCourse: boolean;
+  canUpdateCourse: boolean;
   canCreateClass: boolean;
   canCreateSociety: boolean;
 }
@@ -104,7 +106,9 @@ export function emptyGlobalPermissions(): GlobalPermissions {
     canAccessAcademicWorkspace: false,
     canAccessRoleManagement: false,
     canManageUsers: false,
-    canManageCatalog: false,
+    canManageCurriculum: false,
+    canCreateCourse: false,
+    canUpdateCourse: false,
     canCreateClass: false,
     canCreateSociety: false,
   };
@@ -239,7 +243,9 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
       canAccessAcademicWorkspace: true,
       canAccessRoleManagement: true,
       canManageUsers: true,
-      canManageCatalog: true,
+      canManageCurriculum: true,
+      canCreateCourse: true,
+      canUpdateCourse: true,
       canCreateClass: true,
       canCreateSociety: true,
     };
@@ -256,7 +262,9 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
     canAccessAcademicWorkspace: isHod || isPd,
     canAccessRoleManagement,
     canManageUsers: false,
-    canManageCatalog: isHod,
+    canManageCurriculum: isHod,
+    canCreateCourse: isHod,
+    canUpdateCourse: false,
     canCreateClass: isHod,
     canCreateSociety: isHod,
   };

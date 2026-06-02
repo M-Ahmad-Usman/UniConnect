@@ -4,6 +4,7 @@ import type { ApiResponse, PaginatedResponse } from "../../shared/types/index.js
 import * as classService from "./class.service.js";
 import * as roleService from "../role/role.service.js";
 import { buildAuditContext, recordAuditLog } from "../audit/audit.service.js";
+import { getResolvedClassTarget } from "../../middleware/resolveClassTarget.js";
 
 function auditContextFromRequest(req: Request) {
   return buildAuditContext({
@@ -33,7 +34,7 @@ export async function handleCreateClass(req: Request, res: Response): Promise<vo
     {
       action: "class.create",
       targetType: "class",
-      targetId: classRecord.id,
+      targetId: classRecord.publicId,
       summary: {
         programId: classRecord.program.id,
         currentSemester: classRecord.currentSemester,
@@ -78,7 +79,7 @@ export async function handleListClasses(req: Request, res: Response): Promise<vo
 }
 
 export async function handleGetClass(req: Request, res: Response): Promise<void> {
-  const classRecord = await classService.getClassById(Number(req.params.id), req.user!.id);
+  const classRecord = await classService.getClassById(getResolvedClassTarget(req).id, req.user!.id);
 
   const response: ApiResponse<typeof classRecord> = {
     success: true,
@@ -90,7 +91,7 @@ export async function handleGetClass(req: Request, res: Response): Promise<void>
 
 export async function handleAssignClassCr(req: Request, res: Response): Promise<void> {
   const assignment = await roleService.assignClassCr(
-    String(req.params.classPublicId),
+    String(req.params.publicId),
     req.body.userPublicId,
     callerFromRequest(req),
     auditContextFromRequest(req)
@@ -105,7 +106,7 @@ export async function handleAssignClassCr(req: Request, res: Response): Promise<
 
 export async function handleRevokeClassCr(req: Request, res: Response): Promise<void> {
   const assignment = await roleService.revokeClassCr(
-    String(req.params.classPublicId),
+    String(req.params.publicId),
     callerFromRequest(req),
     auditContextFromRequest(req)
   );
@@ -121,7 +122,7 @@ export async function handleRevokeClassCr(req: Request, res: Response): Promise<
 
 export async function handleAssignCourse(req: Request, res: Response): Promise<void> {
   const assignment = await classService.assignCourseToClass(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     req.body,
     req.user!.id,
     req.user!.userType
@@ -130,8 +131,8 @@ export async function handleAssignCourse(req: Request, res: Response): Promise<v
     {
       action: "class.course.assign",
       targetType: "class",
-      targetId: req.params.id,
-      summary: { courseId: req.body.courseId, teacherId: req.body.teacherId },
+      targetId: getResolvedClassTarget(req).publicId,
+      summary: { courseId: req.body.courseId, teacherPublicId: req.body.teacherPublicId },
     },
     auditContextFromRequest(req)
   );
@@ -146,7 +147,7 @@ export async function handleAssignCourse(req: Request, res: Response): Promise<v
 }
 
 export async function handleListClassCourses(req: Request, res: Response): Promise<void> {
-  const courses = await classService.listClassCourses(Number(req.params.id), req.user!.id);
+  const courses = await classService.listClassCourses(getResolvedClassTarget(req).id, req.user!.id);
 
   const response: ApiResponse<typeof courses> = {
     success: true,
@@ -158,7 +159,7 @@ export async function handleListClassCourses(req: Request, res: Response): Promi
 
 export async function handleReplaceCourseTeacher(req: Request, res: Response): Promise<void> {
   const assignment = await classService.replaceClassCourseTeacher(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     Number(req.params.courseId),
     req.body,
     req.user!.id,
@@ -168,8 +169,8 @@ export async function handleReplaceCourseTeacher(req: Request, res: Response): P
     {
       action: "class.course.teacher.replace",
       targetType: "class",
-      targetId: req.params.id,
-      summary: { courseId: req.params.courseId, teacherId: req.body.teacherId },
+      targetId: getResolvedClassTarget(req).publicId,
+      summary: { courseId: req.params.courseId, teacherPublicId: req.body.teacherPublicId },
     },
     auditContextFromRequest(req)
   );
@@ -185,7 +186,7 @@ export async function handleReplaceCourseTeacher(req: Request, res: Response): P
 
 export async function handleRemoveCourse(req: Request, res: Response): Promise<void> {
   await classService.removeCourseFromClass(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     Number(req.params.courseId),
     req.user!.id,
     req.user!.userType
@@ -194,7 +195,7 @@ export async function handleRemoveCourse(req: Request, res: Response): Promise<v
     {
       action: "class.course.remove",
       targetType: "class",
-      targetId: req.params.id,
+      targetId: getResolvedClassTarget(req).publicId,
       summary: { courseId: req.params.courseId },
     },
     auditContextFromRequest(req)
@@ -213,7 +214,7 @@ export async function handleRemoveCourse(req: Request, res: Response): Promise<v
 
 export async function handleAdvanceSemester(req: Request, res: Response): Promise<void> {
   const result = await classService.advanceSemester(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     req.body,
     req.user!.id,
     req.user!.userType
@@ -222,7 +223,7 @@ export async function handleAdvanceSemester(req: Request, res: Response): Promis
     {
       action: "class.semester.advance",
       targetType: "class",
-      targetId: req.params.id,
+      targetId: getResolvedClassTarget(req).publicId,
       summary: { nextSemester: result.currentSemester },
     },
     auditContextFromRequest(req)
@@ -240,7 +241,7 @@ export async function handleAdvanceSemester(req: Request, res: Response): Promis
 export async function handleListClassStudents(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await classService.listClassStudents(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     {
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
@@ -262,7 +263,7 @@ export async function handleListClassStudents(req: Request, res: Response): Prom
 export async function handleListStudentCandidates(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await classService.listStudentCandidates(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     {
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
@@ -283,7 +284,7 @@ export async function handleListStudentCandidates(req: Request, res: Response): 
 
 export async function handleTransferStudent(req: Request, res: Response): Promise<void> {
   const student = await classService.transferStudentToClass(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     req.body,
     req.user!.id,
     req.user!.userType
@@ -292,8 +293,8 @@ export async function handleTransferStudent(req: Request, res: Response): Promis
     {
       action: "class.student.transfer",
       targetType: "class",
-      targetId: req.params.id,
-      summary: { studentId: req.body.studentId },
+      targetId: getResolvedClassTarget(req).publicId,
+      summary: { studentPublicId: req.body.studentPublicId },
     },
     auditContextFromRequest(req)
   );
@@ -310,7 +311,7 @@ export async function handleTransferStudent(req: Request, res: Response): Promis
 export async function handleListTeacherCandidates(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await classService.listTeacherCandidates(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     {
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
@@ -331,7 +332,7 @@ export async function handleListTeacherCandidates(req: Request, res: Response): 
 
 export async function handleGraduateClass(req: Request, res: Response): Promise<void> {
   const result = await classService.graduateClass(
-    Number(req.params.id),
+    getResolvedClassTarget(req).id,
     req.user!.id,
     req.user!.userType
   );
@@ -339,7 +340,7 @@ export async function handleGraduateClass(req: Request, res: Response): Promise<
     {
       action: "class.graduate",
       targetType: "class",
-      targetId: req.params.id,
+      targetId: getResolvedClassTarget(req).publicId,
       summary: { status: result.status, graduatedAt: result.graduatedAt ?? null },
     },
     auditContextFromRequest(req)
@@ -351,5 +352,11 @@ export async function handleGraduateClass(req: Request, res: Response): Promise<
     message: "Class graduated successfully",
   };
 
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleGetClassDeletionImpact(req: Request, res: Response): Promise<void> {
+  const impact = await classService.getClassDeletionImpact(getResolvedClassTarget(req).id);
+  const response: ApiResponse<typeof impact> = { success: true, data: impact };
   res.status(StatusCodes.OK).json(response);
 }

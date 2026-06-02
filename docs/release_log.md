@@ -57,6 +57,33 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-02 - Schema/Lifecycle Refactor Module 7 Complete
+- Migrated class routes, nested workflows, frontend URLs, query keys, forms, CSV
+  import, and E2E navigation helpers to strict UUIDv7 class public IDs.
+- Replaced public academic student and teacher references with `studentPublicId`
+  and `teacherPublicId`, removed composed DTO leaks, and converted graduation
+  actor metadata to `graduatedByPublicId`.
+- Closed authenticated class-detail and assigned-course IDOR exposure. Reads
+  now require admin, own-department HOD, or own-program PD scope.
+- Added shared transaction row locks and commit-time authority/lifecycle checks
+  for delegated class writes, curriculum changes, HOD course creation, and
+  academic role-owner changes. Added under-lock stale-state checks for owner and
+  class-course mutations plus deterministic source/target locking for student
+  transfers.
+- Added admin-only provisional class deletion impact. Module 8 must add
+  communication descendants before the endpoint can report a final decision.
+- Added granular curriculum/course capabilities and moved Courses to
+  `/academics/courses`. HODs can create courses only for their own departments;
+  course editing remains admin-only.
+- Verification passed: backend build and Jest `498/498`; frontend lint,
+  type-check, Vitest `133/133`, and production build; targeted academic and
+  accessibility Playwright `6/6`; isolated E2E timing-failure rerun `9/9`.
+- Deferred release-hardening findings: investigate the Prisma adapter `pg`
+  concurrent-query deprecation warning before `pg@9`, and stabilize the full
+  parallel Playwright run under local load. The full run completed `28`, failed
+  `5` timing-sensitive auth/post tests, and left `3` unrun before the isolated
+  rerun passed.
+
 ### 2026-06-02 - Schema/Lifecycle Refactor Module 6 Complete
 - Migrated server, channel, and post routes, DTOs, frontend URLs, query keys,
   realtime envelopes, notification links/preferences, linked admin navigation,

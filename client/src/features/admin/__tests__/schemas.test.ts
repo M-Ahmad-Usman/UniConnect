@@ -16,6 +16,7 @@ const baseInput = {
   phone: '03001234567',
   gender: Gender.FEMALE,
 };
+const publicId = '018f47a2-5d6b-7c8d-9e0f-123456789abc';
 
 describe('createUserSchema', () => {
   it('accepts admin users without academic fields', () => {
@@ -24,7 +25,7 @@ describe('createUserSchema', () => {
       userType: UserType.ADMIN,
       departmentId: '',
       programId: '',
-      classId: '',
+      classPublicId: '',
       rollNumber: '',
       designation: '',
     });
@@ -38,14 +39,14 @@ describe('createUserSchema', () => {
       userType: UserType.STUDENT,
       departmentId: '1',
       programId: '2',
-      classId: '3',
+      classPublicId: publicId,
       rollNumber: '22-ntu-cs-1184',
       designation: '',
     });
 
     expect(result.success).toBe(true);
     expect(result.data?.rollNumber).toBe('22-NTU-CS-1184');
-    expect(result.data?.classId).toBe(3);
+    expect(result.data?.classPublicId).toBe(publicId);
   });
 
   it('rejects invalid student roll numbers', () => {
@@ -54,7 +55,7 @@ describe('createUserSchema', () => {
       userType: UserType.STUDENT,
       departmentId: '1',
       programId: '2',
-      classId: '3',
+      classPublicId: publicId,
       rollNumber: '2022-CS-1184',
       designation: '',
     });
@@ -68,7 +69,7 @@ describe('createUserSchema', () => {
       userType: UserType.STUDENT,
       departmentId: '1',
       programId: '2',
-      classId: '3',
+      classPublicId: publicId,
       rollNumber: '22-NTU-CS-1184',
       designation: '',
     });
@@ -77,7 +78,7 @@ describe('createUserSchema', () => {
       ...baseInput,
       userType: UserType.STUDENT,
       departmentId: 1,
-      classId: 3,
+      classPublicId: publicId,
       rollNumber: '22-NTU-CS-1184',
     });
   });
@@ -97,14 +98,14 @@ describe('validateCsvFile', () => {
 
 describe('teacherAssignmentSchema', () => {
   it('coerces selected IDs for class course assignments', () => {
-    expect(teacherAssignmentSchema.parse({ courseId: '12', teacherId: '7' })).toEqual({
+    expect(teacherAssignmentSchema.parse({ courseId: '12', teacherPublicId: publicId })).toEqual({
       courseId: 12,
-      teacherId: 7,
+      teacherPublicId: publicId,
     });
   });
 
   it('rejects empty selections', () => {
-    expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherId: '' }).success).toBe(false);
+    expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherPublicId: '' }).success).toBe(false);
   });
 });
 
@@ -142,14 +143,14 @@ describe('globalProgramSchema', () => {
 
 describe('class hardening form schemas', () => {
   it('validates selected transfer students', () => {
-    expect(transferStudentSchema.parse({ studentId: '42' })).toEqual({ studentId: 42 });
-    expect(transferStudentSchema.safeParse({ studentId: '' }).success).toBe(false);
-    expect(transferStudentSchema.safeParse({ studentId: '0' }).success).toBe(false);
+    expect(transferStudentSchema.parse({ studentPublicId: publicId })).toEqual({ studentPublicId: publicId });
+    expect(transferStudentSchema.safeParse({ studentPublicId: '' }).success).toBe(false);
+    expect(transferStudentSchema.safeParse({ studentPublicId: '0' }).success).toBe(false);
   });
 
   it('validates selected replacement teachers', () => {
-    expect(replaceTeacherSchema.parse({ teacherId: '17' })).toEqual({ teacherId: 17 });
-    expect(replaceTeacherSchema.safeParse({ teacherId: '' }).success).toBe(false);
-    expect(replaceTeacherSchema.safeParse({ teacherId: '-1' }).success).toBe(false);
+    expect(replaceTeacherSchema.parse({ teacherPublicId: publicId })).toEqual({ teacherPublicId: publicId });
+    expect(replaceTeacherSchema.safeParse({ teacherPublicId: '' }).success).toBe(false);
+    expect(replaceTeacherSchema.safeParse({ teacherPublicId: '-1' }).success).toBe(false);
   });
 });

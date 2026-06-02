@@ -7,6 +7,8 @@ const optionalNumericIdSchema = z
   .string()
   .transform((value) => (value === '' ? undefined : Number(value)))
   .pipe(numericIdSchema.optional());
+const requiredPublicIdSchema = z.string().uuid('Select a valid option');
+const optionalPublicIdSchema = z.string().transform((value) => value || undefined).pipe(requiredPublicIdSchema.optional());
 const rollNumberSchema = z
   .string()
   .trim()
@@ -30,7 +32,7 @@ export const createUserSchema = z
     userType: z.enum([UserType.ADMIN, UserType.TEACHER, UserType.STUDENT]),
     departmentId: optionalNumericIdSchema,
     programId: optionalNumericIdSchema,
-    classId: optionalNumericIdSchema,
+    classPublicId: optionalPublicIdSchema,
     rollNumber: z.string().trim().toUpperCase(),
     designation: z.string().trim().max(100),
   })
@@ -59,8 +61,8 @@ export const createUserSchema = z
       if (!values.programId) {
         context.addIssue({ code: 'custom', path: ['programId'], message: 'Select a program' });
       }
-      if (!values.classId) {
-        context.addIssue({ code: 'custom', path: ['classId'], message: 'Select a class' });
+      if (!values.classPublicId) {
+        context.addIssue({ code: 'custom', path: ['classPublicId'], message: 'Select a class' });
       }
       const parsedRollNumber = rollNumberSchema.safeParse(values.rollNumber ?? '');
       if (!parsedRollNumber.success) {
@@ -81,7 +83,7 @@ export interface CreateUserFormInput {
   userType: UserType;
   departmentId: string;
   programId: string;
-  classId: string;
+  classPublicId: string;
   rollNumber: string;
   designation: string;
 }
@@ -112,7 +114,7 @@ export function toCreateUserPayload(values: CreateUserFormValues) {
   return {
     ...base,
     departmentId: values.departmentId!,
-    classId: values.classId!,
+    classPublicId: values.classPublicId!,
     rollNumber: values.rollNumber!.trim().toUpperCase(),
   };
 }
@@ -197,15 +199,15 @@ export const curriculumSchema = z.object({
 
 export const teacherAssignmentSchema = z.object({
   courseId: requiredNumericIdSchema,
-  teacherId: requiredNumericIdSchema,
+  teacherPublicId: requiredPublicIdSchema,
 });
 
 export const transferStudentSchema = z.object({
-  studentId: requiredNumericIdSchema,
+  studentPublicId: requiredPublicIdSchema,
 });
 
 export const replaceTeacherSchema = z.object({
-  teacherId: requiredNumericIdSchema,
+  teacherPublicId: requiredPublicIdSchema,
 });
 
 export type DepartmentFormValues = z.output<typeof departmentSchema>;

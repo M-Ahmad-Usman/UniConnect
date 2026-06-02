@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { e2eUsers } from './helpers/auth';
-import { findClassIdByServerName, module2Fixtures } from './helpers/module2';
+import { findClassByServerName, module2Fixtures } from './helpers/module2';
 import { findSocietyByName, module3Fixtures } from './helpers/module3';
 
 async function signIn(page: Page, email: string, password: string) {
@@ -27,8 +27,8 @@ test.describe.serial('Module 6 UI and accessibility hardening', () => {
   test('theme, role management, class detail, and mobile shell stay accessible', async ({
     page,
   }) => {
-    const classId = await findClassIdByServerName(module2Fixtures.transferTargetServerName);
-    expect(classId).not.toBeNull();
+    const klass = await findClassByServerName(module2Fixtures.transferTargetServerName);
+    expect(klass).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
 
@@ -57,7 +57,7 @@ test.describe.serial('Module 6 UI and accessibility hardening', () => {
     await expect(page.locator('main')).toBeVisible();
     await expectNoPageOverflow(page);
 
-    await page.goto(`/academics/classes/${classId}`);
+    await page.goto(`/academics/classes/${klass!.public_id}`);
 
     await expect(page.getByRole('heading', { name: 'Students', exact: true })).toBeVisible();
     await expect(

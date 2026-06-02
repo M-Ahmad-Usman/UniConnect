@@ -11,6 +11,7 @@ import {
   createClass,
   createCurriculum,
   createTeacherWithInfo,
+  assignHOD,
   loginAs,
 } from "../helpers/factory.js";
 
@@ -142,6 +143,41 @@ describe("Module 5 - Course Management", () => {
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
+    });
+
+    it("should allow an HOD to create a course only for their own department", async () => {
+      const ownDepartment = await createDepartment({ code: `HOD-C-${uid()}` });
+      const foreignDepartment = await createDepartment({ code: `HOD-F-${uid()}` });
+      const hod = await createTeacherWithInfo(ownDepartment.id, {
+        email: `hod-course-${uid()}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignHOD(ownDepartment.id, hod.id);
+      const cookies = await loginAs(hod.email, "Pass@1234");
+
+      const allowed = await request(app)
+        .post("/api/courses")
+        .set("Cookie", cookies)
+        .send({
+          title: "Department Course",
+          code: `HOD-OWN-${uid()}`,
+          creditHours: 3,
+          departmentId: ownDepartment.id,
+        });
+      expect(allowed.status).toBe(201);
+      expect(allowed.body.data.departmentId).toBe(ownDepartment.id);
+
+      const denied = await request(app)
+        .post("/api/courses")
+        .set("Cookie", cookies)
+        .send({
+          title: "Foreign Department Course",
+          code: `HOD-FRN-${uid()}`,
+          creditHours: 3,
+          departmentId: foreignDepartment.id,
+        });
+      expect(denied.status).toBe(403);
+      expect(denied.body.error.code).toBe("SCOPE_FORBIDDEN");
     });
 
     it("should return 404 for non-existent departmentId", async () => {
@@ -360,15 +396,15 @@ describe("Module 5 - Course Management", () => {
       });
 
       const assignFirst = await request(app)
-        .post(`/api/classes/${cls1.id}/courses`)
+        .post(`/api/classes/${cls1.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
       expect(assignFirst.status).toBe(201);
 
       const assignSecond = await request(app)
-        .post(`/api/classes/${cls2.id}/courses`)
+        .post(`/api/classes/${cls2.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
       expect(assignSecond.status).toBe(201);
 
       // Verify the auto-created channels exist with the old code

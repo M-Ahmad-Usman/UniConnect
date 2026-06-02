@@ -37,7 +37,7 @@ type CreateUserInput = {
   gender: "MALE" | "FEMALE";
   userType: "STUDENT" | "TEACHER" | "ADMIN";
   departmentId?: number;
-  classId?: number;
+  classPublicId?: string;
   rollNumber?: string;
   designation?: string;
 };
@@ -81,7 +81,7 @@ function normalizeCsvRow(row: Record<string, string>): CreateUserInput {
     gender: gender as "MALE" | "FEMALE",
     userType: userType as "STUDENT" | "TEACHER" | "ADMIN",
     departmentId: row.departmentId ? Number.parseInt(row.departmentId, 10) : undefined,
-    classId: row.classId ? Number.parseInt(row.classId, 10) : undefined,
+    classPublicId: row.classPublicId?.trim() || undefined,
     rollNumber: row.rollNumber?.trim() ? row.rollNumber.trim().toUpperCase() : undefined,
     designation: row.designation?.trim() ? row.designation.trim() : undefined,
   };
@@ -285,10 +285,11 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
       departmentServerId = department.serverId;
     }
 
-    if (input.userType === "STUDENT" && input.classId) {
+    let resolvedClassId: number | undefined;
+    if (input.userType === "STUDENT" && input.classPublicId) {
       const classRecord = await tx.class.findUnique({
-        where: { id: input.classId },
-        select: { serverId: true, program: { select: { departmentId: true } } },
+        where: { publicId: input.classPublicId },
+        select: { id: true, serverId: true, program: { select: { departmentId: true } } },
       });
 
       if (!classRecord) {
@@ -296,10 +297,11 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
       }
 
       classServerId = classRecord.serverId;
+      resolvedClassId = classRecord.id;
       classDepartmentId = classRecord.program.departmentId;
 
       if (input.departmentId && input.departmentId !== classDepartmentId) {
-        throw new ValidationError("classId does not belong to the provided departmentId");
+        throw new ValidationError("classPublicId does not belong to the provided departmentId");
       }
     }
 
@@ -336,7 +338,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
       await tx.studentInfo.create({
         data: {
           studentId: user.id,
-          classId: input.classId!,
+          classId: resolvedClassId!,
           rollNumber: input.rollNumber!,
         },
       });
@@ -379,7 +381,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
             email: user.email,
             userType: user.userType,
             departmentId: user.departmentId,
-            classId: input.classId ?? null,
+            classPublicId: input.classPublicId ?? null,
           },
         },
         auditContext,
@@ -488,9 +490,9 @@ export async function getProfile(userId: number) {
       studentInfo: {
         select: {
           rollNumber: true,
-          classId: true,
           class: {
             select: {
+              publicId: true,
               program: {
                 select: {
                   code: true,
@@ -514,8 +516,18 @@ export async function getProfile(userId: number) {
 
   const roles = await getPublicUserRoles(userId);
 
+  const publicUser = mapLifecycleUser(user);
+  const studentInfo = publicUser.studentInfo
+    ? {
+        rollNumber: publicUser.studentInfo.rollNumber,
+        classPublicId: publicUser.studentInfo.class.publicId,
+        class: { program: publicUser.studentInfo.class.program },
+      }
+    : null;
+
   return {
-    ...mapLifecycleUser(user),
+    ...publicUser,
+    studentInfo,
     roles,
   };
 }
@@ -653,8 +665,8 @@ export async function getUserByPublicId(userPublicId: string, requestingUser: Au
     ...userLifecycleSelect,
     studentInfo: {
       select: {
-        classId: true,
         rollNumber: true,
+        class: { select: { publicId: true } },
       },
     },
     teacherInfo: {
@@ -681,7 +693,16 @@ export async function getUserByPublicId(userPublicId: string, requestingUser: Au
       throw new NotFoundError("User not found");
     }
 
-    return mapLifecycleUser(user);
+    const publicUser = mapLifecycleUser(user);
+    return {
+      ...publicUser,
+      studentInfo: publicUser.studentInfo
+        ? {
+            classPublicId: publicUser.studentInfo.class.publicId,
+            rollNumber: publicUser.studentInfo.rollNumber,
+          }
+        : null,
+    };
   }
 
   if (requestingUser.userType !== "TEACHER") {
@@ -702,7 +723,16 @@ export async function getUserByPublicId(userPublicId: string, requestingUser: Au
     throw new NotFoundError("User not found");
   }
 
-  return mapLifecycleUser(user);
+  const publicUser = mapLifecycleUser(user);
+  return {
+    ...publicUser,
+    studentInfo: publicUser.studentInfo
+      ? {
+          classPublicId: publicUser.studentInfo.class.publicId,
+          rollNumber: publicUser.studentInfo.rollNumber,
+        }
+      : null,
+  };
 }
 
 // ─── User Lifecycle ────────────────────────────────────────────────────────

@@ -208,7 +208,7 @@ export function UserDetailDialog({
                 {user.studentInfo ? (
                   <>
                     <DetailField label="Roll number" value={user.studentInfo.rollNumber} />
-                    <DetailField label="Class ID" value={user.studentInfo.classId} />
+                    <DetailField label="Class public ID" value={user.studentInfo.classPublicId} />
                   </>
                 ) : null}
                 {user.teacherInfo ? (

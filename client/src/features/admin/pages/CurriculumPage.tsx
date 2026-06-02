@@ -32,7 +32,7 @@ export function CurriculumPage() {
   const addCurriculum = useAddCurriculum(programId ?? 0);
   const removeCurriculum = useRemoveCurriculum(programId ?? 0);
   const departmentId = programQuery.data?.departmentId;
-  const canManageCurriculum = permissionsQuery.data?.global.canManageCatalog ?? false;
+  const canManageCurriculum = permissionsQuery.data?.global.canManageCurriculum ?? false;
   const coursesQuery = useAdminCourses({ page: 1, limit: 50, departmentId }, canManageCurriculum);
   const curriculum = useMemo(() => curriculumQuery.data ?? [], [curriculumQuery.data]);
 

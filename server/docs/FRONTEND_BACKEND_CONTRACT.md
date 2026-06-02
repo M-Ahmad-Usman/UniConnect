@@ -163,7 +163,7 @@ available.
 ### Users (`/api/users`)
 
 - `POST /`
-  - Body: `{ fullName, email, phone, gender, userType, departmentId?, classId?, rollNumber?, designation? }`
+  - Body: `{ fullName, email, phone, gender, userType, departmentId?, classPublicId?, rollNumber?, designation? }`
   - Student `rollNumber` uses NTU format such as `22-NTU-CS-1184`.
 - `POST /bulk-import`
   - Multipart field: `file` (CSV)
@@ -205,7 +205,8 @@ available.
 - `POST /`
   - Body: `{ name, code }`
 - `GET /`
-- `GET /:id`
+- `GET /:publicId`
+  - Auth: admin, own-department HOD, or own-program Program Director.
 - `PATCH /:id`
   - Body: `{ name?, code? }`
 - `GET /:id/stats`
@@ -236,35 +237,41 @@ available.
     - `canViewStudents`, `canManageStudents`, `canAssignCourses`, `canRemoveCourses`
     - `canReplaceCourseTeacher`, `canAdvanceSemester`, `canGraduate`
     - `canManageChannels`, `canAssignModerators`
-- `POST /:id/courses`
-  - Body: `{ courseId, teacherId }`
+- `GET /:publicId/deletion-impact`
+  - Admin only. Returns canonical blocker counts with
+    `checksComplete: false`, `pendingChecks: ["COMMUNICATION_IMPACT"]`, and
+    `canDelete: false` until Module 8.
+- `POST /:publicId/courses`
+  - Body: `{ courseId, teacherPublicId }`
   - Course must be in the class current-semester curriculum; teacher must be active.
-- `GET /:id/courses`
-- `GET /:id/students`
-- `GET /:id/student-candidates`
+- `GET /:publicId/courses`
+- `GET /:publicId/students`
+- `GET /:publicId/student-candidates`
   - Query: `page, limit, search?`
-- `POST /:id/students`
-  - Body: `{ studentId }`
+- `POST /:publicId/students`
+  - Body: `{ studentPublicId }`
   - Transfers an existing same-department active student into the target class.
-- `GET /:id/teacher-candidates`
+- `GET /:publicId/teacher-candidates`
   - Query: `page, limit, search?`
-- `PATCH /:id/courses/:courseId/teacher`
-  - Body: `{ teacherId }`
-- `DELETE /:id/courses/:courseId`
-- `POST /:id/semester-progression`
-  - Body: `{ teacherAssignments: [{ courseId, teacherId }] }`
-- `POST /:id/graduation`
+- `PATCH /:publicId/courses/:courseId/teacher`
+  - Body: `{ teacherPublicId }`
+- `DELETE /:publicId/courses/:courseId`
+- `POST /:publicId/semester-progression`
+  - Body: `{ teacherAssignments: [{ courseId, teacherPublicId }] }`
+- `POST /:publicId/graduation`
   - Final-semester active classes only; locks class channels and keeps history visible.
 
 ### Courses (`/api/courses`)
 
 - `POST /`
   - Body: `{ title, code, creditHours, departmentId }`
+  - Auth: admin for any department or HOD for their own department.
 - `GET /`
   - Query: `page, limit, departmentId?`
 - `GET /:id`
 - `PATCH /:id`
   - Body: `{ title?, code?, creditHours? }`
+  - Auth: admin only.
 
 ### Societies (`/api/societies`)
 

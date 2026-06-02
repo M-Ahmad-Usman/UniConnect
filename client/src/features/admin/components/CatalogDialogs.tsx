@@ -687,9 +687,9 @@ export function AssignCourseDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courses: CourseListItem[];
-  teachers: Array<{ id: number; fullName: string; email: string }>;
+  teachers: Array<{ publicId: string; fullName: string; email: string }>;
   loading: boolean;
-  onSubmit: (values: { courseId: number; teacherId: number }) => Promise<void>;
+  onSubmit: (values: { courseId: number; teacherPublicId: string }) => Promise<void>;
 }) {
   const form = useForm<
     z.input<typeof teacherAssignmentSchema>,
@@ -697,11 +697,11 @@ export function AssignCourseDialog({
     TeacherAssignmentFormValues
   >({
     resolver: zodResolver(teacherAssignmentSchema),
-    defaultValues: { courseId: '', teacherId: '' },
+    defaultValues: { courseId: '', teacherPublicId: '' },
   });
 
   useEffect(() => {
-    form.reset({ courseId: '', teacherId: '' });
+    form.reset({ courseId: '', teacherPublicId: '' });
   }, [form, open]);
 
   return (
@@ -734,15 +734,15 @@ export function AssignCourseDialog({
               ))}
             </select>
           </FormField>
-          <FormField label="Teacher" error={form.formState.errors.teacherId?.message}>
+          <FormField label="Teacher" error={form.formState.errors.teacherPublicId?.message}>
             <select
               className={inputClassName}
-              aria-invalid={form.formState.errors.teacherId ? 'true' : undefined}
-              {...form.register('teacherId')}
+              aria-invalid={form.formState.errors.teacherPublicId ? 'true' : undefined}
+              {...form.register('teacherPublicId')}
             >
               <option value="">Select teacher</option>
               {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
+                <option key={teacher.publicId} value={teacher.publicId}>
                   {teacher.fullName} · {teacher.email}
                 </option>
               ))}

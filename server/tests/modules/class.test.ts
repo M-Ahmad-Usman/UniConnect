@@ -21,6 +21,7 @@ let uidCounter = 0;
 function uid(): string {
   return (++uidCounter).toString(36);
 }
+const UNKNOWN_PUBLIC_ID = "018f47a2-5d6b-7c8d-9e0f-123456789abc";
 
 async function addCurrentCurriculum(
   programId: number,
@@ -58,7 +59,7 @@ describe("Module 7 - Class List Filters", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: classA.id, section: "A" })])
+      expect.arrayContaining([expect.objectContaining({ publicId: classA.publicId, section: "A" })])
     );
     expect(
       res.body.data.every(
@@ -66,6 +67,52 @@ describe("Module 7 - Class List Filters", () => {
           klass.section === "A" && klass.program.department.id === deptA.id
       )
     ).toBe(true);
+  });
+});
+
+describe("Module 7 - Class public boundary and deletion impact", () => {
+  it("rejects numeric class route identifiers", async () => {
+    const admin = await createUser({
+      email: `admin-class-public-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+    const res = await request(app).get("/api/classes/1").set("Cookie", cookies);
+    expect(res.status).toBe(400);
+  });
+
+  it("returns provisional blocker counts only to admins", async () => {
+    const admin = await createUser({
+      email: `admin-class-impact-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const department = await createDepartment({ code: `IMP-${uid()}` });
+    const hod = await createTeacherWithInfo(department.id, {
+      email: `hod-class-impact-${Date.now()}@test.com`,
+      password: "Pass@1234",
+    });
+    await assignHOD(department.id, hod.id);
+    const program = await createProgram(department.id);
+    const klass = await createClass(program.id);
+    await createStudentWithInfo(klass.id, department.id);
+    const adminCookies = await loginAs(admin.email, "Pass@1234");
+
+    const impact = await request(app)
+      .get(`/api/classes/${klass.publicId}/deletion-impact`)
+      .set("Cookie", adminCookies);
+    expect(impact.status).toBe(200);
+    expect(impact.body.data.canDelete).toBe(false);
+    expect(impact.body.data.checksComplete).toBe(false);
+    expect(impact.body.data.pendingChecks).toEqual(["COMMUNICATION_IMPACT"]);
+    expect(impact.body.data.blockers.enrolledStudents.count).toBe(1);
+
+    const hodCookies = await loginAs(hod.email, "Pass@1234");
+    const denied = await request(app)
+      .get(`/api/classes/${klass.publicId}/deletion-impact`)
+      .set("Cookie", hodCookies);
+    expect(denied.status).toBe(403);
   });
 });
 
@@ -100,7 +147,8 @@ describe("Module 4 - Class Management", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.id).toBeDefined();
+      expect(res.body.data.publicId).toEqual(expect.any(String));
+      expect(res.body.data).not.toHaveProperty("id");
       expect(res.body.data.currentSemester).toBe(1);
       expect(res.body.data.academicYear).toBe(2026);
       expect(res.body.data.admissionYear).toBe(2026);
@@ -496,12 +544,13 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(user.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/classes/${klass.id}`)
+        .get(`/api/classes/${klass.publicId}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.id).toBe(klass.id);
+      expect(res.body.data.publicId).toBe(klass.publicId);
+      expect(res.body.data).not.toHaveProperty("id");
       expect(res.body.data.currentSemester).toBeDefined();
       expect(res.body.data.program).toBeDefined();
       expect(res.body.data.program.code).toBeDefined();
@@ -519,7 +568,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(user.email, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/classes/99999")
+        .get(`/api/classes/${UNKNOWN_PUBLIC_ID}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -547,15 +596,17 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.courseId).toBe(course.id);
-      expect(res.body.data.teacherId).toBe(teacher.id);
-      expect(res.body.data.classId).toBe(klass.id);
+      expect(res.body.data.teacherPublicId).toBe(teacher.publicId);
+      expect(res.body.data.classPublicId).toBe(klass.publicId);
+      expect(res.body.data).not.toHaveProperty("teacherId");
+      expect(res.body.data).not.toHaveProperty("classId");
       expect(res.body.data.course).toBeDefined();
       expect(res.body.data.course.code).toBe(course.code);
       expect(res.body.data.teacher).toBeDefined();
@@ -607,9 +658,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -638,9 +689,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(pd.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -669,9 +720,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -702,9 +753,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(pd.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -727,14 +778,14 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
@@ -761,14 +812,14 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacherA.id });
+        .send({ courseId: course.id, teacherPublicId: teacherA.publicId });
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacherB.id });
+        .send({ courseId: course.id, teacherPublicId: teacherB.publicId });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
@@ -789,9 +840,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post("/api/classes/99999/courses")
+        .post(`/api/classes/${UNKNOWN_PUBLIC_ID}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
@@ -812,9 +863,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: 99999, teacherId: teacher.id });
+        .send({ courseId: 99999, teacherPublicId: teacher.publicId });
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
@@ -834,9 +885,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: 99999 });
+        .send({ courseId: course.id, teacherPublicId: UNKNOWN_PUBLIC_ID });
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
@@ -859,9 +910,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: courseFromOtherDept.id, teacherId: teacherA.id });
+        .send({ courseId: courseFromOtherDept.id, teacherPublicId: teacherA.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -885,16 +936,16 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res1 = await request(app)
-        .post(`/api/classes/${classA.id}/courses`)
+        .post(`/api/classes/${classA.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res1.status).toBe(201);
 
       const res2 = await request(app)
-        .post(`/api/classes/${classB.id}/courses`)
+        .post(`/api/classes/${classB.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(res2.status).toBe(201);
 
@@ -927,12 +978,12 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       await request(app)
-        .delete(`/api/classes/${klass.id}/courses/${course.id}`)
+        .delete(`/api/classes/${klass.publicId}/courses/${course.id}`)
         .set("Cookie", cookies);
 
       const archivedChannel = await prisma.channel.findFirst({
@@ -945,9 +996,9 @@ describe("Module 4 - Class Management", () => {
       expect(archivedChannel!.isArchived).toBe(true);
 
       const reassignRes = await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       expect(reassignRes.status).toBe(201);
       expect(reassignRes.body.success).toBe(true);
@@ -986,12 +1037,12 @@ describe("Module 4 - Class Management", () => {
 
       // Assign the course first
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       const res = await request(app)
-        .get(`/api/classes/${klass.id}/courses`)
+        .get(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1016,7 +1067,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(user.email, "Pass@1234");
 
       const res = await request(app)
-        .get("/api/classes/99999/courses")
+        .get(`/api/classes/${UNKNOWN_PUBLIC_ID}/courses`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -1035,7 +1086,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(user.email, "Pass@1234");
 
       const res = await request(app)
-        .get(`/api/classes/${klass.id}/courses`)
+        .get(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1065,13 +1116,13 @@ describe("Module 4 - Class Management", () => {
 
       // Assign the course first
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       // Remove the course
       const res = await request(app)
-        .delete(`/api/classes/${klass.id}/courses/${course.id}`)
+        .delete(`/api/classes/${klass.publicId}/courses/${course.id}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(200);
@@ -1125,14 +1176,14 @@ describe("Module 4 - Class Management", () => {
       });
       const adminCookies = await loginAs(admin.email, "Pass@1234");
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       // Remove as HOD
       const hodCookies = await loginAs(hod.email, "Pass@1234");
       const res = await request(app)
-        .delete(`/api/classes/${klass.id}/courses/${course.id}`)
+        .delete(`/api/classes/${klass.publicId}/courses/${course.id}`)
         .set("Cookie", hodCookies);
 
       expect(res.status).toBe(200);
@@ -1167,14 +1218,14 @@ describe("Module 4 - Class Management", () => {
       });
       const adminCookies = await loginAs(admin.email, "Pass@1234");
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       // Remove as PD
       const pdCookies = await loginAs(pd.email, "Pass@1234");
       const res = await request(app)
-        .delete(`/api/classes/${klass.id}/courses/${course.id}`)
+        .delete(`/api/classes/${klass.publicId}/courses/${course.id}`)
         .set("Cookie", pdCookies);
 
       expect(res.status).toBe(200);
@@ -1210,14 +1261,14 @@ describe("Module 4 - Class Management", () => {
       });
       const adminCookies = await loginAs(admin.email, "Pass@1234");
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       // Try to remove as HOD of other dept
       const hodCookies = await loginAs(hod.email, "Pass@1234");
       const res = await request(app)
-        .delete(`/api/classes/${klass.id}/courses/${course.id}`)
+        .delete(`/api/classes/${klass.publicId}/courses/${course.id}`)
         .set("Cookie", hodCookies);
 
       expect(res.status).toBe(403);
@@ -1237,7 +1288,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .delete(`/api/classes/${klass.id}/courses/${course.id}`)
+        .delete(`/api/classes/${klass.publicId}/courses/${course.id}`)
         .set("Cookie", cookies);
 
       expect(res.status).toBe(404);
@@ -1265,12 +1316,13 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${targetClass.id}/students`)
+        .post(`/api/classes/${targetClass.publicId}/students`)
         .set("Cookie", cookies)
-        .send({ studentId: student.id });
+        .send({ studentPublicId: student.publicId });
 
       expect(res.status).toBe(200);
-      expect(res.body.data.class.id).toBe(targetClass.id);
+      expect(res.body.data.class.publicId).toBe(targetClass.publicId);
+      expect(res.body.data.class).not.toHaveProperty("id");
 
       const studentInfo = await prisma.studentInfo.findUnique({
         where: { studentId: student.id },
@@ -1307,9 +1359,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${targetClass.id}/students`)
+        .post(`/api/classes/${targetClass.publicId}/students`)
         .set("Cookie", cookies)
-        .send({ studentId: student.id });
+        .send({ studentPublicId: student.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -1336,17 +1388,17 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: firstTeacher.id });
+        .send({ courseId: course.id, teacherPublicId: firstTeacher.publicId });
 
       const res = await request(app)
-        .patch(`/api/classes/${klass.id}/courses/${course.id}/teacher`)
+        .patch(`/api/classes/${klass.publicId}/courses/${course.id}/teacher`)
         .set("Cookie", cookies)
-        .send({ teacherId: secondTeacher.id });
+        .send({ teacherPublicId: secondTeacher.publicId });
 
       expect(res.status).toBe(200);
-      expect(res.body.data.teacherId).toBe(secondTeacher.id);
+      expect(res.body.data.teacherPublicId).toBe(secondTeacher.publicId);
 
       const assignment = await prisma.teaches.findUnique({
         where: { classId_courseId: { classId: klass.id, courseId: course.id } },
@@ -1403,22 +1455,22 @@ describe("Module 4 - Class Management", () => {
       const pdCookies = await loginAs(pd.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${ownClass.id}/courses`)
+        .post(`/api/classes/${ownClass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: ownCourse.id, teacherId: firstTeacher.id });
+        .send({ courseId: ownCourse.id, teacherPublicId: firstTeacher.publicId });
       await request(app)
-        .post(`/api/classes/${otherClass.id}/courses`)
+        .post(`/api/classes/${otherClass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: otherCourse.id, teacherId: firstTeacher.id });
+        .send({ courseId: otherCourse.id, teacherPublicId: firstTeacher.publicId });
 
       const ownReplace = await request(app)
-        .patch(`/api/classes/${ownClass.id}/courses/${ownCourse.id}/teacher`)
+        .patch(`/api/classes/${ownClass.publicId}/courses/${ownCourse.id}/teacher`)
         .set("Cookie", pdCookies)
-        .send({ teacherId: secondTeacher.id });
+        .send({ teacherPublicId: secondTeacher.publicId });
       const otherReplace = await request(app)
-        .patch(`/api/classes/${otherClass.id}/courses/${otherCourse.id}/teacher`)
+        .patch(`/api/classes/${otherClass.publicId}/courses/${otherCourse.id}/teacher`)
         .set("Cookie", pdCookies)
-        .send({ teacherId: secondTeacher.id });
+        .send({ teacherPublicId: secondTeacher.publicId });
 
       expect(ownReplace.status).toBe(200);
       expect(otherReplace.status).toBe(403);
@@ -1437,7 +1489,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(pd.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1462,9 +1514,9 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(cr.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${targetClass.id}/students`)
+        .post(`/api/classes/${targetClass.publicId}/students`)
         .set("Cookie", cookies)
-        .send({ studentId: student.id });
+        .send({ studentPublicId: student.publicId });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
@@ -1483,7 +1535,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(pd.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/graduation`)
+        .post(`/api/classes/${klass.publicId}/graduation`)
         .set("Cookie", cookies)
         .send({});
 
@@ -1518,12 +1570,12 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", cookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/graduation`)
+        .post(`/api/classes/${klass.publicId}/graduation`)
         .set("Cookie", cookies)
         .send({});
 
@@ -1545,7 +1597,7 @@ describe("Module 4 - Class Management", () => {
       expect(generalChannel?.isLocked).toBe(false);
 
       const progression = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1568,7 +1620,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1597,9 +1649,9 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       // Verify channel exists
       const channelBefore = await prisma.channel.findFirst({
@@ -1611,7 +1663,7 @@ describe("Module 4 - Class Management", () => {
 
       // Advance semester
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
@@ -1645,9 +1697,9 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/courses`)
+        .post(`/api/classes/${klass.publicId}/courses`)
         .set("Cookie", adminCookies)
-        .send({ courseId: course.id, teacherId: teacher.id });
+        .send({ courseId: course.id, teacherPublicId: teacher.publicId });
 
       // Verify teaches record exists
       const teachesBefore = await prisma.teaches.findMany({
@@ -1657,7 +1709,7 @@ describe("Module 4 - Class Management", () => {
 
       // Advance semester
       await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
@@ -1694,12 +1746,12 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({
           teacherAssignments: [
-            { courseId: course1.id, teacherId: teacher1.id },
-            { courseId: course2.id, teacherId: teacher2.id },
+            { courseId: course1.id, teacherPublicId: teacher1.publicId },
+            { courseId: course2.id, teacherPublicId: teacher2.publicId },
           ],
         });
 
@@ -1741,7 +1793,7 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
@@ -1767,12 +1819,12 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({
           teacherAssignments: [
-            { courseId: course.id, teacherId: teacher.id },
-            { courseId: course.id, teacherId: teacher.id },
+            { courseId: course.id, teacherPublicId: teacher.publicId },
+            { courseId: course.id, teacherPublicId: teacher.publicId },
           ],
         });
 
@@ -1799,12 +1851,12 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({
           teacherAssignments: [
-            { courseId: courseInCurriculum.id, teacherId: teacher.id },
-            { courseId: extraCourse.id, teacherId: teacher.id },
+            { courseId: courseInCurriculum.id, teacherPublicId: teacher.publicId },
+            { courseId: extraCourse.id, teacherPublicId: teacher.publicId },
           ],
         });
 
@@ -1825,7 +1877,7 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
@@ -1852,7 +1904,7 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
@@ -1872,7 +1924,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1893,7 +1945,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1912,7 +1964,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(teacher.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1930,7 +1982,7 @@ describe("Module 4 - Class Management", () => {
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post("/api/classes/999999/semester-progression")
+        .post(`/api/classes/${UNKNOWN_PUBLIC_ID}/semester-progression`)
         .set("Cookie", cookies)
         .send({ teacherAssignments: [] });
 
@@ -1951,7 +2003,7 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
@@ -2003,10 +2055,10 @@ describe("Module 4 - Class Management", () => {
 
       // Advance semester
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({
-          teacherAssignments: [{ courseId: course.id, teacherId: teacher.id }],
+          teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
         });
 
       expect(res.status).toBe(200);
@@ -2038,10 +2090,10 @@ describe("Module 4 - Class Management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({
-          teacherAssignments: [{ courseId: course.id, teacherId: teacher.id }],
+          teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
         });
 
       expect(res.status).toBe(400);
@@ -2074,10 +2126,10 @@ describe("Module 4 - Class Management", () => {
       expect(memberBefore).toBeNull();
 
       await request(app)
-        .post(`/api/classes/${klass.id}/semester-progression`)
+        .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
         .send({
-          teacherAssignments: [{ courseId: course.id, teacherId: teacher.id }],
+          teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
         });
 
       // Verify teacher is now a member

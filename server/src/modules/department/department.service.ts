@@ -41,10 +41,10 @@ const departmentDetailSelect = {
   server: { select: { publicId: true } },
   hod: {
     select: {
-      teacherId: true,
       designation: true,
       user: {
         select: {
+          publicId: true,
           fullName: true,
           email: true,
         },

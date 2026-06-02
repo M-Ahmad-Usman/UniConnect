@@ -23,7 +23,7 @@ export interface UserProfile {
 
 export interface StudentInfo {
   rollNumber: string;
-  classId: number;
+  classPublicId: string;
   class: {
     program: {
       code: string;
@@ -69,7 +69,7 @@ export interface UserDetail {
   deletedByUser: { publicId: string; fullName: string; email: string } | null;
   mustChangePassword: boolean;
   createdAt: string;
-  studentInfo: { classId: number; rollNumber: string } | null;
+  studentInfo: { classPublicId: string; rollNumber: string } | null;
   teacherInfo: { designation: string } | null;
 }
 
@@ -94,7 +94,7 @@ export interface CreateUserRequest {
   gender: Gender;
   userType: UserType;
   departmentId?: number;
-  classId?: number;
+  classPublicId?: string;
   rollNumber?: string;
   designation?: string;
 }

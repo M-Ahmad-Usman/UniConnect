@@ -41,6 +41,27 @@ export function userListParamsToRecord(params: Record<string, unknown>) {
   );
 }
 
+export function resolveCourseDepartmentFilter(
+  canUpdateCourse: boolean,
+  hodDepartmentIds: number[],
+  requestedDepartmentId?: number,
+) {
+  if (canUpdateCourse) return requestedDepartmentId;
+  return requestedDepartmentId && hodDepartmentIds.includes(requestedDepartmentId)
+    ? requestedDepartmentId
+    : hodDepartmentIds[0];
+}
+
+export function filterCourseDepartments<T extends { id: number }>(
+  departments: T[],
+  canUpdateCourse: boolean,
+  hodDepartmentIds: number[],
+) {
+  return canUpdateCourse
+    ? departments
+    : departments.filter((department) => hodDepartmentIds.includes(department.id));
+}
+
 export function getClassDetailActionState(
   klass:
     | Pick<ClassDetail, 'currentSemester' | 'status' | 'program' | 'permissions'>

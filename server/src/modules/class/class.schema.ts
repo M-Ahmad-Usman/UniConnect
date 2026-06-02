@@ -3,15 +3,15 @@ import { publicIdSchema } from "../../shared/ids/index.js";
 
 // ─── Params ────────────────────────────────────────────────────────────────
 
-export const classIdParamSchema = {
+export const classPublicIdParamSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
 
 export const assignClassCrSchema = {
   params: z.object({
-    classPublicId: publicIdSchema,
+    publicId: publicIdSchema,
   }),
   body: z.object({
     userPublicId: publicIdSchema,
@@ -58,7 +58,7 @@ export const listClassesSchema = {
 
 export const classCandidateQuerySchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   query: z.object({
     search: z.string().trim().min(1).max(100).optional(),
@@ -69,10 +69,10 @@ export const classCandidateQuerySchema = {
 
 export const transferStudentSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
-    studentId: z.number().int().positive({ error: "Student ID must be a positive integer" }),
+    studentPublicId: publicIdSchema,
   }),
 };
 
@@ -80,11 +80,11 @@ export const transferStudentSchema = {
 
 export const assignCourseSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
     courseId: z.number().int().positive({ error: "Course ID must be a positive integer" }),
-    teacherId: z.number().int().positive({ error: "Teacher ID must be a positive integer" }),
+    teacherPublicId: publicIdSchema,
   }),
 };
 
@@ -92,7 +92,7 @@ export const assignCourseSchema = {
 
 export const listClassCoursesSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };
 
@@ -100,18 +100,18 @@ export const listClassCoursesSchema = {
 
 export const removeCourseSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
     courseId: z.coerce.number().int().positive({ error: "Course ID must be a positive integer" }),
   }),
 };
 
 export const replaceCourseTeacherSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
     courseId: z.coerce.number().int().positive({ error: "Course ID must be a positive integer" }),
   }),
   body: z.object({
-    teacherId: z.number().int().positive({ error: "Teacher ID must be a positive integer" }),
+    teacherPublicId: publicIdSchema,
   }),
 };
 
@@ -119,14 +119,14 @@ export const replaceCourseTeacherSchema = {
 
 export const semesterProgressionSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
   body: z.object({
     teacherAssignments: z
       .array(
         z.object({
           courseId: z.number().int().positive({ error: "Course ID must be a positive integer" }),
-          teacherId: z.number().int().positive({ error: "Teacher ID must be a positive integer" }),
+          teacherPublicId: publicIdSchema,
         })
       )
       .default([]),
@@ -135,6 +135,6 @@ export const semesterProgressionSchema = {
 
 export const graduationSchema = {
   params: z.object({
-    id: z.coerce.number().int().positive({ error: "Class ID must be a positive integer" }),
+    publicId: publicIdSchema,
   }),
 };

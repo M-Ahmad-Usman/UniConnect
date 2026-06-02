@@ -20,7 +20,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize({ userTypes: ["ADMIN"] }),
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(createCourseSchema),
   handleCreateCourse
 );

@@ -27,6 +27,11 @@ import { emitToUser } from "../../socket/index.js";
 import type { AuditContext } from "../audit/audit.service.js";
 import { recordAuditLog } from "../audit/audit.service.js";
 import { assertServerAcceptsWrites } from "../../shared/lifecycle/society.js";
+import {
+  lockClassForAcademicWrite,
+  lockDepartmentForHodOrAdmin,
+  lockProgramForHodOrAdmin,
+} from "../../shared/lifecycle/academic.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -1634,9 +1639,21 @@ async function assignHOD(
     throw new ValidationError("Teacher must belong to the target department");
   }
 
-  await prisma.department.update({
-    where: { id: departmentId },
-    data: { hodId: targetUser.id },
+  await prisma.$transaction(async (tx) => {
+    await lockDepartmentForHodOrAdmin(departmentId, caller.id, caller.userType, tx);
+    const lockedDepartment = await tx.department.findUnique({
+      where: { id: departmentId },
+      select: { hodId: true },
+    });
+    if (lockedDepartment?.hodId) {
+      throw new ConflictError(
+        "Department already has an HOD assigned. Revoke the current HOD first",
+      );
+    }
+    await tx.department.update({
+      where: { id: departmentId },
+      data: { hodId: targetUser.id },
+    });
   });
 
   return {
@@ -1685,9 +1702,21 @@ async function assignProgramDirector(
     );
   }
 
-  await prisma.program.update({
-    where: { id: programId },
-    data: { programDirectorId: targetUser.id },
+  await prisma.$transaction(async (tx) => {
+    await lockProgramForHodOrAdmin(programId, caller.id, caller.userType, tx);
+    const lockedProgram = await tx.program.findUnique({
+      where: { id: programId },
+      select: { programDirectorId: true },
+    });
+    if (lockedProgram?.programDirectorId) {
+      throw new ConflictError(
+        "Program already has a Program Director assigned. Revoke the current PD first",
+      );
+    }
+    await tx.program.update({
+      where: { id: programId },
+      data: { programDirectorId: targetUser.id },
+    });
   });
 
   return {
@@ -1737,9 +1766,21 @@ async function assignCR(
     throw new ValidationError("Student must belong to the target class");
   }
 
-  await prisma.class.update({
-    where: { id: classId },
-    data: { crId: targetUser.id },
+  await prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, caller.id, caller.userType, "HOD_OR_PD", tx);
+    const lockedClass = await tx.class.findUnique({
+      where: { id: classId },
+      select: { crId: true },
+    });
+    if (lockedClass?.crId) {
+      throw new ConflictError(
+        "Class already has a CR assigned. Revoke the current CR first",
+      );
+    }
+    await tx.class.update({
+      where: { id: classId },
+      data: { crId: targetUser.id },
+    });
   });
 
   return {
@@ -1770,9 +1811,19 @@ async function revokeHOD(
     throw new NotFoundError("User is not the HOD of this department");
   }
 
-  await prisma.department.update({
-    where: { id: departmentId },
-    data: { hodId: null },
+  await prisma.$transaction(async (tx) => {
+    await lockDepartmentForHodOrAdmin(departmentId, caller.id, caller.userType, tx);
+    const lockedDepartment = await tx.department.findUnique({
+      where: { id: departmentId },
+      select: { hodId: true },
+    });
+    if (lockedDepartment?.hodId !== userId) {
+      throw new NotFoundError("User is not the HOD of this department");
+    }
+    await tx.department.update({
+      where: { id: departmentId },
+      data: { hodId: null },
+    });
   });
 
   return { role: "hod", userId, departmentId, departmentName: department.name };
@@ -1803,9 +1854,19 @@ async function revokeProgramDirector(
     throw new NotFoundError("User is not the Program Director of this program");
   }
 
-  await prisma.program.update({
-    where: { id: programId },
-    data: { programDirectorId: null },
+  await prisma.$transaction(async (tx) => {
+    await lockProgramForHodOrAdmin(programId, caller.id, caller.userType, tx);
+    const lockedProgram = await tx.program.findUnique({
+      where: { id: programId },
+      select: { programDirectorId: true },
+    });
+    if (lockedProgram?.programDirectorId !== userId) {
+      throw new NotFoundError("User is not the Program Director of this program");
+    }
+    await tx.program.update({
+      where: { id: programId },
+      data: { programDirectorId: null },
+    });
   });
 
   return {
@@ -1840,9 +1901,19 @@ async function revokeCR(classId: number, userId: number, caller: CallerInfo) {
     throw new NotFoundError("User is not the CR of this class");
   }
 
-  await prisma.class.update({
-    where: { id: classId },
-    data: { crId: null },
+  await prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, caller.id, caller.userType, "HOD_OR_PD", tx);
+    const lockedClass = await tx.class.findUnique({
+      where: { id: classId },
+      select: { crId: true },
+    });
+    if (lockedClass?.crId !== userId) {
+      throw new NotFoundError("User is not the CR of this class");
+    }
+    await tx.class.update({
+      where: { id: classId },
+      data: { crId: null },
+    });
   });
 
   return { role: "cr", userId, classId };
@@ -1885,7 +1956,12 @@ export async function assignDepartmentHod(
     targetUser.publicId,
     auditContext,
   );
-  return { ...result, userPublicId: targetUser.publicId };
+  return {
+    role: result.role,
+    userPublicId: targetUser.publicId,
+    departmentId: result.departmentId,
+    departmentName: result.departmentName,
+  };
 }
 
 export async function revokeDepartmentHod(
@@ -1908,7 +1984,12 @@ export async function revokeDepartmentHod(
     department.hod.user.publicId,
     auditContext,
   );
-  return { ...result, userPublicId: department.hod.user.publicId };
+  return {
+    role: result.role,
+    userPublicId: department.hod.user.publicId,
+    departmentId: result.departmentId,
+    departmentName: result.departmentName,
+  };
 }
 
 export async function assignProgramDirectorRole(
@@ -1925,7 +2006,12 @@ export async function assignProgramDirectorRole(
     targetUser.publicId,
     auditContext,
   );
-  return { ...result, userPublicId: targetUser.publicId };
+  return {
+    role: result.role,
+    userPublicId: targetUser.publicId,
+    programId: result.programId,
+    programCode: result.programCode,
+  };
 }
 
 export async function revokeProgramDirectorRole(
@@ -1954,7 +2040,12 @@ export async function revokeProgramDirectorRole(
     program.programDirector.user.publicId,
     auditContext,
   );
-  return { ...result, userPublicId: program.programDirector.user.publicId };
+  return {
+    role: result.role,
+    userPublicId: program.programDirector.user.publicId,
+    programId: result.programId,
+    programCode: result.programCode,
+  };
 }
 
 export async function assignClassCr(
@@ -1972,7 +2063,7 @@ export async function assignClassCr(
     targetUser.publicId,
     auditContext,
   );
-  return { ...result, userPublicId: targetUser.publicId };
+  return { role: result.role, userPublicId: targetUser.publicId, classPublicId };
 }
 
 export async function revokeClassCr(
@@ -1996,7 +2087,7 @@ export async function revokeClassCr(
     classRecord.cr.user.publicId,
     auditContext,
   );
-  return { ...result, userPublicId: classRecord.cr.user.publicId };
+  return { role: result.role, userPublicId: classRecord.cr.user.publicId, classPublicId };
 }
 
 // ─── Platform Role Assignment Resources ────────────────────────────────────

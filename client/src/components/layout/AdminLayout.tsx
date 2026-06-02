@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { BookOpen, Building2, GraduationCap, LayoutDashboard, Shield, Users } from 'lucide-react';
+import { Building2, GraduationCap, LayoutDashboard, Shield, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
@@ -10,7 +10,6 @@ const adminNavItems = [
   { label: 'Departments', to: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
   { label: 'Programs', to: ROUTES.ADMIN_PROGRAMS, icon: GraduationCap },
   { label: 'Disciplines', to: ROUTES.ADMIN_DISCIPLINES, icon: Shield },
-  { label: 'Courses', to: ROUTES.ADMIN_COURSES, icon: BookOpen },
 ];
 
 export function AdminLayout() {

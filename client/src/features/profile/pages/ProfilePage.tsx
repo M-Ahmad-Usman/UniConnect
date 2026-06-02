@@ -89,7 +89,7 @@ export function ProfilePage() {
               {profile.studentInfo ? (
                 <>
                   <Field label="Roll number" value={profile.studentInfo.rollNumber} />
-                  <Field label="Class ID" value={profile.studentInfo.classId} />
+                  <Field label="Class public ID" value={profile.studentInfo.classPublicId} />
                   <Field label="Program" value={profile.studentInfo.class.program.code} />
                 </>
               ) : null}

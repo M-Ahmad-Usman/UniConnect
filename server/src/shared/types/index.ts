@@ -75,6 +75,11 @@ export interface ResolvedCommunicationTarget {
   post?: ResolvedPostTarget;
 }
 
+export interface ResolvedClassTarget {
+  id: number;
+  publicId: string;
+}
+
 declare global {
   namespace Express {
     interface Request {
@@ -82,6 +87,7 @@ declare global {
       userRoles?: UserRole[];
       requestId?: string;
       communicationTarget?: ResolvedCommunicationTarget;
+      classTarget?: ResolvedClassTarget;
     }
   }
 }

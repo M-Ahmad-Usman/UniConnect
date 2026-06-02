@@ -680,7 +680,9 @@ GET /api/permissions/me
       canAccessAcademicWorkspace: boolean;
       canAccessRoleManagement: boolean;
       canManageUsers: boolean;
-      canManageCatalog: boolean;
+      canManageCurriculum: boolean;
+      canCreateCourse: boolean;
+      canUpdateCourse: boolean;
       canCreateClass: boolean;
       canCreateSociety: boolean;
     };
@@ -968,7 +970,7 @@ GET /api/users/me
     }>;
     studentInfo?: {
       rollNumber: string;
-      classId: number;
+      classPublicId: string;
       class: {
         program: { code: string };
       };
@@ -1058,7 +1060,7 @@ POST /api/users
 
   // STUDENT:
   departmentId?: number;
-  classId?: number;
+  classPublicId?: string;
   rollNumber?: string;  // Format: YY-NTU-DEPT-#### (e.g., 22-NTU-CS-1184)
 }
 ```
@@ -1105,8 +1107,8 @@ POST /api/users/bulk-import
 **CSV Format:**
 
 ```
-fullName,email,phone,gender,userType,departmentId,classId,rollNumber,designation
-John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,22-NTU-CS-1184,
+fullName,email,phone,gender,userType,departmentId,classPublicId,rollNumber,designation
+John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,018f47a2-5d6b-7c8d-9e0f-123456789abc,22-NTU-CS-1184,
 Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
 ```
 
@@ -1573,8 +1575,7 @@ GET /api/programs/:id/curriculum
 {
   success: true;
   data: Array<{
-    id: number;
-    programId: number;
+    publicId: string;
     courseId: number;
     semesterNumber: number;
     batchYear: number;
@@ -1727,18 +1728,16 @@ GET /api/classes
     academicYear: number;
     admissionYear: number;
     section: 'A' | 'B';
-    crId: number | null;
     serverPublicId: string;
     status: 'ACTIVE' | 'GRADUATED';
     graduatedAt: string | null;
-    graduatedBy: number | null;
+    graduatedByPublicId: string | null;
     program: {
       code: string;
       discipline: { name: string };
     };
     cr?: {
-      id: number;
-      fullName: string;
+      user: { publicId: string; fullName: string; email: string };
     } | null;
   }>;
   pagination: { ... };
@@ -1748,10 +1747,10 @@ GET /api/classes
 #### Get Class
 
 ```
-GET /api/classes/:id
+GET /api/classes/:publicId
 ```
 
-**Auth:** Required
+**Auth:** Admin, own-department HOD, or own-program Program Director
 
 **Response:** Same shape as list item, plus counts, graduation metadata, and caller-specific permissions:
 
@@ -1774,6 +1773,17 @@ GET /api/classes/:id
   };
 }
 ```
+
+#### Class Deletion Impact (Admin)
+
+```
+GET /api/classes/:publicId/deletion-impact
+```
+
+Returns bounded enrolled-student and active-teaching-assignment counts. Module 7
+intentionally returns `checksComplete: false`, `pendingChecks:
+['COMMUNICATION_IMPACT']`, and `canDelete: false` until Module 8 adds
+communication-descendant analysis.
 
 #### Create Class (Admin/Teacher)
 
@@ -1803,7 +1813,7 @@ POST /api/classes
 {
   success: true;
   data: {
-    id: number;
+    publicId: string;
     serverPublicId: string; // Auto-created server
   }
   message: 'Class created successfully';
@@ -1813,7 +1823,7 @@ POST /api/classes
 #### Assign Course to Class (Admin/Teacher)
 
 ```
-POST /api/classes/:id/courses
+POST /api/classes/:publicId/courses
 ```
 
 **Auth:** Admin or Teacher
@@ -1823,7 +1833,7 @@ POST /api/classes/:id/courses
 ```typescript
 {
   courseId: number;
-  teacherId: number;
+  teacherPublicId: string;
 }
 ```
 
@@ -1842,16 +1852,16 @@ POST /api/classes/:id/courses
 #### Class Students (Admin/HOD)
 
 ```
-GET /api/classes/:id/students
-GET /api/classes/:id/student-candidates?page&limit&search
-POST /api/classes/:id/students
+GET /api/classes/:publicId/students
+GET /api/classes/:publicId/student-candidates?page&limit&search
+POST /api/classes/:publicId/students
 ```
 
 `POST` body:
 
 ```typescript
 {
-  studentId: number;
+  studentPublicId: string;
 }
 ```
 
@@ -1860,15 +1870,15 @@ Transfers an existing active same-department student into the class and synchron
 #### Teacher Candidates and Replacement
 
 ```
-GET /api/classes/:id/teacher-candidates?page&limit&search
-PATCH /api/classes/:id/courses/:courseId/teacher
+GET /api/classes/:publicId/teacher-candidates?page&limit&search
+PATCH /api/classes/:publicId/courses/:courseId/teacher
 ```
 
 `PATCH` body:
 
 ```typescript
 {
-  teacherId: number;
+  teacherPublicId: string;
 }
 ```
 
@@ -1877,7 +1887,7 @@ Replacement keeps the course channel active and synchronizes auto teacher member
 #### List Courses for Class
 
 ```
-GET /api/classes/:id/courses
+GET /api/classes/:publicId/courses
 ```
 
 **Auth:** Required
@@ -1889,17 +1899,16 @@ GET /api/classes/:id/courses
   success: true;
   data: Array<{
     courseId: number;
-    teacherId: number;
-    classId: number;
+    teacherPublicId: string;
+    classPublicId: string;
     course: {
       code: string;
       title: string;
       creditHours: number;
     };
     teacher: {
-      id: number;
-      fullName: string;
-      email: string;
+      designation: string;
+      user: { publicId: string; fullName: string; email: string };
     };
   }>;
 }
@@ -1908,7 +1917,7 @@ GET /api/classes/:id/courses
 #### Remove Course Assignment (Admin/Teacher)
 
 ```
-DELETE /api/classes/:id/courses/:courseId
+DELETE /api/classes/:publicId/courses/:courseId
 ```
 
 **Auth:** Admin or Teacher
@@ -1928,7 +1937,7 @@ DELETE /api/classes/:id/courses/:courseId
 #### Graduate Class (Admin/HOD)
 
 ```
-POST /api/classes/:id/graduation
+POST /api/classes/:publicId/graduation
 ```
 
 Final-semester active classes only. Graduation marks the class as `GRADUATED`, locks class channels, and keeps history visible.
@@ -1936,7 +1945,7 @@ Final-semester active classes only. Graduation marks the class as `GRADUATED`, l
 #### Semester Progression (Admin/Teacher)
 
 ```
-POST /api/classes/:id/semester-progression
+POST /api/classes/:publicId/semester-progression
 ```
 
 **Auth:** Admin or Teacher
@@ -1947,7 +1956,7 @@ POST /api/classes/:id/semester-progression
 {
   teacherAssignments: Array<{
     courseId: number;
-    teacherId: number;
+    teacherPublicId: string;
   }>;
 }
 ```
@@ -2017,13 +2026,13 @@ GET /api/courses/:id
 
 **Response:** Same shape as list item
 
-#### Create Course (Admin)
+#### Create Course (Admin/HOD)
 
 ```
 POST /api/courses
 ```
 
-**Auth:** Admin only
+**Auth:** Admin for any department; HOD for their own department only
 
 **Request Body:**
 

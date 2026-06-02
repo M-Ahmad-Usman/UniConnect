@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 6 complete
+- Status: Module 7 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -26,7 +26,7 @@
 | 4 | Platform RBAC Refactor | Complete | 2026-05-30 | 2026-05-30 | Append-only platform role assignments, expiry, public role-workspace IDs, canonical academic writes, and admin history added |
 | 5 | Society Lifecycle and Notifications | Complete | 2026-06-01 | 2026-06-01 | Society UUIDv7 API migration, frozen suspension state, audited delete/restore cascade, transactional lifecycle notifications, and frontend lifecycle UI added |
 | 6 | Server, Channel, and Post Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict public communication IDs, archived read-only history, lifecycle-safe writes, and socket room hardening added |
-| 7 | Class and Academic Public-ID Migration | Not started | - | - | Migrates class routes and academic workflows to public IDs |
+| 7 | Class and Academic Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict class UUIDv7 APIs, public academic DTOs, locked delegated writes, provisional class impact, and HOD course creation added |
 | 8 | Rare Entity Impact Reports | Not started | - | - | Adds read-only blocker reports for rare destructive entities |
 | 9 | Cleanup, Squash, and Final Contract | Not started | - | - | Removes transitional compatibility and squashes migrations |
 
@@ -366,3 +366,59 @@
 - Preserve graduated-class behavior: course channels archive as read-only
   history while general and announcement channels remain governed by existing
   authorization rules.
+
+## Module 7 Checklist
+
+### Implementation
+
+- [x] Migrated class primary and nested routes, frontend URLs, query keys, forms,
+  CSV import, and E2E helpers to strict UUIDv7 class public IDs.
+- [x] Replaced external academic user references with `studentPublicId` and
+  `teacherPublicId`; kept numeric catalog IDs internal and documented.
+- [x] Removed numeric core-ID leaks from class, user-student, academic
+  role-holder, and academic role-mutation DTOs.
+- [x] Closed authenticated class detail and assigned-course IDOR exposure.
+  Reads now require admin, own-department HOD, or own-program PD scope.
+- [x] Added admin-only provisional `GET /api/classes/:publicId/deletion-impact`.
+- [x] Added shared academic row-lock helpers and commit-time authority/lifecycle
+  checks for class writes, curriculum writes, HOD course creation, and academic
+  role-owner changes. Academic owner and class-course mutations repeat
+  stale-snapshot checks after locking. Student transfer locks its profile and
+  source/target classes in deterministic class-ID order before committing.
+- [x] Added own-department HOD course creation, granular permission capabilities,
+  and the `/academics/courses` workspace. Removed `/admin/courses`.
+
+### Deferred Risk Register for Modules 8 and 9
+
+- Module 8 must enrich class impact reporting with communication descendants
+  before any class deletion decision can be considered complete. The Module 7
+  endpoint intentionally returns `checksComplete: false` and `canDelete: false`.
+- Module 8 must add matching bounded impact reports for department, program, and
+  course rare-delete planning. No rare destructive endpoints exist yet.
+- Module 9 must remove transitional dual-resolution helpers, remove `isActive`,
+  preserve SQL-only constraints during squash, and regenerate the final Prisma
+  client.
+- A later security pass should extend commit-time authority auditing to
+  non-academic scoped writes and add durable public-safe notification scope links.
+- A later dependency-hardening pass should investigate the `pg` deprecation
+  warning emitted by Prisma adapter transactions: `client.query()` is invoked
+  while the client is already executing a query. This must be resolved before a
+  future `pg@9` upgrade.
+- Before release, stabilize the full parallel Playwright run under local load.
+  The Module 7 final run completed 28 tests, failed 5 timing-sensitive auth/post
+  tests, and left 3 tests unrun; the 5 affected specs passed when rerun
+  sequentially as part of an isolated 9/9 batch.
+
+### Verification
+
+- [x] Backend build.
+- [x] Targeted backend class/role/user/course/permission integration suites,
+  126/126.
+- [x] Full backend Jest suite, 498/498.
+- [x] Frontend lint.
+- [x] Frontend type-check.
+- [x] Full frontend Vitest suite, 133/133.
+- [x] Frontend production build.
+- [x] Targeted Module 2 academic and Module 6 accessibility Playwright suites,
+  6/6.
+- [x] Isolated rerun of full-suite timing failures, 9/9.

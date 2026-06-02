@@ -11,9 +11,9 @@ export interface DepartmentListItem {
 
 export interface DepartmentDetail extends DepartmentListItem {
   hod: {
-    teacherId: number;
     designation: string;
     user: {
+      publicId: string;
       fullName: string;
       email: string;
     };
@@ -59,9 +59,9 @@ export interface ProgramListItem {
 export interface ProgramDetail extends ProgramListItem {
   department: DepartmentListItem;
   programDirector: {
-    teacherId: number;
     designation: string;
     user: {
+      publicId: string;
       fullName: string;
       email: string;
     };
@@ -80,7 +80,7 @@ export interface ProgramListParams extends PaginationParams {
 }
 
 export interface ClassListItem {
-  id: number;
+  publicId: string;
   currentSemester: number;
   academicYear: number;
   admissionYear: number;
@@ -88,7 +88,7 @@ export interface ClassListItem {
   serverPublicId: string;
   status: ClassStatus;
   graduatedAt: string | null;
-  graduatedBy: number | null;
+  graduatedByPublicId: string | null;
   program: {
     id: number;
     code: string;
@@ -108,8 +108,8 @@ export interface ClassListItem {
     };
   };
   cr: {
-    studentId: number;
     user: {
+      publicId: string;
       fullName: string;
       email: string;
     };
@@ -166,8 +166,8 @@ export interface CurriculumEntry {
 
 export interface ClassCourseAssignment {
   courseId: number;
-  teacherId: number;
-  classId: number;
+  teacherPublicId: string;
+  classPublicId: string;
   course: {
     id: number;
     title: string;
@@ -175,9 +175,9 @@ export interface ClassCourseAssignment {
     creditHours: number;
   };
   teacher: {
-    teacherId: number;
     designation: string;
     user: {
+      publicId: string;
       fullName: string;
       email: string;
     };
@@ -186,21 +186,20 @@ export interface ClassCourseAssignment {
 
 export interface TeacherAssignmentInput {
   courseId: number;
-  teacherId: number;
+  teacherPublicId: string;
 }
 
 export interface ClassStudent {
-  studentId: number;
+  studentPublicId: string;
   rollNumber: string;
   user: {
-    id: number;
     fullName: string;
     email: string;
     departmentId: number | null;
     isActive: boolean;
   };
   class: {
-    id: number;
+    publicId: string;
     currentSemester: number;
     section: Section;
     program: {
@@ -211,10 +210,9 @@ export interface ClassStudent {
 }
 
 export interface TeacherCandidate {
-  teacherId: number;
+  teacherPublicId: string;
   designation: string;
   user: {
-    id: number;
     fullName: string;
     email: string;
     departmentId: number | null;
