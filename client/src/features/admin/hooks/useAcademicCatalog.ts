@@ -39,6 +39,16 @@ export function useDepartmentStats(departmentId: number | null) {
   });
 }
 
+export function useDepartmentDeletionImpact(departmentId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: departmentId
+      ? queryKeys.departments.deletionImpact(departmentId)
+      : ['departments', null, 'deletion-impact'],
+    queryFn: () => catalogApi.getDepartmentDeletionImpact(departmentId!),
+    enabled: departmentId !== null && enabled,
+  });
+}
+
 export function useDegreeLevels() {
   return useQuery({
     queryKey: queryKeys.degreeLevels.list(),
@@ -70,6 +80,16 @@ export function useProgram(programId: number | null) {
   });
 }
 
+export function useProgramDeletionImpact(programId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: programId
+      ? queryKeys.programs.deletionImpact(programId)
+      : ['programs', null, 'deletion-impact'],
+    queryFn: () => catalogApi.getProgramDeletionImpact(programId!),
+    enabled: programId !== null && enabled,
+  });
+}
+
 export function useCurriculum(
   programId: number | null,
   params: { semesterNumber?: number; batchYear?: number } = {},
@@ -90,6 +110,16 @@ export function useAdminClass(classPublicId: string | null) {
     queryKey: classPublicId ? queryKeys.classes.detail(classPublicId) : ['classes', null],
     queryFn: () => catalogApi.getClass(classPublicId!),
     enabled: classPublicId !== null,
+  });
+}
+
+export function useClassDeletionImpact(classPublicId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: classPublicId
+      ? queryKeys.classes.deletionImpact(classPublicId)
+      : ['classes', null, 'deletion-impact'],
+    queryFn: () => catalogApi.getClassDeletionImpact(classPublicId!),
+    enabled: classPublicId !== null && enabled,
   });
 }
 
@@ -166,6 +196,16 @@ export function useAdminCourses(params: CourseListParams, enabled = true) {
     queryKey: queryKeys.courses.list(normalized),
     queryFn: () => catalogApi.listCourses(params),
     enabled,
+  });
+}
+
+export function useCourseDeletionImpact(courseId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: courseId
+      ? queryKeys.courses.deletionImpact(courseId)
+      : ['courses', null, 'deletion-impact'],
+    queryFn: () => catalogApi.getCourseDeletionImpact(courseId!),
+    enabled: courseId !== null && enabled,
   });
 }
 

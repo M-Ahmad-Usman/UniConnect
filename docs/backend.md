@@ -31,7 +31,7 @@ Prisma queries must use explicit `select` or `include`.
 All backend modules are implemented: foundation, auth, user management,
 department/program/catalog, class/course management, society management, role
 management, servers/channels, posts, notifications/Socket.IO, semester
-transition/curriculum, and admin dashboard.
+transition/curriculum, rare deletion-impact reports, and admin dashboard.
 
 ## Hardening Summary
 The earlier backend-only hardening pass is complete and its important outcomes

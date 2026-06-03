@@ -3,6 +3,7 @@ import { ApiErrorCode, ConflictError, ForbiddenError, NotFoundError } from "../.
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { lockDepartmentForHodOrAdmin } from "../../shared/lifecycle/academic.js";
+import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,108 @@ export async function getCourseById(id: number) {
   }
 
   return course;
+}
+
+export async function getCourseDeletionImpact(courseId: number) {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: courseDetailSelect,
+  });
+
+  if (!course) {
+    throw new NotFoundError("Course not found");
+  }
+
+  const [
+    curriculumCount,
+    curriculumPreview,
+    teachingCount,
+    teachingPreview,
+    channelCount,
+    channelPreview,
+    postCount,
+    preferenceCount,
+    roleCount,
+  ] = await Promise.all([
+    prisma.programCurriculum.count({ where: { courseId } }),
+    prisma.programCurriculum.findMany({
+      where: { courseId },
+      select: {
+        id: true,
+        semesterNumber: true,
+        batchYear: true,
+        program: {
+          select: {
+            id: true,
+            code: true,
+            department: { select: { id: true, name: true, code: true } },
+          },
+        },
+      },
+      orderBy: [{ program: { code: "asc" } }, { batchYear: "desc" }],
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.teaches.count({ where: { courseId } }),
+    prisma.teaches.findMany({
+      where: { courseId },
+      select: {
+        class: {
+          select: {
+            publicId: true,
+            currentSemester: true,
+            admissionYear: true,
+            section: true,
+            status: true,
+            program: { select: { id: true, code: true } },
+          },
+        },
+        teacher: {
+          select: {
+            designation: true,
+            user: { select: { publicId: true, fullName: true, email: true } },
+          },
+        },
+      },
+      orderBy: [{ class: { admissionYear: "desc" } }, { class: { section: "asc" } }],
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.channel.count({ where: { courseId } }),
+    prisma.channel.findMany({
+      where: { courseId },
+      select: {
+        publicId: true,
+        name: true,
+        type: true,
+        isDeleted: true,
+        isArchived: true,
+        server: { select: { publicId: true, name: true, type: true } },
+      },
+      orderBy: { createdAt: "asc" },
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.post.count({ where: { channel: { courseId } } }),
+    prisma.notificationPreference.count({ where: { channel: { courseId } } }),
+    prisma.userRoleAssignment.count({ where: { channel: { courseId } } }),
+  ]);
+
+  const canDelete = curriculumCount === 0 && teachingCount === 0 && channelCount === 0;
+
+  return {
+    course,
+    canDelete,
+    checksComplete: true,
+    pendingChecks: [] as string[],
+    blockers: {
+      curriculumEntries: buildImpactGroup(curriculumCount, curriculumPreview),
+      activeTeachingAssignments: buildImpactGroup(teachingCount, teachingPreview),
+      courseChannels: buildImpactGroup(channelCount, channelPreview),
+    },
+    communicationImpact: {
+      posts: { count: postCount },
+      notificationPreferences: { count: preferenceCount },
+      platformRoleAssignments: { count: roleCount },
+    },
+  };
 }
 
 export async function updateCourse(id: number, data: UpdateCourseInput) {

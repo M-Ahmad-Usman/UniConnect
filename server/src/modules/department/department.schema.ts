@@ -9,6 +9,8 @@ export const departmentIdParamSchema = {
   }),
 };
 
+export const departmentDeletionImpactSchema = departmentIdParamSchema;
+
 // ─── Create Department ─────────────────────────────────────────────────────
 
 export const createDepartmentSchema = {

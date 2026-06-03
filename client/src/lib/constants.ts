@@ -72,6 +72,7 @@ export const queryKeys = {
   departments: {
     list: () => ['departments'] as const,
     detail: (departmentId: number) => ['departments', departmentId] as const,
+    deletionImpact: (departmentId: number) => ['departments', departmentId, 'deletion-impact'] as const,
     stats: (departmentId: number) => ['departments', departmentId, 'stats'] as const,
     programs: (departmentId: number) => ['departments', departmentId, 'programs'] as const,
   },
@@ -85,6 +86,7 @@ export const queryKeys = {
     all: () => ['programs'] as const,
     list: (params?: Record<string, unknown>) => ['programs', params] as const,
     detail: (programId: number) => ['programs', programId] as const,
+    deletionImpact: (programId: number) => ['programs', programId, 'deletion-impact'] as const,
     curriculumRoot: (programId: number) => ['programs', programId, 'curriculum'] as const,
     curriculum: (programId: number, params?: Record<string, unknown>) =>
       ['programs', programId, 'curriculum', params] as const,
@@ -93,6 +95,7 @@ export const queryKeys = {
     all: () => ['classes'] as const,
     list: (params?: Record<string, unknown>) => ['classes', params] as const,
     detail: (classPublicId: string) => ['classes', classPublicId] as const,
+    deletionImpact: (classPublicId: string) => ['classes', classPublicId, 'deletion-impact'] as const,
     courses: (classPublicId: string) => ['classes', classPublicId, 'courses'] as const,
     students: (classPublicId: string, params?: Record<string, unknown>) =>
       params
@@ -111,6 +114,7 @@ export const queryKeys = {
     all: () => ['courses'] as const,
     list: (params?: Record<string, unknown>) => ['courses', params] as const,
     detail: (courseId: number) => ['courses', courseId] as const,
+    deletionImpact: (courseId: number) => ['courses', courseId, 'deletion-impact'] as const,
   },
   servers: {
     all: () => ['servers'] as const,

@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 7 complete
+- Status: Module 8 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -27,7 +27,7 @@
 | 5 | Society Lifecycle and Notifications | Complete | 2026-06-01 | 2026-06-01 | Society UUIDv7 API migration, frozen suspension state, audited delete/restore cascade, transactional lifecycle notifications, and frontend lifecycle UI added |
 | 6 | Server, Channel, and Post Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict public communication IDs, archived read-only history, lifecycle-safe writes, and socket room hardening added |
 | 7 | Class and Academic Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict class UUIDv7 APIs, public academic DTOs, locked delegated writes, provisional class impact, and HOD course creation added |
-| 8 | Rare Entity Impact Reports | Not started | - | - | Adds read-only blocker reports for rare destructive entities |
+| 8 | Rare Entity Impact Reports | Complete | 2026-06-03 | 2026-06-03 | Admin-only bounded blocker reports, class impact completion, read-path indexes, and frontend catalog hooks added |
 | 9 | Cleanup, Squash, and Final Contract | Not started | - | - | Removes transitional compatibility and squashes migrations |
 
 ## Module 0 Checklist
@@ -339,13 +339,10 @@
 - [x] Focused communication Playwright suite, 8/8
 - [x] Full Playwright suite, 36/36
 
-### Deferred Risk Register for Modules 7 and 8
+### Deferred Risk Register
 
-- Module 7 must complete academic public-ID migration: class primary routes,
-  class/user references, and graduation actor references can still expose or
-  accept numeric IDs on academic surfaces.
-- Module 8 must reconcile communication impact reporting for rare destructive
-  department, program, class, and course workflows before adding deletes.
+- Resolved in Modules 7 and 8: academic public-ID migration and rare destructive
+  impact reporting.
 - Generic scoped-role middleware authorization can race with authority changes
   between middleware execution and transaction commit. Module 6 revalidates
   communication lifecycle and membership where writes naturally require it;
@@ -388,13 +385,11 @@
 - [x] Added own-department HOD course creation, granular permission capabilities,
   and the `/academics/courses` workspace. Removed `/admin/courses`.
 
-### Deferred Risk Register for Modules 8 and 9
+### Deferred Risk Register for Module 9
 
-- Module 8 must enrich class impact reporting with communication descendants
-  before any class deletion decision can be considered complete. The Module 7
-  endpoint intentionally returns `checksComplete: false` and `canDelete: false`.
-- Module 8 must add matching bounded impact reports for department, program, and
-  course rare-delete planning. No rare destructive endpoints exist yet.
+- Module 8 completed class communication impact reporting and matching bounded
+  department, program, and course rare-delete planning reports. Rare destructive
+  endpoints still do not exist.
 - Module 9 must remove transitional dual-resolution helpers, remove `isActive`,
   preserve SQL-only constraints during squash, and regenerate the final Prisma
   client.
@@ -422,3 +417,44 @@
 - [x] Targeted Module 2 academic and Module 6 accessibility Playwright suites,
   6/6.
 - [x] Isolated rerun of full-suite timing failures, 9/9.
+
+## Module 8 Checklist
+
+### Implementation
+
+- [x] Added admin-only rare deletion-impact endpoints for departments,
+  programs, classes, and courses.
+- [x] Replaced the Module 7 provisional class impact response with a complete
+  bounded blocker report and class-server communication cleanup impact.
+- [x] Added stable bounded impact groups with `count`, `preview`, and `hasMore`.
+- [x] Reported department-linked users according to the current
+  `users.departmentId` schema, grouped by user type.
+- [x] Kept communication descendants as cleanup impact rather than automatic
+  blockers unless a current FK blocker exists.
+- [x] Added targeted read-path indexes for rare impact reverse lookups while
+  preserving SQL-only Module 4 and Module 5 constraints.
+- [x] Added frontend catalog impact types, API methods, query keys, and hooks
+  without adding destructive UI.
+- [x] Updated canonical deletion policy, API contracts, backend/frontend
+  summaries, and release log.
+
+### Verification
+
+- [x] `npx prisma validate`
+- [x] `npx prisma generate`
+- [x] `npx dotenv -e .env.test -- prisma db execute --file prisma/migrations/20260603000000_module8_rare_impact_indexes/migration.sql`
+- [x] `npm test -- tests/modules/rare-impact.test.ts tests/modules/class.test.ts`, 68/68
+- [x] Full backend Jest suite, 502/502
+- [x] Backend build
+- [x] Frontend type-check
+- [x] Focused frontend catalog impact Vitest, 1/1
+- [x] Frontend lint
+- [x] Full frontend Vitest suite, 134/134
+- [x] Frontend production build
+
+### Follow-Up for Module 9
+
+- Keep rare destructive delete endpoints deferred.
+- Preserve the Module 8 indexes during migration squash.
+- `npm run db:migrate:test` still returns `P3005` on the local unbaselined test
+  DB; direct `prisma db execute` verified the additive Module 8 SQL.

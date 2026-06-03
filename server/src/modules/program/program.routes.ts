@@ -6,6 +6,7 @@ import {
   programIdParamSchema,
   listProgramsSchema,
   updateProgramSchema,
+  programDeletionImpactSchema,
   getCurriculumSchema,
   addCurriculumSchema,
   removeCurriculumSchema,
@@ -14,6 +15,7 @@ import {
 import {
   handleListPrograms,
   handleGetProgramById,
+  handleGetProgramDeletionImpact,
   handleUpdateProgram,
   handleGetCurriculum,
   handleAddCurriculum,
@@ -29,6 +31,14 @@ router.get(
   authenticate,
   validate(listProgramsSchema),
   handleListPrograms
+);
+
+router.get(
+  "/:id/deletion-impact",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(programDeletionImpactSchema),
+  handleGetProgramDeletionImpact
 );
 
 router.get(

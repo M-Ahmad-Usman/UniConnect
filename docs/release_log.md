@@ -57,6 +57,32 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-03 - Schema/Lifecycle Refactor Module 8 Complete
+- Added admin-only rare deletion-impact reports for departments, programs,
+  classes, and courses. Reports are read-only and do not add destructive delete
+  endpoints.
+- Standardized rare impact responses around bounded blocker groups with
+  `count`, `preview`, and `hasMore`, plus explicit communication cleanup impact.
+- Completed class deletion impact by replacing the Module 7 provisional
+  `COMMUNICATION_IMPACT` pending state with complete class-server channel, post,
+  membership, notification-preference, and platform-role cleanup counts.
+- Kept catalog IDs numeric for departments, programs, and courses while
+  preserving public IDs for core preview rows such as users, classes, channels,
+  servers, societies, and posts.
+- Reported department-linked users according to the current
+  `users.departmentId` schema, grouped by user type, so future hard-delete
+  planning matches actual database blockers.
+- Added Module 8 read-path indexes for rare impact reverse lookups and frontend
+  catalog impact types/API methods/query hooks for future UI use.
+- Verification passed: Prisma validate/generate; Module 8 SQL executed against
+  the isolated test DB with `prisma db execute` because local `migrate deploy`
+  remains blocked by the known unbaselined DB `P3005`; focused backend impact
+  and class suites `68/68`; full backend Jest `502/502`; backend build;
+  frontend type-check, lint, focused catalog Vitest `1/1`, full Vitest
+  `134/134`, and production build.
+- Deferred to Module 9: final migration squash, `isActive` removal, and
+  transitional compatibility cleanup.
+
 ### 2026-06-02 - Schema/Lifecycle Refactor Module 7 Complete
 - Migrated class routes, nested workflows, frontend URLs, query keys, forms, CSV
   import, and E2E navigation helpers to strict UUIDv7 class public IDs.

@@ -205,17 +205,22 @@ available.
 - `POST /`
   - Body: `{ name, code }`
 - `GET /`
-- `GET /:publicId`
-  - Auth: admin, own-department HOD, or own-program Program Director.
+- `GET /:id`
 - `PATCH /:id`
   - Body: `{ name?, code? }`
 - `GET /:id/stats`
+- `GET /:id/deletion-impact`
+  - Admin only. Returns bounded blockers for programs, department-linked users,
+    societies, and dependent courses plus communication cleanup impact.
 - `POST /:id/programs`
   - Body: `{ disciplineId, degreeLevelId, semesters, code }`
 - `GET /:id/programs`
 
 ### Programs (`/api/programs`)
 
+- `GET /:id/deletion-impact`
+  - Admin only. Returns bounded enrolled-class blockers plus curriculum cleanup
+    and program-channel communication impact.
 - `PATCH /:id`
   - Body: `{ semesters?, code? }`
 - `GET /:id/curriculum`
@@ -232,15 +237,15 @@ available.
   - Query: `page, limit, programId?, departmentId?, semester?, section?, status?`
   - `status` accepts `ACTIVE`, `GRADUATED`, or `ALL`; default is `ACTIVE`.
   - Results are scoped to admins, own-department HODs, and own-program Program Directors.
-- `GET /:id`
+- `GET /:publicId`
   - Returns class detail plus `status`, graduation metadata, and caller-specific `permissions`:
     - `canViewStudents`, `canManageStudents`, `canAssignCourses`, `canRemoveCourses`
     - `canReplaceCourseTeacher`, `canAdvanceSemester`, `canGraduate`
     - `canManageChannels`, `canAssignModerators`
 - `GET /:publicId/deletion-impact`
-  - Admin only. Returns canonical blocker counts with
-    `checksComplete: false`, `pendingChecks: ["COMMUNICATION_IMPACT"]`, and
-    `canDelete: false` until Module 8.
+  - Admin only. Returns bounded enrolled-student and teaching-assignment
+    blockers plus class-server communication cleanup impact. `checksComplete`
+    is `true`; `pendingChecks` is empty.
 - `POST /:publicId/courses`
   - Body: `{ courseId, teacherPublicId }`
   - Course must be in the class current-semester curriculum; teacher must be active.
@@ -269,6 +274,9 @@ available.
 - `GET /`
   - Query: `page, limit, departmentId?`
 - `GET /:id`
+- `GET /:id/deletion-impact`
+  - Admin only. Returns bounded blockers for curriculum entries, active
+    teaching assignments, and course channels.
 - `PATCH /:id`
   - Body: `{ title?, code?, creditHours? }`
   - Auth: admin only.

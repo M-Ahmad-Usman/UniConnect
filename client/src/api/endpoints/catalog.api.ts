@@ -5,17 +5,21 @@ import type {
   ClassListItem,
   ClassListParams,
   ClassStudent,
+  ClassDeletionImpact,
   CourseDetail,
+  CourseDeletionImpact,
   CourseListItem,
   CourseListParams,
   CurriculumEntry,
   DegreeLevel,
   DepartmentDetail,
+  DepartmentDeletionImpact,
   DepartmentListItem,
   DepartmentStats,
   Discipline,
   PaginatedResponse,
   ProgramDetail,
+  ProgramDeletionImpact,
   ProgramListParams,
   ProgramListItem,
   TeacherCandidate,
@@ -95,6 +99,13 @@ export const catalogApi = {
     return response.data;
   },
 
+  async getDepartmentDeletionImpact(departmentId: number) {
+    const response = await apiClient.get<DepartmentDeletionImpact>(
+      `/departments/${departmentId}/deletion-impact`,
+    );
+    return response.data;
+  },
+
   async createDepartment(payload: CreateDepartmentRequest) {
     const response = await apiClient.post<DepartmentListItem>('/departments', payload);
     return response.data;
@@ -132,6 +143,13 @@ export const catalogApi = {
 
   async getProgram(programId: number) {
     const response = await apiClient.get<ProgramDetail>(`/programs/${programId}`);
+    return response.data;
+  },
+
+  async getProgramDeletionImpact(programId: number) {
+    const response = await apiClient.get<ProgramDeletionImpact>(
+      `/programs/${programId}/deletion-impact`,
+    );
     return response.data;
   },
 
@@ -189,6 +207,13 @@ export const catalogApi = {
 
   async getClass(classPublicId: string) {
     const response = await apiClient.get<ClassDetail>(`/classes/${classPublicId}`);
+    return response.data;
+  },
+
+  async getClassDeletionImpact(classPublicId: string) {
+    const response = await apiClient.get<ClassDeletionImpact>(
+      `/classes/${classPublicId}/deletion-impact`,
+    );
     return response.data;
   },
 
@@ -273,6 +298,13 @@ export const catalogApi = {
 
   async getCourse(courseId: number) {
     const response = await apiClient.get<CourseDetail>(`/courses/${courseId}`);
+    return response.data;
+  },
+
+  async getCourseDeletionImpact(courseId: number) {
+    const response = await apiClient.get<CourseDeletionImpact>(
+      `/courses/${courseId}/deletion-impact`,
+    );
     return response.data;
   },
 

@@ -2,6 +2,8 @@ import { prisma } from "../../config/prisma.js";
 import { ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { AuthUser } from "../../shared/types/index.js";
+import { getServerCommunicationImpact } from "../../shared/lifecycle/communication-impact.js";
+import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -271,4 +273,135 @@ export async function getDepartmentStats(departmentId: number, requestingUser: A
   ]);
 
   return { departmentId, students, teachers, classes, societies };
+}
+
+export async function getDepartmentDeletionImpact(departmentId: number) {
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      serverId: true,
+      server: { select: { publicId: true } },
+    },
+  });
+
+  if (!department) {
+    throw new NotFoundError("Department not found");
+  }
+
+  const dependentCourseWhere = {
+    departmentId,
+    OR: [
+      { curriculum: { some: {} } },
+      { teaches: { some: {} } },
+      { channels: { some: {} } },
+    ],
+  };
+
+  const [
+    programCount,
+    programPreview,
+    userCount,
+    userPreview,
+    userTypeCounts,
+    societyCount,
+    societyPreview,
+    dependentCourseCount,
+    dependentCoursePreview,
+    communicationImpact,
+  ] = await Promise.all([
+    prisma.program.count({ where: { departmentId } }),
+    prisma.program.findMany({
+      where: { departmentId },
+      select: {
+        id: true,
+        code: true,
+        semesters: true,
+        discipline: { select: { id: true, name: true } },
+        degreeLevel: { select: { id: true, level: true } },
+      },
+      orderBy: { code: "asc" },
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.user.count({ where: { departmentId } }),
+    prisma.user.findMany({
+      where: { departmentId },
+      select: {
+        publicId: true,
+        fullName: true,
+        email: true,
+        userType: true,
+        status: true,
+        isDeleted: true,
+      },
+      orderBy: { fullName: "asc" },
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.user.groupBy({
+      by: ["userType"],
+      where: { departmentId },
+      _count: { _all: true },
+    }),
+    prisma.society.count({ where: { departmentId } }),
+    prisma.society.findMany({
+      where: { departmentId },
+      select: {
+        publicId: true,
+        name: true,
+        status: true,
+        isDeleted: true,
+      },
+      orderBy: { name: "asc" },
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.course.count({ where: dependentCourseWhere }),
+    prisma.course.findMany({
+      where: dependentCourseWhere,
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        _count: { select: { curriculum: true, teaches: true, channels: true } },
+      },
+      orderBy: { code: "asc" },
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    getServerCommunicationImpact(department.serverId),
+  ]);
+
+  const userCountsByType = userTypeCounts.reduce<Record<string, number>>((counts, row) => {
+    counts[row.userType] = row._count._all;
+    return counts;
+  }, {});
+
+  const blockers = {
+    programs: buildImpactGroup(programCount, programPreview),
+    departmentUsers: {
+      ...buildImpactGroup(userCount, userPreview),
+      byUserType: userCountsByType,
+    },
+    societies: buildImpactGroup(societyCount, societyPreview),
+    dependentCourses: buildImpactGroup(dependentCourseCount, dependentCoursePreview),
+  };
+  const canDelete =
+    programCount === 0 &&
+    userCount === 0 &&
+    societyCount === 0 &&
+    dependentCourseCount === 0;
+
+  return {
+    department: {
+      id: department.id,
+      name: department.name,
+      code: department.code,
+      serverPublicId: department.server.publicId,
+    },
+    canDelete,
+    checksComplete: true,
+    pendingChecks: [] as string[],
+    blockers,
+    communicationImpact,
+  };
 }

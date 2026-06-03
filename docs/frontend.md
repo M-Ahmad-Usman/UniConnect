@@ -36,6 +36,9 @@ society management, and role management.
 - Role management lives outside admin routes because scoped managers can use it.
 - Academic delegated workflows live under `/academics/*`; admin routes may wrap
   or redirect but must not be the only path.
+- Rare academic/catalog deletion-impact reports are exposed through typed
+  catalog API methods and TanStack Query hooks; visible destructive UI remains
+  deferred.
 - Society leadership changes stay in society workflows; generic role management
   handles HOD, Program Director, CR, and moderator roles.
 - Post feeds use paginated APIs with load-more/infinite-style interaction.

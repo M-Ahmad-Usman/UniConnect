@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 7 complete, Module 8 not started
+- Status: Module 8 complete, Module 9 not started
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
 - Source references: `pulled-docs/`
@@ -340,9 +340,8 @@ Changes:
   academic payloads and public-safe DTOs.
 - Keep department, program, course, discipline, degree-level, and designation
   references numeric.
-- Add the admin-only provisional class deletion-impact endpoint. It returns
-  canonical class blockers and explicitly marks communication impact incomplete
-  until Module 8.
+- Add the admin-only provisional class deletion-impact endpoint. Module 8
+  completes this endpoint with communication cleanup impact.
 - Update class transfer, course assignment, semester progression, and graduation
   flows.
 - Revalidate delegated academic authority and class lifecycle under transaction
@@ -360,7 +359,12 @@ Goal: expose safe blocker reports for rare destructive cleanup planning.
 
 Changes:
 - Add deletion-impact endpoints for departments, programs, classes, and courses.
-- Return all blockers in one stable response shape.
+- Return all blockers in one stable bounded response shape with counts, preview
+  rows, and `hasMore`.
+- Mark class communication impact complete and move class impact from
+  provisional to final report semantics.
+- Add frontend API methods, query keys, hooks, and contract types for future
+  admin UI use without adding destructive UI.
 - Do not implement destructive delete endpoints for these entities.
 
 Acceptance:

@@ -248,6 +248,7 @@ model StudentInfo {
   crOfClass          Class?   @relation("ClassCR")
   presidentOfSociety Society? @relation("SocietyPresident")
 
+  @@index([classId])
   @@map("student_info")
 }
 
@@ -401,6 +402,8 @@ model Channel {
   notificationPreferences NotificationPreference[]
 
   @@index([serverId, isDeleted, isArchived])
+  @@index([courseId, isDeleted])
+  @@index([programId, isDeleted])
   @@map("channels")
 }
 
@@ -451,6 +454,7 @@ model Course {
   teaches    Teaches[]
   curriculum ProgramCurriculum[]
 
+  @@index([departmentId])
   @@map("courses")
 }
 
@@ -465,6 +469,7 @@ model Teaches {
 
   @@id([teacherId, courseId, classId])
   @@unique([classId, courseId])
+  @@index([courseId])
   @@map("teaches")
 }
 
@@ -624,6 +629,8 @@ model NotificationPreference {
   channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   @@unique([userId, notificationType, scopeType, serverId, channelId])
+  @@index([serverId])
+  @@index([channelId])
   @@map("notification_preferences")
 }
 
@@ -671,5 +678,6 @@ model ProgramCurriculum {
   course  Course  @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   @@unique([programId, courseId, batchYear])
+  @@index([courseId])
   @@map("program_curriculum")
 }

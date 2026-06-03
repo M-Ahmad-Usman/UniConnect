@@ -52,6 +52,20 @@ export async function handleGetProgramById(req: Request, res: Response): Promise
   res.status(StatusCodes.OK).json(response);
 }
 
+export async function handleGetProgramDeletionImpact(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const impact = await programService.getProgramDeletionImpact(Number(req.params.id));
+
+  const response: ApiResponse<typeof impact> = {
+    success: true,
+    data: impact,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
 export async function handleUpdateProgram(req: Request, res: Response): Promise<void> {
   const program = await programService.updateProgram(Number(req.params.id), req.body);
   await recordAuditLog(

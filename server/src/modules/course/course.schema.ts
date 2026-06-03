@@ -9,6 +9,8 @@ export const courseIdParamSchema = {
   }),
 };
 
+export const courseDeletionImpactSchema = courseIdParamSchema;
+
 // ─── Create Course ─────────────────────────────────────────────────────────
 
 export const createCourseSchema = {

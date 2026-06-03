@@ -1462,6 +1462,17 @@ GET /api/departments/:id/stats
 }
 ```
 
+#### Department Deletion Impact (Admin)
+
+```
+GET /api/departments/:id/deletion-impact
+```
+
+Returns `canDelete`, `checksComplete: true`, `pendingChecks: []`, bounded
+`blockers`, and `communicationImpact`. Blockers include programs,
+department-linked users grouped by user type, societies, and dependent courses.
+Each blocker group has `{ count, preview, hasMore }`.
+
 #### List Programs in Department
 
 ```
@@ -1524,6 +1535,16 @@ POST /api/departments/:id/programs
 ---
 
 ### Programs Endpoints
+
+#### Program Deletion Impact (Admin)
+
+```
+GET /api/programs/:id/deletion-impact
+```
+
+Returns bounded enrolled-class blockers plus curriculum cleanup impact and
+program-channel communication impact. Communication impact is informational and
+does not force `canDelete: false`.
 
 #### Update Program (Admin)
 
@@ -1780,10 +1801,10 @@ GET /api/classes/:publicId
 GET /api/classes/:publicId/deletion-impact
 ```
 
-Returns bounded enrolled-student and active-teaching-assignment counts. Module 7
-intentionally returns `checksComplete: false`, `pendingChecks:
-['COMMUNICATION_IMPACT']`, and `canDelete: false` until Module 8 adds
-communication-descendant analysis.
+Returns bounded enrolled-student and active-teaching-assignment blockers plus
+class-server communication cleanup impact. The response has
+`checksComplete: true`, `pendingChecks: []`, and `canDelete` based only on the
+student and teaching-assignment blockers.
 
 #### Create Class (Admin/Teacher)
 
@@ -2085,6 +2106,16 @@ PATCH /api/courses/:id
   "message": "Course updated successfully"
 }
 ```
+
+#### Course Deletion Impact (Admin)
+
+```
+GET /api/courses/:id/deletion-impact
+```
+
+Returns bounded blockers for curriculum entries, active teaching assignments,
+and course channels. Also returns post, notification-preference, and platform
+role-assignment counts under course channels.
 
 ---
 

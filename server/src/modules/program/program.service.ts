@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from ".
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { lockProgramForHodOrAdmin } from "../../shared/lifecycle/academic.js";
+import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -182,6 +183,98 @@ export async function getProgramById(id: number) {
   }
 
   return toPublicProgramDetail(program);
+}
+
+export async function getProgramDeletionImpact(programId: number) {
+  const program = await prisma.program.findUnique({
+    where: { id: programId },
+    select: {
+      id: true,
+      code: true,
+      semesters: true,
+      department: { select: { id: true, name: true, code: true } },
+      discipline: { select: { id: true, name: true } },
+      degreeLevel: { select: { id: true, level: true } },
+    },
+  });
+
+  if (!program) {
+    throw new NotFoundError("Program not found");
+  }
+
+  const [
+    classCount,
+    classPreview,
+    curriculumCount,
+    curriculumPreview,
+    channelCount,
+    channelPreview,
+    postCount,
+    preferenceCount,
+    roleCount,
+  ] = await Promise.all([
+    prisma.class.count({ where: { programId } }),
+    prisma.class.findMany({
+      where: { programId },
+      select: {
+        publicId: true,
+        currentSemester: true,
+        academicYear: true,
+        admissionYear: true,
+        section: true,
+        status: true,
+      },
+      orderBy: [{ admissionYear: "desc" }, { section: "asc" }],
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.programCurriculum.count({ where: { programId } }),
+    prisma.programCurriculum.findMany({
+      where: { programId },
+      select: {
+        id: true,
+        semesterNumber: true,
+        batchYear: true,
+        course: { select: { id: true, code: true, title: true } },
+      },
+      orderBy: [{ semesterNumber: "asc" }, { course: { code: "asc" } }],
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.channel.count({ where: { programId } }),
+    prisma.channel.findMany({
+      where: { programId },
+      select: {
+        publicId: true,
+        name: true,
+        type: true,
+        isDeleted: true,
+        isArchived: true,
+      },
+      orderBy: { createdAt: "asc" },
+      take: IMPACT_PREVIEW_LIMIT,
+    }),
+    prisma.post.count({ where: { channel: { programId } } }),
+    prisma.notificationPreference.count({ where: { channel: { programId } } }),
+    prisma.userRoleAssignment.count({ where: { channel: { programId } } }),
+  ]);
+
+  return {
+    program,
+    canDelete: classCount === 0,
+    checksComplete: true,
+    pendingChecks: [] as string[],
+    blockers: {
+      enrolledClasses: buildImpactGroup(classCount, classPreview),
+    },
+    cleanupImpact: {
+      curriculumEntries: buildImpactGroup(curriculumCount, curriculumPreview),
+    },
+    communicationImpact: {
+      channels: buildImpactGroup(channelCount, channelPreview),
+      posts: { count: postCount },
+      notificationPreferences: { count: preferenceCount },
+      platformRoleAssignments: { count: roleCount },
+    },
+  };
 }
 
 export async function updateProgram(id: number, data: UpdateProgramInput) {

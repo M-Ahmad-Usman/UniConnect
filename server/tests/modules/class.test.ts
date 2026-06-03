@@ -82,7 +82,7 @@ describe("Module 7 - Class public boundary and deletion impact", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns provisional blocker counts only to admins", async () => {
+  it("returns completed blocker counts only to admins", async () => {
     const admin = await createUser({
       email: `admin-class-impact-${Date.now()}@test.com`,
       password: "Pass@1234",
@@ -104,9 +104,11 @@ describe("Module 7 - Class public boundary and deletion impact", () => {
       .set("Cookie", adminCookies);
     expect(impact.status).toBe(200);
     expect(impact.body.data.canDelete).toBe(false);
-    expect(impact.body.data.checksComplete).toBe(false);
-    expect(impact.body.data.pendingChecks).toEqual(["COMMUNICATION_IMPACT"]);
+    expect(impact.body.data.checksComplete).toBe(true);
+    expect(impact.body.data.pendingChecks).toEqual([]);
     expect(impact.body.data.blockers.enrolledStudents.count).toBe(1);
+    expect(impact.body.data.blockers.enrolledStudents.preview[0].user.publicId).toEqual(expect.any(String));
+    expect(impact.body.data.communicationImpact.channels.count).toEqual(expect.any(Number));
 
     const hodCookies = await loginAs(hod.email, "Pass@1234");
     const denied = await request(app)

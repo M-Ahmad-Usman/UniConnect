@@ -297,13 +297,21 @@ Rules:
 ## Rare Entity Impact Policy
 
 Rare destructive deletes are deferred, but blocker reports are part of this
-refactor.
+refactor. Module 8 reports blockers and cleanup impact only; it does not expose
+hard-delete APIs.
+
+All rare impact endpoints are admin-only and return bounded blocker groups with
+`count`, `preview`, and `hasMore`. Communication descendants are reported as
+cleanup impact so future destructive workflows can plan channel/post cleanup,
+but communication impact does not by itself force `canDelete = false` unless a
+current foreign key blocker is also present.
 
 ### Departments
 
 Blockers:
 - programs in the department.
-- teachers in the department.
+- users linked to the department through `users.departmentId`, grouped by user
+  type. This includes teachers and students under the current schema.
 - societies in the department.
 - courses with curriculum, teaching assignments, or channels that prevent safe
   cleanup.
@@ -330,11 +338,10 @@ Blockers:
 
 Deletion-impact endpoint:
 - `GET /api/classes/:publicId/deletion-impact` is admin-only.
-- Module 7 returns bounded counts for the canonical blockers above.
-- The response remains provisional with `checksComplete: false`,
-  `pendingChecks: ["COMMUNICATION_IMPACT"]`, and `canDelete: false`.
-- Module 8 must add communication-descendant analysis before rare class cleanup
-  can be considered safe.
+- Module 8 returns bounded blocker previews and communication cleanup impact.
+- `checksComplete` is `true`; `pendingChecks` is empty.
+- `canDelete` is based on enrolled-student and active-teaching-assignment
+  blockers, not communication cleanup counts.
 
 Special rule:
 - `crId` is nullable to resolve creation/deletion cycles, but CR business rules

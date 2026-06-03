@@ -7,11 +7,13 @@ import {
   listCoursesSchema,
   courseIdParamSchema,
   updateCourseSchema,
+  courseDeletionImpactSchema,
 } from "./course.schema.js";
 import {
   handleCreateCourse,
   handleListCourses,
   handleGetCourseById,
+  handleGetCourseDeletionImpact,
   handleUpdateCourse,
 } from "./course.controller.js";
 
@@ -30,6 +32,14 @@ router.get(
   authenticate,
   validate(listCoursesSchema),
   handleListCourses
+);
+
+router.get(
+  "/:id/deletion-impact",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(courseDeletionImpactSchema),
+  handleGetCourseDeletionImpact
 );
 
 router.get(

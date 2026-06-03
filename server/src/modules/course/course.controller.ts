@@ -64,6 +64,17 @@ export async function handleGetCourseById(req: Request, res: Response): Promise<
   res.status(StatusCodes.OK).json(response);
 }
 
+export async function handleGetCourseDeletionImpact(req: Request, res: Response): Promise<void> {
+  const impact = await courseService.getCourseDeletionImpact(Number(req.params.id));
+
+  const response: ApiResponse<typeof impact> = {
+    success: true,
+    data: impact,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
 export async function handleUpdateCourse(req: Request, res: Response): Promise<void> {
   const course = await courseService.updateCourse(Number(req.params.id), req.body);
   await recordAuditLog(

@@ -9,6 +9,7 @@ import {
   createProgramSchema,
   listProgramsSchema,
   assignDepartmentHodSchema,
+  departmentDeletionImpactSchema,
 } from "./department.schema.js";
 import {
   handleCreateDepartment,
@@ -18,6 +19,7 @@ import {
   handleCreateProgram,
   handleListPrograms,
   handleGetDepartmentStats,
+  handleGetDepartmentDeletionImpact,
   handleAssignDepartmentHod,
   handleRevokeDepartmentHod,
 } from "./department.controller.js";
@@ -40,6 +42,14 @@ router.get(
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(departmentIdParamSchema),
   handleGetDepartmentStats
+);
+
+router.get(
+  "/:id/deletion-impact",
+  authenticate,
+  authorize({ userTypes: ["ADMIN"] }),
+  validate(departmentDeletionImpactSchema),
+  handleGetDepartmentDeletionImpact
 );
 
 router.get(

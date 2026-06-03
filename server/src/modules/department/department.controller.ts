@@ -64,6 +64,20 @@ export async function handleGetDepartmentById(req: Request, res: Response): Prom
   res.status(StatusCodes.OK).json(response);
 }
 
+export async function handleGetDepartmentDeletionImpact(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const impact = await departmentService.getDepartmentDeletionImpact(Number(req.params.id));
+
+  const response: ApiResponse<typeof impact> = {
+    success: true,
+    data: impact,
+  };
+
+  res.status(StatusCodes.OK).json(response);
+}
+
 export async function handleUpdateDepartment(req: Request, res: Response): Promise<void> {
   const department = await departmentService.updateDepartment(Number(req.params.id), req.body);
   await recordAuditLog(

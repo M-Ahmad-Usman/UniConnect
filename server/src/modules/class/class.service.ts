@@ -15,6 +15,8 @@ import {
   lockProgramForHodOrAdmin,
   lockStudentProfileForTransfer,
 } from "../../shared/lifecycle/academic.js";
+import { getServerCommunicationImpact } from "../../shared/lifecycle/communication-impact.js";
+import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import { disconnectUserSockets } from "../../socket/index.js";
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -1500,10 +1502,18 @@ export async function getClassDeletionImpact(classId: number) {
       publicId: true,
       currentSemester: true,
       admissionYear: true,
+      academicYear: true,
       section: true,
       status: true,
-      program: { select: { id: true, code: true } },
-      _count: { select: { students: true, teaches: true } },
+      serverId: true,
+      server: { select: { publicId: true } },
+      program: {
+        select: {
+          id: true,
+          code: true,
+          department: { select: { id: true, name: true, code: true } },
+        },
+      },
     },
   });
 
@@ -1511,22 +1521,66 @@ export async function getClassDeletionImpact(classId: number) {
     throw new NotFoundError("Class not found");
   }
 
+  const [studentCount, studentPreview, teachingCount, teachingPreview, communicationImpact] =
+    await Promise.all([
+      prisma.studentInfo.count({ where: { classId } }),
+      prisma.studentInfo.findMany({
+        where: { classId },
+        select: {
+          rollNumber: true,
+          user: {
+            select: {
+              publicId: true,
+              fullName: true,
+              email: true,
+              status: true,
+              isDeleted: true,
+            },
+          },
+        },
+        orderBy: { rollNumber: "asc" },
+        take: IMPACT_PREVIEW_LIMIT,
+      }),
+      prisma.teaches.count({ where: { classId } }),
+      prisma.teaches.findMany({
+        where: { classId },
+        select: {
+          course: { select: { id: true, code: true, title: true } },
+          teacher: {
+            select: {
+              designation: true,
+              user: { select: { publicId: true, fullName: true, email: true } },
+            },
+          },
+        },
+        orderBy: { course: { code: "asc" } },
+        take: IMPACT_PREVIEW_LIMIT,
+      }),
+      getServerCommunicationImpact(classRecord.serverId),
+    ]);
+
+  const canDelete = studentCount === 0 && teachingCount === 0;
+
   return {
     class: {
       publicId: classRecord.publicId,
       programId: classRecord.program.id,
       programCode: classRecord.program.code,
+      department: classRecord.program.department,
       section: classRecord.section,
       currentSemester: classRecord.currentSemester,
+      academicYear: classRecord.academicYear,
       admissionYear: classRecord.admissionYear,
       status: classRecord.status,
+      serverPublicId: classRecord.server.publicId,
     },
-    canDelete: false,
-    checksComplete: false,
-    pendingChecks: ["COMMUNICATION_IMPACT"] as const,
+    canDelete,
+    checksComplete: true,
+    pendingChecks: [] as string[],
     blockers: {
-      enrolledStudents: { count: classRecord._count.students },
-      activeTeachingAssignments: { count: classRecord._count.teaches },
+      enrolledStudents: buildImpactGroup(studentCount, studentPreview),
+      activeTeachingAssignments: buildImpactGroup(teachingCount, teachingPreview),
     },
+    communicationImpact,
   };
 }

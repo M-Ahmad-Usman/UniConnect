@@ -10,6 +10,8 @@ export const programIdParamSchema = {
   }),
 };
 
+export const programDeletionImpactSchema = programIdParamSchema;
+
 // ─── List Programs ─────────────────────────────────────────────────────────
 
 export const listProgramsSchema = {
