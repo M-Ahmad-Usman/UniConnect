@@ -128,7 +128,6 @@ async function upsertUser(input: SeedUserInput) {
     departmentId: input.departmentId ?? null,
     passwordHash,
     status: "ACTIVE" as const,
-    isActive: true,
     isDeleted: false,
     mustChangePassword: input.mustChangePassword ?? false,
   };
@@ -192,7 +191,6 @@ async function ensureServer(
         description,
         createdBy,
         isDeleted: false,
-        isActive: true,
       },
     });
   }
@@ -204,7 +202,6 @@ async function ensureServer(
       description,
       createdBy,
       isDeleted: false,
-      isActive: true,
     },
   });
 }
@@ -548,7 +545,6 @@ async function seedDemoWorkspace() {
     convenorId: convenor.id,
     serverId: societyServer.id,
     status: "ACTIVE" as const,
-    isActive: true,
     isDeleted: false,
   };
 
@@ -747,17 +743,17 @@ async function seedDemoWorkspace() {
     }),
   ]);
 
-  console.log("  ✅ Demo workspace seeded");
-  console.log("  ↳ Admin: admin@uniconnect.com /", ADMIN_PASSWORD);
-  console.log("  ↳ HOD: hod.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ Program Director: pd.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ Lecturer: lecturer.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ Convenor: convenor.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ CR: cr.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ President: president.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ Student: student.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ Server Moderator: server.mod.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.log("  ↳ Channel Moderator: channel.mod.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Demo workspace seeded");
+  console.warn("[SEED] Admin: admin@uniconnect.com /", ADMIN_PASSWORD);
+  console.warn("[SEED] HOD: hod.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Program Director: pd.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Lecturer: lecturer.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Convenor: convenor.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] CR: cr.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] President: president.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Student: student.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Server Moderator: server.mod.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Channel Moderator: channel.mod.demo@uniconnect.com /", DEMO_PASSWORD);
 
   return {
     admin,
@@ -781,19 +777,19 @@ async function seedDemoWorkspace() {
 }
 
 async function seed() {
-  console.log("🌱 Seeding database...");
+  console.warn("[SEED] Seeding database...");
 
   await seedRolesAndPermissions();
-  console.log("  ✅ Roles and permissions seeded");
+  console.warn("[SEED] Roles and permissions seeded");
 
   await seedDemoWorkspace();
 
-  console.log("\n🎉 Seeding complete!");
+  console.warn("[SEED] Seeding complete");
 }
 
 seed()
   .catch((error) => {
-    console.error("❌ Seed failed:", error);
+    console.error("[SEED] Seed failed", { error });
     process.exit(1);
   })
   .finally(async () => {

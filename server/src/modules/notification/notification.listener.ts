@@ -16,7 +16,7 @@ export function registerNotificationListeners(): void {
     try {
       await createPostNotifications(payload);
     } catch (error) {
-      console.error("[NotificationListener] Failed to create post notifications:", error);
+      console.error("[NOTIFICATION] Failed to create post notifications", { error });
     }
   });
 

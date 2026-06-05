@@ -289,7 +289,7 @@ Rules:
   lists.
 - Soft-deleted users do not receive active permissions from preserved role rows.
 - Soft-deleted servers/channels do not grant platform role authority.
-- Suspended, deleted, or inactive society scopes and graduated class scopes do
+- Suspended or deleted society scopes and graduated class scopes do
   not grant platform role authority.
 - A database exclusion constraint prevents overlapping periods for the same
   user, platform role, server, and optional channel scope.

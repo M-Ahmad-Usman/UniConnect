@@ -16,6 +16,7 @@ import type {
 } from '@/types';
 
 let socket: Socket | null = null;
+const socketUrl = import.meta.env.VITE_SOCKET_URL;
 
 export function connectSocket(): void {
   if (socket) {
@@ -25,10 +26,10 @@ export function connectSocket(): void {
     return;
   }
 
-  socket = io({
+  socket = io(socketUrl, {
     withCredentials: true,
     path: '/api/socket.io',
-    // Same-origin — socket path under /api so access_token cookie is sent
+    // Same-origin by default; E2E may bypass the Vite websocket proxy.
   });
 
   socket.on('notification:new', (payload: NewNotificationPayload) => {

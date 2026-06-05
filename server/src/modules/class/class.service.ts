@@ -201,7 +201,8 @@ const studentTransferSelect = {
   user: {
     select: {
       id: true,
-      isActive: true,
+      status: true,
+      isDeleted: true,
       userType: true,
       departmentId: true,
     },
@@ -228,7 +229,6 @@ const classStudentSelect = {
       fullName: true,
       email: true,
       departmentId: true,
-      isActive: true,
     },
   },
   class: {
@@ -252,7 +252,6 @@ const teacherCandidateSelect = {
       fullName: true,
       email: true,
       departmentId: true,
-      isActive: true,
     },
   },
 } as const;
@@ -396,7 +395,7 @@ function assertStudentCanTransfer(
   if (!student) {
     throw new NotFoundError("Student not found");
   }
-  if (!student.user.isActive || student.user.userType !== "STUDENT") {
+  if (student.user.status !== "ACTIVE" || student.user.isDeleted || student.user.userType !== "STUDENT") {
     throw new ValidationError("Student must be an active student user");
   }
   if (student.classId === targetClassId) {
@@ -467,7 +466,7 @@ async function assertActiveTeacher(teacherId: number): Promise<void> {
     where: { teacherId },
     select: {
       teacherId: true,
-      user: { select: { isActive: true, userType: true } },
+      user: { select: { status: true, isDeleted: true, userType: true } },
     },
   });
 
@@ -475,7 +474,7 @@ async function assertActiveTeacher(teacherId: number): Promise<void> {
     throw new NotFoundError("Teacher not found");
   }
 
-  if (!teacher.user.isActive || teacher.user.userType !== "TEACHER") {
+  if (teacher.user.status !== "ACTIVE" || teacher.user.isDeleted || teacher.user.userType !== "TEACHER") {
     throw new ValidationError("Teacher must be an active teacher user");
   }
 }
@@ -505,7 +504,7 @@ function assertCanReadManagedClass(
   classRecord: { program: { id: number; department: { id: number } } },
 ): void {
   const canRead =
-    context.user?.isActive &&
+    context.user?.status === "ACTIVE" &&
     (context.user.userType === "ADMIN" ||
       context.scopes.hodDepartmentIds.includes(classRecord.program.department.id) ||
       context.scopes.directedProgramIds.includes(classRecord.program.id));
@@ -549,7 +548,7 @@ function buildScopedClassWhere(
   query: ListClassesQuery,
   context: Awaited<ReturnType<typeof getPermissionContext>>
 ): Prisma.ClassWhereInput {
-  if (!context.user?.isActive) {
+  if (context.user?.status !== "ACTIVE") {
     throw new ForbiddenError(
       "You do not have permission to manage this class",
       ApiErrorCode.SCOPE_FORBIDDEN
@@ -1047,7 +1046,8 @@ export async function listStudentCandidates(
   const where: Prisma.StudentInfoWhereInput = {
     classId: { not: classId },
     user: {
-      isActive: true,
+      status: "ACTIVE",
+      isDeleted: false,
       userType: "STUDENT",
       departmentId: classRecord.program.departmentId,
       ...(query.search
@@ -1170,7 +1170,8 @@ export async function listTeacherCandidates(
   const { page, limit, skip, take } = parsePagination(query);
   const where: Prisma.TeacherInfoWhereInput = {
     user: {
-      isActive: true,
+      status: "ACTIVE",
+      isDeleted: false,
       userType: "TEACHER",
       ...(query.search
         ? {

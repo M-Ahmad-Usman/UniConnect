@@ -54,7 +54,6 @@ export type SocietyMinAggregateOutputType = {
   convenorId: number | null
   serverId: number | null
   status: $Enums.SocietyStatus | null
-  isActive: boolean | null
   isDeleted: boolean | null
   deletedAt: Date | null
   deletedBy: number | null
@@ -72,7 +71,6 @@ export type SocietyMaxAggregateOutputType = {
   convenorId: number | null
   serverId: number | null
   status: $Enums.SocietyStatus | null
-  isActive: boolean | null
   isDeleted: boolean | null
   deletedAt: Date | null
   deletedBy: number | null
@@ -90,7 +88,6 @@ export type SocietyCountAggregateOutputType = {
   convenorId: number
   serverId: number
   status: number
-  isActive: number
   isDeleted: number
   deletedAt: number
   deletedBy: number
@@ -128,7 +125,6 @@ export type SocietyMinAggregateInputType = {
   convenorId?: true
   serverId?: true
   status?: true
-  isActive?: true
   isDeleted?: true
   deletedAt?: true
   deletedBy?: true
@@ -146,7 +142,6 @@ export type SocietyMaxAggregateInputType = {
   convenorId?: true
   serverId?: true
   status?: true
-  isActive?: true
   isDeleted?: true
   deletedAt?: true
   deletedBy?: true
@@ -164,7 +159,6 @@ export type SocietyCountAggregateInputType = {
   convenorId?: true
   serverId?: true
   status?: true
-  isActive?: true
   isDeleted?: true
   deletedAt?: true
   deletedBy?: true
@@ -269,7 +263,6 @@ export type SocietyGroupByOutputType = {
   convenorId: number
   serverId: number
   status: $Enums.SocietyStatus
-  isActive: boolean
   isDeleted: boolean
   deletedAt: Date | null
   deletedBy: number | null
@@ -310,7 +303,6 @@ export type SocietyWhereInput = {
   convenorId?: Prisma.IntFilter<"Society"> | number
   serverId?: Prisma.IntFilter<"Society"> | number
   status?: Prisma.EnumSocietyStatusFilter<"Society"> | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFilter<"Society"> | boolean
   isDeleted?: Prisma.BoolFilter<"Society"> | boolean
   deletedAt?: Prisma.DateTimeNullableFilter<"Society"> | Date | string | null
   deletedBy?: Prisma.IntNullableFilter<"Society"> | number | null
@@ -335,7 +327,6 @@ export type SocietyOrderByWithRelationInput = {
   convenorId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  isActive?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -363,7 +354,6 @@ export type SocietyWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Society"> | string | null
   departmentId?: Prisma.IntFilter<"Society"> | number
   status?: Prisma.EnumSocietyStatusFilter<"Society"> | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFilter<"Society"> | boolean
   isDeleted?: Prisma.BoolFilter<"Society"> | boolean
   deletedAt?: Prisma.DateTimeNullableFilter<"Society"> | Date | string | null
   deletedBy?: Prisma.IntNullableFilter<"Society"> | number | null
@@ -388,7 +378,6 @@ export type SocietyOrderByWithAggregationInput = {
   convenorId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  isActive?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedBy?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -414,7 +403,6 @@ export type SocietyScalarWhereWithAggregatesInput = {
   convenorId?: Prisma.IntWithAggregatesFilter<"Society"> | number
   serverId?: Prisma.IntWithAggregatesFilter<"Society"> | number
   status?: Prisma.EnumSocietyStatusWithAggregatesFilter<"Society"> | $Enums.SocietyStatus
-  isActive?: Prisma.BoolWithAggregatesFilter<"Society"> | boolean
   isDeleted?: Prisma.BoolWithAggregatesFilter<"Society"> | boolean
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Society"> | Date | string | null
   deletedBy?: Prisma.IntNullableWithAggregatesFilter<"Society"> | number | null
@@ -427,7 +415,6 @@ export type SocietyCreateInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -451,7 +438,6 @@ export type SocietyUncheckedCreateInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -466,7 +452,6 @@ export type SocietyUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -490,7 +475,6 @@ export type SocietyUncheckedUpdateInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -510,7 +494,6 @@ export type SocietyCreateManyInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -523,7 +506,6 @@ export type SocietyUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -540,7 +522,6 @@ export type SocietyUncheckedUpdateManyInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -573,7 +554,6 @@ export type SocietyCountOrderByAggregateInput = {
   convenorId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  isActive?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
@@ -600,7 +580,6 @@ export type SocietyMaxOrderByAggregateInput = {
   convenorId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  isActive?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
@@ -618,7 +597,6 @@ export type SocietyMinOrderByAggregateInput = {
   convenorId?: Prisma.SortOrder
   serverId?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  isActive?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   deletedBy?: Prisma.SortOrder
@@ -859,7 +837,6 @@ export type SocietyCreateWithoutDepartmentInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -881,7 +858,6 @@ export type SocietyUncheckedCreateWithoutDepartmentInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -930,7 +906,6 @@ export type SocietyScalarWhereInput = {
   convenorId?: Prisma.IntFilter<"Society"> | number
   serverId?: Prisma.IntFilter<"Society"> | number
   status?: Prisma.EnumSocietyStatusFilter<"Society"> | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFilter<"Society"> | boolean
   isDeleted?: Prisma.BoolFilter<"Society"> | boolean
   deletedAt?: Prisma.DateTimeNullableFilter<"Society"> | Date | string | null
   deletedBy?: Prisma.IntNullableFilter<"Society"> | number | null
@@ -943,7 +918,6 @@ export type SocietyCreateWithoutDeletedByUserInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -966,7 +940,6 @@ export type SocietyUncheckedCreateWithoutDeletedByUserInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1006,7 +979,6 @@ export type SocietyCreateWithoutPresidentInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1028,7 +1000,6 @@ export type SocietyUncheckedCreateWithoutPresidentInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -1059,7 +1030,6 @@ export type SocietyUpdateWithoutPresidentInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1081,7 +1051,6 @@ export type SocietyUncheckedUpdateWithoutPresidentInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1096,7 +1065,6 @@ export type SocietyCreateWithoutConvenorInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1118,7 +1086,6 @@ export type SocietyUncheckedCreateWithoutConvenorInput = {
   presidentId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -1149,7 +1116,6 @@ export type SocietyUpdateWithoutConvenorInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1171,7 +1137,6 @@ export type SocietyUncheckedUpdateWithoutConvenorInput = {
   presidentId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1186,7 +1151,6 @@ export type SocietyCreateWithoutServerInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1208,7 +1172,6 @@ export type SocietyUncheckedCreateWithoutServerInput = {
   presidentId: number
   convenorId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -1239,7 +1202,6 @@ export type SocietyUpdateWithoutServerInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1261,7 +1223,6 @@ export type SocietyUncheckedUpdateWithoutServerInput = {
   presidentId?: Prisma.IntFieldUpdateOperationsInput | number
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1276,7 +1237,6 @@ export type SocietyCreateWithoutMembershipRequestsInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1299,7 +1259,6 @@ export type SocietyUncheckedCreateWithoutMembershipRequestsInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -1329,7 +1288,6 @@ export type SocietyUpdateWithoutMembershipRequestsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1352,7 +1310,6 @@ export type SocietyUncheckedUpdateWithoutMembershipRequestsInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1366,7 +1323,6 @@ export type SocietyCreateWithoutNotificationsInput = {
   name: string
   description?: string | null
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1389,7 +1345,6 @@ export type SocietyUncheckedCreateWithoutNotificationsInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -1419,7 +1374,6 @@ export type SocietyUpdateWithoutNotificationsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1442,7 +1396,6 @@ export type SocietyUncheckedUpdateWithoutNotificationsInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1460,7 +1413,6 @@ export type SocietyCreateManyDepartmentInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedBy?: number | null
@@ -1473,7 +1425,6 @@ export type SocietyUpdateWithoutDepartmentInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1495,7 +1446,6 @@ export type SocietyUncheckedUpdateWithoutDepartmentInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1514,7 +1464,6 @@ export type SocietyUncheckedUpdateManyWithoutDepartmentInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedBy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1532,7 +1481,6 @@ export type SocietyCreateManyDeletedByUserInput = {
   convenorId: number
   serverId: number
   status?: $Enums.SocietyStatus
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: Date | string | null
   deletedCascadeId?: string | null
@@ -1544,7 +1492,6 @@ export type SocietyUpdateWithoutDeletedByUserInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1567,7 +1514,6 @@ export type SocietyUncheckedUpdateWithoutDeletedByUserInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1586,7 +1532,6 @@ export type SocietyUncheckedUpdateManyWithoutDeletedByUserInput = {
   convenorId?: Prisma.IntFieldUpdateOperationsInput | number
   serverId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumSocietyStatusFieldUpdateOperationsInput | $Enums.SocietyStatus
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedCascadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1643,7 +1588,6 @@ export type SocietySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   convenorId?: boolean
   serverId?: boolean
   status?: boolean
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
@@ -1669,7 +1613,6 @@ export type SocietySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   convenorId?: boolean
   serverId?: boolean
   status?: boolean
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
@@ -1692,7 +1635,6 @@ export type SocietySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   convenorId?: boolean
   serverId?: boolean
   status?: boolean
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
@@ -1715,7 +1657,6 @@ export type SocietySelectScalar = {
   convenorId?: boolean
   serverId?: boolean
   status?: boolean
-  isActive?: boolean
   isDeleted?: boolean
   deletedAt?: boolean
   deletedBy?: boolean
@@ -1723,7 +1664,7 @@ export type SocietySelectScalar = {
   createdAt?: boolean
 }
 
-export type SocietyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "name" | "description" | "departmentId" | "presidentId" | "convenorId" | "serverId" | "status" | "isActive" | "isDeleted" | "deletedAt" | "deletedBy" | "deletedCascadeId" | "createdAt", ExtArgs["result"]["society"]>
+export type SocietyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "publicId" | "name" | "description" | "departmentId" | "presidentId" | "convenorId" | "serverId" | "status" | "isDeleted" | "deletedAt" | "deletedBy" | "deletedCascadeId" | "createdAt", ExtArgs["result"]["society"]>
 export type SocietyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
   president?: boolean | Prisma.StudentInfoDefaultArgs<ExtArgs>
@@ -1770,7 +1711,6 @@ export type $SocietyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     convenorId: number
     serverId: number
     status: $Enums.SocietyStatus
-    isActive: boolean
     isDeleted: boolean
     deletedAt: Date | null
     deletedBy: number | null
@@ -2215,7 +2155,6 @@ export interface SocietyFieldRefs {
   readonly convenorId: Prisma.FieldRef<"Society", 'Int'>
   readonly serverId: Prisma.FieldRef<"Society", 'Int'>
   readonly status: Prisma.FieldRef<"Society", 'SocietyStatus'>
-  readonly isActive: Prisma.FieldRef<"Society", 'Boolean'>
   readonly isDeleted: Prisma.FieldRef<"Society", 'Boolean'>
   readonly deletedAt: Prisma.FieldRef<"Society", 'DateTime'>
   readonly deletedBy: Prisma.FieldRef<"Society", 'Int'>

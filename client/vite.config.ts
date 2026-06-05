@@ -41,9 +41,9 @@ export default defineConfig({
           }
 
           if (
-            id.includes('/react/') ||
-            id.includes('/react-dom/') ||
-            id.includes('/react-router-dom/')
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('/node_modules/react-router-dom/')
           ) {
             return 'react-vendor';
           }
@@ -60,10 +60,15 @@ export default defineConfig({
           if (
             id.includes('/@base-ui/react/') ||
             id.includes('/lucide-react/') ||
+            id.includes('/framer-motion/') ||
             id.includes('/sonner/') ||
             id.includes('/next-themes/')
           ) {
             return 'ui-vendor';
+          }
+
+          if (id.includes('/@tiptap/')) {
+            return 'editor-vendor';
           }
 
           if (

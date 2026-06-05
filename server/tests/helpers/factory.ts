@@ -162,7 +162,6 @@ export async function createAdmin(overrides?: { email?: string; fullName?: strin
       userType: "ADMIN",
       departmentId: null,
       status: "ACTIVE",
-      isActive: true,
       isDeleted: false,
       mustChangePassword: true,
     },
@@ -177,13 +176,13 @@ export async function createUser(overrides: {
   fullName?: string;
   password?: string;
   userType?: "ADMIN" | "TEACHER" | "STUDENT";
-  isActive?: boolean;
+  status?: "ACTIVE" | "SUSPENDED";
   mustChangePassword?: boolean;
   departmentId?: number | null;
 }) {
   const password = overrides.password ?? "Test@1234";
   const passwordHash = await bcrypt.hash(password, 1);
-  const isActive = overrides.isActive ?? true;
+  const status = overrides.status ?? "ACTIVE";
 
   return prisma.user.create({
     data: {
@@ -194,8 +193,7 @@ export async function createUser(overrides: {
       gender: "MALE",
       userType: overrides.userType ?? "STUDENT",
       departmentId: overrides.departmentId ?? null,
-      status: isActive ? "ACTIVE" : "SUSPENDED",
-      isActive,
+      status,
       isDeleted: false,
       mustChangePassword: overrides.mustChangePassword ?? false,
     },
@@ -248,7 +246,6 @@ export async function createServer(
       type,
       createdBy,
       isDeleted: false,
-      isActive: true,
     },
   });
 }
@@ -436,7 +433,6 @@ export async function createSociety(
       type: "SOCIETY",
       createdBy,
       isDeleted: false,
-      isActive: true,
     },
   });
 
@@ -457,7 +453,6 @@ export async function createSociety(
       serverId: server.id,
       status: "ACTIVE",
       isDeleted: false,
-      isActive: true,
     },
   });
 

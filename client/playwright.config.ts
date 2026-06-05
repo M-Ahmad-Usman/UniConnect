@@ -63,6 +63,7 @@ export default defineConfig({
       env: {
         ...process.env,
         VITE_PROXY_TARGET: backendUrl,
+        VITE_SOCKET_URL: backendUrl,
       },
     },
   ],

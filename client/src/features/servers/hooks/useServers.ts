@@ -11,7 +11,7 @@ export function useServers(options?: UseServersOptions) {
   return useQuery({
     queryKey: queryKeys.servers.list(),
     queryFn: () => serversApi.list({ page: 1, limit: 50 }),
-    select: (response) => response.data.filter((server) => server.isActive),
+    select: (response) => response.data,
     enabled: options?.enabled,
   });
 }

@@ -110,12 +110,11 @@ export function initializeSocket(server: http.Server): SocketIOServer {
           departmentId: true,
           mustChangePassword: true,
           status: true,
-          isActive: true,
           isDeleted: true,
         },
       });
 
-      if (!user || user.isDeleted || !user.isActive || user.status !== "ACTIVE") {
+      if (!user || user.isDeleted || user.status !== "ACTIVE") {
         return next(new Error("Authentication required"));
       }
 
@@ -197,7 +196,7 @@ export function initializeSocket(server: http.Server): SocketIOServer {
         socket.join(`channel:${channelId}`);
         joinedChannelIds.set(channelPublicId, channelId);
       } catch (error) {
-        console.warn("[Socket] Failed to join channel", {
+        console.warn("[SOCKET] Failed to join channel", {
           userId: user.id,
           channelPublicId,
           error: error instanceof Error ? error.message : String(error),
@@ -332,10 +331,9 @@ async function resolveJoinableChannelId(
       isArchived: true,
       server: {
         select: {
-          isActive: true,
           isDeleted: true,
           society: {
-            select: { status: true, isActive: true, isDeleted: true },
+            select: { status: true, isDeleted: true },
           },
         },
       },
@@ -347,10 +345,8 @@ async function resolveJoinableChannelId(
     channel.isDeleted ||
     channel.isArchived ||
     channel.server.isDeleted ||
-    !channel.server.isActive ||
     (channel.server.society &&
       (channel.server.society.status !== "ACTIVE" ||
-        !channel.server.society.isActive ||
         channel.server.society.isDeleted))
   ) {
     return undefined;

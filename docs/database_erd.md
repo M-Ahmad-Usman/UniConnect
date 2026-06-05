@@ -93,8 +93,9 @@ DEGREE_LEVEL.id < PROGRAM.degree_level_id
 
 USER {
   id SERIAL PK
+  public_id UUID // NOT NULL UNIQUE DEFAULT uuidv7()
   full_name VARCHAR(100) // NOT NULL
-  email VARCHAR(255) // NOT NULL UNIQUE
+  email VARCHAR(255) // NOT NULL; partial unique index while is_deleted = false
   phone VARCHAR(20) // NOT NULL
   password_hash VARCHAR(255) // NOT NULL
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
@@ -102,7 +103,10 @@ USER {
   bio TEXT
   user_type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
   department_id INTEGER FK // Will be NULL only for admin user type
-  is_active BOOLEAN // DEFAULT TRUE
+  status VARCHAR(20) // NOT NULL enum ['active', 'suspended']; defaults to active
+  is_deleted BOOLEAN // DEFAULT FALSE
+  deleted_at TIMESTAMP
+  deleted_by INTEGER FK
   created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
   updated_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
 }
@@ -162,7 +166,6 @@ SOCIETY {
   convenor_id INT FK // NOT NULL
   server_id INT FK // UNIQUE NOT NULL
   status VARCHAR(20) // NOT NULL enum ['active', 'suspended']; defaults to active
-  is_active BOOLEAN // DEFAULT TRUE
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
   deleted_by INTEGER FK
@@ -191,7 +194,6 @@ SERVER {
   type VARCHAR(50) // NOT NULL enum ['Department', 'Class', 'Society']
 
   icon_url TEXT
-  is_active BOOLEAN // DEFAULT TRUE
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
   deleted_by INTEGER FK

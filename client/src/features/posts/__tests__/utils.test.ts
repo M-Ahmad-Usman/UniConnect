@@ -193,7 +193,6 @@ describe('edit and permission helpers', () => {
       description: null,
       type: ServerType.CLASS,
       iconUrl: null,
-      isActive: true,
       createdAt: '2026-04-24T10:00:00.000Z',
       department: null,
       class: null,

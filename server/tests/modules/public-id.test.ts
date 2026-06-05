@@ -11,7 +11,6 @@ import {
   parsePublicId,
   resolveChannelPublicId,
   resolveClassPublicId,
-  resolveCoreIdentifier,
   resolvePostPublicId,
   resolvePublicId,
   resolveServerPublicId,
@@ -143,11 +142,11 @@ describe("Module 2 - Public ID Foundation", () => {
       });
       await prisma.society.update({
         where: { id: society.id },
-        data: { isDeleted: true, isActive: false, deletedAt, deletedCascadeId },
+        data: { isDeleted: true, status: "SUSPENDED", deletedAt, deletedCascadeId },
       });
       await prisma.server.update({
         where: { id: server.id },
-        data: { isDeleted: true, isActive: false, deletedAt, deletedCascadeId },
+        data: { isDeleted: true, deletedAt, deletedCascadeId },
       });
       await prisma.channel.update({
         where: { id: channel.id },
@@ -186,26 +185,11 @@ describe("Module 2 - Public ID Foundation", () => {
       });
     });
 
-    it("supports explicit dual resolution without enabling it on routes", async () => {
+    it("rejects internal numeric IDs through the public resolver", async () => {
       const { server } = await createCoreFixtures();
 
-      await expect(
-        resolveCoreIdentifier("server", server.id, { mode: "public" }),
-      ).rejects.toBeInstanceOf(ValidationError);
-
-      await expect(resolveCoreIdentifier("server", server.publicId, { mode: "dual" })).resolves.toEqual({
-        id: server.id,
-        publicId: server.publicId,
-        source: "publicId",
-      });
-      await expect(resolveCoreIdentifier("server", String(server.id), { mode: "dual" })).resolves.toEqual({
-        id: server.id,
-        publicId: server.publicId,
-        source: "internalId",
-      });
-      await expect(
-        resolveCoreIdentifier("server", UUID_V4, { mode: "dual" }),
-      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(resolvePublicId("server", server.id)).rejects.toBeInstanceOf(ValidationError);
+      await expect(resolvePublicId("server", String(server.id))).rejects.toBeInstanceOf(ValidationError);
     });
   });
 

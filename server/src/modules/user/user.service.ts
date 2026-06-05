@@ -315,7 +315,6 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
         userType: input.userType,
         departmentId: input.userType === "ADMIN" ? null : (input.departmentId ?? classDepartmentId ?? null),
         status: "ACTIVE",
-        isActive: true,
         isDeleted: false,
         mustChangePassword: true,
       },
@@ -395,7 +394,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
   try {
     await emailService.sendTempPasswordEmail(createdUser.email, tempPassword);
   } catch (error) {
-    console.error("Failed to send temp-password email:", error);
+    console.error("[USER] Failed to send temp-password email", { error });
     invalidateSystemStatsCache();
     return {
       ...mapLifecycleUser(createdUser),
@@ -908,7 +907,6 @@ export async function updateUserStatus(
       where: { id: current.id },
       data: {
         status,
-        isActive: status === "ACTIVE",
         ...(status === "SUSPENDED" ? { passwordResetTokenHash: null } : {}),
       },
       select: userLifecycleSelect,
@@ -994,7 +992,6 @@ export async function deleteUser(
         isDeleted: true,
         deletedAt: now,
         deletedBy: requestingUserId,
-        isActive: false,
         passwordResetTokenHash: null,
       },
       select: userLifecycleSelect,
@@ -1086,7 +1083,6 @@ export async function restoreUser(
         isDeleted: false,
         deletedAt: null,
         deletedBy: null,
-        isActive: current.status === "ACTIVE",
       },
       select: userLifecycleSelect,
     });

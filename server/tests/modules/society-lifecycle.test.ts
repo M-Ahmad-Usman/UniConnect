@@ -104,7 +104,7 @@ describe("Module 5 - Society Lifecycle and Notifications", () => {
     ).resolves.toBe(1);
     await expect(
       prisma.server.findUniqueOrThrow({ where: { id: fixture.server.id } }),
-    ).resolves.toMatchObject({ isActive: false, isDeleted: false });
+    ).resolves.toMatchObject({ isDeleted: false });
 
     const lifecycleNotices = await prisma.notification.findMany({
       where: { societyId: fixture.society.id, type: "SOCIETY_SUSPENDED" },
@@ -138,7 +138,7 @@ describe("Module 5 - Society Lifecycle and Notifications", () => {
     expect(activate.status).toBe(200);
     await expect(
       prisma.server.findUniqueOrThrow({ where: { id: fixture.server.id } }),
-    ).resolves.toMatchObject({ isActive: true, isDeleted: false });
+    ).resolves.toMatchObject({ isDeleted: false });
   });
 
   it("soft-deletes and restores only descendants tagged by the same cascade", async () => {
@@ -253,11 +253,7 @@ describe("Module 5 - Society Lifecycle and Notifications", () => {
       .mockImplementation(async () => {
         await prisma.society.update({
           where: { id: fixture.society.id },
-          data: { status: "SUSPENDED", isActive: false },
-        });
-        await prisma.server.update({
-          where: { id: fixture.server.id },
-          data: { isActive: false },
+          data: { status: "SUSPENDED" },
         });
         return {
           url: "https://cloudinary.com/post-attachments/race.jpg",

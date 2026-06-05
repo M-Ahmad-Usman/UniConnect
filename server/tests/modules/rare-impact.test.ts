@@ -207,7 +207,6 @@ async function createClassForProgram(programId: number) {
     data: {
       name: `Class Impact Server ${uid()}`,
       type: "CLASS",
-      isActive: true,
       isDeleted: false,
     },
   });

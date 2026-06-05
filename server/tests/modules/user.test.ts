@@ -1069,7 +1069,6 @@ describe("Module 2 - User Management", () => {
         prisma.user.findUniqueOrThrow({ where: { id: target.id } })
       ).resolves.toMatchObject({
         isDeleted: true,
-        isActive: false,
         status: "ACTIVE",
       });
       await expect(prisma.notification.count({ where: { userId: target.id } })).resolves.toBe(0);
@@ -1092,7 +1091,6 @@ describe("Module 2 - User Management", () => {
         prisma.user.findUniqueOrThrow({ where: { id: target.id } })
       ).resolves.toMatchObject({
         isDeleted: false,
-        isActive: true,
         status: "ACTIVE",
       });
     });

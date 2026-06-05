@@ -200,7 +200,8 @@ async function getSubscribedMemberIds(
       serverId,
       userId: { not: excludeUserId },
       user: {
-        isActive: true,
+        status: "ACTIVE",
+        isDeleted: false,
       },
     },
     select: { userId: true },
@@ -408,10 +409,10 @@ export async function createRoleAssignedNotification(
 
   const server = await prisma.server.findUnique({
     where: { id: input.serverId },
-    select: { name: true, isActive: true },
+    select: { name: true, isDeleted: true },
   });
 
-  if (!server || !server.isActive) {
+  if (!server || server.isDeleted) {
     return;
   }
 
@@ -528,7 +529,6 @@ export async function createSocietyLifecycleNotifications(
     WHERE membership."server_id" = ${input.serverId}
       AND membership."user_id" <> ${input.actorUserId}
       AND member."status" = 'active'::"user_status"
-      AND member."is_active" = TRUE
       AND member."is_deleted" = FALSE
     RETURNING "id"
   `;
@@ -629,7 +629,7 @@ export async function markAsRead(notificationId: number, userId: number) {
   });
 
   void emitUnreadCount(userId).catch((error) => {
-    console.error("[NotificationService] Failed to emit unread count:", error);
+    console.error("[NOTIFICATION] Failed to emit unread count", { error });
   });
 
   return updated;
@@ -642,7 +642,7 @@ export async function markAllAsRead(userId: number) {
   });
 
   void emitUnreadCount(userId).catch((error) => {
-    console.error("[NotificationService] Failed to emit unread count:", error);
+    console.error("[NOTIFICATION] Failed to emit unread count", { error });
   });
 
   return { count: result.count };

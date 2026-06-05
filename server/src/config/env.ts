@@ -103,7 +103,7 @@ function validateEnv() {
       .map((issue) => `  - ${issue.path.join(".")}: ${issue.message}`)
       .join("\n");
 
-    console.error("❌ Environment validation failed:\n" + formatted);
+    console.error("[ENV] Environment validation failed:\n" + formatted);
     process.exit(1);
   }
 
@@ -112,12 +112,16 @@ function validateEnv() {
     result.data.CSRF_ENABLED &&
     !process.env.CSRF_SECRET
   ) {
-    console.error("❌ Environment validation failed:\n  - CSRF_SECRET: CSRF_SECRET is required when CSRF is enabled in production");
+    console.error(
+      "[ENV] Environment validation failed:\n  - CSRF_SECRET: CSRF_SECRET is required when CSRF is enabled in production"
+    );
     process.exit(1);
   }
 
   if (result.data.AUTH_COOKIE_SAME_SITE === "none" && !result.data.AUTH_COOKIE_SECURE) {
-    console.error("❌ Environment validation failed:\n  - AUTH_COOKIE_SECURE: SameSite=None cookies require AUTH_COOKIE_SECURE=true or production auto mode");
+    console.error(
+      "[ENV] Environment validation failed:\n  - AUTH_COOKIE_SECURE: SameSite=None cookies require AUTH_COOKIE_SECURE=true or production auto mode"
+    );
     process.exit(1);
   }
 

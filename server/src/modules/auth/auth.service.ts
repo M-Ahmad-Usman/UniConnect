@@ -35,8 +35,8 @@ function generateRefreshToken(userId: number): string {
   });
 }
 
-function canAuthenticate(user: { isActive: boolean; isDeleted: boolean; status: string }): boolean {
-  return user.isActive && !user.isDeleted && user.status === "ACTIVE";
+function canAuthenticate(user: { isDeleted: boolean; status: string }): boolean {
+  return !user.isDeleted && user.status === "ACTIVE";
 }
 
 async function storeRefreshToken(userId: number, token: string): Promise<void> {
@@ -252,7 +252,6 @@ export async function resetPassword(
       passwordResetTokenHash: true,
       mustChangePassword: true,
       status: true,
-      isActive: true,
       isDeleted: true,
     },
   });

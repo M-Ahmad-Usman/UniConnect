@@ -2767,7 +2767,6 @@ GET /api/servers
     description: string | null;
     type: 'DEPARTMENT' | 'CLASS' | 'SOCIETY';
     iconUrl: string | null;
-    isActive: boolean;
     createdAt: string;
   }>;
   pagination: { ... };
@@ -2795,7 +2794,6 @@ GET /api/servers/:publicId
     description: string | null;
     type: 'DEPARTMENT' | 'CLASS' | 'SOCIETY';
     iconUrl: string | null;
-    isActive: boolean;
     createdAt: string;
     department?: {
       id: number;

@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 8 complete, Module 9 not started
+- Status: Module 9 complete
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
 - Source references: `pulled-docs/`
@@ -212,7 +212,8 @@ Changes:
 - Add designation lookup.
 - Add targeted constraints and partial indexes.
 - Align FK `onDelete` behavior with `docs/entity_deletion_policy.md`.
-- Temporarily keep current `isActive` fields until services are migrated.
+- Transitional `isActive` fields were kept only during staged migration and are
+  removed from the final Module 9 baseline.
 
 Acceptance:
 - Prisma generate, reset, seed, backend build, and focused schema tests pass.
@@ -229,9 +230,9 @@ Changes:
 - Added public-ID-to-internal-ID resolvers for core entities:
   `resolveUserPublicId`, `resolveClassPublicId`, `resolveSocietyPublicId`,
   `resolveServerPublicId`, `resolveChannelPublicId`, and `resolvePostPublicId`.
-- Added `resolveCoreIdentifier` for temporary staged migration support. Default
-  mode is public-ID only; `mode: "dual"` accepts UUIDv7 public IDs or positive
-  internal IDs and reports `source: "publicId" | "internalId"`.
+- Added temporary staged dual-resolution support during migration. Module 9
+  removed that compatibility; final core API helpers accept strict UUIDv7 public
+  IDs only.
 - Added shallow public DTO mappers:
   `mapUserPublicDto`, `mapClassPublicDto`, `mapSocietyPublicDto`,
   `mapServerPublicDto`, `mapChannelPublicDto`, and `mapPostPublicDto`.
@@ -389,6 +390,15 @@ Acceptance:
 - Full backend, frontend, and Playwright regression passes.
 - Docs match the implemented final state.
 
+Implementation status:
+- Complete as of 2026-06-05.
+- The final baseline is
+  `server/prisma/migrations/20260605000000_module9_final_baseline/migration.sql`.
+- `isActive`/`is_active` no longer exists on users, societies, or servers.
+- Temporary dual numeric/public core-ID resolution has been removed.
+- SQL-only partial indexes, lifecycle checks, role-assignment constraints, and
+  notification-preference constraints are preserved in the squashed baseline.
+
 ## Final Verification Gate
 
 Run from the correct app workspace:
@@ -416,3 +426,6 @@ Frontend:
 - Background cleanup or revocation events for expired platform roles.
 - Full trigger-based lifecycle stamping.
 - Opaque server-side sessions.
+- Investigate the Prisma adapter/`pg` transaction deprecation warning before a
+  future `pg@9` upgrade. Row-locking raw SQL is preserved for lifecycle
+  correctness until a lower-risk adapter or query pattern is available.

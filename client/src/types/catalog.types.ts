@@ -349,7 +349,6 @@ export interface ClassStudent {
     fullName: string;
     email: string;
     departmentId: number | null;
-    isActive: boolean;
   };
   class: {
     publicId: string;
@@ -369,6 +368,5 @@ export interface TeacherCandidate {
     fullName: string;
     email: string;
     departmentId: number | null;
-    isActive: boolean;
   };
 }

@@ -266,10 +266,10 @@ export async function getDepartmentStats(departmentId: number, requestingUser: A
   }
 
   const [students, teachers, classes, societies] = await Promise.all([
-    prisma.user.count({ where: { departmentId, userType: "STUDENT", isActive: true } }),
-    prisma.user.count({ where: { departmentId, userType: "TEACHER", isActive: true } }),
+    prisma.user.count({ where: { departmentId, userType: "STUDENT", status: "ACTIVE", isDeleted: false } }),
+    prisma.user.count({ where: { departmentId, userType: "TEACHER", status: "ACTIVE", isDeleted: false } }),
     prisma.class.count({ where: { program: { departmentId } } }),
-    prisma.society.count({ where: { departmentId, isActive: true } }),
+    prisma.society.count({ where: { departmentId, status: "ACTIVE", isDeleted: false } }),
   ]);
 
   return { departmentId, students, teachers, classes, societies };

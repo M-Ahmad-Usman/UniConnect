@@ -165,9 +165,9 @@
 | FR-52 | User can view their profile (name, program, semester, roles)          |
 | FR-53 | User can update profile picture and bio                               |
 | FR-54 | User can view their role badges                                       |
-| FR-55 | Admin can deactivate a user account (soft deactivation)               |
-| FR-56 | Deactivated users cannot login but their posts and data are preserved |
-| FR-57 | Admin can reactivate a previously deactivated user                    |
+| FR-55 | Admin can suspend a user account                                      |
+| FR-56 | Suspended users cannot login but their posts and data are preserved   |
+| FR-57 | Admin can reactivate a previously suspended user                      |
 
 #### 4.8 Role Management
 

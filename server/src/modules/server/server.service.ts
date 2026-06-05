@@ -44,7 +44,6 @@ const serverListSelect = {
   description: true,
   type: true,
   iconUrl: true,
-  isActive: true,
   createdAt: true,
 } as const;
 
@@ -55,7 +54,6 @@ const serverDetailSelect = {
   description: true,
   type: true,
   iconUrl: true,
-  isActive: true,
   createdAt: true,
   department: {
     select: { id: true, name: true, code: true },
@@ -203,7 +201,7 @@ async function canManageServer(
 async function findServerOrThrow(serverId: number) {
   const server = await prisma.server.findFirst({
     where: { id: serverId, isDeleted: false },
-    select: { id: true, isActive: true },
+    select: { id: true },
   });
 
   if (!server) {

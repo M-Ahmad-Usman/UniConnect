@@ -50,7 +50,7 @@ describe("POST /api/auth/login", () => {
     const inactiveUser = await createUser({
       email: "inactive@test.com",
       password: PASSWORD,
-      isActive: false,
+      status: "SUSPENDED",
     });
     inactiveUserEmail = inactiveUser.email;
 
@@ -129,7 +129,7 @@ describe("POST /api/auth/login", () => {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { status: "SUSPENDED", isActive: false },
+      data: { status: "SUSPENDED" },
     });
 
     const res = await request(app).get("/api/users/me").set("Cookie", cookies);
@@ -147,7 +147,7 @@ describe("POST /api/auth/login", () => {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { isDeleted: true, deletedAt: new Date(), isActive: false },
+      data: { isDeleted: true, deletedAt: new Date(), status: "SUSPENDED" },
     });
 
     const res = await request(app).get("/api/users/me").set("Cookie", cookies);
@@ -359,7 +359,7 @@ describe("PATCH /api/auth/change-password", () => {
 
     await prisma.user.update({
       where: { id: suspendedUser.id },
-      data: { isActive: false, status: "SUSPENDED" },
+      data: { status: "SUSPENDED" },
     });
 
     const res = await request(app)
@@ -402,7 +402,7 @@ describe("POST /api/auth/forgot-password", () => {
     await createUser({
       email: "forgot-suspended@test.com",
       password: "Pass@1234",
-      isActive: false,
+      status: "SUSPENDED",
     });
   });
 
@@ -551,7 +551,7 @@ describe("POST /api/auth/reset-password", () => {
     const suspendedUser = await createUser({
       email: "reset-suspended@test.com",
       password: "OldPass@123",
-      isActive: false,
+      status: "SUSPENDED",
     });
     const resetToken = jwt.sign(
       { id: suspendedUser.id, email: suspendedUser.email },

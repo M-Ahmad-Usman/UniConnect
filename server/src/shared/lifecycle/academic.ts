@@ -50,7 +50,6 @@ async function lockActiveActor(userId: number, client: PrismaTransaction): Promi
     SELECT "id"
     FROM "users"
     WHERE "id" = ${userId}
-      AND "is_active" = TRUE
       AND "is_deleted" = FALSE
       AND "status" = 'active'
     FOR UPDATE

@@ -8,7 +8,6 @@ export interface ServerListItem {
   description: string | null;
   type: ServerType;
   iconUrl: string | null;
-  isActive: boolean;
   createdAt: string;
 }
 
@@ -20,7 +19,6 @@ export interface ServerDetail {
   description: string | null;
   type: ServerType;
   iconUrl: string | null;
-  isActive: boolean;
   createdAt: string;
   department: {
     id: number;

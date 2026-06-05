@@ -26,10 +26,10 @@ CREATE TYPE "post_priority" AS ENUM ('normal', 'important', 'urgent');
 CREATE TYPE "section" AS ENUM ('A', 'B');
 
 -- CreateEnum
-CREATE TYPE "moderator_scope_type" AS ENUM ('server', 'channel');
+CREATE TYPE "platform_role_scope_type" AS ENUM ('server', 'channel');
 
 -- CreateEnum
-CREATE TYPE "notification_type" AS ENUM ('new_post', 'role_assigned', 'society_request_reviewed');
+CREATE TYPE "notification_type" AS ENUM ('new_post', 'role_assigned', 'society_request_reviewed', 'society_suspended', 'society_activated', 'society_deleted', 'society_restored');
 
 -- CreateEnum
 CREATE TYPE "notification_scope_type" AS ENUM ('server', 'channel');
@@ -103,7 +103,6 @@ CREATE TABLE "users" (
     "user_type" "user_type" NOT NULL,
     "department_id" INTEGER,
     "status" "user_status" NOT NULL DEFAULT 'active',
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "deleted_at" TIMESTAMP(3),
     "deleted_by" INTEGER,
@@ -161,7 +160,6 @@ CREATE TABLE "societies" (
     "convenor_id" INTEGER NOT NULL,
     "server_id" INTEGER NOT NULL,
     "status" "society_status" NOT NULL DEFAULT 'active',
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "deleted_at" TIMESTAMP(3),
     "deleted_by" INTEGER,
@@ -179,7 +177,6 @@ CREATE TABLE "servers" (
     "description" TEXT,
     "type" "server_type" NOT NULL,
     "icon_url" TEXT,
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "deleted_at" TIMESTAMP(3),
     "deleted_by" INTEGER,
@@ -298,6 +295,7 @@ CREATE TABLE "post_attachments" (
 CREATE TABLE "roles" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(100) NOT NULL,
+    "scope_type" "platform_role_scope_type" NOT NULL,
 
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
 );
@@ -319,16 +317,21 @@ CREATE TABLE "role_permissions" (
 );
 
 -- CreateTable
-CREATE TABLE "moderator_assignments" (
+CREATE TABLE "user_role_assignments" (
     "id" SERIAL NOT NULL,
+    "public_id" UUID NOT NULL DEFAULT uuidv7(),
     "user_id" INTEGER NOT NULL,
-    "scope_type" "moderator_scope_type" NOT NULL,
+    "role_id" INTEGER NOT NULL,
+    "scope_type" "platform_role_scope_type" NOT NULL,
     "server_id" INTEGER NOT NULL,
     "channel_id" INTEGER,
     "assigned_by" INTEGER,
-    "assigned_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "assigned_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMPTZ(3),
+    "revoked_by" INTEGER,
+    "revoked_at" TIMESTAMPTZ(3),
 
-    CONSTRAINT "moderator_assignments_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "user_role_assignments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -336,6 +339,7 @@ CREATE TABLE "notifications" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "post_id" INTEGER,
+    "society_id" INTEGER,
     "type" "notification_type" NOT NULL,
     "title" VARCHAR(200) NOT NULL,
     "message" TEXT,
@@ -428,13 +432,13 @@ CREATE UNIQUE INDEX "programs_department_id_discipline_id_degree_level_id_key" O
 CREATE UNIQUE INDEX "users_public_id_key" ON "users"("public_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_live_key" ON "users"("email") WHERE "is_deleted" = false;
-
--- CreateIndex
 CREATE INDEX "users_department_id_user_type_status_idx" ON "users"("department_id", "user_type", "status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "student_info_roll_number_key" ON "student_info"("roll_number");
+
+-- CreateIndex
+CREATE INDEX "student_info_class_id_idx" ON "student_info"("class_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "classes_public_id_key" ON "classes"("public_id");
@@ -453,9 +457,6 @@ CREATE UNIQUE INDEX "classes_program_id_current_semester_section_admission_year_
 
 -- CreateIndex
 CREATE UNIQUE INDEX "societies_public_id_key" ON "societies"("public_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "societies_name_live_key" ON "societies"("name") WHERE "is_deleted" = false;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "societies_president_id_key" ON "societies"("president_id");
@@ -482,16 +483,16 @@ CREATE INDEX "servers_type_is_deleted_idx" ON "servers"("type", "is_deleted");
 CREATE UNIQUE INDEX "channels_public_id_key" ON "channels"("public_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "channels_server_id_name_live_key" ON "channels"("server_id", "name") WHERE "is_deleted" = false;
-
--- CreateIndex
-CREATE UNIQUE INDEX "channels_server_id_course_id_live_key" ON "channels"("server_id", "course_id") WHERE "is_deleted" = false AND "course_id" IS NOT NULL;
-
--- CreateIndex
-CREATE INDEX "channels_server_id_program_id_live_idx" ON "channels"("server_id", "program_id") WHERE "is_deleted" = false AND "program_id" IS NOT NULL;
-
--- CreateIndex
 CREATE INDEX "channels_server_id_is_deleted_is_archived_idx" ON "channels"("server_id", "is_deleted", "is_archived");
+
+-- CreateIndex
+CREATE INDEX "channels_course_id_is_deleted_idx" ON "channels"("course_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "channels_program_id_is_deleted_idx" ON "channels"("program_id", "is_deleted");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "channels_id_server_id_key" ON "channels"("id", "server_id");
 
 -- CreateIndex
 CREATE INDEX "server_memberships_server_id_idx" ON "server_memberships"("server_id");
@@ -512,6 +513,12 @@ CREATE UNIQUE INDEX "society_membership_requests_society_id_user_id_key" ON "soc
 CREATE UNIQUE INDEX "courses_code_key" ON "courses"("code");
 
 -- CreateIndex
+CREATE INDEX "courses_department_id_idx" ON "courses"("department_id");
+
+-- CreateIndex
+CREATE INDEX "teaches_course_id_idx" ON "teaches"("course_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "teaches_class_id_course_id_key" ON "teaches"("class_id", "course_id");
 
 -- CreateIndex
@@ -530,13 +537,28 @@ CREATE INDEX "post_attachments_post_id_idx" ON "post_attachments"("post_id");
 CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "roles_id_scope_type_key" ON "roles"("id", "scope_type");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "permissions_name_key" ON "permissions"("name");
 
 -- CreateIndex
-CREATE INDEX "moderator_assignments_server_id_idx" ON "moderator_assignments"("server_id");
+CREATE UNIQUE INDEX "user_role_assignments_public_id_key" ON "user_role_assignments"("public_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "moderator_assignments_user_id_server_id_channel_id_key" ON "moderator_assignments"("user_id", "server_id", "channel_id");
+CREATE INDEX "user_role_assignments_user_id_revoked_at_expires_at_idx" ON "user_role_assignments"("user_id", "revoked_at", "expires_at");
+
+-- CreateIndex
+CREATE INDEX "user_role_assignments_role_id_server_id_revoked_at_expires__idx" ON "user_role_assignments"("role_id", "server_id", "revoked_at", "expires_at");
+
+-- CreateIndex
+CREATE INDEX "user_role_assignments_server_id_revoked_at_expires_at_idx" ON "user_role_assignments"("server_id", "revoked_at", "expires_at");
+
+-- CreateIndex
+CREATE INDEX "user_role_assignments_channel_id_revoked_at_expires_at_idx" ON "user_role_assignments"("channel_id", "revoked_at", "expires_at");
+
+-- CreateIndex
+CREATE INDEX "user_role_assignments_assigned_at_idx" ON "user_role_assignments"("assigned_at");
 
 -- CreateIndex
 CREATE INDEX "notifications_user_id_read_at_idx" ON "notifications"("user_id", "read_at");
@@ -546,6 +568,15 @@ CREATE INDEX "notifications_user_id_type_created_at_idx" ON "notifications"("use
 
 -- CreateIndex
 CREATE INDEX "notifications_post_id_idx" ON "notifications"("post_id");
+
+-- CreateIndex
+CREATE INDEX "notifications_society_id_idx" ON "notifications"("society_id");
+
+-- CreateIndex
+CREATE INDEX "notification_preferences_server_id_idx" ON "notification_preferences"("server_id");
+
+-- CreateIndex
+CREATE INDEX "notification_preferences_channel_id_idx" ON "notification_preferences"("channel_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "notification_preferences_user_id_notification_type_scope_ty_key" ON "notification_preferences"("user_id", "notification_type", "scope_type", "server_id", "channel_id");
@@ -564,6 +595,9 @@ CREATE INDEX "audit_logs_target_type_target_id_created_at_idx" ON "audit_logs"("
 
 -- CreateIndex
 CREATE INDEX "audit_logs_action_created_at_idx" ON "audit_logs"("action", "created_at");
+
+-- CreateIndex
+CREATE INDEX "program_curriculum_course_id_idx" ON "program_curriculum"("course_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "program_curriculum_program_id_course_id_batch_year_key" ON "program_curriculum"("program_id", "course_id", "batch_year");
@@ -710,22 +744,31 @@ ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FO
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "moderator_assignments" ADD CONSTRAINT "moderator_assignments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_role_assignments" ADD CONSTRAINT "user_role_assignments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "moderator_assignments" ADD CONSTRAINT "moderator_assignments_server_id_fkey" FOREIGN KEY ("server_id") REFERENCES "servers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_role_assignments" ADD CONSTRAINT "user_role_assignments_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "moderator_assignments" ADD CONSTRAINT "moderator_assignments_channel_id_fkey" FOREIGN KEY ("channel_id") REFERENCES "channels"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_role_assignments" ADD CONSTRAINT "user_role_assignments_server_id_fkey" FOREIGN KEY ("server_id") REFERENCES "servers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "moderator_assignments" ADD CONSTRAINT "moderator_assignments_assigned_by_fkey" FOREIGN KEY ("assigned_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "user_role_assignments" ADD CONSTRAINT "user_role_assignments_channel_id_fkey" FOREIGN KEY ("channel_id") REFERENCES "channels"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_role_assignments" ADD CONSTRAINT "user_role_assignments_assigned_by_fkey" FOREIGN KEY ("assigned_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_role_assignments" ADD CONSTRAINT "user_role_assignments_revoked_by_fkey" FOREIGN KEY ("revoked_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_society_id_fkey" FOREIGN KEY ("society_id") REFERENCES "societies"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "notification_preferences" ADD CONSTRAINT "notification_preferences_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -747,3 +790,165 @@ ALTER TABLE "program_curriculum" ADD CONSTRAINT "program_curriculum_program_id_f
 
 -- AddForeignKey
 ALTER TABLE "program_curriculum" ADD CONSTRAINT "program_curriculum_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- SQL-only safeguards preserved from the schema/lifecycle refactor.
+-- Prisma's schema DSL cannot represent these partial indexes, expression
+-- indexes, composite FKs, checks, or exclusion constraints.
+
+-- Live-row uniqueness for soft-deletable entities.
+CREATE UNIQUE INDEX "users_email_live_key" ON "users"("email") WHERE "is_deleted" = false;
+CREATE UNIQUE INDEX "societies_name_live_key" ON "societies"("name") WHERE "is_deleted" = false;
+CREATE UNIQUE INDEX "channels_server_id_name_live_key" ON "channels"("server_id", "name") WHERE "is_deleted" = false;
+CREATE UNIQUE INDEX "channels_server_id_course_id_live_key" ON "channels"("server_id", "course_id") WHERE "is_deleted" = false AND "course_id" IS NOT NULL;
+CREATE INDEX "channels_server_id_program_id_live_idx" ON "channels"("server_id", "program_id") WHERE "is_deleted" = false AND "program_id" IS NOT NULL;
+
+-- Lifecycle consistency for soft-deletable entities.
+ALTER TABLE "users"
+ADD CONSTRAINT "users_lifecycle_state_check"
+CHECK (
+  (
+    "is_deleted" = TRUE
+    AND "deleted_at" IS NOT NULL
+  )
+  OR
+  (
+    "is_deleted" = FALSE
+    AND "deleted_at" IS NULL
+    AND "deleted_by" IS NULL
+  )
+);
+
+ALTER TABLE "societies"
+ADD CONSTRAINT "societies_lifecycle_state_check"
+CHECK (
+  (
+    "is_deleted" = TRUE
+    AND "deleted_at" IS NOT NULL
+    AND "deleted_cascade_id" IS NOT NULL
+  )
+  OR
+  (
+    "is_deleted" = FALSE
+    AND "deleted_at" IS NULL
+    AND "deleted_by" IS NULL
+    AND "deleted_cascade_id" IS NULL
+  )
+);
+
+ALTER TABLE "servers"
+ADD CONSTRAINT "servers_lifecycle_state_check"
+CHECK (
+  (
+    "is_deleted" = TRUE
+    AND "deleted_at" IS NOT NULL
+  )
+  OR
+  (
+    "is_deleted" = FALSE
+    AND "deleted_at" IS NULL
+    AND "deleted_by" IS NULL
+    AND "deleted_cascade_id" IS NULL
+  )
+);
+
+ALTER TABLE "channels"
+ADD CONSTRAINT "channels_lifecycle_state_check"
+CHECK (
+  (
+    "is_deleted" = TRUE
+    AND "deleted_at" IS NOT NULL
+  )
+  OR
+  (
+    "is_deleted" = FALSE
+    AND "deleted_at" IS NULL
+    AND "deleted_by" IS NULL
+    AND "deleted_cascade_id" IS NULL
+  )
+);
+
+CREATE INDEX "channels_server_id_deleted_cascade_id_idx"
+ON "channels"("server_id", "deleted_cascade_id")
+WHERE "deleted_cascade_id" IS NOT NULL;
+
+-- Platform role-assignment scope and period integrity.
+ALTER TABLE "user_role_assignments"
+ADD CONSTRAINT "user_role_assignments_scope_check"
+CHECK (
+  ("scope_type" = 'server'::"platform_role_scope_type" AND "channel_id" IS NULL)
+  OR
+  ("scope_type" = 'channel'::"platform_role_scope_type" AND "channel_id" IS NOT NULL)
+);
+
+ALTER TABLE "user_role_assignments"
+ADD CONSTRAINT "user_role_assignments_expiry_check"
+CHECK ("expires_at" IS NULL OR "expires_at" > "assigned_at");
+
+ALTER TABLE "user_role_assignments"
+ADD CONSTRAINT "user_role_assignments_revocation_check"
+CHECK (
+  ("revoked_at" IS NULL AND "revoked_by" IS NULL)
+  OR
+  ("revoked_at" IS NOT NULL AND "revoked_at" >= "assigned_at")
+);
+
+ALTER TABLE "user_role_assignments"
+ADD CONSTRAINT "user_role_assignments_role_scope_fkey"
+FOREIGN KEY ("role_id", "scope_type") REFERENCES "roles"("id", "scope_type")
+ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "user_role_assignments"
+ADD CONSTRAINT "user_role_assignments_channel_server_fkey"
+FOREIGN KEY ("channel_id", "server_id") REFERENCES "channels"("id", "server_id")
+ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+ALTER TABLE "user_role_assignments"
+ADD CONSTRAINT "user_role_assignments_no_overlapping_periods"
+EXCLUDE USING gist (
+  "user_id" WITH =,
+  "role_id" WITH =,
+  "server_id" WITH =,
+  (COALESCE("channel_id", 0)) WITH =,
+  (
+    tstzrange(
+      "assigned_at",
+      LEAST(
+        COALESCE("expires_at", 'infinity'::timestamptz),
+        COALESCE("revoked_at", 'infinity'::timestamptz)
+      ),
+      '[)'
+    )
+  ) WITH &&
+);
+
+-- Notification preference scope and null-safe uniqueness integrity.
+ALTER TABLE "notification_preferences"
+ADD CONSTRAINT "notification_preferences_scope_channel_check"
+CHECK (
+  ("scope_type" = 'server'::"notification_scope_type" AND "channel_id" IS NULL)
+  OR
+  ("scope_type" = 'channel'::"notification_scope_type" AND "channel_id" IS NOT NULL)
+);
+
+ALTER TABLE "notification_preferences"
+ADD CONSTRAINT "notification_preferences_configurable_type_check"
+CHECK ("notification_type" IN (
+  'new_post'::"notification_type",
+  'role_assigned'::"notification_type"
+));
+
+ALTER TABLE "notification_preferences"
+ADD CONSTRAINT "notification_preferences_channel_id_server_id_fkey"
+FOREIGN KEY ("channel_id", "server_id") REFERENCES "channels"("id", "server_id")
+ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE UNIQUE INDEX "notification_preferences_scope_unique"
+ON "notification_preferences"(
+  "user_id",
+  "notification_type",
+  "scope_type",
+  "server_id",
+  COALESCE("channel_id", 0)
+);

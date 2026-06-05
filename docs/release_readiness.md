@@ -92,12 +92,13 @@ and accessibility.
 - No known permission/UI mismatch remains in hardened workflows.
 - Root `README.md` reflects current full-system status.
 
-## Module 7 Completion Status
-- Status: complete as of 2026-05-25.
-- Backend build, focused backend suites, and full backend Jest passed.
-- Frontend type-check, lint, Vitest, production build, targeted Playwright, and
-  full Playwright passed.
-- Remaining follow-ups are operational cleanup items, not release blockers:
-  existing Vite large `react-vendor` chunk warning, shutdown-time Vite websocket
-  proxy `ECONNRESET` noise in Playwright, and pg concurrent `client.query()`
-  deprecation warning.
+## Module 9 Completion Status
+- Status: complete as of 2026-06-05.
+- Backend schema cleanup, final baseline migration, build, focused suites, and
+  full Jest suite passed.
+- Frontend type-check, lint, Vitest, and production build passed; the previous
+  Vite large `react-vendor` chunk warning is resolved.
+- Full Playwright passed, 36/36; the previous shutdown-time Vite websocket
+  proxy `ECONNRESET` noise did not recur.
+- Remaining follow-up is operational cleanup for the Prisma adapter/`pg`
+  transaction deprecation warning before a future `pg@9` upgrade.

@@ -218,7 +218,7 @@ describe("Module 12 - Admin Dashboard", () => {
         email: "inactive-user-filter@test.com",
         password: "Pass@1234",
         userType: "STUDENT",
-        isActive: false,
+        status: "SUSPENDED",
       });
 
       const cookies = await loginAs(admin.email, "Pass@1234");

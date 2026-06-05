@@ -179,7 +179,6 @@ async function findSocietyOrThrow(
       convenorId: true,
       departmentId: true,
       status: true,
-      isActive: true,
       isDeleted: true,
       deletedCascadeId: true,
       president: { select: { user: { select: { id: true } } } },
@@ -207,7 +206,6 @@ async function assertStudentForSocietyOrThrow(
       id: resolved.id,
       userType: "STUDENT",
       status: "ACTIVE",
-      isActive: true,
       isDeleted: false,
     },
     select: {
@@ -240,7 +238,6 @@ async function assertTeacherForSocietyOrThrow(
       id: resolved.id,
       userType: "TEACHER",
       status: "ACTIVE",
-      isActive: true,
       isDeleted: false,
     },
     select: {
@@ -306,28 +303,25 @@ async function collectLifecycleRefreshUserIds(
   departmentId: number,
   actorUserId: number,
 ): Promise<number[]> {
-  const [members, admins, department] = await Promise.all([
-    client.serverMembership.findMany({
-      where: {
-        serverId,
-        user: { status: "ACTIVE", isActive: true, isDeleted: false },
-      },
-      select: { userId: true },
-    }),
-    client.user.findMany({
-      where: {
-        userType: "ADMIN",
-        status: "ACTIVE",
-        isActive: true,
-        isDeleted: false,
-      },
-      select: { id: true },
-    }),
-    client.department.findUnique({
-      where: { id: departmentId },
-      select: { hodId: true },
-    }),
-  ]);
+  const members = await client.serverMembership.findMany({
+    where: {
+      serverId,
+      user: { status: "ACTIVE", isDeleted: false },
+    },
+    select: { userId: true },
+  });
+  const admins = await client.user.findMany({
+    where: {
+      userType: "ADMIN",
+      status: "ACTIVE",
+      isDeleted: false,
+    },
+    select: { id: true },
+  });
+  const department = await client.department.findUnique({
+    where: { id: departmentId },
+    select: { hodId: true },
+  });
   return [
     ...new Set([
       actorUserId,
@@ -616,7 +610,7 @@ export async function addMember(societyPublicId: string, userPublicId: string, c
     await assertSocietyAcceptsWrites(societyResolution.id, tx);
     const society = await findSocietyOrThrow(societyResolution.id, tx);
     assertLeadershipAuthority(society, caller);
-    const user = await tx.user.findFirst({ where: { id: userResolution.id, userType: "STUDENT", status: "ACTIVE", isActive: true, isDeleted: false }, select: { id: true } });
+    const user = await tx.user.findFirst({ where: { id: userResolution.id, userType: "STUDENT", status: "ACTIVE", isDeleted: false }, select: { id: true } });
     if (!user) throw new ForbiddenError("Only active students can be added as society members");
     const existing = await tx.serverMembership.findUnique({ where: { userId_serverId: { userId: user.id, serverId: society.serverId } }, select: { userId: true } });
     if (existing) throw new ConflictError("User is already a member of this society", ApiErrorCode.ALREADY_MEMBER);
@@ -688,7 +682,6 @@ export async function listMemberCandidates(societyPublicId: string, query: Membe
   const where: Prisma.UserWhereInput = {
     userType: "STUDENT",
     status: "ACTIVE",
-    isActive: true,
     isDeleted: false,
     serverMemberships: { none: { serverId: society.serverId } },
     ...(search ? { OR: [{ fullName: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
@@ -709,7 +702,6 @@ export async function listLeadershipCandidates(query: LeadershipCandidatesQuery,
   const where: Prisma.UserWhereInput = {
     userType: query.role === "president" ? "STUDENT" : "TEACHER",
     status: "ACTIVE",
-    isActive: true,
     isDeleted: false,
     departmentId: query.departmentId,
     ...(query.role === "president" ? { studentInfo: { isNot: null } } : { teacherInfo: { isNot: null } }),
@@ -727,13 +719,11 @@ export async function getSocietyDeletionImpact(societyPublicId: string, caller: 
   return prisma.$transaction(async (tx) => {
     const society = await findSocietyOrThrow(resolved.id, tx, true);
     assertLifecycleAuthority(society, caller);
-    const [activeMemberCount, liveChannelCount, pendingRequestCount, preservedPostCount, preservedPlatformRoleAssignmentCount] = await Promise.all([
-      tx.serverMembership.count({ where: { serverId: society.serverId, user: { status: "ACTIVE", isActive: true, isDeleted: false } } }),
-      tx.channel.count({ where: { serverId: society.serverId, isDeleted: false } }),
-      tx.societyMembershipRequest.count({ where: { societyId: society.id, status: "PENDING" } }),
-      tx.post.count({ where: { channel: { serverId: society.serverId } } }),
-      tx.userRoleAssignment.count({ where: { serverId: society.serverId } }),
-    ]);
+    const activeMemberCount = await tx.serverMembership.count({ where: { serverId: society.serverId, user: { status: "ACTIVE", isDeleted: false } } });
+    const liveChannelCount = await tx.channel.count({ where: { serverId: society.serverId, isDeleted: false } });
+    const pendingRequestCount = await tx.societyMembershipRequest.count({ where: { societyId: society.id, status: "PENDING" } });
+    const preservedPostCount = await tx.post.count({ where: { channel: { serverId: society.serverId } } });
+    const preservedPlatformRoleAssignmentCount = await tx.userRoleAssignment.count({ where: { serverId: society.serverId } });
     return { canDelete: !society.isDeleted, activeMemberCount, liveChannelCount, pendingRequestCount, preservedPostCount, preservedPlatformRoleAssignmentCount };
   });
 }
@@ -745,8 +735,7 @@ export async function updateSocietyStatus(societyPublicId: string, status: Socie
     const society = await findSocietyOrThrow(locked.id, tx);
     assertLifecycleAuthority(society, caller);
     if (locked.status === status) throw new ConflictError(`Society is already ${status.toLowerCase()}`);
-    const updated = await tx.society.update({ where: { id: society.id }, data: { status, isActive: status === "ACTIVE" }, select: societyListSelect });
-    await tx.server.update({ where: { id: society.serverId }, data: { isActive: status === "ACTIVE" } });
+    const updated = await tx.society.update({ where: { id: society.id }, data: { status }, select: societyListSelect });
     const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: status === "ACTIVE" ? "SOCIETY_ACTIVATED" : "SOCIETY_SUSPENDED" });
     await recordAuditLog({ action: "society.status_update", targetType: "society", targetId: society.publicId, summary: { status: { before: locked.status, after: status }, reason: reason ?? null } }, auditContext, tx);
     return { data: updated, notificationIds, refreshUserIds: await collectLifecycleRefreshUserIds(tx, society.serverId, society.departmentId, caller.id) };
@@ -764,8 +753,8 @@ export async function deleteSociety(societyPublicId: string, caller: CallerInfo,
     if (locked.isDeleted) throw new ConflictError("Society is already deleted");
     const now = new Date();
     const cascadeId = randomUUID();
-    const updated = await tx.society.update({ where: { id: society.id }, data: { isDeleted: true, isActive: false, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId }, select: societyListSelect });
-    await tx.server.update({ where: { id: society.serverId }, data: { isDeleted: true, isActive: false, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId } });
+    const updated = await tx.society.update({ where: { id: society.id }, data: { isDeleted: true, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId }, select: societyListSelect });
+    await tx.server.update({ where: { id: society.serverId }, data: { isDeleted: true, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId } });
     const channels = await tx.channel.updateMany({ where: { serverId: society.serverId, isDeleted: false }, data: { isDeleted: true, deletedAt: now, deletedBy: caller.id, deletedCascadeId: cascadeId } });
     const pendingRequests = await tx.societyMembershipRequest.deleteMany({ where: { societyId: society.id, status: "PENDING" } });
     const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: "SOCIETY_DELETED" });
@@ -786,10 +775,10 @@ export async function restoreSociety(societyPublicId: string, caller: CallerInfo
     if (!locked.deletedCascadeId) throw new ConflictError("Society deletion cascade metadata is missing");
     const duplicate = await tx.society.findFirst({ where: { id: { not: society.id }, name: society.name, isDeleted: false }, select: { id: true } });
     if (duplicate) throw new ConflictError("Society name has been reused", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
-    const server = await tx.server.updateMany({ where: { id: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, isActive: society.status === "ACTIVE", deletedAt: null, deletedBy: null, deletedCascadeId: null } });
+    const server = await tx.server.updateMany({ where: { id: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, deletedAt: null, deletedBy: null, deletedCascadeId: null } });
     if (server.count !== 1) throw new ConflictError("Society server cascade metadata is inconsistent");
     const channels = await tx.channel.updateMany({ where: { serverId: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, deletedAt: null, deletedBy: null, deletedCascadeId: null } });
-    const updated = await tx.society.update({ where: { id: society.id }, data: { isDeleted: false, isActive: society.status === "ACTIVE", deletedAt: null, deletedBy: null, deletedCascadeId: null }, select: societyListSelect });
+    const updated = await tx.society.update({ where: { id: society.id }, data: { isDeleted: false, deletedAt: null, deletedBy: null, deletedCascadeId: null }, select: societyListSelect });
     const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: "SOCIETY_RESTORED" });
     await recordAuditLog({ action: "society.restore", targetType: "society", targetId: society.publicId, summary: { restoredStatus: society.status, reason: reason ?? null, restoredChannels: channels.count } }, auditContext, tx);
     return { data: updated, notificationIds, refreshUserIds: await collectLifecycleRefreshUserIds(tx, society.serverId, society.departmentId, caller.id) };

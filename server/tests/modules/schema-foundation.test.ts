@@ -56,15 +56,13 @@ describe("Module 1 - Schema Foundation", () => {
     expect(post.publicId).toMatch(UUID_V7_REGEX);
 
     expect(admin.status).toBe("ACTIVE");
-    expect(admin.isActive).toBe(true);
     expect(admin.isDeleted).toBe(false);
     expect(society.status).toBe("ACTIVE");
-    expect(society.isActive).toBe(true);
     expect(society.isDeleted).toBe(false);
     expect(server.isDeleted).toBe(false);
   });
 
-  it("dual-writes user lifecycle status endpoint to transitional isActive", async () => {
+  it("keeps final lifecycle state on status and deletion columns only", async () => {
     const admin = await createUser({
       email: "schema-status-admin@test.com",
       password: "Pass@1234",
@@ -83,7 +81,6 @@ describe("Module 1 - Schema Foundation", () => {
 
     expect(deactivateRes.status).toBe(200);
     const deactivated = await prisma.user.findUniqueOrThrow({ where: { id: target.id } });
-    expect(deactivated.isActive).toBe(false);
     expect(deactivated.status).toBe("SUSPENDED");
 
     const reactivateRes = await request(app)
@@ -93,8 +90,17 @@ describe("Module 1 - Schema Foundation", () => {
 
     expect(reactivateRes.status).toBe(200);
     const reactivated = await prisma.user.findUniqueOrThrow({ where: { id: target.id } });
-    expect(reactivated.isActive).toBe(true);
     expect(reactivated.status).toBe("ACTIVE");
+
+    const columns = await prisma.$queryRaw<Array<{ table_name: string }>>`
+      SELECT "table_name"
+      FROM "information_schema"."columns"
+      WHERE "table_schema" = 'public'
+        AND "table_name" IN ('users', 'societies', 'servers')
+        AND "column_name" = 'is_active'
+    `;
+
+    expect(columns).toEqual([]);
   });
 
   it("allows email reuse only after user soft-delete", async () => {

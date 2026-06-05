@@ -223,7 +223,6 @@ export async function canPostInChannel(
       server: {
         select: {
           type: true,
-          isActive: true,
           isDeleted: true,
           memberships: {
             where: { userId },
@@ -231,19 +230,18 @@ export async function canPostInChannel(
             take: 1,
           },
           class: { select: { id: true } },
-          society: { select: { status: true, isActive: true, isDeleted: true } },
+          society: { select: { status: true, isDeleted: true } },
         },
       },
     },
   });
 
   if (!channel || channel.isDeleted || channel.isArchived) return false;
-  if (!channel.server.isActive || channel.server.isDeleted) return false;
+  if (channel.server.isDeleted) return false;
   if (
     channel.server.society &&
     (
       channel.server.society.status !== "ACTIVE" ||
-      !channel.server.society.isActive ||
       channel.server.society.isDeleted
     )
   ) {

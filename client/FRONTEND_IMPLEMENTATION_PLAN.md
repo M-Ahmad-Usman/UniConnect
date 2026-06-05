@@ -1,9 +1,13 @@
 # UniConnect Frontend Implementation Plan
 
 **Version:** 1.0
-**Last Updated:** 2026-03-10
+**Last Updated:** 2026-06-05
 **Project:** UniConnect - University Communication Platform
 **Target Users:** Department of Computer Science, NTU (~1000 students, ~75 faculty)
+
+**Current contract note:** This plan is historical. Current API and lifecycle
+contracts are governed by `client/API_CONTRACT.md` and
+`docs/schema_lifecycle_refactor_plan.md`.
 
 ---
 
@@ -1334,11 +1338,12 @@ export const usersApi = {
   listUsers: (params: UserListParams) =>
     axios.get<PaginatedResponse<UserListItem>>('/users', { params }),
 
-  getUser: (id: number) => axios.get<UserProfile>(`/users/${id}`),
+  getUser: (publicId: string) => axios.get<UserProfile>(`/users/${publicId}`),
 
-  deactivateUser: (id: number) => axios.patch(`/users/${id}/deactivate`),
+  updateUserStatus: (publicId: string, status: UserStatus) =>
+    axios.patch(`/users/${publicId}/status`, { status }),
 
-  reactivateUser: (id: number) => axios.patch(`/users/${id}/reactivate`),
+  restoreUser: (publicId: string) => axios.patch(`/users/${publicId}/restore`),
 };
 ```
 
@@ -1428,7 +1433,7 @@ routes remain compatibility redirects.
 - Fetches via `useAdminStats()` → `GET /api/admin/stats`
 - Grid of stat cards (4 columns on desktop, 2 on tablet, 1 on mobile):
   1. **Total Users** - Count + breakdown: Admin / Teacher / Student
-  2. **Active Users** - Count (isActive === true)
+  2. **Active Users** - Count (`status === 'ACTIVE' && isDeleted === false`)
   3. **Total Servers** - Count + breakdown: Department / Class / Society
   4. **Total Posts** - Count
 - Each card:
@@ -2109,7 +2114,7 @@ export function Can({ action, serverId, children }: CanProps) {
 ✅ Admin user list with filters
 ✅ Create user
 ✅ Bulk import CSV
-✅ Deactivate/reactivate user
+✅ Suspend/reactivate user
 
 ### Module 7
 

@@ -65,7 +65,6 @@ export interface PermissionContext {
     userType: string;
     departmentId: number | null;
     status: string;
-    isActive: boolean;
   } | null;
   scopes: PermissionScopeSummary;
   hodServerIds: number[];
@@ -163,7 +162,7 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
     await Promise.all([
       prisma.user.findFirst({
         where: { id: userId, isDeleted: false },
-        select: { id: true, userType: true, departmentId: true, status: true, isActive: true },
+        select: { id: true, userType: true, departmentId: true, status: true },
       }),
       prisma.department.findMany({
         where: { hodId: userId },
@@ -233,7 +232,7 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
 }
 
 export function buildGlobalPermissions(context: PermissionContext): GlobalPermissions {
-  if (!isActiveUser(context)) {
+  if (!hasActiveUser(context)) {
     return emptyGlobalPermissions();
   }
 
@@ -271,7 +270,7 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
 }
 
 export function buildRoleWorkspacePermissions(context: PermissionContext): RoleWorkspacePermissions {
-  if (!isActiveUser(context)) {
+  if (!hasActiveUser(context)) {
     return emptyRoleWorkspacePermissions();
   }
 
@@ -313,7 +312,7 @@ export function buildClassPermissions(
   context: PermissionContext,
   classRecord: ClassPermissionTarget | null
 ): ClassPermissions {
-  if (!isActiveUser(context) || !classRecord) {
+  if (!hasActiveUser(context) || !classRecord) {
     return emptyClassPermissions();
   }
 
@@ -351,7 +350,7 @@ export function buildSocietyPermissions(
   society: SocietyPermissionTarget | null,
   viewer: SocietyViewerState
 ): SocietyPermissions {
-  if (!isActiveUser(context) || !society) {
+  if (!hasActiveUser(context) || !society) {
     return emptySocietyPermissions();
   }
 
@@ -398,10 +397,10 @@ export function buildSocietyPermissions(
   };
 }
 
-function isActiveUser(
+function hasActiveUser(
   context: PermissionContext
 ): context is PermissionContext & { user: NonNullable<PermissionContext["user"]> } {
-  return Boolean(context.user?.isActive && context.user.status === "ACTIVE");
+  return Boolean(context.user?.status === "ACTIVE");
 }
 
 function allClassPermissions(): ClassPermissions {

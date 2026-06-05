@@ -3,7 +3,6 @@ import { prisma } from "../../config/prisma.js";
 import {
   ApiErrorCode,
   ConflictError,
-  ForbiddenError,
   NotFoundError,
 } from "../errors/index.js";
 
@@ -17,11 +16,9 @@ type SocietyLifecycleRow = {
   publicId: string;
   name: string;
   status: "ACTIVE" | "SUSPENDED";
-  isActive: boolean;
   isDeleted: boolean;
   deletedCascadeId: string | null;
   serverId: number;
-  serverIsActive: boolean;
   serverIsDeleted: boolean;
 };
 
@@ -30,11 +27,9 @@ type SocietyLifecycleSqlRow = {
   public_id: string;
   name: string;
   status: "active" | "suspended";
-  is_active: boolean;
   is_deleted: boolean;
   deleted_cascade_id: string | null;
   server_id: number;
-  server_is_active: boolean;
   server_is_deleted: boolean;
 };
 
@@ -44,11 +39,9 @@ function mapLifecycleRow(row: SocietyLifecycleSqlRow): SocietyLifecycleRow {
     publicId: row.public_id,
     name: row.name,
     status: row.status === "active" ? "ACTIVE" : "SUSPENDED",
-    isActive: row.is_active,
     isDeleted: row.is_deleted,
     deletedCascadeId: row.deleted_cascade_id,
     serverId: row.server_id,
-    serverIsActive: row.server_is_active,
     serverIsDeleted: row.server_is_deleted,
   };
 }
@@ -68,11 +61,9 @@ export async function lockSocietyLifecycleRow(
       society."public_id",
       society."name",
       society."status",
-      society."is_active",
       society."is_deleted",
       society."deleted_cascade_id",
       server."id" AS "server_id",
-      server."is_active" AS "server_is_active",
       server."is_deleted" AS "server_is_deleted"
     FROM "societies" AS society
     INNER JOIN "servers" AS server ON server."id" = society."server_id"
@@ -91,9 +82,7 @@ export function assertLiveSocietyAcceptsWrites(society: SocietyLifecycleRow): vo
     throw new NotFoundError("Society not found");
   }
   if (
-    society.status !== "ACTIVE" ||
-    !society.isActive ||
-    !society.serverIsActive
+    society.status !== "ACTIVE"
   ) {
     throw new ConflictError(
       "Suspended societies are read-only",
@@ -117,7 +106,7 @@ export async function assertServerAcceptsWrites(
 ): Promise<void> {
   const server = await client.server.findUnique({
     where: { id: serverId },
-    select: { id: true, type: true, isActive: true, isDeleted: true },
+    select: { id: true, type: true, isDeleted: true },
   });
   if (!server || server.isDeleted) {
     throw new NotFoundError("Server not found");
@@ -132,8 +121,5 @@ export async function assertServerAcceptsWrites(
     }
     await assertSocietyAcceptsWrites(society.id, client);
     return;
-  }
-  if (!server.isActive) {
-    throw new ForbiddenError("Inactive servers are read-only");
   }
 }

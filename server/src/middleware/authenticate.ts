@@ -36,12 +36,11 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
         departmentId: true,
         mustChangePassword: true,
         status: true,
-        isActive: true,
         isDeleted: true,
       },
     });
 
-    if (!user || user.isDeleted || !user.isActive || user.status !== "ACTIVE") {
+    if (!user || user.isDeleted || user.status !== "ACTIVE") {
       throw new UnauthorizedError("Authentication required");
     }
 

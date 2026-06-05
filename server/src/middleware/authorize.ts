@@ -118,27 +118,26 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
   const [hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, platformAssignments] =
     await Promise.all([
       prisma.department.findMany({
-        where: { hodId: userId, server: { isDeleted: false, isActive: true } },
+        where: { hodId: userId, server: { isDeleted: false } },
         select: { serverId: true },
       }),
       prisma.program.findMany({
         where: {
           programDirectorId: userId,
-          department: { server: { isDeleted: false, isActive: true } },
+          department: { server: { isDeleted: false } },
         },
         select: { department: { select: { serverId: true } } },
       }),
       prisma.class.findMany({
-        where: { crId: userId, status: "ACTIVE", server: { isDeleted: false, isActive: true } },
+        where: { crId: userId, status: "ACTIVE", server: { isDeleted: false } },
         select: { serverId: true },
       }),
       prisma.society.findMany({
         where: {
           presidentId: userId,
           status: "ACTIVE",
-          isActive: true,
           isDeleted: false,
-          server: { isDeleted: false, isActive: true },
+          server: { isDeleted: false },
         },
         select: { serverId: true },
       }),
@@ -146,9 +145,8 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
         where: {
           convenorId: userId,
           status: "ACTIVE",
-          isActive: true,
           isDeleted: false,
-          server: { isDeleted: false, isActive: true },
+          server: { isDeleted: false },
         },
         select: { serverId: true },
       }),

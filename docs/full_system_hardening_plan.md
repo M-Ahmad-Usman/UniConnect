@@ -19,7 +19,7 @@ This plan is divided into implementation modules so each module can be built, te
   - Program Directors cannot run semester progression.
 - Student class management:
   - Admins and own-department HODs can enroll or transfer existing students between classes.
-  - HODs do not create, edit, deactivate, or reactivate users in this hardening pass.
+  - HODs do not create, edit, suspend, or reactivate users in this hardening pass.
   - Student transfer moves class access: add the new class server membership and remove the old auto class server membership.
 - Class Representatives:
   - CRs keep communication powers and moderator delegation in their own class server.

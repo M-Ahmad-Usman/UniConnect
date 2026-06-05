@@ -233,7 +233,7 @@
   - Backend build passes.
   - Focused role Jest suite passes, 47/47.
   - Frontend role/socket Vitest coverage passes, 6/6.
-  - Frontend type-check, lint, and production build pass. Vite still reports the existing large `react-vendor` chunk warning.
+  - Frontend type-check, lint, and production build pass. Vite reported the then-existing large `react-vendor` chunk warning; Module 9 later resolved it.
   - Module 4 Playwright role-management flows pass for HOD CR assignment, PD CR assignment, CR class-server moderator assignment, and society leader moderator assignment.
 
 ## Module 5 Checklist: Security Hardening
@@ -382,8 +382,8 @@
   - Frontend type-check, lint, Vitest, production build, targeted Playwright, and full Playwright pass.
   - Full frontend Vitest suite passes, 129/129.
   - Full Playwright suite passes, 36/36.
-  - Vite still reports the existing large `react-vendor` chunk warning during production build.
-  - Playwright runs still emit shutdown-time Vite websocket proxy `ECONNRESET` noise and a pg deprecation warning about concurrent `client.query()` usage; these did not fail the suite and should be tracked as follow-up operational cleanup.
+  - Vite reported the then-existing large `react-vendor` chunk warning during production build; Module 9 later resolved it.
+  - Playwright runs emitted shutdown-time Vite websocket proxy `ECONNRESET` noise and a pg deprecation warning about concurrent `client.query()` usage. Module 9 full-suite runs did not reproduce the websocket noise; the pg warning remains deferred before a future pg 9 upgrade.
 
 ## Decision Log
 

@@ -88,12 +88,11 @@ async function createUser(pool: Pool, user: SeedUser) {
         password_hash,
         gender,
         user_type,
-        is_active,
         must_change_password,
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5::gender, $6::user_type, $7, $8, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5::gender, $6::user_type, $7, NOW(), NOW())
     `,
     [
       user.fullName,
@@ -102,7 +101,6 @@ async function createUser(pool: Pool, user: SeedUser) {
       passwordHash,
       'male',
       user.userType ?? 'Student',
-      true,
       user.mustChangePassword,
     ],
   );
@@ -236,7 +234,6 @@ async function seedModule3Data(pool: Pool) {
         password_hash,
         gender,
         user_type,
-        is_active,
         must_change_password,
         department_id,
         created_at,
@@ -249,7 +246,6 @@ async function seedModule3Data(pool: Pool) {
         'not-used-for-login',
         'male'::gender,
         'Student'::user_type,
-        true,
         false,
         $1,
         NOW(),

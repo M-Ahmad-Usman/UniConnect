@@ -191,7 +191,6 @@ model User {
   userType               UserType   @map("user_type")
   departmentId           Int?       @map("department_id")
   status                 UserStatus @default(ACTIVE)
-  isActive               Boolean    @default(true) @map("is_active")
   isDeleted              Boolean    @default(false) @map("is_deleted")
   deletedAt              DateTime?  @map("deleted_at")
   deletedBy              Int?       @map("deleted_by")
@@ -305,7 +304,6 @@ model Society {
   convenorId       Int           @unique @map("convenor_id")
   serverId         Int           @unique @map("server_id")
   status           SocietyStatus @default(ACTIVE)
-  isActive         Boolean       @default(true) @map("is_active")
   isDeleted        Boolean       @default(false) @map("is_deleted")
   deletedAt        DateTime?     @map("deleted_at")
   deletedBy        Int?          @map("deleted_by")
@@ -333,7 +331,6 @@ model Server {
   description      String?
   type             ServerType
   iconUrl          String?    @map("icon_url")
-  isActive         Boolean    @default(true) @map("is_active")
   isDeleted        Boolean    @default(false) @map("is_deleted")
   deletedAt        DateTime?  @map("deleted_at")
   deletedBy        Int?       @map("deleted_by")

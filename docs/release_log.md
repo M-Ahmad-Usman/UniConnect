@@ -57,6 +57,35 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-05 - Schema/Lifecycle Refactor Module 9 Complete
+- Removed transitional `isActive`/`is_active` compatibility from users,
+  societies, and servers across Prisma schema, backend services, frontend
+  contracts, tests, and seed data. Lifecycle behavior now uses `status` plus
+  `isDeleted` consistently.
+- Removed temporary dual numeric/public core-ID resolution. Final core API
+  helpers and routes accept strict UUIDv7 public IDs for users, classes,
+  societies, servers, channels, and posts.
+- Squashed Prisma history into the final baseline migration
+  `20260605000000_module9_final_baseline`, preserving SQL-only partial indexes,
+  lifecycle checks, role-assignment exclusion constraints, and
+  notification-preference constraints.
+- Regenerated the committed Prisma client, simplified Prisma adapter/Jest
+  teardown wiring, and refreshed clean development/test databases from the final
+  baseline.
+- Resolved low-risk warning cleanup: backend log prefixes now follow module
+  conventions, Vite chunk splitting removes the previous large
+  `react-vendor` build warning, and Playwright uses an explicit socket URL.
+- Verification passed: Prisma validate/generate; development DB reset and seed;
+  test DB migration; backend build; focused backend suites `55/55`; full
+  backend Jest `502/502`; frontend type-check, lint, Vitest `134/134`,
+  production build, and Playwright `36/36`.
+- The previous Playwright shutdown-time Vite websocket proxy `ECONNRESET` noise
+  did not recur in the Module 9 full-suite runs.
+- Deferred: Prisma adapter/`pg` transaction deprecation warning remains for
+  row-locking raw SQL and should be handled before a future `pg@9` upgrade.
+  Playwright also inherits an ambient Node color-env warning in this shell when
+  `NO_COLOR` and `FORCE_COLOR` are both set; it does not affect the suite.
+
 ### 2026-06-03 - Schema/Lifecycle Refactor Module 8 Complete
 - Added admin-only rare deletion-impact reports for departments, programs,
   classes, and courses. Reports are read-only and do not add destructive delete
@@ -75,13 +104,13 @@ This is the single active implementation and release log going forward. Older ba
 - Added Module 8 read-path indexes for rare impact reverse lookups and frontend
   catalog impact types/API methods/query hooks for future UI use.
 - Verification passed: Prisma validate/generate; Module 8 SQL executed against
-  the isolated test DB with `prisma db execute` because local `migrate deploy`
-  remains blocked by the known unbaselined DB `P3005`; focused backend impact
-  and class suites `68/68`; full backend Jest `502/502`; backend build;
+  the isolated test DB with `prisma db execute` before Module 9 established the
+  final clean baseline; focused backend impact and class suites `68/68`; full
+  backend Jest `502/502`; backend build;
   frontend type-check, lint, focused catalog Vitest `1/1`, full Vitest
   `134/134`, and production build.
-- Deferred to Module 9: final migration squash, `isActive` removal, and
-  transitional compatibility cleanup.
+- Deferred to Module 9 and completed there: final migration squash, `isActive`
+  removal, and transitional compatibility cleanup.
 
 ### 2026-06-02 - Schema/Lifecycle Refactor Module 7 Complete
 - Migrated class routes, nested workflows, frontend URLs, query keys, forms, CSV
@@ -287,7 +316,7 @@ This is the single active implementation and release log going forward. Older ba
   - targeted Playwright rerun for the initial regression files
   - full Playwright suite, 36/36
 - Known follow-ups:
-  - Vite production build still reports the existing large `react-vendor` chunk.
-  - Playwright shutdown still emits Vite websocket proxy `ECONNRESET` noise.
-  - E2E logs expose a pg deprecation warning for concurrent `client.query()`
-    usage that should be cleaned up before pg 9.
+  - Module 9 resolved the Vite production large-chunk warning and configured an
+    explicit Playwright socket URL to avoid shutdown-time websocket proxy noise.
+  - Backend/E2E logs can still expose a Prisma adapter/pg transaction
+    deprecation warning that should be cleaned up before pg 9.

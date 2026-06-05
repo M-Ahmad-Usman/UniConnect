@@ -3,7 +3,7 @@
 ## Document Control
 
 - Created: 2026-05-28
-- Status: Module 8 complete
+- Status: Module 9 complete
 - Plan reference: `docs/schema_lifecycle_refactor_plan.md`
 - Deletion policy reference: `docs/entity_deletion_policy.md`
 
@@ -28,7 +28,7 @@
 | 6 | Server, Channel, and Post Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict public communication IDs, archived read-only history, lifecycle-safe writes, and socket room hardening added |
 | 7 | Class and Academic Public-ID Migration | Complete | 2026-06-02 | 2026-06-02 | Strict class UUIDv7 APIs, public academic DTOs, locked delegated writes, provisional class impact, and HOD course creation added |
 | 8 | Rare Entity Impact Reports | Complete | 2026-06-03 | 2026-06-03 | Admin-only bounded blocker reports, class impact completion, read-path indexes, and frontend catalog hooks added |
-| 9 | Cleanup, Squash, and Final Contract | Not started | - | - | Removes transitional compatibility and squashes migrations |
+| 9 | Cleanup, Squash, and Final Contract | Complete | 2026-06-05 | 2026-06-05 | Final baseline migration, strict public IDs, no `isActive`, and docs/contracts synchronized |
 
 ## Module 0 Checklist
 
@@ -99,8 +99,8 @@
   `resolveUserPublicId`, `resolveClassPublicId`, `resolveSocietyPublicId`,
   `resolveServerPublicId`, `resolveChannelPublicId`, and
   `resolvePostPublicId`.
-- [x] Added `resolveCoreIdentifier` with public-only default mode and explicit
-  temporary `mode: "dual"` support for staged route migration.
+- [x] Added temporary dual-resolution support for staged route migration. This
+  compatibility was removed in Module 9; final helpers are strict public-ID only.
 - [x] Added `includeDeleted` resolver option for future lifecycle restore and
   impact paths.
 - [x] Added shallow public DTO mappers for users, classes, societies, servers,
@@ -119,8 +119,7 @@
 
 - Use `resolveUserPublicId` for new user lifecycle routes.
 - Use public DTO mappers when user lifecycle responses expose core user data.
-- Do not use `mode: "dual"` for final public user lifecycle endpoints unless a
-  temporary compatibility route is explicitly needed and covered by tests.
+- Final public user lifecycle endpoints must remain strict public-ID only.
 
 ## Module 3 Checklist
 
@@ -131,8 +130,8 @@
 - [x] Switched access and refresh JWT payloads to standard `sub` for the signed
   internal authenticated user key.
 - [x] Added DB-backed access-token authentication and Socket.IO authentication
-  so deleted, inactive, suspended, or missing users are rejected even if they
-  still hold an otherwise valid access token.
+  so deleted, suspended, or missing users are rejected even if they still hold
+  an otherwise valid access token.
 - [x] Added admin user lifecycle endpoints:
   `GET /api/users/:publicId/deletion-impact`,
   `PATCH /api/users/:publicId/status`, `DELETE /api/users/:publicId`, and
@@ -277,7 +276,8 @@
 - [x] Applied the Module 5 migration SQL against the existing isolated test DB.
   `npm run db:migrate:test` could not deploy because that local DB predates
   Prisma migration tracking (`P3005`), so the additive migration was exercised
-  with `prisma db execute`.
+  with `prisma db execute`. Module 9 later replaced this with the final clean
+  baseline migration.
 - [x] Backend build
 - [x] Focused Module 5 lifecycle suite, 6/6
 - [x] Existing society regression suite, 58/58
@@ -385,13 +385,13 @@
 - [x] Added own-department HOD course creation, granular permission capabilities,
   and the `/academics/courses` workspace. Removed `/admin/courses`.
 
-### Deferred Risk Register for Module 9
+### Deferred Risk Register
 
 - Module 8 completed class communication impact reporting and matching bounded
   department, program, and course rare-delete planning reports. Rare destructive
   endpoints still do not exist.
-- Module 9 must remove transitional dual-resolution helpers, remove `isActive`,
-  preserve SQL-only constraints during squash, and regenerate the final Prisma
+- Module 9 removed transitional dual-resolution helpers, removed `isActive`,
+  preserved SQL-only constraints during squash, and regenerated the final Prisma
   client.
 - A later security pass should extend commit-time authority auditing to
   non-academic scoped writes and add durable public-safe notification scope links.
@@ -399,10 +399,7 @@
   warning emitted by Prisma adapter transactions: `client.query()` is invoked
   while the client is already executing a query. This must be resolved before a
   future `pg@9` upgrade.
-- Before release, stabilize the full parallel Playwright run under local load.
-  The Module 7 final run completed 28 tests, failed 5 timing-sensitive auth/post
-  tests, and left 3 tests unrun; the 5 affected specs passed when rerun
-  sequentially as part of an isolated 9/9 batch.
+- Full parallel Playwright status is tracked in the Module 9 release-log entry.
 
 ### Verification
 
@@ -452,9 +449,46 @@
 - [x] Full frontend Vitest suite, 134/134
 - [x] Frontend production build
 
-### Follow-Up for Module 9
+## Module 9 Checklist
 
-- Keep rare destructive delete endpoints deferred.
-- Preserve the Module 8 indexes during migration squash.
-- `npm run db:migrate:test` still returns `P3005` on the local unbaselined test
-  DB; direct `prisma db execute` verified the additive Module 8 SQL.
+### Implementation
+
+- [x] Removed transitional `isActive` fields from users, societies, and servers
+  in Prisma schema, backend services, frontend contracts, tests, and seed data.
+- [x] Removed temporary dual numeric/public core-ID resolution; final core API
+  helpers accept strict UUIDv7 public IDs only.
+- [x] Squashed schema history into
+  `server/prisma/migrations/20260605000000_module9_final_baseline/migration.sql`.
+- [x] Preserved SQL-only partial live uniqueness, lifecycle checks,
+  role-assignment exclusion constraints, and notification-preference constraints
+  in the final baseline.
+- [x] Switched Prisma adapter initialization to connection-string adapter
+  construction and simplified Jest teardown to Prisma disconnect.
+- [x] Fixed low-risk runtime warning cleanup: backend log prefixes, frontend
+  Vite chunk splitting, and Playwright socket URL configuration.
+- [x] Regenerated committed Prisma client and synchronized canonical docs.
+
+### Verification
+
+- [x] `npx prisma validate`
+- [x] `npx prisma generate`
+- [x] `npm run db:reset -- --force` against the clean development database
+- [x] `npm run db:migrate:test` against the clean isolated test database
+- [x] Backend build
+- [x] Focused schema/public-ID/auth/society lifecycle backend suites, 55/55
+- [x] Full backend Jest suite, 502/502
+- [x] Frontend type-check
+- [x] Frontend lint
+- [x] Full frontend Vitest suite, 134/134
+- [x] Frontend production build without the previous Vite large-chunk warning
+- [x] Full Playwright suite, 36/36
+
+### Deferred Risk Register
+
+- Rare destructive delete endpoints remain intentionally deferred; Module 8
+  impact reports stay read-only.
+- A Prisma adapter/`pg` deprecation warning can still be emitted by transaction
+  row-locking raw SQL. The warning does not fail current tests, but should be
+  resolved before a future `pg@9` upgrade.
+- The prior Vite websocket proxy `ECONNRESET` noise did not recur in the
+  Module 9 full Playwright runs.

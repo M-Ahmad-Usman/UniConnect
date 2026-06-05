@@ -59,12 +59,11 @@ export function isPlatformRoleName(value: string): value is PlatformRoleName {
  */
 export function activePlatformRoleServerWhere(): Prisma.ServerWhereInput {
   return {
-    isActive: true,
     isDeleted: false,
     class: { isNot: { status: "GRADUATED" } },
     society: {
       isNot: {
-        OR: [{ status: "SUSPENDED" }, { isActive: false }, { isDeleted: true }],
+        OR: [{ status: "SUSPENDED" }, { isDeleted: true }],
       },
     },
   };
@@ -83,7 +82,6 @@ export function activePlatformRoleAssignmentWhere(
     user: {
       is: {
         status: "ACTIVE",
-        isActive: true,
         isDeleted: false,
       },
     },

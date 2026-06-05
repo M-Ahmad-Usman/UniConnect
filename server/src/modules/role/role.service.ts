@@ -220,7 +220,6 @@ async function findActiveUserOrThrow(userPublicId: string) {
       publicId: true,
       userType: true,
       status: true,
-      isActive: true,
       isDeleted: true,
       departmentId: true,
       studentInfo: { select: { studentId: true, classId: true } },
@@ -228,7 +227,7 @@ async function findActiveUserOrThrow(userPublicId: string) {
     },
   });
 
-  if (!user || user.status !== "ACTIVE" || !user.isActive || user.isDeleted) {
+  if (!user || user.status !== "ACTIVE" || user.isDeleted) {
     throw new NotFoundError("User not found or inactive");
   }
 
@@ -297,7 +296,7 @@ async function getCallerHODDepartmentId(
   const dept = await prisma.department.findFirst({
     where: {
       hodId: callerId,
-      hod: { user: { status: "ACTIVE", isActive: true, isDeleted: false } },
+      hod: { user: { status: "ACTIVE", isDeleted: false } },
       server: activePlatformRoleServerWhere(),
     },
     select: { id: true },
@@ -314,7 +313,7 @@ async function getCallerPDProgram(callerId: number) {
     where: {
       programDirectorId: callerId,
       programDirector: {
-        user: { status: "ACTIVE", isActive: true, isDeleted: false },
+        user: { status: "ACTIVE", isDeleted: false },
       },
       department: { server: activePlatformRoleServerWhere() },
     },
@@ -330,7 +329,7 @@ async function getCallerCRClass(callerId: number) {
     where: {
       crId: callerId,
       status: "ACTIVE",
-      cr: { user: { status: "ACTIVE", isActive: true, isDeleted: false } },
+      cr: { user: { status: "ACTIVE", isDeleted: false } },
       server: activePlatformRoleServerWhere(),
     },
     select: { id: true, serverId: true },
@@ -344,7 +343,6 @@ async function getCallerSocietyLeadership(callerId: number) {
   return prisma.society.findFirst({
     where: {
       status: "ACTIVE",
-      isActive: true,
       isDeleted: false,
       server: activePlatformRoleServerWhere(),
       OR: [{ presidentId: callerId }, { convenorId: callerId }],
@@ -359,7 +357,6 @@ async function getCallerSocietyLeadershipIds(
   const societies = await prisma.society.findMany({
     where: {
       status: "ACTIVE",
-      isActive: true,
       isDeleted: false,
       server: activePlatformRoleServerWhere(),
       OR: [{ presidentId: callerId }, { convenorId: callerId }],
@@ -449,7 +446,6 @@ async function getCallerModeratorServerWhere(
         society: {
           is: {
             status: "ACTIVE",
-            isActive: true,
             isDeleted: false,
             departmentId: hodDeptId,
           },
@@ -472,7 +468,6 @@ async function getCallerModeratorServerWhere(
         is: {
           id: { in: societyLeadershipIds },
           status: "ACTIVE",
-          isActive: true,
           isDeleted: false,
         },
       },
@@ -1024,7 +1019,6 @@ async function listModeratorCandidateUsers(
     serverId,
     user: {
       status: "ACTIVE",
-      isActive: true,
       isDeleted: false,
       userType: { in: roleOption.targetUserTypes },
       ...(userSearch ?? {}),
@@ -1079,7 +1073,6 @@ async function listTeacherUsersByWhere(
     ...(userSearch ?? {}),
     userType: "TEACHER",
     status: "ACTIVE",
-    isActive: true,
     isDeleted: false,
     teacherInfo: { isNot: null },
   };
@@ -1120,7 +1113,6 @@ async function listStudentUsersByWhere(
     ...(userSearch ?? {}),
     userType: "STUDENT",
     status: "ACTIVE",
-    isActive: true,
     isDeleted: false,
     studentInfo: where.studentInfo ?? { isNot: null },
   };
@@ -2471,7 +2463,6 @@ export async function getUserRoles(userPublicId: string, caller: CallerInfo) {
     select: {
       id: true,
       departmentId: true,
-      isActive: true,
       isDeleted: true,
       status: true,
     },
@@ -2535,7 +2526,6 @@ export async function getUserRoles(userPublicId: string, caller: CallerInfo) {
       where: {
         presidentId: targetUser.id,
         status: "ACTIVE",
-        isActive: true,
         isDeleted: false,
       },
       select: { publicId: true, name: true },
@@ -2544,7 +2534,6 @@ export async function getUserRoles(userPublicId: string, caller: CallerInfo) {
       where: {
         convenorId: targetUser.id,
         status: "ACTIVE",
-        isActive: true,
         isDeleted: false,
       },
       select: { publicId: true, name: true },
