@@ -6,14 +6,16 @@
 - Status: Module 9 complete
 - Companion tracker: `docs/schema_lifecycle_refactor_progress.md`
 - Canonical deletion policy: `docs/entity_deletion_policy.md`
-- Source references: `pulled-docs/`
+- Original source references were removed after the refactor was completed and
+  ported into canonical docs.
 
 ## Purpose
 
-This plan incorporates the useful high-level schema and entity-deletion work from
-`pulled-docs/` into the current UniConnect codebase without blindly replacing the
-working implementation. The goal is a production-grade, scalable, and testable
-refactor that can be executed module by module without losing track of decisions.
+This plan incorporated the useful high-level schema and entity-deletion work from
+imported source material into the current UniConnect codebase without blindly
+replacing the working implementation. The goal was a production-grade, scalable,
+and testable refactor that could be executed module by module without losing
+track of decisions.
 
 Each module should be a vertical slice where practical: schema, backend behavior,
 frontend contracts, tests, and docs move together for one coherent behavior.
@@ -178,7 +180,7 @@ contract must match this document.
   because the project is not in production.
 - Keep generated Prisma client files committed, matching the current repo
   pattern.
-- `pulled-docs/` is archived source material. Canonical target docs live in
+- Imported source material has been retired. Canonical target docs live in
   `docs/`.
 
 ## Module Order
@@ -192,13 +194,12 @@ Changes:
 - Add `docs/schema_lifecycle_refactor_progress.md`.
 - Add `docs/entity_deletion_policy.md`.
 - Update `docs/README.md`.
-- Add `pulled-docs/README.md` explaining that pulled docs are references, not
-  canonical targets.
+- Mark imported source material as references, not canonical targets.
 - Record JWT/public-ID policy.
 
 Acceptance:
 - A future implementer can start Module 1 without rereading the entire chat.
-- `pulled-docs/` cannot be mistaken for the current target schema.
+- Imported source material cannot be mistaken for the current target schema.
 
 ### Module 1: Schema Foundation and Transitional State
 

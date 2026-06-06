@@ -38,14 +38,14 @@
 - [x] Add canonical progress tracker.
 - [x] Add canonical entity deletion policy.
 - [x] Update documentation index.
-- [x] Add `pulled-docs` archive/source-reference note.
+- [x] Add imported source-material reference note.
 - [x] Record JWT payload and public-ID policy.
 
 ### Verification
 
 - [x] Confirmed current docs index did not already contain this refactor.
-- [x] Confirmed `pulled-docs` contains imported ERD and deletion policy source
-  material.
+- [x] Confirmed imported ERD and deletion policy source material was reviewed
+  and ported into canonical docs.
 - [x] Confirmed server Docker uses PostgreSQL 18.3, matching the `uuidv7()`
   target.
 

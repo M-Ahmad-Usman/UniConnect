@@ -57,6 +57,12 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-06 - Documentation Artifact Cleanup
+- Removed the temporary audit remediation memory file now that the production
+  readiness changes are recorded in canonical release/progress docs.
+- Removed the retired imported source-reference docs after the schema lifecycle
+  refactor was completed and ported into canonical docs.
+
 ### 2026-06-06 - User Detail and Admin Creation Hardening
 - Student profile/admin detail payloads now include display-ready class metadata
   (`publicId`, `currentSemester`, `section`, `program.code`) so the frontend can
@@ -424,8 +430,7 @@ This is the single active implementation and release log going forward. Older ba
   public-ID, platform-role, and deletion-policy refactor.
 - Added `docs/entity_deletion_policy.md` as the branch source of truth for
   soft-delete, status, restore, cascade, and blocker-report behavior.
-- Marked `pulled-docs/` as imported source material rather than canonical target
-  docs.
+- Marked imported source material as non-canonical planning input.
 - Locked JWT/public-ID policy: JWTs may keep internal numeric user IDs as signed
   readable metadata, while public APIs must use public IDs for core entities.
 

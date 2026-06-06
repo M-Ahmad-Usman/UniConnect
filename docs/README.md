@@ -42,10 +42,9 @@ This is the primary documentation entry point. It points to the canonical source
   integration behavior.
 - Historical implementation notes should be summarized into `docs/release_log.md`
   instead of creating new long-lived progress files.
-- The schema/lifecycle/public-ID refactor is an active multi-module exception
-  with its own plan and progress tracker until Module 9 cleanup is complete.
-- `pulled-docs/` is imported source material only. Canonical decisions for the
-  current branch live under `docs/`.
+- Completed refactor plans may retain their plan/progress docs as historical
+  records, but canonical decisions should be summarized into the release log and
+  current policy docs.
 - Do not duplicate endpoint catalogs or architecture rules in root summaries;
   link to the app-local source of truth instead.
 

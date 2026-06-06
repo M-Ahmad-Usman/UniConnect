@@ -3,8 +3,8 @@
 ## Purpose
 
 This is the canonical deletion and lifecycle policy for the schema/public-ID
-refactor. It incorporates the useful policy work from `pulled-docs/` while
-reflecting the decisions locked for this branch.
+refactor. It incorporates the useful policy work from retired source references
+while reflecting the decisions locked for this branch.
 
 The core principle remains:
 
@@ -359,6 +359,5 @@ Blockers:
 
 ## Documentation and Source Material
 
-`pulled-docs/` remains imported source material only. This document is the
-canonical policy for this branch. When source material and this document differ,
-this document wins.
+This document is the canonical policy for this branch. The imported source
+references used during planning have been retired after the completed refactor.
