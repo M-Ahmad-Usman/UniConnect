@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { RoleBadge } from '@/components/shared/RoleBadge';
 import { Badge } from '@/components/ui/badge';
+import { formatClassLabel } from '@/lib/academic-labels';
 import { UserStatus } from '@/types';
 import { ProfilePictureUpload } from '../components/ProfilePictureUpload';
 import { BioEditor } from '../components/BioEditor';
@@ -89,8 +90,7 @@ export function ProfilePage() {
               {profile.studentInfo ? (
                 <>
                   <Field label="Roll number" value={profile.studentInfo.rollNumber} />
-                  <Field label="Class public ID" value={profile.studentInfo.classPublicId} />
-                  <Field label="Program" value={profile.studentInfo.class.program.code} />
+                  <Field label="Class" value={formatClassLabel(profile.studentInfo.class)} />
                 </>
               ) : null}
               {profile.teacherInfo ? (

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Gender, UserType } from '@/types';
+import type { CreatableUserType } from '@/types';
 
 const numericIdSchema = z.number().int().positive('Select a valid option');
 const requiredNumericIdSchema = z.coerce.number().int().positive('Select a valid option');
@@ -29,7 +30,7 @@ const baseUserFields = {
 export const createUserSchema = z
   .object({
     ...baseUserFields,
-    userType: z.enum([UserType.ADMIN, UserType.TEACHER, UserType.STUDENT]),
+    userType: z.enum([UserType.TEACHER, UserType.STUDENT]),
     departmentId: optionalNumericIdSchema,
     programId: optionalNumericIdSchema,
     classPublicId: optionalPublicIdSchema,
@@ -37,10 +38,6 @@ export const createUserSchema = z
     designation: z.string().trim().max(100),
   })
   .superRefine((values, context) => {
-    if (values.userType === UserType.ADMIN) {
-      return;
-    }
-
     if (!values.departmentId) {
       context.addIssue({
         code: 'custom',
@@ -80,7 +77,7 @@ export interface CreateUserFormInput {
   email: string;
   phone: string;
   gender: Gender;
-  userType: UserType;
+  userType: CreatableUserType;
   departmentId: string;
   programId: string;
   classPublicId: string;
@@ -98,10 +95,6 @@ export function toCreateUserPayload(values: CreateUserFormValues) {
     gender: values.gender,
     userType: values.userType,
   };
-
-  if (values.userType === UserType.ADMIN) {
-    return base;
-  }
 
   if (values.userType === UserType.TEACHER) {
     return {
@@ -192,10 +185,22 @@ export const courseSchema = z.object({
 export const updateCourseSchema = courseSchema.omit({ departmentId: true });
 
 export const curriculumSchema = z.object({
-  courseId: requiredNumericIdSchema,
+  courseIds: z
+    .array(z.coerce.number().int().positive('Select a valid course'))
+    .min(1, 'Select at least one course'),
   semesterNumber: z.coerce.number().int().min(1, 'Minimum is 1').max(10, 'Maximum is 10'),
   batchYear: z.coerce.number().int().min(2000, 'Invalid year').max(2100, 'Invalid year'),
 });
+
+export const copyCurriculumBatchSchema = z
+  .object({
+    sourceBatchYear: z.coerce.number().int().min(2000, 'Invalid year').max(2100, 'Invalid year'),
+    targetBatchYear: z.coerce.number().int().min(2000, 'Invalid year').max(2100, 'Invalid year'),
+  })
+  .refine((values) => values.sourceBatchYear !== values.targetBatchYear, {
+    path: ['targetBatchYear'],
+    message: 'Target batch must be different',
+  });
 
 export const teacherAssignmentSchema = z.object({
   courseId: requiredNumericIdSchema,
@@ -219,6 +224,7 @@ export type ClassFormValues = z.output<typeof classSchema>;
 export type CourseFormValues = z.output<typeof courseSchema>;
 export type UpdateCourseFormValues = z.output<typeof updateCourseSchema>;
 export type CurriculumFormValues = z.output<typeof curriculumSchema>;
+export type CopyCurriculumBatchFormValues = z.output<typeof copyCurriculumBatchSchema>;
 export type TeacherAssignmentFormValues = z.output<typeof teacherAssignmentSchema>;
 export type TransferStudentFormValues = z.output<typeof transferStudentSchema>;
 export type ReplaceTeacherFormValues = z.output<typeof replaceTeacherSchema>;

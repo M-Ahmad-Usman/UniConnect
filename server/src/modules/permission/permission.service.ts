@@ -12,6 +12,7 @@ export async function getMyPermissions(userId: number) {
     roleWorkspace: buildRoleWorkspacePermissions(context),
     scopes: {
       hodDepartmentIds: context.scopes.hodDepartmentIds,
+      directedProgramIds: context.scopes.directedProgramIds,
     },
   };
 }

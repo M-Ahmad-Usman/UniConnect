@@ -90,7 +90,7 @@ export function UserDropdown() {
             Societies
           </DropdownMenuItem>
           {canAccessAcademics ? (
-            <DropdownMenuItem onClick={() => navigate(ROUTES.ACADEMICS_CLASSES)}>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.ACADEMICS_PROGRAMS)}>
               <GraduationCap className="size-4" />
               Academics
             </DropdownMenuItem>

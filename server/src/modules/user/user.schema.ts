@@ -3,6 +3,7 @@ import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 const userTypeEnum = z.enum(["STUDENT", "TEACHER", "ADMIN"]);
+const creatableUserTypeEnum = z.enum(["STUDENT", "TEACHER"]);
 const genderEnum = z.enum(["MALE", "FEMALE"]);
 const userStatusEnum = z.enum(["ACTIVE", "SUSPENDED"]);
 const lifecycleReasonSchema = z.string().trim().min(1).max(500).optional();
@@ -22,13 +23,13 @@ export const createUserBodySchema = z
     email: z.email({ error: "Invalid email address" }),
     phone: z.string().min(1, { error: "Phone is required" }).max(20),
     gender: genderEnum,
-    userType: userTypeEnum,
+    userType: creatableUserTypeEnum,
     departmentId: z.number().int().positive().optional(),
     classPublicId: publicIdSchema.optional(),
     rollNumber: rollNumberSchema.optional(),
     designation: z.string().min(1, { error: "Designation is required" }).max(100).optional(),
   })
-  .refine((data) => data.userType === "ADMIN" || data.departmentId !== undefined, {
+  .refine((data) => data.departmentId !== undefined, {
     error: "departmentId is required for STUDENT and TEACHER",
     path: ["departmentId"],
   })

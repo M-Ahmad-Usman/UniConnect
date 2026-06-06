@@ -21,15 +21,37 @@ function callerFromRequest(req: Request) {
   };
 }
 
+function queryNumber(value: unknown): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : undefined;
+}
+
+function queryNumberArray(value: unknown): number[] | undefined {
+  if (Array.isArray(value)) {
+    return value
+      .map(queryNumber)
+      .filter((item): item is number => item !== undefined);
+  }
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  return value
+    .split(",")
+    .map((item) => queryNumber(item.trim()))
+    .filter((item): item is number => item !== undefined);
+}
+
 export async function handleListPrograms(req: Request, res: Response): Promise<void> {
-  const query = req.query as Record<string, string | undefined>;
+  const query = req.query as Record<string, unknown>;
   const result = await programService.listPrograms({
-    departmentId: query.departmentId ? Number(query.departmentId) : undefined,
-    disciplineId: query.disciplineId ? Number(query.disciplineId) : undefined,
-    degreeLevelId: query.degreeLevelId ? Number(query.degreeLevelId) : undefined,
-    search: query.search,
-    page: query.page ? Number(query.page) : undefined,
-    limit: query.limit ? Number(query.limit) : undefined,
+    departmentId: queryNumber(query.departmentId),
+    departmentIds: queryNumberArray(query.departmentIds),
+    disciplineId: queryNumber(query.disciplineId),
+    degreeLevelId: queryNumber(query.degreeLevelId),
+    programIds: queryNumberArray(query.programIds),
+    search: typeof query.search === "string" ? query.search : undefined,
+    page: queryNumber(query.page),
+    limit: queryNumber(query.limit),
   });
 
   const response: PaginatedResponse<(typeof result.data)[number]> = {
@@ -159,6 +181,69 @@ export async function handleAddCurriculum(req: Request, res: Response): Promise<
     success: true,
     data: entry,
     message: "Curriculum entry added successfully",
+  };
+
+  res.status(StatusCodes.CREATED).json(response);
+}
+
+export async function handleBulkAddCurriculum(req: Request, res: Response): Promise<void> {
+  const result = await programService.bulkAddCurriculum(
+    req.user!.id,
+    req.user!.userType,
+    Number(req.params.id),
+    req.body
+  );
+  await recordAuditLog(
+    {
+      action: "curriculum.bulk_add",
+      targetType: "program",
+      targetId: req.params.id,
+      summary: {
+        courseIds: req.body.courseIds,
+        semesterNumber: req.body.semesterNumber,
+        batchYear: req.body.batchYear,
+        addedCount: result.addedCount,
+        skippedCourseIds: result.skippedCourseIds,
+      },
+    },
+    auditContextFromRequest(req)
+  );
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    message: "Curriculum entries added successfully",
+  };
+
+  res.status(StatusCodes.CREATED).json(response);
+}
+
+export async function handleCopyCurriculumBatch(req: Request, res: Response): Promise<void> {
+  const result = await programService.copyCurriculumBatch(
+    req.user!.id,
+    req.user!.userType,
+    Number(req.params.id),
+    req.body
+  );
+  await recordAuditLog(
+    {
+      action: "curriculum.copy_batch",
+      targetType: "program",
+      targetId: req.params.id,
+      summary: {
+        sourceBatchYear: req.body.sourceBatchYear,
+        targetBatchYear: req.body.targetBatchYear,
+        addedCount: result.addedCount,
+        skippedCourseIds: result.skippedCourseIds,
+      },
+    },
+    auditContextFromRequest(req)
+  );
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    message: "Curriculum batch copied successfully",
   };
 
   res.status(StatusCodes.CREATED).json(response);

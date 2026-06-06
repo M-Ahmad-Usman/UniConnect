@@ -9,6 +9,8 @@ import {
   programDeletionImpactSchema,
   getCurriculumSchema,
   addCurriculumSchema,
+  bulkAddCurriculumSchema,
+  copyCurriculumBatchSchema,
   removeCurriculumSchema,
   assignProgramDirectorSchema,
 } from "./program.schema.js";
@@ -19,6 +21,8 @@ import {
   handleUpdateProgram,
   handleGetCurriculum,
   handleAddCurriculum,
+  handleBulkAddCurriculum,
+  handleCopyCurriculumBatch,
   handleRemoveCurriculum,
   handleAssignProgramDirector,
   handleRevokeProgramDirector,
@@ -87,6 +91,22 @@ router.post(
   authorize({ userTypes: ["ADMIN", "TEACHER"] }),
   validate(addCurriculumSchema),
   handleAddCurriculum
+);
+
+router.post(
+  "/:id/curriculum/bulk",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(bulkAddCurriculumSchema),
+  handleBulkAddCurriculum
+);
+
+router.post(
+  "/:id/curriculum/copy-batch",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(copyCurriculumBatchSchema),
+  handleCopyCurriculumBatch
 );
 
 router.delete(

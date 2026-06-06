@@ -15,7 +15,7 @@ This plan is divided into implementation modules so each module can be built, te
 - Academic management:
   - Admins manage all academic data.
   - HODs manage their own department classes, student placement, curriculum, courses, semester progression, and graduation.
-  - Program Directors can view curriculum and manage course/teacher assignments for classes in their own program.
+  - Program Directors can manage curriculum and course/teacher assignments for classes in their own program.
   - Program Directors cannot run semester progression.
 - Student class management:
   - Admins and own-department HODs can enroll or transfer existing students between classes.

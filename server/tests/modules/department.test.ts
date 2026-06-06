@@ -5,6 +5,9 @@ import { prisma } from "../../src/config/prisma.js";
 import { resetDB } from "../helpers/db.helper.js";
 import {
   createUser,
+  createClass,
+  createCourse,
+  createCurriculum,
   createDepartment,
   createProgram,
   createDiscipline,
@@ -16,7 +19,7 @@ beforeAll(async () => {
   await resetDB();
 });
 
-describe("Module 7 - Academic Lookup and Program Admin Endpoints", () => {
+describe("Academic lookup and program admin endpoints", () => {
   it("should list degree levels for authenticated users", async () => {
     const user = await createUser({
       email: `degree-level-user-${Date.now()}@test.com`,
@@ -88,13 +91,71 @@ describe("Module 7 - Academic Lookup and Program Admin Endpoints", () => {
     expect(detailRes.body.data.department.id).toBe(dept.id);
     expect(detailRes.body.data._count).toBeDefined();
   });
+
+  it("should filter programs by explicit program IDs", async () => {
+    const admin = await createUser({
+      email: `admin-program-ids-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const dept = await createDepartment({ code: `M7-PI-${Date.now().toString().slice(-5)}` });
+    const included = await createProgram(dept.id, { code: `M7PI1-${Date.now().toString().slice(-5)}` });
+    const excluded = await createProgram(dept.id, { code: `M7PI2-${Date.now().toString().slice(-5)}` });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+
+    const res = await request(app)
+      .get("/api/programs")
+      .query({ programIds: `${included.id}` })
+      .set("Cookie", cookies);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([expect.objectContaining({ id: included.id })]);
+    expect(res.body.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: excluded.id })])
+    );
+  });
+
+  it("should union department and program ID filters for scoped program lists", async () => {
+    const admin = await createUser({
+      email: `admin-program-scope-${Date.now()}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const hodDept = await createDepartment({ code: `M7-PSH-${Date.now().toString().slice(-4)}` });
+    const pdDept = await createDepartment({ code: `M7-PSP-${Date.now().toString().slice(-4)}` });
+    const hodProgram = await createProgram(hodDept.id, { code: `M7PSH-${Date.now().toString().slice(-4)}` });
+    const directedProgram = await createProgram(pdDept.id, { code: `M7PSP-${Date.now().toString().slice(-4)}` });
+    const excluded = await createProgram(pdDept.id, { code: `M7PSX-${Date.now().toString().slice(-4)}` });
+    const cookies = await loginAs(admin.email, "Pass@1234");
+
+    const res = await request(app)
+      .get("/api/programs")
+      .query({
+        departmentIds: `${hodDept.id}`,
+        programIds: `${directedProgram.id}`,
+      })
+      .set("Cookie", cookies);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: hodProgram.id }),
+        expect.objectContaining({ id: directedProgram.id }),
+      ])
+    );
+    expect(res.body.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: excluded.id })])
+    );
+  });
 });
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 3 - Department & Program Management", () => {
+describe("Department and program management", () => {
   // ─── Discipline Endpoints ──────────────────────────────────────────────
 
   describe("POST /api/disciplines", () => {
@@ -797,7 +858,7 @@ describe("Module 3 - Department & Program Management", () => {
   // ─── Program Update Endpoint ──────────────────────────────────────────
 
   describe("PATCH /api/programs/:id", () => {
-    it("should allow admin to update program", async () => {
+    it("should allow admin to update unused program details", async () => {
       const admin = await createUser({
         email: "admin-prog-update@test.com",
         password: "Pass@1234",
@@ -828,6 +889,63 @@ describe("Module 3 - Department & Program Management", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.semesters).toBe(6);
+    });
+
+    it("should block program code and semester updates after classes exist", async () => {
+      const admin = await createUser({
+        email: "admin-prog-upd-locked@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-M3-PLOCK" });
+      const program = await createProgram(dept.id, { code: "BSCS-PLOCK", semesters: 8 });
+      await createClass(program.id, { creatorId: admin.id });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .patch(`/api/programs/${program.id}`)
+        .set("Cookie", cookies)
+        .send({ code: "BSCS-PLOCK-NEW", semesters: 6 });
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("RESOURCE_IN_USE");
+    });
+
+    it("should require confirmation before reducing semesters that have curriculum", async () => {
+      const admin = await createUser({
+        email: "admin-prog-upd-reduce@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-M3-PRED" });
+      const program = await createProgram(dept.id, { code: "BSCS-PRED", semesters: 8 });
+      const course = await createCourse(dept.id, { code: "PRED-401" });
+      await createCurriculum(program.id, course.id, 7, 2026);
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const blocked = await request(app)
+        .patch(`/api/programs/${program.id}`)
+        .set("Cookie", cookies)
+        .send({ semesters: 6 });
+
+      expect(blocked.status).toBe(409);
+      expect(blocked.body.success).toBe(false);
+      expect(blocked.body.error.code).toBe("RESOURCE_IN_USE");
+
+      const confirmed = await request(app)
+        .patch(`/api/programs/${program.id}`)
+        .set("Cookie", cookies)
+        .send({ semesters: 6, confirmSemesterReduction: true });
+
+      expect(confirmed.status).toBe(200);
+      expect(confirmed.body.success).toBe(true);
+      expect(confirmed.body.data.semesters).toBe(6);
+
+      const remaining = await prisma.programCurriculum.count({
+        where: { programId: program.id, semesterNumber: { gt: 6 } },
+      });
+      expect(remaining).toBe(0);
     });
 
     it("should return 404 for non-existent program", async () => {

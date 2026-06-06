@@ -34,13 +34,6 @@ export function SocietyListPage() {
     searchParams.get('lifecycle') === 'deleted' || searchParams.get('lifecycle') === 'all'
       ? (searchParams.get('lifecycle') as 'deleted' | 'all')
       : undefined;
-  const societiesQuery = useSocieties({
-    page,
-    limit: DEFAULT_PAGE_SIZE,
-    departmentId,
-    status,
-    lifecycle,
-  });
   const departmentsQuery = useDepartments();
   const permissionsQuery = useMyPermissions();
   const createSociety = useCreateSociety();
@@ -53,6 +46,16 @@ export function SocietyListPage() {
     const hodDepartmentIds = new Set(permissionsQuery.data?.scopes.hodDepartmentIds ?? []);
     return allDepartments.filter((department) => hodDepartmentIds.has(department.id));
   }, [departmentsQuery.data, permissionsQuery.data, user?.userType]);
+  const lockedDepartment =
+    user?.userType !== UserType.ADMIN && departments.length === 1 ? departments[0] : null;
+  const effectiveDepartmentId = lockedDepartment?.id ?? departmentId;
+  const societiesQuery = useSocieties({
+    page,
+    limit: DEFAULT_PAGE_SIZE,
+    departmentId: effectiveDepartmentId,
+    status,
+    lifecycle,
+  });
   const canCreate = permissionsQuery.data?.global.canCreateSociety ?? false;
   const canManageLifecycle =
     user?.userType === UserType.ADMIN ||
@@ -95,18 +98,26 @@ export function SocietyListPage() {
       <div className="grid gap-3 rounded-lg border bg-background p-3 md:grid-cols-3">
         <label className="space-y-1.5">
           <span className="text-sm font-medium">Department</span>
-          <select
-            className={inputClassName}
-            value={departmentId ?? ''}
-            onChange={(event) => updateFilter({ departmentId: event.target.value })}
-          >
-            <option value="">All departments</option>
-            {departments.map((department) => (
-              <option key={department.id} value={department.id}>
-                {department.code}
-              </option>
-            ))}
-          </select>
+          {lockedDepartment ? (
+            <input
+              className={inputClassName}
+              value={`${lockedDepartment.code} · ${lockedDepartment.name}`}
+              readOnly
+            />
+          ) : (
+            <select
+              className={inputClassName}
+              value={effectiveDepartmentId ?? ''}
+              onChange={(event) => updateFilter({ departmentId: event.target.value })}
+            >
+              <option value="">All departments</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.code}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
         {canManageLifecycle ? (
           <>
@@ -197,6 +208,7 @@ export function SocietyListPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         departments={departments}
+        lockDepartment={user?.userType !== UserType.ADMIN}
         loading={createSociety.isPending}
         onSubmit={handleCreate}
       />

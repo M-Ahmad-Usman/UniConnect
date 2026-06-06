@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { e2eUsers, findUserByEmail } from './helpers/auth';
-import { module2Fixtures } from './helpers/module2';
-import { module3Fixtures } from './helpers/module3';
+import { academicShellFixtures } from './helpers/academic-shell-fixtures';
+import { serverSocietyFixtures } from './helpers/server-society-fixtures';
 import {
   clearClassCr,
   clearServerModerator,
@@ -36,11 +36,11 @@ async function assignRoleByValues(
   await page.getByRole('button', { name: 'Assign role' }).click();
 }
 
-test.describe.serial('Module 4 role management hardening flows', () => {
+test.describe.serial('Role management workflows', () => {
   test.setTimeout(90_000);
 
   test('HOD assigns CR within department', async ({ page }) => {
-    const classRecord = await findClassByServerName(module2Fixtures.transferTargetServerName);
+    const classRecord = await findClassByServerName(academicShellFixtures.transferTargetServerName);
     const student = await findUserByEmail(e2eUsers.moduleSocietyMember.email);
     expect(classRecord).not.toBeNull();
     expect(student).not.toBeNull();
@@ -59,7 +59,7 @@ test.describe.serial('Module 4 role management hardening flows', () => {
   });
 
   test('PD assigns CR within own program', async ({ page }) => {
-    const classRecord = await findClassByServerName(module2Fixtures.replacementServerName);
+    const classRecord = await findClassByServerName(academicShellFixtures.replacementServerName);
     const student = await findUserByEmail(e2eUsers.moduleSocietyApplicant.email);
     expect(classRecord).not.toBeNull();
     expect(student).not.toBeNull();
@@ -78,7 +78,7 @@ test.describe.serial('Module 4 role management hardening flows', () => {
   });
 
   test('CR assigns server moderator only in own class server', async ({ page }) => {
-    const classRecord = await findClassByServerName(module2Fixtures.transferTargetServerName);
+    const classRecord = await findClassByServerName(academicShellFixtures.transferTargetServerName);
     const cr = await findUserByEmail(e2eUsers.moduleSocietyMember.email);
     const target = await findUserByEmail(e2eUsers.moduleSocietyApplicant.email);
     expect(classRecord).not.toBeNull();
@@ -106,7 +106,7 @@ test.describe.serial('Module 4 role management hardening flows', () => {
   });
 
   test('society leader assigns society server moderator', async ({ page }) => {
-    const society = await findSocietyServerByName(module3Fixtures.societyName);
+    const society = await findSocietyServerByName(serverSocietyFixtures.societyName);
     const target = await findUserByEmail(e2eUsers.moduleSocietyMember.email);
     expect(society).not.toBeNull();
     expect(target).not.toBeNull();

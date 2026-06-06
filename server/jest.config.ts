@@ -21,6 +21,14 @@ const config: Config = {
   },
   extensionsToTreatAsEsm: [".ts"],
   testTimeout: 30000,
+  coverageThreshold: {
+    global: {
+      statements: 80,
+      branches: 65,
+      functions: 85,
+      lines: 80,
+    },
+  },
 };
 
 export default config;

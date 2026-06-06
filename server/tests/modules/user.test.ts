@@ -32,7 +32,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 2 - User Management", () => {
+describe("User management", () => {
   describe("POST /api/users", () => {
     it("should allow admin to create a student with auto-memberships", async () => {
       const admin = await createUser({
@@ -153,6 +153,31 @@ describe("Module 2 - User Management", () => {
 
       expect(teacherInfo?.designation).toBe("Lecturer");
       expect(memberships).toHaveLength(1);
+    });
+
+    it("should reject admin creation through the user API", async () => {
+      const admin = await createUser({
+        email: "admin-create-admin-block@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/users")
+        .set("Cookie", cookies)
+        .send({
+          fullName: "Second Admin",
+          email: "second-admin@test.com",
+          phone: "03001112222",
+          gender: "MALE",
+          userType: "ADMIN",
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
     });
 
     it("should return 409 for duplicate email", async () => {
@@ -654,6 +679,42 @@ describe("Module 2 - User Management", () => {
       expect(res.body.data.publicId).toBe(target.publicId);
       expect(res.body.data).not.toHaveProperty("id");
       expect(res.body.data).not.toHaveProperty("passwordHash");
+    });
+
+    it("should include display-ready class metadata for student details", async () => {
+      const admin = await createUser({
+        email: "admin-get-student-class@test.com",
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: "CS-DETAIL", creatorId: admin.id });
+      const program = await createProgram(dept.id, { code: "BSCS" });
+      const klass = await createClass(program.id, {
+        creatorId: admin.id,
+        currentSemester: 7,
+        section: "A",
+      });
+      const target = await createStudentWithInfo(klass.id, dept.id, {
+        email: "student-class-detail@test.com",
+        password: "Pass@1234",
+        rollNumber: "22-NTU-CS-7777",
+      });
+
+      const cookies = await loginAs(admin.email, "Pass@1234");
+      const res = await request(app).get(`/api/users/${target.publicId}`).set("Cookie", cookies);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.studentInfo).toEqual({
+        rollNumber: "22-NTU-CS-7777",
+        classPublicId: klass.publicId,
+        class: {
+          publicId: klass.publicId,
+          currentSemester: 7,
+          section: "A",
+          program: { code: "BSCS" },
+        },
+      });
     });
 
     it("should allow HOD to fetch user in own department", async () => {

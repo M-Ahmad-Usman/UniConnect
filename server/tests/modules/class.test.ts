@@ -31,11 +31,22 @@ async function addCurrentCurriculum(
   return createCurriculum(programId, courseId, klass.currentSemester, klass.admissionYear);
 }
 
+async function addFullCurriculum(
+  departmentId: number,
+  program: { id: number; semesters: number },
+  batchYear: number,
+) {
+  for (let semester = 1; semester <= program.semesters; semester += 1) {
+    const course = await createCourse(departmentId, { code: `FC${semester}-${uid()}` });
+    await createCurriculum(program.id, course.id, semester, batchYear);
+  }
+}
+
 beforeAll(async () => {
   await resetDB();
 });
 
-describe("Module 7 - Class List Filters", () => {
+describe("Class list filters", () => {
   it("should filter classes by departmentId and section", async () => {
     const admin = await createUser({
       email: `admin-class-filter-${Date.now()}@test.com`,
@@ -70,7 +81,7 @@ describe("Module 7 - Class List Filters", () => {
   });
 });
 
-describe("Module 7 - Class public boundary and deletion impact", () => {
+describe("Class public boundary and deletion impact", () => {
   it("rejects numeric class route identifiers", async () => {
     const admin = await createUser({
       email: `admin-class-public-${Date.now()}@test.com`,
@@ -122,11 +133,11 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 4 - Class Management", () => {
+describe("Class management", () => {
   // ─── POST /api/classes ───────────────────────────────────────────────
 
   describe("POST /api/classes", () => {
-    it("should allow admin to create class with auto-created server, announcements, and general channels", async () => {
+    it("should allow admin to create class with auto-created server and curriculum channels", async () => {
       const admin = await createUser({
         email: "admin-cls-create@test.com",
         password: "Pass@1234",
@@ -134,6 +145,9 @@ describe("Module 4 - Class Management", () => {
       });
       const dept = await createDepartment({ code: `CS-CLS-${uid()}` });
       const program = await createProgram(dept.id, { semesters: 8 });
+      await addFullCurriculum(dept.id, program, 2026);
+      const extraCurrentCourse = await createCourse(dept.id, { code: `CSX-${uid()}` });
+      await createCurriculum(program.id, extraCurrentCourse.id, 1, 2026);
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
@@ -166,12 +180,12 @@ describe("Module 4 - Class Management", () => {
       expect(server!.type).toBe("CLASS");
       expect(server!.name).toContain(program.code);
 
-      // Verify #announcements and #general channels auto-created
+      // Verify #announcements, #general, and current-semester course channels auto-created
       const channels = await prisma.channel.findMany({
         where: { serverId: server!.id },
         orderBy: { name: "asc" },
       });
-      expect(channels.length).toBe(2);
+      expect(channels.length).toBe(4);
 
       const announcementsChannel = channels.find((c) => c.name === "announcements");
       expect(announcementsChannel).toBeDefined();
@@ -182,6 +196,11 @@ describe("Module 4 - Class Management", () => {
       expect(generalChannel).toBeDefined();
       expect(generalChannel!.type).toBe("GENERAL");
       expect(generalChannel!.isAutoCreated).toBe(true);
+
+      const courseChannels = channels.filter((c) => c.type === "COURSE");
+      expect(courseChannels.length).toBe(2);
+      expect(courseChannels.map((channel) => channel.courseId)).toContain(extraCurrentCourse.id);
+      expect(courseChannels.every((channel) => channel.isAutoCreated)).toBe(true);
     });
 
     it("should allow HOD to create class in own department", async () => {
@@ -198,6 +217,7 @@ describe("Module 4 - Class Management", () => {
       });
 
       const program = await createProgram(dept.id, { semesters: 8 });
+      await addFullCurriculum(dept.id, program, 2025);
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
@@ -281,6 +301,7 @@ describe("Module 4 - Class Management", () => {
       });
       const dept = await createDepartment({ code: `DUP-CLS-${uid()}` });
       const program = await createProgram(dept.id, { semesters: 8 });
+      await addFullCurriculum(dept.id, program, 2026);
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
@@ -308,6 +329,34 @@ describe("Module 4 - Class Management", () => {
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe("CONFLICT");
+    });
+
+    it("should return 400 when full batch curriculum is missing", async () => {
+      const admin = await createUser({
+        email: `admin-cls-nocur-${Date.now()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `NCUR-CLS-${uid()}` });
+      const program = await createProgram(dept.id, { semesters: 4 });
+      const course = await createCourse(dept.id, { code: `NCUR-C-${uid()}` });
+      await createCurriculum(program.id, course.id, 1, 2026);
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const res = await request(app)
+        .post("/api/classes")
+        .set("Cookie", cookies)
+        .send({
+          programId: program.id,
+          currentSemester: 1,
+          academicYear: 2026,
+          admissionYear: 2026,
+          section: "A",
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.message).toContain("Full curriculum is required");
     });
 
     it("should return 404 for non-existent program", async () => {
@@ -451,6 +500,8 @@ describe("Module 4 - Class Management", () => {
       const dept = await createDepartment({ code: `FILT-P-${uid()}` });
       const program1 = await createProgram(dept.id, { semesters: 8 });
       const program2 = await createProgram(dept.id, { semesters: 6 });
+      await addFullCurriculum(dept.id, program1, 2026);
+      await addFullCurriculum(dept.id, program2, 2026);
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
@@ -1300,7 +1351,7 @@ describe("Module 4 - Class Management", () => {
 
   // ─── POST /api/classes/:id/semester-progression ──────────────────────
 
-  describe("Module 2 - Academic class hardening", () => {
+  describe("Academic class hardening", () => {
     it("should transfer a same-department student and move auto class memberships", async () => {
       const u = uid();
       const dept = await createDepartment({ code: `TRN-${u}` });
@@ -1619,12 +1670,19 @@ describe("Module 4 - Class Management", () => {
       const dept = await createDepartment({ code: `SP-${u}` });
       const program = await createProgram(dept.id, { semesters: 8 });
       const klass = await createClass(program.id, { currentSemester: 1 });
+      const course = await createCourse(dept.id, { code: `SP-C-${u}` });
+      await createCurriculum(program.id, course.id, 2, klass.admissionYear);
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-sp-${u}@test.com`,
+      });
       const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
         .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
-        .send({ teacherAssignments: [] });
+        .send({
+          teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
+        });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -1643,10 +1701,15 @@ describe("Module 4 - Class Management", () => {
       const klass = await createClass(program.id, { currentSemester: 1 });
       const course = await createCourse(dept.id, { code: `SPA-C-${u}` });
       await addCurrentCurriculum(program.id, klass, course.id);
+      const nextCourse = await createCourse(dept.id, { code: `SPA-N-${u}` });
+      await createCurriculum(program.id, nextCourse.id, 2, klass.admissionYear);
 
       // Assign course to class via API to get auto-created channel
       const teacher = await createTeacherWithInfo(dept.id, {
         email: `teacher-spa-${u}@test.com`,
+      });
+      const nextTeacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-spa-next-${u}@test.com`,
       });
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
@@ -1667,7 +1730,9 @@ describe("Module 4 - Class Management", () => {
       const res = await request(app)
         .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
-        .send({ teacherAssignments: [] });
+        .send({
+          teacherAssignments: [{ courseId: nextCourse.id, teacherPublicId: nextTeacher.publicId }],
+        });
 
       expect(res.status).toBe(200);
 
@@ -1693,8 +1758,13 @@ describe("Module 4 - Class Management", () => {
       const klass = await createClass(program.id, { currentSemester: 1 });
       const course = await createCourse(dept.id, { code: `SPCLR-C-${u}` });
       await addCurrentCurriculum(program.id, klass, course.id);
+      const nextCourse = await createCourse(dept.id, { code: `SPCLR-N-${u}` });
+      await createCurriculum(program.id, nextCourse.id, 2, klass.admissionYear);
       const teacher = await createTeacherWithInfo(dept.id, {
         email: `teacher-spclr-${u}@test.com`,
+      });
+      const nextTeacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-spclr-next-${u}@test.com`,
       });
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
@@ -1713,13 +1783,15 @@ describe("Module 4 - Class Management", () => {
       await request(app)
         .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
-        .send({ teacherAssignments: [] });
+        .send({
+          teacherAssignments: [{ courseId: nextCourse.id, teacherPublicId: nextTeacher.publicId }],
+        });
 
-      // Verify teaches records cleared
+      // Verify previous teaches record cleared and target-semester assignment created
       const teachesAfter = await prisma.teaches.findMany({
         where: { classId: klass.id },
       });
-      expect(teachesAfter.length).toBe(0);
+      expect(teachesAfter).toEqual([expect.objectContaining({ courseId: nextCourse.id })]);
     });
 
     it("should auto-create course channels from curriculum with teacher assignments", async () => {
@@ -1866,7 +1938,7 @@ describe("Module 4 - Class Management", () => {
       expect(res.body.success).toBe(false);
     });
 
-    it("should succeed without curriculum (no auto-creation)", async () => {
+    it("should return 400 without target semester curriculum", async () => {
       const u = uid();
       const admin = await createUser({
         email: `admin-sp-nocur-${u}@test.com`,
@@ -1883,14 +1955,9 @@ describe("Module 4 - Class Management", () => {
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
-      expect(res.status).toBe(200);
-      expect(res.body.data.currentSemester).toBe(2);
-
-      // Verify no course channels created
-      const courseChannels = await prisma.channel.findMany({
-        where: { serverId: klass.serverId, type: "COURSE" },
-      });
-      expect(courseChannels.length).toBe(0);
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.message).toContain("Curriculum is required");
     });
 
     it("should return 400 when already at max semester", async () => {
@@ -1923,12 +1990,19 @@ describe("Module 4 - Class Management", () => {
       await assignHOD(dept.id, hod.id);
       const program = await createProgram(dept.id, { semesters: 8 });
       const klass = await createClass(program.id, { currentSemester: 1 });
+      const course = await createCourse(dept.id, { code: `SPHOD-C-${u}` });
+      await createCurriculum(program.id, course.id, 2, klass.admissionYear);
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-sphod-${u}@test.com`,
+      });
       const cookies = await loginAs(hod.email, "Pass@1234");
 
       const res = await request(app)
         .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", cookies)
-        .send({ teacherAssignments: [] });
+        .send({
+          teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
+        });
 
       expect(res.status).toBe(200);
       expect(res.body.data.currentSemester).toBe(2);
@@ -2002,12 +2076,19 @@ describe("Module 4 - Class Management", () => {
       const dept = await createDepartment({ code: `SPSN-${u}` });
       const program = await createProgram(dept.id, { semesters: 8 });
       const klass = await createClass(program.id, { currentSemester: 1 });
+      const course = await createCourse(dept.id, { code: `SPSN-C-${u}` });
+      await createCurriculum(program.id, course.id, 2, klass.admissionYear);
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-spsn-${u}@test.com`,
+      });
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       await request(app)
         .post(`/api/classes/${klass.publicId}/semester-progression`)
         .set("Cookie", adminCookies)
-        .send({ teacherAssignments: [] });
+        .send({
+          teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
+        });
 
       const server = await prisma.server.findUnique({
         where: { id: klass.serverId },

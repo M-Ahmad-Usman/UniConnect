@@ -28,7 +28,7 @@ beforeAll(async () => {
   await resetDB();
 });
 
-describe("Module 8 - rare deletion-impact reports", () => {
+describe("Rare deletion-impact reports", () => {
   it("reports department blockers with bounded previews and denies non-admins", async () => {
     const admin = await createUser({
       email: `admin-dept-impact-${uid()}@test.com`,
@@ -130,7 +130,7 @@ describe("Module 8 - rare deletion-impact reports", () => {
 
   it("completes class impact and does not treat communication history as a blocker", async () => {
     const admin = await createUser({
-      email: `admin-class-impact-module8-${uid()}@test.com`,
+      email: `admin-class-impact-rare-impact-${uid()}@test.com`,
       password: "Pass@1234",
       userType: "ADMIN",
     });

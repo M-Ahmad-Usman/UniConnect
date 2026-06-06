@@ -1,6 +1,6 @@
 # Dependency Version Audit
 
-**Date:** 2026-05-25
+**Date:** 2026-06-05
 
 This document records the direct dependency audit for the UniConnect client and server. It identifies which packages are already current, which packages were safely updated during this audit, and which major upgrades should be deferred until their breaking changes are intentionally handled.
 
@@ -16,6 +16,11 @@ This document records the direct dependency audit for the UniConnect client and 
 - The server direct dependency set is current after those updates.
 - Optional Sentry telemetry packages were added during Module 7 and are enabled
   only when DSN/release environment variables are configured.
+- The production-readiness remediation pass also applied targeted client
+  security updates for `axios`, `react-router-dom`, `vitest`, and
+  `@vitest/coverage-v8`.
+- Frontend `npm audit` reports 0 vulnerabilities after targeted direct updates
+  plus transitive `hono` and `qs` npm overrides.
 - The remaining outdated direct dependencies are all intentional deferrals on the client side.
 - The main upgrade that should **not** be applied automatically right now is `eslint` / `@eslint/js` v10.
 - `@types/node` v25 is intentionally deferred because the project currently targets Node 20, and newer type definitions can expose runtime APIs that are not actually available in production.
@@ -29,6 +34,10 @@ This document records the direct dependency audit for the UniConnect client and 
 | `eslint-plugin-react-refresh` | `^0.5.2` | `0.5.2` | Current |
 | `globals` | `^17.4.0` | `17.4.0` | Current |
 | `@types/node` | `^24.10.1` | `25.3.5` | Defer |
+| `@vitest/coverage-v8` | `^4.1.8` | `4.1.8` | Current |
+| `axios` | `^1.17.0` | `1.17.0` | Current |
+| `react-router-dom` | `^7.17.0` | `7.17.0` | Current |
+| `vitest` | `^4.1.8` | `4.1.8` | Current |
 | `@sentry/react` | `^10.53.1` | `10.53.1` | Current |
 | `@sentry/vite-plugin` | `^5.3.0` | `5.3.0` | Current |
 
@@ -73,6 +82,20 @@ The following direct dependency updates were applied during this audit:
 - `@sentry/vite-plugin` at `^5.3.0` for optional release source-map upload.
 
 These packages are inert unless Sentry environment variables are configured.
+
+### Production Readiness Remediation
+
+- Added `@vitest/coverage-v8` at `^4.1.8` and introduced
+  `npm run test:coverage` with an initial 10% aggregate frontend coverage
+  ratchet.
+- Updated `axios` to `^1.17.0`.
+- Updated `react-router-dom` to `^7.17.0`.
+- Updated `vitest` to `^4.1.8`.
+- Added npm overrides for transitive `hono` and `qs` findings pulled through
+  the `shadcn` CLI dependency chain.
+
+These updates were intentionally scoped to security and test-infrastructure
+risk. Broader lint/runtime major upgrades remain separate decisions.
 
 ## Breaking Changes and Upgrade Notes
 
@@ -216,9 +239,12 @@ After applying the safe updates, the remaining intentionally deferred direct dep
 
 ## npm Audit Notes
 
-After adding optional Sentry packages, npm reported existing audit findings:
-- server: `7` moderate severity findings
-- client: `1` moderate severity finding
+After the production-readiness remediation dependency pass:
+
+- client: `npm audit` reports 0 vulnerabilities.
+- server: audit remediation was not part of this pass; keep treating backend
+  audit updates as scoped dependency work instead of running `npm audit fix`
+  blindly.
 
 Do not run `npm audit fix` blindly. Treat remediation as a scoped dependency
 task because automated fixes can introduce unrelated upgrades or behavior changes.

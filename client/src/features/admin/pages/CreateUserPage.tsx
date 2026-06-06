@@ -73,16 +73,6 @@ export function CreateUserPage() {
     setValue('classPublicId', '');
   }, [programId, setValue]);
 
-  useEffect(() => {
-    if (userType === UserType.ADMIN) {
-      setValue('departmentId', '');
-      setValue('programId', '');
-      setValue('classPublicId', '');
-      setValue('rollNumber', '');
-      setValue('designation', '');
-    }
-  }, [setValue, userType]);
-
   const departmentOptions = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
   const programOptions = programsQuery.data ?? [];
   const classOptions = classesQuery.data ?? [];
@@ -115,7 +105,7 @@ export function CreateUserPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-normal">Create user</h1>
           <p className="text-sm text-muted-foreground">
-            Add an admin, teacher, or student account with first-login password change.
+            Add a teacher or student account with first-login password change.
           </p>
         </div>
         <Button variant="outline" render={<Link to={ROUTES.ADMIN_USERS} />}>
@@ -189,31 +179,28 @@ export function CreateUserPage() {
             >
               <option value={UserType.STUDENT}>Student</option>
               <option value={UserType.TEACHER}>Teacher</option>
-              <option value={UserType.ADMIN}>Admin</option>
             </select>
           </div>
 
-          {userType !== UserType.ADMIN ? (
-            <div className="space-y-2">
-              <Label htmlFor="create-user-department">Department</Label>
-              <select
-                id="create-user-department"
-                disabled={createUser.isPending || departmentsQuery.isLoading}
-                className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                {...register('departmentId')}
-              >
-                <option value="">Select department</option>
-                {departmentOptions.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.code} · {department.name}
-                  </option>
-                ))}
-              </select>
-              {'departmentId' in errors && errors.departmentId ? (
-                <p className="text-sm text-destructive">{errors.departmentId.message}</p>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="space-y-2">
+            <Label htmlFor="create-user-department">Department</Label>
+            <select
+              id="create-user-department"
+              disabled={createUser.isPending || departmentsQuery.isLoading}
+              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              {...register('departmentId')}
+            >
+              <option value="">Select department</option>
+              {departmentOptions.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.code} · {department.name}
+                </option>
+              ))}
+            </select>
+            {'departmentId' in errors && errors.departmentId ? (
+              <p className="text-sm text-destructive">{errors.departmentId.message}</p>
+            ) : null}
+          </div>
 
           {userType === UserType.TEACHER ? (
             <div className="space-y-2">

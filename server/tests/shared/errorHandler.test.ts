@@ -119,10 +119,10 @@ describe("Error Handler Middleware", () => {
 
   it("should include a trusted request ID in error responses", async () => {
     const app = createTestApp(new NotFoundError("User not found"));
-    const res = await request(app).get("/test").set("X-Request-ID", "module7-test-request");
+    const res = await request(app).get("/test").set("X-Request-ID", "error-handler-test-request");
 
     expect(res.status).toBe(404);
-    expect(res.headers["x-request-id"]).toBe("module7-test-request");
-    expect(res.body.error.requestId).toBe("module7-test-request");
+    expect(res.headers["x-request-id"]).toBe("error-handler-test-request");
+    expect(res.body.error.requestId).toBe("error-handler-test-request");
   });
 });

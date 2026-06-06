@@ -49,7 +49,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 10 - Notifications", () => {
+describe("Notifications", () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // POST CREATION → NOTIFICATION GENERATION (via EventEmitter)
   // ═══════════════════════════════════════════════════════════════════════════

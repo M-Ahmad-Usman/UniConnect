@@ -950,7 +950,7 @@ GET /api/users/me
     gender: 'MALE' | 'FEMALE';
     bio: string | null;
     profilePictureUrl: string | null;
-    userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    userType: 'TEACHER' | 'STUDENT';
     departmentId: number | null;
     status: 'ACTIVE' | 'SUSPENDED';
     mustChangePassword: boolean;
@@ -972,6 +972,9 @@ GET /api/users/me
       rollNumber: string;
       classPublicId: string;
       class: {
+        publicId: string;
+        currentSemester: number;
+        section: string;
         program: { code: string };
       };
     } | null;
@@ -1051,7 +1054,7 @@ POST /api/users
   email: string;      // Valid email
   phone: string;      // Format: 03XXXXXXXXX
   gender: 'MALE' | 'FEMALE';
-  userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  userType: 'TEACHER' | 'STUDENT';
 
   // Conditional fields based on userType:
   // TEACHER:
@@ -1076,7 +1079,7 @@ POST /api/users
     fullName: string;
     phone: string;
     gender: 'MALE' | 'FEMALE';
-    userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    userType: 'TEACHER' | 'STUDENT';
     departmentId: number | null;
     status: 'ACTIVE' | 'SUSPENDED';
     mustChangePassword: true;
@@ -1087,7 +1090,7 @@ POST /api/users
 }
 ```
 
-**Note:** Backend emails the generated temporary password to the user. The frontend should not display the password to admins. User must change password on first login.
+**Note:** Backend emails the generated temporary password to the user. The frontend should not display the password to admins. User must change password on first login. Admin accounts are not created through this endpoint; bootstrap or add them directly in the database.
 
 #### Bulk Import Users (CSV)
 
@@ -1111,6 +1114,8 @@ fullName,email,phone,gender,userType,departmentId,classPublicId,rollNumber,desig
 John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,018f47a2-5d6b-7c8d-9e0f-123456789abc,22-NTU-CS-1184,
 Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
 ```
+
+CSV `userType` supports `STUDENT` and `TEACHER` only. Admin accounts are not created through bulk import.
 
 **Response:**
 
@@ -1185,7 +1190,7 @@ GET /api/users/:publicId
 
 **Auth:** Admin or Teacher
 
-**Response:** User detail with `publicId`, `status`, `isDeleted`, `deletedAt`, and optional `deletedByUser`. Admins can read deleted users; teachers can only read live users in their HOD department scope.
+**Response:** User detail with `publicId`, `status`, `isDeleted`, `deletedAt`, and optional `deletedByUser`. Student details include `studentInfo.class` with `publicId`, `currentSemester`, `section`, and `program.code` so clients can render labels such as `BSCS-7-A` without an additional class lookup. Admins can read deleted users; teachers can only read live users in their HOD department scope.
 
 #### Get User Deletion Impact (Admin)
 
@@ -1536,6 +1541,33 @@ POST /api/departments/:id/programs
 
 ### Programs Endpoints
 
+#### List Programs
+
+```
+GET /api/programs
+```
+
+**Auth:** Required
+
+**Query Parameters:**
+
+```typescript
+{
+  page?: number;
+  limit?: number;
+  departmentId?: number;   // exact department filter
+  departmentIds?: number[]; // comma-separated or repeated; union scope filter
+  programIds?: number[];    // comma-separated or repeated; union scope filter
+  disciplineId?: number;
+  degreeLevelId?: number;
+  search?: string;
+}
+```
+
+When `departmentId` is omitted, `departmentIds` and `programIds` are combined as
+a union. The Academics workspace uses this to list all programs a mixed HOD/PD
+user can manage without broad client-side filtering.
+
 #### Program Deletion Impact (Admin)
 
 ```
@@ -1560,8 +1592,14 @@ PATCH /api/programs/:id
 {
   semesters?: number;  // 1-10
   code?: string;
+  confirmSemesterReduction?: boolean;
 }
 ```
+
+Program `code` and `semesters` are locked after any class exists for the
+program. Before class enrollment, reducing `semesters` requires
+`confirmSemesterReduction: true` when curriculum entries above the new semester
+count would be deleted.
 
 **Response:**
 
@@ -1596,10 +1634,11 @@ GET /api/programs/:id/curriculum
 {
   success: true;
   data: Array<{
-    publicId: string;
-    courseId: number;
+    id: number;
     semesterNumber: number;
     batchYear: number;
+    isLocked: boolean;
+    lockedThroughSemester: number;
     course: {
       id: number;
       code: string;
@@ -1610,13 +1649,16 @@ GET /api/programs/:id/curriculum
 }
 ```
 
-#### Add Course to Curriculum (Admin/Teacher)
+`isLocked` is true when an existing class for the same program and batch has
+already reached that semester. Locked curriculum entries are read-only.
+
+#### Add Course to Curriculum (Admin/HOD/Program Director)
 
 ```
 POST /api/programs/:id/curriculum
 ```
 
-**Auth:** Admin or Teacher
+**Auth:** Admin, own-department HOD, or directed-program Program Director
 
 **Request Body:**
 
@@ -1638,13 +1680,77 @@ POST /api/programs/:id/curriculum
 }
 ```
 
-#### Remove Course from Curriculum (Admin/Teacher)
+Single-course add preserves duplicate conflicts. The bulk endpoint below should
+be used for semester setup because it skips duplicates.
+
+#### Bulk Add Courses to Curriculum (Admin/HOD/Program Director)
+
+```
+POST /api/programs/:id/curriculum/bulk
+```
+
+**Auth:** Admin, own-department HOD, or directed-program Program Director
+
+**Rules:** The target semester must not be locked by an existing class for the
+same program/batch. Courses must belong to the program department. A course can
+appear only once in the same program/batch across the full degree; duplicates
+are skipped.
+
+**Request Body:**
+
+```typescript
+{
+  courseIds: number[];
+  semesterNumber: number;
+  batchYear: number;
+}
+```
+
+**Response:**
+
+```typescript
+{
+  success: true;
+  data: {
+    entries: CurriculumEntry[];
+    addedCount: number;
+    skippedCourseIds: number[];
+  };
+  message: 'Curriculum courses added successfully';
+}
+```
+
+#### Copy Batch Curriculum (Admin/HOD/Program Director)
+
+```
+POST /api/programs/:id/curriculum/copy-batch
+```
+
+Copies a complete source batch curriculum into a target batch. Existing target
+courses are skipped. The source batch must have at least one course in every
+program semester.
+
+**Request Body:**
+
+```typescript
+{
+  sourceBatchYear: number;
+  targetBatchYear: number;
+}
+```
+
+**Response:** Same shape as bulk add.
+
+#### Remove Course from Curriculum (Admin/HOD/Program Director)
 
 ```
 DELETE /api/programs/:id/curriculum/:curriculumId
 ```
 
-**Auth:** Admin or Teacher
+**Auth:** Admin, own-department HOD, or directed-program Program Director
+
+Removal is blocked for locked semesters and for live class batches when removing
+the entry would make that batch curriculum incomplete.
 
 **Response:**
 
@@ -1814,7 +1920,10 @@ POST /api/classes
 
 **Auth:** Admin or Teacher
 
-**Rules:** Course must be in the class current-semester curriculum. Teacher must be active.
+**Rules:** The class admission year must have a complete curriculum for every
+program semester before the class can be created. Class creation creates the
+class server, default channels, and current-semester course channels from that
+curriculum.
 
 **Request Body:**
 
@@ -1848,6 +1957,9 @@ POST /api/classes/:publicId/courses
 ```
 
 **Auth:** Admin or Teacher
+
+Course assignment is limited to courses in the class current-semester
+curriculum. Teacher must be active.
 
 **Request Body:**
 
@@ -1942,6 +2054,11 @@ DELETE /api/classes/:publicId/courses/:courseId
 ```
 
 **Auth:** Admin or Teacher
+
+Progression requires teacher assignments for every course in the target-semester
+curriculum and rejects missing, duplicate, or extra course assignments. Existing
+active course channels are archived and target-semester course channels are
+created or reactivated.
 
 **Response:**
 
@@ -2096,6 +2213,9 @@ PATCH /api/courses/:id
   creditHours?: number;
 }
 ```
+
+Course details are locked after the course is used in curriculum, class
+teaching assignments, or course channels.
 
 **Response:**
 

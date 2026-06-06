@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Edit, Plus, Search } from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ROUTES } from '@/lib/constants';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { parsePositiveInt } from '../utils';
 import { useDepartments } from '../hooks/useDepartments';
 import {
@@ -32,21 +34,68 @@ export function ProgramListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<ProgramListItem | null>(null);
+  const [pendingReduction, setPendingReduction] = useState<UpdateProgramFormValues | null>(null);
   const searchParamValue = searchParams.get('search') ?? '';
   const [searchValue, setSearchValue] = useState(searchParamValue);
   const debouncedSearch = useDebouncedValue(searchValue.trim(), 300);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const departmentId = parsePositiveInt(searchParams.get('departmentId'));
   const search = searchParamValue.trim() || undefined;
+  const permissionsQuery = useMyPermissions();
+  const permissions = permissionsQuery.data;
+  const canManageProgramCatalog = permissions?.global.canAccessAdminDashboard ?? false;
+  const hodDepartmentIds = permissions?.scopes.hodDepartmentIds;
+  const directedProgramIds = permissions?.scopes.directedProgramIds;
+  const selectedScopedDepartmentId =
+    !canManageProgramCatalog && departmentId && hodDepartmentIds?.includes(departmentId)
+      ? departmentId
+      : undefined;
+  const effectiveDepartmentId = canManageProgramCatalog ? departmentId : selectedScopedDepartmentId;
+  const effectiveDepartmentIds =
+    !canManageProgramCatalog && selectedScopedDepartmentId === undefined
+      ? hodDepartmentIds
+      : undefined;
+  const effectiveProgramIds =
+    !canManageProgramCatalog && selectedScopedDepartmentId === undefined
+      ? directedProgramIds
+      : undefined;
+  const canListPrograms =
+    canManageProgramCatalog ||
+    selectedScopedDepartmentId !== undefined ||
+    (hodDepartmentIds?.length ?? 0) > 0 ||
+    (directedProgramIds?.length ?? 0) > 0;
 
-  const programsQuery = usePrograms({ page, limit: DEFAULT_PAGE_SIZE, departmentId, search });
+  const programsQuery = usePrograms(
+    {
+      page,
+      limit: DEFAULT_PAGE_SIZE,
+      departmentId: effectiveDepartmentId,
+      departmentIds: effectiveDepartmentIds,
+      programIds: effectiveProgramIds,
+      search,
+    },
+    permissionsQuery.isSuccess && canListPrograms,
+  );
   const departmentsQuery = useDepartments();
   const disciplinesQuery = useDisciplines();
   const degreeLevelsQuery = useDegreeLevels();
   const createProgram = useCreateGlobalProgram();
   const updateProgram = useUpdateProgram(editingProgram?.id ?? 0);
   const programs = programsQuery.data?.data ?? [];
-  const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
+  const departments = useMemo(() => {
+    const records = departmentsQuery.data ?? [];
+    return canManageProgramCatalog
+      ? records
+      : records.filter((department) => hodDepartmentIds?.includes(department.id));
+  }, [canManageProgramCatalog, departmentsQuery.data, hodDepartmentIds]);
+  const lockedDepartment =
+    !canManageProgramCatalog &&
+    departments.length === 1 &&
+    (directedProgramIds?.length ?? 0) === 0
+      ? departments[0]
+      : null;
+  const scopedDepartmentLabel =
+    !canManageProgramCatalog && departments.length === 0 ? 'Directed programs' : null;
 
   useEffect(() => {
     setSearchValue(searchParamValue);
@@ -78,7 +127,28 @@ export function ProgramListPage() {
   }
 
   async function handleUpdate(values: ProgramFormValues | UpdateProgramFormValues) {
-    await updateProgram.mutateAsync(values as UpdateProgramFormValues);
+    const updateValues = values as UpdateProgramFormValues;
+    if (
+      editingProgram &&
+      updateValues.semesters < editingProgram.semesters &&
+      (editingProgram._count?.curriculum ?? 0) > 0
+    ) {
+      setPendingReduction(updateValues);
+      return false;
+    }
+
+    await updateProgram.mutateAsync(updateValues);
+    return undefined;
+  }
+
+  async function confirmSemesterReduction() {
+    if (!pendingReduction) return;
+    await updateProgram.mutateAsync({
+      ...pendingReduction,
+      confirmSemesterReduction: true,
+    });
+    setPendingReduction(null);
+    setEditingProgram(null);
   }
 
   async function handleCreate(values: GlobalProgramFormValues) {
@@ -89,13 +159,20 @@ export function ProgramListPage() {
   return (
     <section className="space-y-5">
       <AdminPageHeader
+        eyebrow="Academics"
         title="Programs"
-        description="Browse, create, and update program codes and semester counts across departments."
+        description={
+          canManageProgramCatalog
+            ? 'Browse, create, and update program codes and semester counts across departments.'
+            : 'Browse scoped programs and manage curriculum for your academic role.'
+        }
         actions={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            Create program
-          </Button>
+          canManageProgramCatalog ? (
+            <Button type="button" onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              Create program
+            </Button>
+          ) : null
         }
       />
       <div className="rounded-lg border bg-background p-3">
@@ -113,27 +190,43 @@ export function ProgramListPage() {
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Department</span>
-            <select
-              className={inputClassName}
-              value={departmentId ?? ''}
-              onChange={(event) => updateFilter({ departmentId: event.target.value })}
-            >
-              <option value="">All departments</option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.code}
-                </option>
-              ))}
-            </select>
+            {lockedDepartment || scopedDepartmentLabel ? (
+              <input
+                className={inputClassName}
+                value={
+                  lockedDepartment
+                    ? `${lockedDepartment.code} · ${lockedDepartment.name}`
+                    : scopedDepartmentLabel ?? ''
+                }
+                readOnly
+              />
+            ) : (
+              <select
+                className={inputClassName}
+                value={effectiveDepartmentId ?? ''}
+                onChange={(event) => updateFilter({ departmentId: event.target.value })}
+              >
+                {canManageProgramCatalog ? <option value="">All departments</option> : null}
+                {!canManageProgramCatalog ? <option value="">All scoped programs</option> : null}
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.code}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
         </div>
       </div>
       <div className="overflow-hidden rounded-lg border bg-background">
         <DataState
-          isLoading={programsQuery.isLoading}
+          isLoading={programsQuery.isLoading || permissionsQuery.isLoading}
           isError={programsQuery.isError}
+          error={programsQuery.error}
           onRetry={() => void programsQuery.refetch()}
           empty={programs.length === 0}
+          emptyTitle="No programs found"
+          emptyDescription="No programs match the current scope or filters."
         >
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-sm">
@@ -158,20 +251,22 @@ export function ProgramListPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         <Link
-                          to={ROUTES.ADMIN_PROGRAM_CURRICULUM(program.id)}
+                          to={ROUTES.ACADEMICS_PROGRAM_CURRICULUM(program.id)}
                           className={buttonVariants({ variant: 'outline', size: 'sm' })}
                         >
                           Curriculum
                         </Link>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => setEditingProgram(program)}
-                        >
-                          <Edit className="size-4" />
-                          <span className="sr-only">Edit program</span>
-                        </Button>
+                        {canManageProgramCatalog ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setEditingProgram(program)}
+                          >
+                            <Edit className="size-4" />
+                            <span className="sr-only">Edit program</span>
+                          </Button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -185,24 +280,44 @@ export function ProgramListPage() {
         pagination={programsQuery.data?.pagination}
         onPageChange={(nextPage) => updateFilter({ page: nextPage })}
       />
-      <GlobalProgramDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        departments={departments}
-        disciplines={disciplinesQuery.data ?? []}
-        degreeLevels={degreeLevelsQuery.data ?? []}
-        loading={createProgram.isPending}
-        onSubmit={handleCreate}
-      />
-      <ProgramDialog
-        open={editingProgram !== null}
-        onOpenChange={(open) => !open && setEditingProgram(null)}
-        initial={editingProgram ?? undefined}
-        disciplines={disciplinesQuery.data ?? []}
-        degreeLevels={degreeLevelsQuery.data ?? []}
-        loading={updateProgram.isPending}
-        onSubmit={handleUpdate}
-      />
+      {canManageProgramCatalog ? (
+        <>
+          <GlobalProgramDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            departments={departments}
+            disciplines={disciplinesQuery.data ?? []}
+            degreeLevels={degreeLevelsQuery.data ?? []}
+            loading={createProgram.isPending}
+            onSubmit={handleCreate}
+          />
+          <ProgramDialog
+            open={editingProgram !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingProgram(null);
+                setPendingReduction(null);
+              }
+            }}
+            initial={editingProgram ?? undefined}
+            disciplines={disciplinesQuery.data ?? []}
+            degreeLevels={degreeLevelsQuery.data ?? []}
+            loading={updateProgram.isPending}
+            onSubmit={handleUpdate}
+          />
+          <ConfirmDialog
+            open={pendingReduction !== null}
+            onOpenChange={(open) => {
+              if (!open) setPendingReduction(null);
+            }}
+            title="Reduce program semesters?"
+            description="Curriculum entries above the new semester count will be deleted. This is only allowed because no classes are enrolled in this program."
+            confirmLabel="Reduce semesters"
+            variant="destructive"
+            onConfirm={confirmSemesterReduction}
+          />
+        </>
+      ) : null}
     </section>
   );
 }

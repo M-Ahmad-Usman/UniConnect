@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { e2eUsers } from './helpers/auth';
-import { findClassByServerName, module2Fixtures } from './helpers/module2';
-import { findSocietyByName, module3Fixtures } from './helpers/module3';
+import { findClassByServerName, academicShellFixtures } from './helpers/academic-shell-fixtures';
+import { findSocietyByName, serverSocietyFixtures } from './helpers/server-society-fixtures';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -21,13 +21,13 @@ async function expectNoCriticalA11yViolations(page: Page) {
   expect(results.violations).toEqual([]);
 }
 
-test.describe.serial('Module 6 UI and accessibility hardening', () => {
+test.describe.serial('UI and accessibility workflows', () => {
   test.setTimeout(90_000);
 
   test('theme, role management, class detail, and mobile shell stay accessible', async ({
     page,
   }) => {
-    const klass = await findClassByServerName(module2Fixtures.transferTargetServerName);
+    const klass = await findClassByServerName(academicShellFixtures.transferTargetServerName);
     expect(klass).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
@@ -75,7 +75,7 @@ test.describe.serial('Module 6 UI and accessibility hardening', () => {
   test('society detail tabs and destructive confirmation are keyboard reachable', async ({
     page,
   }) => {
-    const society = await findSocietyByName(module3Fixtures.societyName);
+    const society = await findSocietyByName(serverSocietyFixtures.societyName);
     expect(society).not.toBeNull();
 
     await signIn(

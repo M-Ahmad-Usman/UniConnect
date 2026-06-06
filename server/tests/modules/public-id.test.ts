@@ -73,7 +73,7 @@ async function createCoreFixtures() {
   };
 }
 
-describe("Module 2 - Public ID Foundation", () => {
+describe("Public ID contract", () => {
   describe("UUIDv7 validation", () => {
     it("accepts UUIDv7 public IDs and normalizes casing", () => {
       expect(isPublicId(VALID_UUID_V7)).toBe(true);

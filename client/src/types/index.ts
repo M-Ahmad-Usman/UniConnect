@@ -25,6 +25,7 @@ export type {
 // Users
 export type {
   UserProfile,
+  CreatableUserType,
   StudentInfo,
   TeacherInfo,
   UserListItem,

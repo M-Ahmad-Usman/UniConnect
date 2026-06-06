@@ -1,6 +1,6 @@
 import { withDb } from './db';
 
-export const module3Fixtures = {
+export const serverSocietyFixtures = {
   serverName: 'Engineering Faculty Hub',
   announcementChannelName: 'announcements',
   mutableChannelName: 'project-lab',

@@ -26,7 +26,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 12 - Admin Dashboard", () => {
+describe("Admin dashboard", () => {
   // ─── GET /api/admin/stats ──────────────────────────────────────────────
 
   describe("GET /api/admin/stats", () => {

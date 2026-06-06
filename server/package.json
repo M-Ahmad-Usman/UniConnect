@@ -10,8 +10,10 @@
     "start": "node dist/server.js",
     "test": "NODE_OPTIONS='--max-old-space-size=2048' dotenv -e .env.test -- node --experimental-vm-modules node_modules/.bin/jest --runInBand",
     "test:coverage": "dotenv -e .env.test -- node --experimental-vm-modules node_modules/.bin/jest --runInBand --forceExit --coverage",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
     "db:migrate:test": "dotenv -e .env.test -- prisma migrate deploy",
+    "db:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio"

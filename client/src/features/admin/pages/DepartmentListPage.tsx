@@ -44,6 +44,7 @@ export function DepartmentListPage() {
         <DataState
           isLoading={departmentsQuery.isLoading}
           isError={departmentsQuery.isError}
+          error={departmentsQuery.error}
           onRetry={() => void departmentsQuery.refetch()}
           empty={departments.length === 0}
         >

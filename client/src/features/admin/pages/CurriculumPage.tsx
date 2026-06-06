@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Copy, Lock, Plus, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -9,31 +9,83 @@ import { ROUTES } from '@/lib/constants';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { parsePositiveInt } from '../utils';
 import {
-  useAddCurriculum,
   useAdminCourses,
+  useBulkAddCurriculum,
+  useCopyCurriculumBatch,
   useCurriculum,
   useProgram,
   useRemoveCurriculum,
 } from '../hooks/useAcademicCatalog';
-import { AdminPageHeader, DataState, inputClassName } from '../components/AdminDataPrimitives';
-import { CurriculumDialog } from '../components/CatalogDialogs';
+import { AdminPageHeader, DataState } from '../components/AdminDataPrimitives';
+import { CopyCurriculumBatchDialog, CurriculumDialog } from '../components/CatalogDialogs';
 import type { CurriculumEntry } from '@/types';
-import type { CurriculumFormValues } from '../schemas';
+import type { CopyCurriculumBatchFormValues, CurriculumFormValues } from '../schemas';
+
+const RECENT_BATCH_COUNT = 5;
+const OLDER_BATCH_PAGE_SIZE = 5;
+const MIN_BATCH_YEAR = 2000;
 
 export function CurriculumPage() {
   const programId = parsePositiveInt(useParams().programId ?? null) ?? null;
   const [searchParams, setSearchParams] = useSearchParams();
-  const batchYear = parsePositiveInt(searchParams.get('batchYear'));
+  const currentYear = new Date().getFullYear();
+  const parsedBatchYear = parsePositiveInt(searchParams.get('batchYear'));
+  const selectedBatchYear =
+    parsedBatchYear && parsedBatchYear >= MIN_BATCH_YEAR && parsedBatchYear <= currentYear
+      ? parsedBatchYear
+      : currentYear;
+  const recentBatchYears = useMemo(
+    () => Array.from({ length: RECENT_BATCH_COUNT }, (_, index) => currentYear - index),
+    [currentYear],
+  );
+  const olderBatchYears = useMemo(
+    () =>
+      Array.from(
+        { length: Math.max(0, currentYear - RECENT_BATCH_COUNT - MIN_BATCH_YEAR + 1) },
+        (_, index) => currentYear - RECENT_BATCH_COUNT - index,
+      ),
+    [currentYear],
+  );
+  const [olderOpen, setOlderOpen] = useState(
+    selectedBatchYear < currentYear - RECENT_BATCH_COUNT + 1,
+  );
+  const [olderPage, setOlderPage] = useState(() => {
+    const olderIndex = olderBatchYears.indexOf(selectedBatchYear);
+    return olderIndex >= 0 ? Math.floor(olderIndex / OLDER_BATCH_PAGE_SIZE) + 1 : 1;
+  });
   const [addOpen, setAddOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [courseSearch, setCourseSearch] = useState('');
+  const deferredCourseSearch = useDeferredValue(courseSearch);
   const [removing, setRemoving] = useState<CurriculumEntry | null>(null);
   const permissionsQuery = useMyPermissions();
   const programQuery = useProgram(programId);
-  const curriculumQuery = useCurriculum(programId, { batchYear });
-  const addCurriculum = useAddCurriculum(programId ?? 0);
+  const curriculumQuery = useCurriculum(programId, { batchYear: selectedBatchYear });
+  const bulkAddCurriculum = useBulkAddCurriculum(programId ?? 0);
+  const copyCurriculumBatch = useCopyCurriculumBatch(programId ?? 0);
   const removeCurriculum = useRemoveCurriculum(programId ?? 0);
   const departmentId = programQuery.data?.departmentId;
-  const canManageCurriculum = permissionsQuery.data?.global.canManageCurriculum ?? false;
-  const coursesQuery = useAdminCourses({ page: 1, limit: 50, departmentId }, canManageCurriculum);
+  const permissionData = permissionsQuery.data;
+  const canManageCurriculum = Boolean(
+    permissionData?.global.canAccessAdminDashboard ||
+      (departmentId !== undefined &&
+        permissionData?.scopes.hodDepartmentIds.includes(departmentId)) ||
+      (programId !== null && permissionData?.scopes.directedProgramIds.includes(programId)),
+  );
+  const coursesQuery = useAdminCourses(
+    {
+      page: 1,
+      limit: 50,
+      departmentId,
+      search: deferredCourseSearch.trim() || undefined,
+    },
+    canManageCurriculum && departmentId !== undefined,
+  );
+  const olderTotalPages = Math.max(1, Math.ceil(olderBatchYears.length / OLDER_BATCH_PAGE_SIZE));
+  const olderPageYears = olderBatchYears.slice(
+    (olderPage - 1) * OLDER_BATCH_PAGE_SIZE,
+    olderPage * OLDER_BATCH_PAGE_SIZE,
+  );
   const curriculum = useMemo(() => curriculumQuery.data ?? [], [curriculumQuery.data]);
 
   const grouped = useMemo(() => {
@@ -59,7 +111,22 @@ export function CurriculumPage() {
   const program = programQuery.data;
 
   async function handleAdd(values: CurriculumFormValues) {
-    await addCurriculum.mutateAsync(values);
+    await bulkAddCurriculum.mutateAsync(values);
+  }
+
+  async function handleCopy(values: CopyCurriculumBatchFormValues) {
+    await copyCurriculumBatch.mutateAsync(values);
+  }
+
+  function handleAddOpenChange(open: boolean) {
+    setAddOpen(open);
+    if (!open) setCourseSearch('');
+  }
+
+  function selectBatchYear(year: number) {
+    const next = new URLSearchParams(searchParams);
+    next.set('batchYear', String(year));
+    setSearchParams(next);
   }
 
   return (
@@ -69,38 +136,96 @@ export function CurriculumPage() {
         description={`${program.department.code} · ${program.discipline.name} · ${program.degreeLevel.level}`}
         actions={
           <>
-            <Link to={ROUTES.ACADEMICS_CLASSES} className={buttonVariants({ variant: 'outline' })}>
+            <Link to={ROUTES.ACADEMICS_PROGRAMS} className={buttonVariants({ variant: 'outline' })}>
               <ArrowLeft className="size-4" />
-              Classes
+              Programs
             </Link>
             {canManageCurriculum ? (
-              <Button type="button" onClick={() => setAddOpen(true)}>
-                <Plus className="size-4" />
-                Add course
-              </Button>
+              <>
+                <Button type="button" variant="outline" onClick={() => setCopyOpen(true)}>
+                  <Copy className="size-4" />
+                  Copy batch
+                </Button>
+                <Button type="button" onClick={() => setAddOpen(true)}>
+                  <Plus className="size-4" />
+                  Add courses
+                </Button>
+              </>
             ) : null}
           </>
         }
       />
-      <div className="rounded-lg border bg-background p-3">
-        <label className="block max-w-xs space-y-1.5">
-          <span className="text-sm font-medium">Batch year</span>
-          <input
-            className={inputClassName}
-            type="number"
-            value={batchYear ?? ''}
-            onChange={(event) => {
-              const next = new URLSearchParams(searchParams);
-              if (event.target.value) next.set('batchYear', event.target.value);
-              else next.delete('batchYear');
-              setSearchParams(next);
-            }}
-          />
-        </label>
+      <div className="space-y-3 rounded-lg border bg-background p-3">
+        <div className="flex flex-wrap gap-2">
+          {recentBatchYears.map((year) => (
+            <Button
+              key={year}
+              type="button"
+              variant={selectedBatchYear === year ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => selectBatchYear(year)}
+            >
+              {year}
+            </Button>
+          ))}
+          {olderBatchYears.length > 0 ? (
+            <Button
+              type="button"
+              variant={olderOpen ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setOlderOpen((open) => !open)}
+            >
+              Older batches
+            </Button>
+          ) : null}
+        </div>
+        {olderOpen ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+            <div className="flex flex-wrap gap-2">
+              {olderPageYears.map((year) => (
+                <Button
+                  key={year}
+                  type="button"
+                  variant={selectedBatchYear === year ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => selectBatchYear(year)}
+                >
+                  {year}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={olderPage <= 1}
+                onClick={() => setOlderPage((page) => Math.max(1, page - 1))}
+              >
+                <ChevronLeft className="size-4" />
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {olderPage} of {olderTotalPages}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={olderPage >= olderTotalPages}
+                onClick={() => setOlderPage((page) => Math.min(olderTotalPages, page + 1))}
+              >
+                Next
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
       <DataState
         isLoading={curriculumQuery.isLoading}
         isError={curriculumQuery.isError}
+        error={curriculumQuery.error}
         onRetry={() => void curriculumQuery.refetch()}
         empty={curriculum.length === 0}
       >
@@ -117,7 +242,6 @@ export function CurriculumPage() {
                       <th className="px-4 py-3 font-medium">Course</th>
                       <th className="px-4 py-3 font-medium">Code</th>
                       <th className="px-4 py-3 font-medium">Credits</th>
-                      <th className="px-4 py-3 font-medium">Batch</th>
                       <th className="px-4 py-3 text-right font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -127,10 +251,20 @@ export function CurriculumPage() {
                         <td className="px-4 py-3 font-medium">{entry.course.title}</td>
                         <td className="px-4 py-3">{entry.course.code}</td>
                         <td className="px-4 py-3">{entry.course.creditHours}</td>
-                        <td className="px-4 py-3">{entry.batchYear}</td>
                         <td className="px-4 py-3 text-right">
-                          {canManageCurriculum ? (
-                            <Button type="button" variant="ghost" size="icon-sm" onClick={() => setRemoving(entry)}>
+                          {canManageCurriculum && entry.isLocked ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                              <Lock className="size-3.5" />
+                              Locked
+                            </span>
+                          ) : null}
+                          {canManageCurriculum && !entry.isLocked ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => setRemoving(entry)}
+                            >
                               <Trash2 className="size-4" />
                               <span className="sr-only">Remove curriculum entry</span>
                             </Button>
@@ -147,12 +281,23 @@ export function CurriculumPage() {
       </DataState>
       <CurriculumDialog
         open={addOpen}
-        onOpenChange={setAddOpen}
+        onOpenChange={handleAddOpenChange}
         courses={coursesQuery.data?.data ?? []}
-        defaultBatchYear={batchYear ?? new Date().getFullYear()}
+        coursesLoading={coursesQuery.isFetching}
+        courseSearch={courseSearch}
+        onCourseSearchChange={setCourseSearch}
+        defaultBatchYear={selectedBatchYear}
         maxSemester={program.semesters}
-        loading={addCurriculum.isPending}
+        loading={bulkAddCurriculum.isPending}
         onSubmit={handleAdd}
+      />
+      <CopyCurriculumBatchDialog
+        open={copyOpen}
+        onOpenChange={setCopyOpen}
+        defaultSourceBatchYear={selectedBatchYear - 1}
+        defaultTargetBatchYear={selectedBatchYear}
+        loading={copyCurriculumBatch.isPending}
+        onSubmit={handleCopy}
       />
       <ConfirmDialog
         open={removing !== null}

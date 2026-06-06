@@ -1,13 +1,13 @@
 import { withDb } from './db';
 
-export const module2Fixtures = {
+export const academicShellFixtures = {
   shellServerName: 'Computer Science Hub',
   announcementChannelName: 'announcements',
   generalChannelName: 'general',
   notificationServerName: 'Realtime Updates Hub',
   notificationChannelName: 'updates',
   searchablePostTitle: 'Searchable Architecture Notes',
-  filteredOutPostTitle: 'Module 2 Runtime Update',
+  filteredOutPostTitle: 'Runtime Update',
   notificationTitle: 'Realtime Notification Drill',
   academicProgramCode: 'E2EACAD',
   transferTargetServerName: 'Academic Transfer Target Class',

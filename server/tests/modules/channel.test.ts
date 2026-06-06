@@ -39,7 +39,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 8 - Server & Channel Management (Channel Endpoints)", () => {
+describe("Channel management endpoints", () => {
   // ─── PATCH /api/channels/:id ─────────────────────────────────────────
 
   describe("PATCH /api/channels/:id", () => {

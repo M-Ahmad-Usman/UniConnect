@@ -1,10 +1,11 @@
-import { BookOpen, GraduationCap } from 'lucide-react';
+import { BookOpen, GraduationCap, LibraryBig } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
 
 const academicNavItems = [
+  { label: 'Programs', to: ROUTES.ACADEMICS_PROGRAMS, icon: LibraryBig },
   { label: 'Classes', to: ROUTES.ACADEMICS_CLASSES, icon: GraduationCap },
 ];
 
@@ -19,7 +20,7 @@ export function AcademicLayout() {
       <aside className="rounded-lg border border-border bg-background p-3">
         <div className="px-2 pb-3">
           <p className="text-sm font-semibold">Academic workspace</p>
-          <p className="text-muted-foreground text-xs">Delegated class and curriculum operations.</p>
+          <p className="text-muted-foreground text-xs">Delegated program and class operations.</p>
         </div>
         <nav className="grid gap-1">
           {navItems.map((item) => {
@@ -41,10 +42,6 @@ export function AcademicLayout() {
               </NavLink>
             );
           })}
-          <span className="text-muted-foreground mt-2 flex items-center gap-2 px-3 py-2 text-xs">
-            <BookOpen className="size-3.5" />
-            Curriculum opens from a program or class.
-          </span>
         </nav>
       </aside>
       <section className="min-w-0">

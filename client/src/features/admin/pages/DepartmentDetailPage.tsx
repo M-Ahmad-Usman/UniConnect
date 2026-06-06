@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Edit, GraduationCap, Plus, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -28,6 +29,7 @@ export function DepartmentDetailPage() {
   const [editDepartmentOpen, setEditDepartmentOpen] = useState(false);
   const [createProgramOpen, setCreateProgramOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<ProgramListItem | null>(null);
+  const [pendingReduction, setPendingReduction] = useState<UpdateProgramFormValues | null>(null);
 
   const departmentQuery = useDepartment(departmentId);
   const statsQuery = useDepartmentStats(departmentId);
@@ -77,7 +79,27 @@ export function DepartmentDetailPage() {
 
   async function handleUpdateProgram(values: ProgramFormValues | UpdateProgramFormValues) {
     if (!editingProgram) return;
-    await updateProgram.mutateAsync(values as UpdateProgramFormValues);
+    const updateValues = values as UpdateProgramFormValues;
+    if (
+      updateValues.semesters < editingProgram.semesters &&
+      (editingProgram._count?.curriculum ?? 0) > 0
+    ) {
+      setPendingReduction(updateValues);
+      return false;
+    }
+
+    await updateProgram.mutateAsync(updateValues);
+    return undefined;
+  }
+
+  async function confirmSemesterReduction() {
+    if (!pendingReduction) return;
+    await updateProgram.mutateAsync({
+      ...pendingReduction,
+      confirmSemesterReduction: true,
+    });
+    setPendingReduction(null);
+    setEditingProgram(null);
   }
 
   return (
@@ -146,6 +168,7 @@ export function DepartmentDetailPage() {
           <DataState
             isLoading={programsQuery.isLoading}
             isError={programsQuery.isError}
+            error={programsQuery.error}
             onRetry={() => void programsQuery.refetch()}
             empty={programs.length === 0}
           >
@@ -169,7 +192,7 @@ export function DepartmentDetailPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         <Link
-                          to={ROUTES.ADMIN_PROGRAM_CURRICULUM(program.id)}
+                          to={ROUTES.ACADEMICS_PROGRAM_CURRICULUM(program.id)}
                           className={buttonVariants({ variant: 'outline', size: 'sm' })}
                         >
                           Curriculum
@@ -204,12 +227,28 @@ export function DepartmentDetailPage() {
       />
       <ProgramDialog
         open={editingProgram !== null}
-        onOpenChange={(open) => !open && setEditingProgram(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingProgram(null);
+            setPendingReduction(null);
+          }
+        }}
         initial={editingProgram ?? undefined}
         disciplines={disciplinesQuery.data ?? []}
         degreeLevels={degreeLevelsQuery.data ?? []}
         loading={updateProgram.isPending}
         onSubmit={handleUpdateProgram}
+      />
+      <ConfirmDialog
+        open={pendingReduction !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingReduction(null);
+        }}
+        title="Reduce program semesters?"
+        description="Curriculum entries above the new semester count will be deleted. This is only allowed because no classes are enrolled in this program."
+        confirmLabel="Reduce semesters"
+        variant="destructive"
+        onConfirm={confirmSemesterReduction}
       />
     </section>
   );

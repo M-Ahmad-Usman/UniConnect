@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { catalogApi } from '@/api/endpoints/catalog.api';
+import { getApiErrorMessage } from '@/features/auth/utils';
 import { queryKeys } from '@/lib/constants';
 import type {
   ClassListParams,
@@ -11,6 +12,8 @@ import type {
 import { userListParamsToRecord } from '../utils';
 import type {
   AddCurriculumRequest,
+  BulkAddCurriculumRequest,
+  CopyCurriculumBatchRequest,
   CreateClassRequest,
   CreateCourseRequest,
   CreateDepartmentRequest,
@@ -63,12 +66,13 @@ export function useDisciplines() {
   });
 }
 
-export function usePrograms(params: ProgramListParams) {
+export function usePrograms(params: ProgramListParams, enabled = true) {
   const normalized = userListParamsToRecord({ ...params });
 
   return useQuery({
     queryKey: queryKeys.programs.list(normalized),
     queryFn: () => catalogApi.listPrograms(params),
+    enabled,
   });
 }
 
@@ -283,6 +287,9 @@ export function useUpdateProgram(programId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(programId) });
       toast.success('Program updated');
     },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'Unable to update program.'));
+    },
   });
 }
 
@@ -440,6 +447,9 @@ export function useUpdateCourse(courseId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.programs.all() });
       toast.success('Course updated');
     },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'Unable to update course.'));
+    },
   });
 }
 
@@ -454,6 +464,46 @@ export function useAddCurriculum(programId: number) {
       });
       void queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(programId) });
       toast.success('Curriculum entry added');
+    },
+  });
+}
+
+export function useBulkAddCurriculum(programId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: BulkAddCurriculumRequest) =>
+      catalogApi.bulkAddCurriculum(programId, payload),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.programs.curriculumRoot(programId),
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(programId) });
+      toast.success(
+        result.skippedCourseIds.length > 0
+          ? `Added ${result.addedCount} curriculum course(s); skipped ${result.skippedCourseIds.length} duplicate(s)`
+          : `Added ${result.addedCount} curriculum course(s)`,
+      );
+    },
+  });
+}
+
+export function useCopyCurriculumBatch(programId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CopyCurriculumBatchRequest) =>
+      catalogApi.copyCurriculumBatch(programId, payload),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.programs.curriculumRoot(programId),
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(programId) });
+      toast.success(
+        result.skippedCourseIds.length > 0
+          ? `Copied ${result.addedCount} course(s); skipped ${result.skippedCourseIds.length} duplicate(s)`
+          : `Copied ${result.addedCount} course(s)`,
+      );
     },
   });
 }

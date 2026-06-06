@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import type { PaginationMeta } from '@/types';
+import { ApiError, type PaginationMeta } from '@/types';
+import { getApiErrorCopy } from '@/lib/api-error';
 import { cn } from '@/lib/utils';
 
 export function AdminPageHeader({
@@ -34,6 +35,7 @@ export function AdminPageHeader({
 export function DataState({
   isLoading,
   isError,
+  error,
   onRetry,
   empty,
   emptyTitle = 'No records found',
@@ -42,6 +44,7 @@ export function DataState({
 }: {
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   onRetry: () => void;
   empty: boolean;
   emptyTitle?: string;
@@ -57,12 +60,18 @@ export function DataState({
   }
 
   if (isError) {
+    const copy = getApiErrorCopy(error);
+    const requestId = error instanceof ApiError ? error.requestId : undefined;
+    const description = requestId
+      ? `${copy.message} Request ID: ${requestId}`
+      : copy.message;
+
     return (
       <EmptyState
         icon={RotateCcw}
-        title="Could not load data"
-        description="Refresh the request and try again."
-        action={{ label: 'Retry', onClick: onRetry }}
+        title={copy.title}
+        description={description}
+        action={copy.retryable ? { label: 'Retry', onClick: onRetry } : undefined}
       />
     );
   }

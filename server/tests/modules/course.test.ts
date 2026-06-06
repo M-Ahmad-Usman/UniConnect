@@ -25,7 +25,7 @@ beforeAll(async () => {
   await resetDB();
 });
 
-describe("Module 7 - Course Search Filters", () => {
+describe("Course search filters", () => {
   it("should search courses by code or title", async () => {
     const admin = await createUser({
       email: `admin-crs-search-${Date.now()}@test.com`,
@@ -63,7 +63,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 5 - Course Management", () => {
+describe("Course management", () => {
   // ─── POST /api/courses ───────────────────────────────────────────────
 
   describe("POST /api/courses", () => {
@@ -375,7 +375,7 @@ describe("Module 5 - Course Management", () => {
       expect(res.body.message).toBe("Course updated successfully");
     });
 
-    it("should sync auto-created channel names when course code changes", async () => {
+    it("should block course detail updates after curriculum and class channel use", async () => {
       const admin = await createUser({
         email: "admin-crs-sync@test.com",
         password: "Pass@1234",
@@ -414,22 +414,21 @@ describe("Module 5 - Course Management", () => {
       expect(channelsBefore.length).toBe(2);
       expect(channelsBefore.every((channel) => channel.name === oldCode)).toBe(true);
 
-      // Update the course code
       const newCode = `NEW-${uid()}`;
       const res = await request(app)
         .patch(`/api/courses/${course.id}`)
         .set("Cookie", cookies)
         .send({ code: newCode });
 
-      expect(res.status).toBe(200);
-      expect(res.body.data.code).toBe(newCode);
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("RESOURCE_IN_USE");
 
-      // Verify all auto-created course channel names were synced
       const channelsAfter = await prisma.channel.findMany({
         where: { courseId: course.id, isAutoCreated: true },
       });
       expect(channelsAfter.length).toBe(2);
-      expect(channelsAfter.every((channel) => channel.name === newCode)).toBe(true);
+      expect(channelsAfter.every((channel) => channel.name === oldCode)).toBe(true);
     });
 
     it("should return 409 when updating to a duplicate code", async () => {

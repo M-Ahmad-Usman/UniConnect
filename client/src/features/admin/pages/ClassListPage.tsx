@@ -40,21 +40,58 @@ export function ClassListPage() {
   const section = parseSection(searchParams.get('section'));
   const status = parseStatus(searchParams.get('status'));
   const permissionsQuery = useMyPermissions();
-  const canListClasses = permissionsQuery.data?.global.canAccessAcademicWorkspace ?? false;
+  const permissions = permissionsQuery.data;
+  const canListClasses = permissions?.global.canAccessAcademicWorkspace ?? false;
+  const canAccessAllDepartments = permissions?.global.canAccessAdminDashboard ?? false;
+  const hodDepartmentIds = permissions?.scopes.hodDepartmentIds;
+  const directedProgramIds = permissions?.scopes.directedProgramIds;
+  const selectedScopedDepartmentId =
+    !canAccessAllDepartments && departmentId && hodDepartmentIds?.includes(departmentId)
+      ? departmentId
+      : undefined;
+  const effectiveDepartmentId = canAccessAllDepartments ? departmentId : selectedScopedDepartmentId;
+  const effectiveDepartmentIds =
+    !canAccessAllDepartments && selectedScopedDepartmentId === undefined
+      ? hodDepartmentIds
+      : undefined;
+  const effectiveProgramIds =
+    !canAccessAllDepartments && selectedScopedDepartmentId === undefined
+      ? directedProgramIds
+      : undefined;
 
   const classesQuery = useAdminClasses({
     page,
     limit: DEFAULT_PAGE_SIZE,
-    departmentId,
+    departmentId: effectiveDepartmentId,
     programId,
     semester,
     section,
     status,
   }, canListClasses);
   const departmentsQuery = useDepartments();
-  const programsQuery = usePrograms({ page: 1, limit: 50, departmentId });
+  const programsQuery = usePrograms(
+    {
+      page: 1,
+      limit: 50,
+      departmentId: effectiveDepartmentId,
+      departmentIds: effectiveDepartmentIds,
+      programIds: effectiveProgramIds,
+    },
+    permissionsQuery.isSuccess && canListClasses,
+  );
   const createClass = useCreateClass();
-  const departments = useMemo(() => departmentsQuery.data ?? [], [departmentsQuery.data]);
+  const departments = useMemo(() => {
+    const records = departmentsQuery.data ?? [];
+    return canAccessAllDepartments
+      ? records
+      : records.filter((department) => hodDepartmentIds?.includes(department.id));
+  }, [canAccessAllDepartments, departmentsQuery.data, hodDepartmentIds]);
+  const lockedDepartment =
+    !canAccessAllDepartments && departments.length === 1 && (directedProgramIds?.length ?? 0) === 0
+      ? departments[0]
+      : null;
+  const scopedDepartmentLabel =
+    !canAccessAllDepartments && departments.length === 0 ? 'Directed programs' : null;
   const programs = programsQuery.data?.data ?? [];
   const classes = classesQuery.data?.data ?? [];
   const canCreateClass = permissionsQuery.data?.global.canCreateClass ?? false;
@@ -113,14 +150,32 @@ export function ClassListPage() {
         <div className="grid gap-3 lg:grid-cols-5">
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Department</span>
-            <select className={inputClassName} value={departmentId ?? ''} onChange={(event) => updateFilter({ departmentId: event.target.value })}>
-              <option value="">All departments</option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.code}
+            {lockedDepartment || scopedDepartmentLabel ? (
+              <input
+                className={inputClassName}
+                value={
+                  lockedDepartment
+                    ? `${lockedDepartment.code} · ${lockedDepartment.name}`
+                    : scopedDepartmentLabel ?? ''
+                }
+                readOnly
+              />
+            ) : (
+              <select
+                className={inputClassName}
+                value={effectiveDepartmentId ?? ''}
+                onChange={(event) => updateFilter({ departmentId: event.target.value })}
+              >
+                <option value="">
+                  {canAccessAllDepartments ? 'All departments' : 'All scoped departments'}
                 </option>
-              ))}
-            </select>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.code}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Program</span>
@@ -159,6 +214,7 @@ export function ClassListPage() {
         <DataState
           isLoading={classesQuery.isLoading || permissionsQuery.isLoading}
           isError={classesQuery.isError}
+          error={classesQuery.error}
           onRetry={() => void classesQuery.refetch()}
           empty={classes.length === 0}
         >

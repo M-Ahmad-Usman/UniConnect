@@ -12,7 +12,7 @@ import type { BulkImportResult } from '@/types';
 
 const CSV_TEMPLATE =
   'fullName,email,phone,gender,userType,departmentId,classPublicId,rollNumber,designation\n' +
-  'John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,1,22-NTU-CS-1184,\n' +
+  'John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,018f47a2-5d6b-7c8d-9e0f-123456789abc,22-NTU-CS-1184,\n' +
   'Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Lecturer\n';
 
 export function BulkImportPage() {
@@ -60,7 +60,7 @@ export function BulkImportPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-normal">Bulk import users</h1>
           <p className="text-sm text-muted-foreground">
-            Upload a CSV file with student, teacher, or admin rows.
+            Upload a CSV file with student or teacher rows.
           </p>
         </div>
         <Button variant="outline" render={<Link to={ROUTES.ADMIN_USERS} />}>
@@ -136,6 +136,9 @@ export function BulkImportPage() {
           </p>
           <p className="text-xs text-muted-foreground">
             Student roll numbers use NTU format, for example 22-NTU-CS-1184.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Admin accounts are not created through import.
           </p>
         </aside>
       </div>

@@ -54,6 +54,7 @@ export function CourseListPage() {
     () => new Map(departments.map((department) => [department.id, department])),
     [departments],
   );
+  const lockedDepartment = !canUpdateCourse && departments.length === 1 ? departments[0] : null;
   const courses = coursesQuery.data?.data ?? [];
 
   useEffect(() => {
@@ -121,18 +122,26 @@ export function CourseListPage() {
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Department</span>
-            <select
-              className={inputClassName}
-              value={departmentId ?? ''}
-              onChange={(event) => updateFilter({ departmentId: event.target.value })}
-            >
-              {canUpdateCourse ? <option value="">All departments</option> : null}
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.code}
-                </option>
-              ))}
-            </select>
+            {lockedDepartment ? (
+              <input
+                className={inputClassName}
+                value={`${lockedDepartment.code} · ${lockedDepartment.name}`}
+                readOnly
+              />
+            ) : (
+              <select
+                className={inputClassName}
+                value={departmentId ?? ''}
+                onChange={(event) => updateFilter({ departmentId: event.target.value })}
+              >
+                {canUpdateCourse ? <option value="">All departments</option> : null}
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.code}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
         </div>
       </div>
@@ -140,6 +149,7 @@ export function CourseListPage() {
         <DataState
           isLoading={coursesQuery.isLoading}
           isError={coursesQuery.isError}
+          error={coursesQuery.error}
           onRetry={() => void coursesQuery.refetch()}
           empty={courses.length === 0}
         >
@@ -184,6 +194,7 @@ export function CourseListPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         departments={departments}
+        lockDepartment={!canUpdateCourse}
         loading={createCourse.isPending}
         onSubmit={handleCreate}
       /> : null}

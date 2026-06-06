@@ -77,6 +77,12 @@ const programSelect = {
       level: true,
     },
   },
+  _count: {
+    select: {
+      classes: true,
+      curriculum: true,
+    },
+  },
 } as const;
 
 function toPublicDepartment<T extends {

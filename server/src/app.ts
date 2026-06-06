@@ -62,25 +62,6 @@ app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
 app.use("/api", csrfProtection);
 
-// ─── Request Timeout ────────────────────────────────────────────────────────
-const REQUEST_TIMEOUT_MS = 30_000;
-app.use((_req, res, next) => {
-  const timer = setTimeout(() => {
-    if (!res.headersSent) {
-      res.status(408).json({
-        success: false,
-        error: {
-          code: "REQUEST_TIMEOUT",
-          message: "The request took too long to complete. Please try again.",
-          ...(_req.requestId && { requestId: _req.requestId }),
-        },
-      });
-    }
-  }, REQUEST_TIMEOUT_MS);
-  res.on("close", () => clearTimeout(timer));
-  next();
-});
-
 // ─── HTTP Request Logging ────────────────────────────────────────────────────
 if (env.NODE_ENV !== "test") {
   app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));

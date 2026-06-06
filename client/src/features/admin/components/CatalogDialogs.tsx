@@ -23,6 +23,7 @@ import { FormField, inputClassName } from './AdminDataPrimitives';
 import {
   classSchema,
   courseSchema,
+  copyCurriculumBatchSchema,
   curriculumSchema,
   departmentSchema,
   disciplineSchema,
@@ -33,6 +34,7 @@ import {
   updateProgramSchema,
   type ClassFormValues,
   type CourseFormValues,
+  type CopyCurriculumBatchFormValues,
   type CurriculumFormValues,
   type DepartmentFormValues,
   type DisciplineFormValues,
@@ -43,9 +45,17 @@ import {
   type UpdateProgramFormValues,
 } from '../schemas';
 
-function SubmitButton({ loading, label }: { loading: boolean; label: string }) {
+function SubmitButton({
+  loading,
+  label,
+  disabled = false,
+}: {
+  loading: boolean;
+  label: string;
+  disabled?: boolean;
+}) {
   return (
-    <Button type="submit" disabled={loading}>
+    <Button type="submit" disabled={loading || disabled}>
       {loading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
       {label}
     </Button>
@@ -167,7 +177,7 @@ export function ProgramDialog({
   disciplines: Discipline[];
   degreeLevels: DegreeLevel[];
   loading: boolean;
-  onSubmit: (values: ProgramFormValues | UpdateProgramFormValues) => Promise<void>;
+  onSubmit: (values: ProgramFormValues | UpdateProgramFormValues) => Promise<boolean | void>;
 }) {
   const createForm = useForm<z.input<typeof programSchema>, unknown, ProgramFormValues>({
     resolver: zodResolver(programSchema),
@@ -188,6 +198,8 @@ export function ProgramDialog({
     }
   }, [createForm, initial, open, updateForm]);
 
+  const programHasClasses = (initial?._count?.classes ?? 0) > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -201,12 +213,18 @@ export function ProgramDialog({
           <form
             className="space-y-4"
             onSubmit={updateForm.handleSubmit(async (values) => {
-              await onSubmit(values);
-              onOpenChange(false);
+              const shouldClose = await onSubmit(values);
+              if (shouldClose !== false) {
+                onOpenChange(false);
+              }
             })}
           >
             <FormField label="Code" error={updateForm.formState.errors.code?.message}>
-              <input className={inputClassName} {...updateForm.register('code')} />
+              <input
+                className={inputClassName}
+                disabled={programHasClasses}
+                {...updateForm.register('code')}
+              />
             </FormField>
             <FormField label="Semesters" error={updateForm.formState.errors.semesters?.message}>
               <input
@@ -214,11 +232,21 @@ export function ProgramDialog({
                 min={1}
                 max={10}
                 className={inputClassName}
+                disabled={programHasClasses}
                 {...updateForm.register('semesters')}
               />
             </FormField>
+            {programHasClasses ? (
+              <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                Program code and semester count are locked because classes already exist.
+              </p>
+            ) : null}
             <DialogFooter>
-              <SubmitButton loading={loading} label="Save changes" />
+              <SubmitButton
+                loading={loading}
+                label="Save changes"
+                disabled={programHasClasses}
+              />
             </DialogFooter>
           </form>
         ) : (
@@ -492,6 +520,7 @@ export function CourseDialog({
   onOpenChange,
   initial,
   departments,
+  lockDepartment = false,
   loading,
   onSubmit,
 }: {
@@ -499,12 +528,19 @@ export function CourseDialog({
   onOpenChange: (open: boolean) => void;
   initial?: CourseListItem;
   departments: DepartmentListItem[];
+  lockDepartment?: boolean;
   loading: boolean;
   onSubmit: (values: CourseFormValues | UpdateCourseFormValues) => Promise<void>;
 }) {
+  const lockedDepartment = lockDepartment && departments.length === 1 ? departments[0] : null;
   const createForm = useForm<z.input<typeof courseSchema>, unknown, CourseFormValues>({
     resolver: zodResolver(courseSchema),
-    defaultValues: { title: '', code: '', creditHours: 3, departmentId: 0 },
+    defaultValues: {
+      title: '',
+      code: '',
+      creditHours: 3,
+      departmentId: lockedDepartment?.id ?? 0,
+    },
   });
   const updateForm = useForm<z.input<typeof updateCourseSchema>, unknown, UpdateCourseFormValues>({
     resolver: zodResolver(updateCourseSchema),
@@ -519,9 +555,14 @@ export function CourseDialog({
         creditHours: initial.creditHours,
       });
     } else {
-      createForm.reset({ title: '', code: '', creditHours: 3, departmentId: 0 });
+      createForm.reset({
+        title: '',
+        code: '',
+        creditHours: 3,
+        departmentId: lockedDepartment?.id ?? 0,
+      });
     }
-  }, [createForm, initial, open, updateForm]);
+  }, [createForm, initial, lockedDepartment?.id, open, updateForm]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -586,16 +627,33 @@ export function CourseDialog({
                 {...createForm.register('creditHours')}
               />
             </FormField>
-            <FormField label="Department" error={createForm.formState.errors.departmentId?.message}>
-              <select className={inputClassName} {...createForm.register('departmentId')}>
-                <option value="">Select department</option>
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.code} · {department.name}
-                  </option>
-                ))}
-              </select>
-            </FormField>
+            {lockedDepartment ? (
+              <FormField
+                label="Department"
+                error={createForm.formState.errors.departmentId?.message}
+              >
+                <input
+                  className={inputClassName}
+                  value={`${lockedDepartment.code} · ${lockedDepartment.name}`}
+                  readOnly
+                />
+                <input type="hidden" {...createForm.register('departmentId')} />
+              </FormField>
+            ) : (
+              <FormField
+                label="Department"
+                error={createForm.formState.errors.departmentId?.message}
+              >
+                <select className={inputClassName} {...createForm.register('departmentId')}>
+                  <option value="">Select department</option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.code} · {department.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            )}
             <DialogFooter>
               <SubmitButton loading={loading} label="Create" />
             </DialogFooter>
@@ -610,6 +668,9 @@ export function CurriculumDialog({
   open,
   onOpenChange,
   courses,
+  coursesLoading,
+  courseSearch,
+  onCourseSearchChange,
   defaultBatchYear,
   maxSemester,
   loading,
@@ -618,6 +679,9 @@ export function CurriculumDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courses: CourseListItem[];
+  coursesLoading: boolean;
+  courseSearch: string;
+  onCourseSearchChange: (search: string) => void;
   defaultBatchYear: number;
   maxSemester: number;
   loading: boolean;
@@ -625,18 +689,22 @@ export function CurriculumDialog({
 }) {
   const form = useForm<z.input<typeof curriculumSchema>, unknown, CurriculumFormValues>({
     resolver: zodResolver(curriculumSchema),
-    defaultValues: { courseId: 0, semesterNumber: 1, batchYear: defaultBatchYear },
+    defaultValues: { courseIds: [], semesterNumber: 1, batchYear: defaultBatchYear },
   });
 
   useEffect(() => {
-    form.reset({ courseId: 0, semesterNumber: 1, batchYear: defaultBatchYear });
+    form.reset({ courseIds: [], semesterNumber: 1, batchYear: defaultBatchYear });
   }, [defaultBatchYear, form, open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add curriculum course</DialogTitle>
+          <DialogTitle>Add curriculum courses</DialogTitle>
+          <DialogDescription>
+            Select every course for the chosen semester. Courses already present in this batch are
+            skipped automatically.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"
@@ -645,15 +713,44 @@ export function CurriculumDialog({
             onOpenChange(false);
           })}
         >
-          <FormField label="Course" error={form.formState.errors.courseId?.message}>
-            <select className={inputClassName} {...form.register('courseId')}>
-              <option value="">Select course</option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.code} · {course.title}
-                </option>
-              ))}
-            </select>
+          <FormField label="Search courses">
+            <input
+              className={inputClassName}
+              value={courseSearch}
+              onChange={(event) => onCourseSearchChange(event.target.value)}
+              placeholder="Search by course code or title"
+            />
+          </FormField>
+          <FormField label="Courses" error={form.formState.errors.courseIds?.message}>
+            <div className="max-h-64 overflow-y-auto rounded-lg border bg-background p-2">
+              {coursesLoading ? (
+                <p className="px-2 py-3 text-sm text-muted-foreground">Loading courses...</p>
+              ) : courses.length > 0 ? (
+                <div className="grid gap-1">
+                  {courses.map((course) => (
+                    <label
+                      key={course.id}
+                      className="flex items-start gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                    >
+                      <input
+                        type="checkbox"
+                        value={course.id}
+                        className="mt-0.5 size-4"
+                        {...form.register('courseIds')}
+                      />
+                      <span>
+                        <span className="font-medium">{course.code}</span>
+                        <span className="text-muted-foreground"> · {course.title}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="px-2 py-3 text-sm text-muted-foreground">
+                  No matching courses are available for this program department.
+                </p>
+              )}
+            </div>
           </FormField>
           <FormField label="Semester" error={form.formState.errors.semesterNumber?.message}>
             <input
@@ -668,7 +765,82 @@ export function CurriculumDialog({
             <input type="number" className={inputClassName} {...form.register('batchYear')} />
           </FormField>
           <DialogFooter>
-            <SubmitButton loading={loading} label="Add course" />
+            <SubmitButton
+              loading={loading}
+              disabled={coursesLoading || courses.length === 0}
+              label="Add courses"
+            />
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function CopyCurriculumBatchDialog({
+  open,
+  onOpenChange,
+  defaultSourceBatchYear,
+  defaultTargetBatchYear,
+  loading,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultSourceBatchYear: number;
+  defaultTargetBatchYear: number;
+  loading: boolean;
+  onSubmit: (values: CopyCurriculumBatchFormValues) => Promise<void>;
+}) {
+  const form = useForm<
+    z.input<typeof copyCurriculumBatchSchema>,
+    unknown,
+    CopyCurriculumBatchFormValues
+  >({
+    resolver: zodResolver(copyCurriculumBatchSchema),
+    defaultValues: {
+      sourceBatchYear: defaultSourceBatchYear,
+      targetBatchYear: defaultTargetBatchYear,
+    },
+  });
+
+  useEffect(() => {
+    form.reset({
+      sourceBatchYear: defaultSourceBatchYear,
+      targetBatchYear: defaultTargetBatchYear,
+    });
+  }, [defaultSourceBatchYear, defaultTargetBatchYear, form, open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Copy batch curriculum</DialogTitle>
+          <DialogDescription>
+            Copy a complete source batch into a target batch. Existing target courses are skipped.
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit(async (values) => {
+            await onSubmit(values);
+            onOpenChange(false);
+          })}
+        >
+          <FormField
+            label="Source batch"
+            error={form.formState.errors.sourceBatchYear?.message}
+          >
+            <input type="number" className={inputClassName} {...form.register('sourceBatchYear')} />
+          </FormField>
+          <FormField
+            label="Target batch"
+            error={form.formState.errors.targetBatchYear?.message}
+          >
+            <input type="number" className={inputClassName} {...form.register('targetBatchYear')} />
+          </FormField>
+          <DialogFooter>
+            <SubmitButton loading={loading} label="Copy curriculum" />
           </DialogFooter>
         </form>
       </DialogContent>

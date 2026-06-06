@@ -141,7 +141,8 @@ console.error('[USER] Unexpected error creating user', { error });
 - Use `@prisma/adapter-pg` — the project uses the Prisma driver adapter pattern.
 - ESM imports use `.js` extension: `import { prisma } from '../config/prisma.js'`
 - Enum-like values use Prisma enums or string literals matching the schema.
-- When running migrations: `npm run db:migrate` (dev) or `npm run db:migrate:test` (test DB).
+- When applying existing migrations: `npm run db:migrate` (dev) or `npm run db:migrate:test` (test DB).
+- When creating a new Prisma migration after intentional schema edits: `npm run db:migrate:dev -- --name <change-name>`.
 
 ### TypeScript Rules (Backend)
 - Native ESM: all source imports must include `.js` extension.
@@ -279,7 +280,8 @@ import { PasswordField } from './PasswordField';
 | Build | `npm run build` |
 | Tests | `npm test` |
 | Coverage | `npm run test:coverage` |
-| Dev DB migration | `npm run db:migrate` |
+| Apply dev DB migrations | `npm run db:migrate` |
+| Create dev DB migration | `npm run db:migrate:dev -- --name <change-name>` |
 | Test DB migration | `npm run db:migrate:test` |
 | Seed | `npm run db:seed` |
 | Single Jest test | `npm test -- tests/modules/file.test.ts` |

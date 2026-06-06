@@ -30,7 +30,7 @@ async function findBioByEmail(email: string) {
   });
 }
 
-test.describe.serial('Module 5 CSRF browser flows', () => {
+test.describe.serial('CSRF browser flows', () => {
   test('normal unsafe profile mutation works with CSRF enabled', async ({ page }) => {
     const bio = `CSRF protected profile update ${Date.now()}`;
 

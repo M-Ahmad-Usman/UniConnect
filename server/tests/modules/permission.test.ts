@@ -30,7 +30,7 @@ beforeAll(async () => {
   await resetDB();
 });
 
-describe("Module 1 - Permission Policy Foundation", () => {
+describe("Permission policy foundation", () => {
   it("returns global permission bootstrap for admin, HOD, PD, CR, society leadership, and ordinary student", async () => {
     const fixture = await createPermissionFixture();
 
@@ -61,9 +61,10 @@ describe("Module 1 - Permission Policy Foundation", () => {
 
     const pdPermissions = await getMyPermissions(fixture.pd.email);
     expect(pdPermissions.global.canAccessAcademicWorkspace).toBe(true);
-    expect(pdPermissions.global.canManageCurriculum).toBe(false);
+    expect(pdPermissions.global.canManageCurriculum).toBe(true);
     expect(pdPermissions.global.canCreateCourse).toBe(false);
     expect(pdPermissions.global.canCreateClass).toBe(false);
+    expect(pdPermissions.scopes.directedProgramIds).toContain(fixture.program.id);
     expect(pdPermissions.roleWorkspace.canOpenRoleManagement).toBe(true);
     expect(pdPermissions.roleWorkspace.canAssignCR).toBe(true);
     expect(pdPermissions.roleWorkspace.canAssignServerModerator).toBe(false);

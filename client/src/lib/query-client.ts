@@ -10,10 +10,14 @@ function shouldSuppressToast(meta: Record<string, unknown> | undefined): boolean
   return meta?.suppressErrorToast === true;
 }
 
+function shouldToastQueryError(meta: Record<string, unknown> | undefined): boolean {
+  return meta?.toastOnError === true && !shouldSuppressToast(meta);
+}
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      if (shouldSuppressToast(query.meta)) {
+      if (!shouldToastQueryError(query.meta)) {
         return;
       }
 

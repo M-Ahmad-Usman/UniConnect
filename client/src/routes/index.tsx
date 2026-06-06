@@ -158,11 +158,6 @@ function RedirectToAcademicClass() {
   return <Navigate to={ROUTES.ACADEMICS_CLASS(classPublicId ?? '')} replace />;
 }
 
-function RedirectToAcademicCurriculum() {
-  const { programId } = useParams();
-  return <Navigate to={ROUTES.ACADEMICS_PROGRAM_CURRICULUM(programId ?? '')} replace />;
-}
-
 // ─── Suspense wrapper for lazy-loaded routes ───────────────────────────────
 
 function SuspenseOutlet() {
@@ -241,17 +236,20 @@ export const router = createBrowserRouter([
                         path: 'academics',
                         element: <AcademicLayout />,
                         children: [
-                          { index: true, element: <Navigate to={ROUTES.ACADEMICS_CLASSES} replace /> },
+                          { index: true, element: <Navigate to={ROUTES.ACADEMICS_PROGRAMS} replace /> },
+                          {
+                            path: 'programs',
+                            children: [
+                              { index: true, element: <ProgramListPage /> },
+                              { path: ':programId/curriculum', element: <CurriculumPage /> },
+                            ],
+                          },
                           {
                             path: 'classes',
                             children: [
                               { index: true, element: <ClassListPage /> },
                               { path: ':classPublicId', element: <ClassDetailPage /> },
                             ],
-                          },
-                          {
-                            path: 'programs/:programId/curriculum',
-                            element: <CurriculumPage />,
                           },
                           { path: 'courses', element: <CourseListPage /> },
                         ],
@@ -293,16 +291,6 @@ export const router = createBrowserRouter([
                             children: [
                               { index: true, element: <DepartmentListPage /> },
                               { path: ':departmentId', element: <DepartmentDetailPage /> },
-                            ],
-                          },
-                          {
-                            path: 'programs',
-                            children: [
-                              { index: true, element: <ProgramListPage /> },
-                              {
-                                path: ':programId/curriculum',
-                                element: <RedirectToAcademicCurriculum />,
-                              },
                             ],
                           },
                           { path: 'disciplines', element: <DisciplineListPage /> },

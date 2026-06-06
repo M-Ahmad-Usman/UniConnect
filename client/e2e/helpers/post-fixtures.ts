@@ -1,14 +1,14 @@
 import { withDb } from './db';
 
-export const module4Fixtures = {
+export const postFixtures = {
   serverName: 'Engineering Faculty Hub',
   announcementChannelName: 'announcements',
-  lockedCourseChannelName: 'module4-locked',
-  pinnedPostTitle: 'Module 4 Pinned Safety Bulletin',
-  importantPostTitle: 'Module 4 Important Date Filter',
-  expiredPostTitle: 'Module 4 Expired Edit Window',
-  createdPostTitle: 'Module 4 Runtime Draft',
-  editedPostTitle: 'Module 4 Runtime Draft Edited',
+  lockedCourseChannelName: 'post-flow-locked',
+  pinnedPostTitle: 'Pinned Safety Bulletin',
+  importantPostTitle: 'Important Date Filter',
+  expiredPostTitle: 'Expired Edit Window',
+  createdPostTitle: 'Runtime Draft',
+  editedPostTitle: 'Runtime Draft Edited',
 } as const;
 
 export async function findServerPublicIdByName(name: string) {

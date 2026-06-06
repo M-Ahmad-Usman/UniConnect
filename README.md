@@ -40,6 +40,12 @@ npm run db:seed
 npm run dev
 ```
 
+`npm run db:migrate` applies committed migrations non-interactively. Create a
+new migration only after intentional Prisma schema edits:
+```bash
+npm run db:migrate:dev -- --name short_descriptive_name
+```
+
 Useful backend checks:
 ```bash
 cd server

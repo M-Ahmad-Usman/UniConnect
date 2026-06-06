@@ -261,7 +261,7 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
     canAccessAcademicWorkspace: isHod || isPd,
     canAccessRoleManagement,
     canManageUsers: false,
-    canManageCurriculum: isHod,
+    canManageCurriculum: isHod || isPd,
     canCreateCourse: isHod,
     canUpdateCourse: false,
     canCreateClass: isHod,

@@ -32,7 +32,7 @@ npm install
 ```bash
 docker compose up -d
 ```
-3. Apply dev migrations.
+3. Apply existing dev migrations.
 ```bash
 npm run db:migrate
 ```
@@ -47,12 +47,18 @@ npm run db:migrate:test
 
 ## Daily Development Workflow
 1. Pull latest changes.
-2. If Prisma schema changed, run:
+2. If new migration files were pulled, run:
 ```bash
 npm run db:migrate
 npm run db:migrate:test
 ```
-3. Start dev server:
+3. If you intentionally changed `prisma/schema.prisma`, create a named dev
+   migration and review the generated SQL before committing it:
+```bash
+npm run db:migrate:dev -- --name short_descriptive_name
+npm run db:migrate:test
+```
+4. Start dev server:
 ```bash
 npm run dev
 ```
@@ -63,11 +69,40 @@ npm run dev
 - `npm run start`: run compiled app from `dist/`
 - `npm test`: run full Jest suite against test DB
 - `npm run test:coverage`: run coverage suite
-- `npm run db:migrate`: create/apply Prisma migration in dev
+- `npm run db:migrate`: apply existing migrations to the dev DB without prompting
+- `npm run db:migrate:dev -- --name <name>`: create/apply a new dev migration after schema changes
 - `npm run db:migrate:test`: apply migrations to test DB
+- `npm run db:status`: show Prisma migration status for the dev DB
 - `npm run db:seed`: seed dev DB
 - `npm run db:reset`: reset dev DB
 - `npm run db:studio`: open Prisma Studio
+
+## Migration Command Guidance
+Use `npm run db:migrate` for fresh setup, pulls, and presentation/demo refreshes.
+It runs `prisma migrate deploy`, which applies committed migration files and is
+non-interactive.
+
+Use `npm run db:migrate:dev -- --name <name>` only when you have intentionally
+changed `prisma/schema.prisma` and want Prisma to generate a new migration.
+`migrate dev` uses a shadow database, checks drift, and may prompt for a new
+migration name when the Prisma schema has differences not represented by the
+committed migration history. This project also has SQL-only constraints and
+extensions in migrations, so generated migrations must be reviewed before use.
+
+## Demo Seed Data
+`npm run db:seed` creates an idempotent presentation dataset:
+- Computer Science department with HOD, Program Directors, lecturers, students,
+  CRs, society leaders, and moderators.
+- BSCS and BSSE demo programs with complete all-semester curricula across
+  multiple batches.
+- Three active classes whose current-semester course channels and teacher
+  assignments match their curricula.
+- Department, program, class, course, and society channels with sample posts.
+- IEEE Student Society with active members and pending/approved membership
+  request examples.
+
+Useful demo logins are printed after seeding. Most use `Demo@1234`; the admin
+seed uses `TEMP_Admin@123` and intentionally requires a password change.
 
 ## Testing
 Run all tests:

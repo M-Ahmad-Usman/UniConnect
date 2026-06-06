@@ -3,8 +3,8 @@ import { e2eUsers } from './helpers/auth';
 import {
   findChannelPublicIdByName,
   findServerPublicIdByName,
-  module2Fixtures,
-} from './helpers/module2';
+  academicShellFixtures,
+} from './helpers/academic-shell-fixtures';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -14,13 +14,13 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/servers$/);
 }
 
-test.describe('Module 2 shell flows', () => {
+test.describe('App shell workflows', () => {
   test('server routes redirect to the default announcement channel and channel search syncs with the URL', async ({
     page,
   }) => {
-    const serverPublicId = await findServerPublicIdByName(module2Fixtures.shellServerName);
+    const serverPublicId = await findServerPublicIdByName(academicShellFixtures.shellServerName);
     const announcementChannelPublicId = serverPublicId
-      ? await findChannelPublicIdByName(serverPublicId, module2Fixtures.announcementChannelName)
+      ? await findChannelPublicIdByName(serverPublicId, academicShellFixtures.announcementChannelName)
       : null;
 
     expect(serverPublicId).not.toBeNull();
@@ -33,15 +33,15 @@ test.describe('Module 2 shell flows', () => {
       new RegExp(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}$`),
     );
     await expect(
-      page.getByRole('heading', { name: module2Fixtures.announcementChannelName, exact: true }),
+      page.getByRole('heading', { name: academicShellFixtures.announcementChannelName, exact: true }),
     ).toBeVisible();
 
     const searchInput = page.getByPlaceholder('Search posts in this channel');
     await searchInput.fill('Architecture');
 
     await expect(page).toHaveURL(/search=Architecture/);
-    await expect(page.getByText(module2Fixtures.searchablePostTitle)).toBeVisible();
-    await expect(page.getByText(module2Fixtures.filteredOutPostTitle)).toHaveCount(0);
+    await expect(page.getByText(academicShellFixtures.searchablePostTitle)).toBeVisible();
+    await expect(page.getByText(academicShellFixtures.filteredOutPostTitle)).toHaveCount(0);
   });
 
   test('mobile drawer supports server navigation and channel-step navigation', async ({ page }) => {
@@ -52,21 +52,21 @@ test.describe('Module 2 shell flows', () => {
 
     await page.getByRole('button', { name: 'Open navigation' }).click();
     await expect(page.getByRole('heading', { name: 'Servers' })).toBeVisible();
-    await expect(page.getByRole('link', { name: module2Fixtures.shellServerName })).toBeVisible();
+    await expect(page.getByRole('link', { name: academicShellFixtures.shellServerName })).toBeVisible();
 
-    await page.getByRole('link', { name: module2Fixtures.shellServerName }).click();
+    await page.getByRole('link', { name: academicShellFixtures.shellServerName }).click();
     await expect(page.getByRole('heading', { name: 'Channels' })).toBeVisible();
-    await expect(page.getByRole('link', { name: module2Fixtures.announcementChannelName })).toBeVisible();
+    await expect(page.getByRole('link', { name: academicShellFixtures.announcementChannelName })).toBeVisible();
 
     await page.getByRole('button', { name: 'Back to servers' }).click();
     await expect(page.getByRole('heading', { name: 'Servers' })).toBeVisible();
-    await expect(page.getByRole('link', { name: module2Fixtures.shellServerName })).toBeVisible();
+    await expect(page.getByRole('link', { name: academicShellFixtures.shellServerName })).toBeVisible();
   });
 
   test('notification preview shows unread count and routes into the linked channel', async ({ page }) => {
-    const serverPublicId = await findServerPublicIdByName(module2Fixtures.notificationServerName);
+    const serverPublicId = await findServerPublicIdByName(academicShellFixtures.notificationServerName);
     const channelPublicId = serverPublicId
-      ? await findChannelPublicIdByName(serverPublicId, module2Fixtures.notificationChannelName)
+      ? await findChannelPublicIdByName(serverPublicId, academicShellFixtures.notificationChannelName)
       : null;
 
     expect(serverPublicId).not.toBeNull();
@@ -77,15 +77,15 @@ test.describe('Module 2 shell flows', () => {
     await page.getByRole('button', { name: 'Notifications' }).click();
 
     await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible();
-    await expect(page.getByText(module2Fixtures.notificationTitle)).toBeVisible();
+    await expect(page.getByText(academicShellFixtures.notificationTitle)).toBeVisible();
 
-    await page.getByRole('button', { name: new RegExp(module2Fixtures.notificationTitle) }).first().click();
+    await page.getByRole('button', { name: new RegExp(academicShellFixtures.notificationTitle) }).first().click();
 
     await expect(page).toHaveURL(
       new RegExp(`/servers/${serverPublicId}/channels/${channelPublicId}$`),
     );
     await expect(
-      page.getByRole('heading', { name: module2Fixtures.notificationChannelName, exact: true }),
+      page.getByRole('heading', { name: academicShellFixtures.notificationChannelName, exact: true }),
     ).toBeVisible();
   });
 });

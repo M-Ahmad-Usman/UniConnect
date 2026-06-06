@@ -49,6 +49,7 @@ export interface RoleWorkspacePermissions {
 
 export interface PermissionScopeSummary {
   hodDepartmentIds: number[];
+  directedProgramIds: number[];
 }
 
 export interface MyPermissions {

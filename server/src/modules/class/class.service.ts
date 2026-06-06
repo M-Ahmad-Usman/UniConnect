@@ -15,6 +15,7 @@ import {
   lockProgramForHodOrAdmin,
   lockStudentProfileForTransfer,
 } from "../../shared/lifecycle/academic.js";
+import { assertFullCurriculumExists } from "../../shared/curriculum/policy.js";
 import { getServerCommunicationImpact } from "../../shared/lifecycle/communication-impact.js";
 import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
@@ -612,9 +613,31 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
   }
 
   await assertHodOrAdmin(userId, userType, program.departmentId);
+  await assertFullCurriculumExists(prisma, {
+    programId: data.programId,
+    programSemesters: program.semesters,
+    batchYear: data.admissionYear,
+  });
 
   const classRecord = await prisma.$transaction(async (tx) => {
     await lockProgramForHodOrAdmin(data.programId, userId, userType, tx);
+    await assertFullCurriculumExists(tx, {
+      programId: data.programId,
+      programSemesters: program.semesters,
+      batchYear: data.admissionYear,
+    });
+    const currentCurriculum = await tx.programCurriculum.findMany({
+      where: {
+        programId: data.programId,
+        semesterNumber: data.currentSemester,
+        batchYear: data.admissionYear,
+      },
+      select: {
+        courseId: true,
+        course: { select: { code: true } },
+      },
+      orderBy: { course: { code: "asc" } },
+    });
     const serverName = `${program.code} - S${data.currentSemester} - Section ${data.section}`;
 
     const server = await tx.server.create({
@@ -653,6 +676,14 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
           isAutoCreated: true,
           createdBy: userId,
         },
+        ...currentCurriculum.map((entry) => ({
+          serverId: server.id,
+          name: entry.course.code,
+          type: "COURSE" as const,
+          courseId: entry.courseId,
+          isAutoCreated: true,
+          createdBy: userId,
+        })),
       ],
     });
 
@@ -1286,9 +1317,9 @@ export async function advanceSemester(
     for (const teacherId of [...new Set(teacherAssignments.map((a) => a.teacherId))]) {
       await assertActiveTeacher(teacherId);
     }
-  } else if (teacherAssignments.length > 0) {
+  } else {
     throw new ValidationError(
-      "Teacher assignments were provided but no curriculum exists for the next semester"
+      `Curriculum is required for semester ${newSemester} before this class can advance`
     );
   }
 

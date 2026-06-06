@@ -236,6 +236,7 @@ export function ClassDetailPage() {
         <ClassStudentsSection
           isLoading={studentsQuery.isLoading}
           isError={studentsQuery.isError}
+          error={studentsQuery.error}
           students={students}
           onRetry={() => void studentsQuery.refetch()}
         />
@@ -254,6 +255,7 @@ export function ClassDetailPage() {
         <DataState
           isLoading={coursesQuery.isLoading}
           isError={coursesQuery.isError}
+          error={coursesQuery.error}
           onRetry={() => void coursesQuery.refetch()}
           empty={assignments.length === 0}
           emptyTitle="No assigned courses"
@@ -435,11 +437,13 @@ export function ClassDetailPage() {
 function ClassStudentsSection({
   isLoading,
   isError,
+  error,
   students,
   onRetry,
 }: {
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   students: Array<{
     studentPublicId: string;
     rollNumber: string;
@@ -454,6 +458,7 @@ function ClassStudentsSection({
       <DataState
         isLoading={isLoading}
         isError={isError}
+        error={error}
         onRetry={onRetry}
         empty={students.length === 0}
         emptyTitle="No students found"

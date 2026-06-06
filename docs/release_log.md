@@ -57,6 +57,140 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-06 - User Detail and Admin Creation Hardening
+- Student profile/admin detail payloads now include display-ready class metadata
+  (`publicId`, `currentSemester`, `section`, `program.code`) so the frontend can
+  render labels such as `BSCS-7-A` without an extra class lookup.
+- Profile and admin user detail views now show the readable class label instead
+  of exposing class public IDs as the primary display value.
+- Application-level user creation and bulk import now reject `ADMIN` rows.
+  Admin accounts are treated as bootstrap/DB-managed records rather than
+  frontend-created accounts.
+- Updated create-user and bulk-import UX copy, API contracts, and focused
+  backend/frontend tests for the new policy.
+
+### 2026-06-06 - Academic Edit Invariant Hardening
+- Program code and semester count are now locked once any class exists for the
+  program, preserving curriculum/class/channel lifecycle assumptions.
+- Before class enrollment, reducing a program's semester count requires explicit
+  confirmation and deletes only curriculum entries above the new semester count
+  in the same transaction. Increasing semesters remains allowed but requires
+  curriculum setup before classes can be admitted.
+- Program code updates now return an explicit duplicate-code conflict instead
+  of relying on raw database uniqueness errors.
+- Course title, code, and credit hours are now locked once the course is used in
+  curriculum, teaching assignments, or course channels.
+- Program edit dialogs now show locked fields for used programs and require a
+  destructive confirmation before confirmed semester reduction.
+
+### 2026-06-05 - Production Readiness Audit Remediation
+- Moved Programs out of the Admin navigation and into the Academics workspace as
+  `/academics/programs`. Legacy `/admin/programs` routes now redirect to the
+  academic workspace.
+- Expanded curriculum authority so admins, own-department HODs, and
+  directed-program Program Directors can add/remove curriculum entries. Program
+  catalog creation/editing remains admin-only.
+- Added `directedProgramIds` to `/api/permissions/me` and added scoped
+  `/api/programs` list filters. `departmentIds` and `programIds` combine as a
+  union when `departmentId` is omitted, so mixed HOD/PD users can see all
+  programs in their authority.
+- Made program and curriculum frontend actions backend-scope-aware; admins see
+  catalog create/edit actions, while HOD/PD users see only permitted curriculum
+  actions.
+- Switched query error UX to inline-first. Query failures no longer toast
+  globally by default; shared data states and the Academic guard render retry
+  states with API copy and request IDs when available.
+- Removed society leadership roles from the generic role-assignment form to
+  match the backend boundary that manages leadership through society workflows.
+- Replaced in-memory new-post notification fanout with set-based SQL
+  `INSERT ... SELECT`, preserving server/channel unsubscribe behavior and
+  Socket.IO unread-count emission.
+- Removed the Express response-timeout middleware that could race later route
+  responses; HTTP server request/header/socket/keep-alive timeouts now own this
+  behavior.
+- Renamed active tests and Playwright files/helpers from historical module
+  numbers to domain workflow names.
+- Added backend Jest coverage thresholds and frontend Vitest V8 coverage with an
+  initial aggregate 10% ratchet. Generated coverage output is excluded from
+  ESLint so running coverage does not pollute lint results.
+- Added `@vitest/coverage-v8`, updated `axios`, `react-router-dom`, `vitest`,
+  and `@vitest/coverage-v8`, and added npm overrides for transitive `hono` and
+  `qs`. Frontend `npm audit` now reports 0 vulnerabilities.
+- Removed hidden legacy `/admin/programs` redirects and route constants. Programs
+  are now reached only through `/academics/programs`, with admin-only catalog
+  controls rendered in that academic workspace.
+- Removed deprecated `baseUrl` from `server/tsconfig.json`; the server build and
+  explicit no-emit TypeScript check pass without adding `ignoreDeprecations`.
+- Tightened scoped academic UX: HOD create-course and create-society dialogs now
+  lock the department field when there is a single scoped department, and class
+  program-filter options wait for permission bootstrap before requesting scoped
+  program lists.
+- Tightened curriculum/class lifecycle coupling:
+  - class creation now requires a complete admission-year curriculum with at
+    least one course in every program semester
+  - class creation auto-creates current-semester course channels in the class
+    server from that curriculum
+  - semester progression requires teacher assignments for every target-semester
+    curriculum course and rejects missing, duplicate, or extra assignments
+  - curriculum edits/removals are blocked for semesters already reached by an
+    existing class in the same program/batch
+  - removing curriculum from a live class batch is blocked when it would make
+    the batch curriculum incomplete
+- Added curriculum bulk-add and copy-batch workflows for admins, own-department
+  HODs, and directed-program Program Directors. Bulk add and copy skip duplicate
+  program/batch courses; the existing schema uniqueness keeps a course from
+  appearing more than once in the same degree batch.
+- Updated the frontend curriculum workspace to add multiple semester courses in
+  one dialog, copy a previous batch curriculum into a target batch, and show
+  locked curriculum rows as read-only. The add-curriculum dialog now uses
+  server-backed course search and distinct loading/empty states so large
+  departments are not limited to the initially loaded course page.
+- Reworked curriculum batch selection to avoid free-form invalid year input:
+  the page now shows recent batch toggles, a paginated older-batch selector,
+  and always renders one batch's full curriculum instead of mixing all batches
+  in each semester group.
+- Locked academic department filters where the caller has a single immutable
+  scope. HOD course/class/program/society filters now display the scoped
+  department as read-only, and PD-only class/program filters show a read-only
+  directed-program scope indicator.
+- Verification passed:
+  - backend build
+  - active server `tsconfig.json` no-emit check
+  - backend coverage suite, 23/23 suites and 509/509 tests
+  - frontend lint, type-check, Vitest, coverage, production build
+  - Playwright E2E, 36/36
+- Incremental verification after the admin-route, scoped-dialog, class-filter,
+  and `tsconfig.json` edits passed: server no-emit TypeScript check, server
+  build, frontend type-check, frontend lint, and frontend Vitest 136/136.
+- Final verification after the curriculum/class lifecycle changes passed:
+  server build, focused backend curriculum/class suites 93/93, frontend
+  type-check, frontend lint, frontend Vitest 139/139, frontend production build,
+  and `git diff --check`.
+- Updated the development seed script for the stricter curriculum/class
+  lifecycle. The seed now creates complete BSCS/BSSE curricula across multiple
+  batches, three active classes with current-semester course channels and
+  teacher assignments, richer demo users, society membership request examples,
+  and presentation-ready posts.
+- Changed the backend migration scripts so `npm run db:migrate` runs
+  `prisma migrate deploy` for non-interactive fresh setup and pulls. New
+  migration creation now uses `npm run db:migrate:dev -- --name <name>`.
+  This avoids Prisma prompting for a migration name during fresh setup when the
+  committed migration has already been applied.
+- Known follow-up:
+  - Prisma adapter/`pg` transaction deprecation warning still appears under
+    backend coverage/E2E and should be resolved before a future `pg@9` upgrade.
+  - The current server `tsconfig.json` compiles cleanly; a stricter ad-hoc
+    NodeNext compatibility check surfaces many existing Prisma transaction/type
+    inference issues, so switching from `moduleResolution: "bundler"` should be
+    treated as a separate backend TypeScript hardening task.
+  - Structured async logging with request IDs, redaction, and log levels is a
+    high-value production upgrade. The current repo standard still uses
+    prefixed console methods, so a Pino migration should be handled as an
+    explicit logging-design change rather than a drive-by dependency addition.
+  - Before horizontal scaling, add shared infrastructure for cross-instance
+    behavior: Redis-backed rate-limit/session-style coordination where needed
+    and the Socket.IO Redis adapter for room/event fanout.
+
 ### 2026-06-05 - Schema/Lifecycle Refactor Module 9 Complete
 - Removed transitional `isActive`/`is_active` compatibility from users,
   societies, and servers across Prisma schema, backend services, frontend

@@ -106,6 +106,10 @@ export interface ProgramListItem {
     id: number;
     level: string;
   };
+  _count?: {
+    classes: number;
+    curriculum: number;
+  };
 }
 
 export interface ProgramDetail extends ProgramListItem {
@@ -147,8 +151,10 @@ export interface ProgramDeletionImpact {
 
 export interface ProgramListParams extends PaginationParams {
   departmentId?: number;
+  departmentIds?: number[];
   disciplineId?: number;
   degreeLevelId?: number;
+  programIds?: number[];
   search?: string;
 }
 
@@ -309,6 +315,8 @@ export interface CurriculumEntry {
   id: number;
   semesterNumber: number;
   batchYear: number;
+  isLocked: boolean;
+  lockedThroughSemester: number;
   course: {
     id: number;
     code: string;

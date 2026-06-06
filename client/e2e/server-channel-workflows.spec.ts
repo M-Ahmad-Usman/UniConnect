@@ -3,8 +3,8 @@ import { e2eUsers } from './helpers/auth';
 import {
   findChannelPublicIdByName,
   findServerPublicIdByName,
-  module3Fixtures,
-} from './helpers/module3';
+  serverSocietyFixtures,
+} from './helpers/server-society-fixtures';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -14,13 +14,13 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/servers$/);
 }
 
-test.describe('Module 3 server and channel flows', () => {
+test.describe('Server and channel workflows', () => {
   test('authorized manager can create, edit, lock, unlock, and delete a channel', async ({ page }) => {
-    const serverPublicId = await findServerPublicIdByName(module3Fixtures.serverName);
+    const serverPublicId = await findServerPublicIdByName(serverSocietyFixtures.serverName);
     expect(serverPublicId).not.toBeNull();
 
     const announcementChannelPublicId = serverPublicId
-      ? await findChannelPublicIdByName(serverPublicId, module3Fixtures.announcementChannelName)
+      ? await findChannelPublicIdByName(serverPublicId, serverSocietyFixtures.announcementChannelName)
       : null;
     expect(announcementChannelPublicId).not.toBeNull();
 
@@ -30,10 +30,10 @@ test.describe('Module 3 server and channel flows', () => {
     await expect(page.getByRole('button', { name: 'New channel' })).toBeVisible();
 
     await page.getByRole('button', { name: 'New channel' }).click();
-    await page.getByLabel('Channel name').fill(module3Fixtures.createdChannelName);
+    await page.getByLabel('Channel name').fill(serverSocietyFixtures.createdChannelName);
     await page
       .getByLabel('Description')
-      .fill('Created from Playwright to validate Module 3 channel-management runtime wiring.');
+      .fill('Created from Playwright to validate server-channel management runtime wiring.');
     await page.locator('#create-channel-name').evaluate((input) => {
       (input as HTMLInputElement).form?.requestSubmit();
     });
@@ -44,7 +44,7 @@ test.describe('Module 3 server and channel flows', () => {
         async () => {
           createdChannelPublicId = await findChannelPublicIdByName(
             serverPublicId as string,
-            module3Fixtures.createdChannelName,
+            serverSocietyFixtures.createdChannelName,
           );
           return createdChannelPublicId;
         },
@@ -53,12 +53,12 @@ test.describe('Module 3 server and channel flows', () => {
       .not.toBeNull();
 
     await page.goto(`/servers/${serverPublicId}/channels/${createdChannelPublicId}`);
-    await expect(page.getByRole('heading', { name: module3Fixtures.createdChannelName })).toBeVisible();
+    await expect(page.getByRole('heading', { name: serverSocietyFixtures.createdChannelName })).toBeVisible();
 
     await page.getByRole('button', { name: 'Open channel actions' }).click();
     await page.getByRole('menuitem', { name: 'Edit channel' }).click();
 
-    await page.getByLabel('Channel name').fill(module3Fixtures.editedChannelName);
+    await page.getByLabel('Channel name').fill(serverSocietyFixtures.editedChannelName);
     await page
       .getByLabel('Description')
       .fill('Edited from Playwright to validate update flow and query invalidation.');
@@ -66,7 +66,7 @@ test.describe('Module 3 server and channel flows', () => {
       (input as HTMLInputElement).form?.requestSubmit();
     });
 
-    await expect(page.getByRole('heading', { name: module3Fixtures.editedChannelName })).toBeVisible();
+    await expect(page.getByRole('heading', { name: serverSocietyFixtures.editedChannelName })).toBeVisible();
 
     await page.getByRole('button', { name: 'Open channel actions' }).click();
     await page.getByRole('menuitem', { name: 'Lock channel' }).click();
@@ -85,16 +85,16 @@ test.describe('Module 3 server and channel flows', () => {
       new RegExp(`/servers/${serverPublicId}/channels/${announcementChannelPublicId}$`),
     );
     await expect(
-      page.getByRole('heading', { name: module3Fixtures.announcementChannelName, exact: true }),
+      page.getByRole('heading', { name: serverSocietyFixtures.announcementChannelName, exact: true }),
     ).toBeVisible();
   });
 
   test('viewer does not see channel management controls', async ({ page }) => {
-    const serverPublicId = await findServerPublicIdByName(module3Fixtures.serverName);
+    const serverPublicId = await findServerPublicIdByName(serverSocietyFixtures.serverName);
     expect(serverPublicId).not.toBeNull();
 
     const announcementChannelPublicId = serverPublicId
-      ? await findChannelPublicIdByName(serverPublicId, module3Fixtures.announcementChannelName)
+      ? await findChannelPublicIdByName(serverPublicId, serverSocietyFixtures.announcementChannelName)
       : null;
     expect(announcementChannelPublicId).not.toBeNull();
 
@@ -106,7 +106,7 @@ test.describe('Module 3 server and channel flows', () => {
   });
 
   test('members route renders paginated cards with role badges', async ({ page }) => {
-    const serverPublicId = await findServerPublicIdByName(module3Fixtures.serverName);
+    const serverPublicId = await findServerPublicIdByName(serverSocietyFixtures.serverName);
     expect(serverPublicId).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);

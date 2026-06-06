@@ -50,7 +50,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe("Module 6 - Society Management", () => {
+describe("Society management", () => {
   // ─── POST /api/societies ─────────────────────────────────────────────
 
   describe("POST /api/societies", () => {

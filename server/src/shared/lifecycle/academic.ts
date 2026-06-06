@@ -17,6 +17,7 @@ type ProgramAuthorityRow = {
   department_id: number;
   semesters: number;
   hod_id: number | null;
+  program_director_id: number | null;
 };
 
 export type AcademicClassWriteRow = {
@@ -89,8 +90,46 @@ export async function lockProgramForHodOrAdmin(
   client: PrismaTransaction = prisma,
 ): Promise<ProgramAuthorityRow> {
   await lockActiveActor(userId, client);
+  const program = await lockProgramAuthority(programId, client);
+  if (userType !== "ADMIN" && program.hod_id !== userId) {
+    throw new ForbiddenError(
+      "Only the HOD of this department can perform this action",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
+  }
+  return program;
+}
+
+export async function lockProgramForHodPdOrAdmin(
+  programId: number,
+  userId: number,
+  userType: string,
+  client: PrismaTransaction = prisma,
+): Promise<ProgramAuthorityRow> {
+  await lockActiveActor(userId, client);
+  const program = await lockProgramAuthority(programId, client);
+  const allowed =
+    userType === "ADMIN" || program.hod_id === userId || program.program_director_id === userId;
+  if (!allowed) {
+    throw new ForbiddenError(
+      "Only the HOD or Program Director for this program can perform this action",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
+  }
+  return program;
+}
+
+async function lockProgramAuthority(
+  programId: number,
+  client: PrismaTransaction,
+): Promise<ProgramAuthorityRow> {
   const rows = await client.$queryRaw<ProgramAuthorityRow[]>`
-    SELECT program."id", program."department_id", program."semesters", department."hod_id"
+    SELECT
+      program."id",
+      program."department_id",
+      program."semesters",
+      department."hod_id",
+      program."program_director_id"
     FROM "programs" AS program
     INNER JOIN "departments" AS department ON department."id" = program."department_id"
     WHERE program."id" = ${programId}
@@ -98,12 +137,6 @@ export async function lockProgramForHodOrAdmin(
   `;
   const program = rows[0];
   if (!program) throw new NotFoundError("Program not found");
-  if (userType !== "ADMIN" && program.hod_id !== userId) {
-    throw new ForbiddenError(
-      "Only the HOD of this department can perform this action",
-      ApiErrorCode.SCOPE_FORBIDDEN,
-    );
-  }
   return program;
 }
 

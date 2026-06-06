@@ -26,6 +26,7 @@ interface SocietyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   departments: DepartmentListItem[];
+  lockDepartment?: boolean;
   loading: boolean;
   onSubmit: (values: SocietyFormValues) => Promise<void>;
 }
@@ -192,20 +193,23 @@ export function SocietyDialog({
   open,
   onOpenChange,
   departments,
+  lockDepartment = false,
   loading,
   onSubmit,
 }: SocietyDialogProps) {
   const [presidentSearch, setPresidentSearch] = useState('');
   const [convenorSearch, setConvenorSearch] = useState('');
+  const lockedDepartment = lockDepartment && departments.length === 1 ? departments[0] : null;
+  const defaultValues = {
+    name: '',
+    description: '',
+    departmentId: lockedDepartment?.id ?? 0,
+    presidentPublicId: '',
+    convenorPublicId: '',
+  };
   const form = useForm<SocietyFormValues>({
     resolver: zodResolver(societySchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      departmentId: 0,
-      presidentPublicId: '',
-      convenorPublicId: '',
-    },
+    defaultValues,
   });
   const departmentId = useWatch({ control: form.control, name: 'departmentId' });
   const selectedDepartmentId = departmentId > 0 ? departmentId : undefined;
@@ -226,10 +230,16 @@ export function SocietyDialog({
     if (!nextOpen) {
       setPresidentSearch('');
       setConvenorSearch('');
-      form.reset();
+      form.reset(defaultValues);
     }
     onOpenChange(nextOpen);
   }
+
+  useEffect(() => {
+    if (open && lockedDepartment) {
+      form.setValue('departmentId', lockedDepartment.id);
+    }
+  }, [form, lockedDepartment, open]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -254,25 +264,36 @@ export function SocietyDialog({
               {...form.register('description')}
             />
           </FormField>
-          <FormField label="Department" error={form.formState.errors.departmentId?.message}>
-            <select
-              className={inputClassName}
-              aria-invalid={form.formState.errors.departmentId ? 'true' : undefined}
-              {...departmentRegistration}
-              onChange={(event) => {
-                void departmentRegistration.onChange(event);
-                setPresidentSearch('');
-                setConvenorSearch('');
-              }}
-            >
-              <option value={0}>Select department</option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.code} · {department.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
+          {lockedDepartment ? (
+            <FormField label="Department" error={form.formState.errors.departmentId?.message}>
+              <input
+                className={inputClassName}
+                value={`${lockedDepartment.code} · ${lockedDepartment.name}`}
+                readOnly
+              />
+              <input type="hidden" {...departmentRegistration} />
+            </FormField>
+          ) : (
+            <FormField label="Department" error={form.formState.errors.departmentId?.message}>
+              <select
+                className={inputClassName}
+                aria-invalid={form.formState.errors.departmentId ? 'true' : undefined}
+                {...departmentRegistration}
+                onChange={(event) => {
+                  void departmentRegistration.onChange(event);
+                  setPresidentSearch('');
+                  setConvenorSearch('');
+                }}
+              >
+                <option value={0}>Select department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.code} · {department.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          )}
           <LeadershipSelects
             open={open}
             departmentId={selectedDepartmentId}

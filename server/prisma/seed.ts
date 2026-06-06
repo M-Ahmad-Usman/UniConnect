@@ -57,6 +57,14 @@ interface SeedUserInput {
   mustChangePassword?: boolean;
 }
 
+type DegreePlan = ReadonlyArray<
+  ReadonlyArray<{
+    readonly code: string;
+    readonly title: string;
+    readonly creditHours: number;
+  }>
+>;
+
 async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
 }
@@ -327,6 +335,143 @@ async function ensureModeratorAssignment(input: {
   });
 }
 
+async function ensureCourse(input: {
+  departmentId: number;
+  code: string;
+  title: string;
+  creditHours: number;
+}) {
+  return prisma.course.upsert({
+    where: { code: input.code },
+    update: {
+      title: input.title,
+      creditHours: input.creditHours,
+      departmentId: input.departmentId,
+    },
+    create: input,
+  });
+}
+
+async function ensureCurriculum(input: {
+  programId: number;
+  courseId: number;
+  semesterNumber: number;
+  batchYear: number;
+}) {
+  return prisma.programCurriculum.upsert({
+    where: {
+      programId_courseId_batchYear: {
+        programId: input.programId,
+        courseId: input.courseId,
+        batchYear: input.batchYear,
+      },
+    },
+    update: { semesterNumber: input.semesterNumber },
+    create: input,
+  });
+}
+
+async function ensureClass(input: {
+  programId: number;
+  currentSemester: number;
+  academicYear: number;
+  admissionYear: number;
+  section: "A" | "B";
+  serverId: number;
+}) {
+  const existing = await prisma.class.findFirst({
+    where: {
+      programId: input.programId,
+      currentSemester: input.currentSemester,
+      admissionYear: input.admissionYear,
+      section: input.section,
+    },
+  });
+
+  if (existing) {
+    return prisma.class.update({
+      where: { id: existing.id },
+      data: {
+        academicYear: input.academicYear,
+        serverId: input.serverId,
+        status: "ACTIVE",
+        graduatedAt: null,
+        graduatedBy: null,
+      },
+    });
+  }
+
+  return prisma.class.create({ data: input });
+}
+
+async function ensureTeachingAssignment(input: {
+  teacherId: number;
+  courseId: number;
+  classId: number;
+}) {
+  const existingForClassCourse = await prisma.teaches.findUnique({
+    where: {
+      classId_courseId: {
+        classId: input.classId,
+        courseId: input.courseId,
+      },
+    },
+    select: { teacherId: true },
+  });
+
+  if (existingForClassCourse && existingForClassCourse.teacherId !== input.teacherId) {
+    await prisma.teaches.delete({
+      where: {
+        teacherId_courseId_classId: {
+          teacherId: existingForClassCourse.teacherId,
+          courseId: input.courseId,
+          classId: input.classId,
+        },
+      },
+    });
+  }
+
+  return prisma.teaches.upsert({
+    where: {
+      teacherId_courseId_classId: {
+        teacherId: input.teacherId,
+        courseId: input.courseId,
+        classId: input.classId,
+      },
+    },
+    update: {},
+    create: input,
+  });
+}
+
+async function ensureSocietyMembershipRequest(input: {
+  societyId: number;
+  userId: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  reviewedBy?: number | null;
+}) {
+  return prisma.societyMembershipRequest.upsert({
+    where: {
+      societyId_userId: {
+        societyId: input.societyId,
+        userId: input.userId,
+      },
+    },
+    update: {
+      status: input.status,
+      reviewedBy: input.reviewedBy ?? null,
+      reviewedAt: input.reviewedBy ? new Date() : null,
+    },
+    create: {
+      societyId: input.societyId,
+      userId: input.userId,
+      status: input.status,
+      reviewedBy: input.reviewedBy ?? null,
+      reviewedAt: input.reviewedBy ? new Date() : null,
+    },
+  });
+}
+
 async function seedDemoWorkspace() {
   const admin = await upsertUser({
     email: "admin@uniconnect.com",
@@ -338,53 +483,91 @@ async function seedDemoWorkspace() {
     mustChangePassword: true,
   });
 
-  const hod = await upsertUser({
-    email: "hod.demo@uniconnect.com",
-    fullName: "Dr. Fatima Noor",
-    phone: "03010000001",
-    gender: "FEMALE",
-    userType: "TEACHER",
-    password: DEMO_PASSWORD,
-  });
-  const programDirector = await upsertUser({
-    email: "pd.demo@uniconnect.com",
-    fullName: "Dr. Bilal Ahmed",
-    phone: "03010000002",
-    gender: "MALE",
-    userType: "TEACHER",
-    password: DEMO_PASSWORD,
-  });
-  const lecturer = await upsertUser({
-    email: "lecturer.demo@uniconnect.com",
-    fullName: "Ms. Ayesha Khan",
-    phone: "03010000003",
-    gender: "FEMALE",
-    userType: "TEACHER",
-    password: DEMO_PASSWORD,
-  });
-  const convenor = await upsertUser({
-    email: "convenor.demo@uniconnect.com",
-    fullName: "Mr. Hamza Tariq",
-    phone: "03010000004",
-    gender: "MALE",
-    userType: "TEACHER",
-    password: DEMO_PASSWORD,
-  });
-  const serverModerator = await upsertUser({
-    email: "server.mod.demo@uniconnect.com",
-    fullName: "Mr. Kamran Ali",
-    phone: "03010000005",
-    gender: "MALE",
-    userType: "TEACHER",
-    password: DEMO_PASSWORD,
-  });
+  const teachers = {
+    hod: await upsertUser({
+      email: "hod.demo@uniconnect.com",
+      fullName: "Dr. Fatima Noor",
+      phone: "03010000001",
+      gender: "FEMALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    bscsDirector: await upsertUser({
+      email: "pd.demo@uniconnect.com",
+      fullName: "Dr. Bilal Ahmed",
+      phone: "03010000002",
+      gender: "MALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    bsseDirector: await upsertUser({
+      email: "pd.se.demo@uniconnect.com",
+      fullName: "Dr. Sana Iqbal",
+      phone: "03010000006",
+      gender: "FEMALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    databaseLecturer: await upsertUser({
+      email: "lecturer.demo@uniconnect.com",
+      fullName: "Ms. Ayesha Khan",
+      phone: "03010000003",
+      gender: "FEMALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    webLecturer: await upsertUser({
+      email: "web.lecturer.demo@uniconnect.com",
+      fullName: "Mr. Omar Farooq",
+      phone: "03010000007",
+      gender: "MALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    systemsLecturer: await upsertUser({
+      email: "systems.lecturer.demo@uniconnect.com",
+      fullName: "Dr. Nadia Hassan",
+      phone: "03010000008",
+      gender: "FEMALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    seLecturer: await upsertUser({
+      email: "se.lecturer.demo@uniconnect.com",
+      fullName: "Mr. Sameer Malik",
+      phone: "03010000009",
+      gender: "MALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    convenor: await upsertUser({
+      email: "convenor.demo@uniconnect.com",
+      fullName: "Mr. Hamza Tariq",
+      phone: "03010000004",
+      gender: "MALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+    serverModerator: await upsertUser({
+      email: "server.mod.demo@uniconnect.com",
+      fullName: "Mr. Kamran Ali",
+      phone: "03010000005",
+      gender: "MALE",
+      userType: "TEACHER",
+      password: DEMO_PASSWORD,
+    }),
+  };
 
   await Promise.all([
-    ensureTeacherInfo(hod.id, "Professor"),
-    ensureTeacherInfo(programDirector.id, "Associate Professor"),
-    ensureTeacherInfo(lecturer.id, "Lecturer"),
-    ensureTeacherInfo(convenor.id, "Assistant Professor"),
-    ensureTeacherInfo(serverModerator.id, "Lecturer"),
+    ensureTeacherInfo(teachers.hod.id, "Professor"),
+    ensureTeacherInfo(teachers.bscsDirector.id, "Associate Professor"),
+    ensureTeacherInfo(teachers.bsseDirector.id, "Associate Professor"),
+    ensureTeacherInfo(teachers.databaseLecturer.id, "Lecturer"),
+    ensureTeacherInfo(teachers.webLecturer.id, "Lecturer"),
+    ensureTeacherInfo(teachers.systemsLecturer.id, "Assistant Professor"),
+    ensureTeacherInfo(teachers.seLecturer.id, "Lecturer"),
+    ensureTeacherInfo(teachers.convenor.id, "Assistant Professor"),
+    ensureTeacherInfo(teachers.serverModerator.id, "Lecturer"),
   ]);
 
   const departmentServer = await ensureServer(
@@ -399,20 +582,20 @@ async function seedDemoWorkspace() {
     update: {
       name: "Computer Science",
       serverId: departmentServer.id,
-      hodId: hod.id,
+      hodId: teachers.hod.id,
     },
     create: {
       name: "Computer Science",
       code: "CS-DEMO",
       serverId: departmentServer.id,
-      hodId: hod.id,
+      hodId: teachers.hod.id,
     },
   });
 
   await prisma.user.updateMany({
     where: {
       id: {
-        in: [hod.id, programDirector.id, lecturer.id, convenor.id, serverModerator.id],
+        in: Object.values(teachers).map((teacher) => teacher.id),
       },
     },
     data: {
@@ -420,67 +603,213 @@ async function seedDemoWorkspace() {
     },
   });
 
-  const discipline = await prisma.discipline.upsert({
+  const computerScience = await prisma.discipline.upsert({
     where: { name: "Computer Science" },
     update: {},
     create: { name: "Computer Science" },
   });
-  const bachelors = await prisma.degreeLevel.findUnique({
+  const softwareEngineering = await prisma.discipline.upsert({
+    where: { name: "Software Engineering" },
+    update: {},
+    create: { name: "Software Engineering" },
+  });
+  const bachelors = await prisma.degreeLevel.findUniqueOrThrow({
     where: { level: "Bachelors" },
   });
 
-  const program = await prisma.program.upsert({
+  const bscsProgram = await prisma.program.upsert({
     where: { code: "BSCS-DEMO" },
     update: {
       departmentId: department.id,
-      disciplineId: discipline.id,
-      degreeLevelId: bachelors!.id,
+      disciplineId: computerScience.id,
+      degreeLevelId: bachelors.id,
       semesters: 8,
-      programDirectorId: programDirector.id,
+      programDirectorId: teachers.bscsDirector.id,
     },
     create: {
       departmentId: department.id,
-      disciplineId: discipline.id,
-      degreeLevelId: bachelors!.id,
+      disciplineId: computerScience.id,
+      degreeLevelId: bachelors.id,
       semesters: 8,
       code: "BSCS-DEMO",
-      programDirectorId: programDirector.id,
+      programDirectorId: teachers.bscsDirector.id,
     },
   });
+
+  const bsseProgram = await prisma.program.upsert({
+    where: { code: "BSSE-DEMO" },
+    update: {
+      departmentId: department.id,
+      disciplineId: softwareEngineering.id,
+      degreeLevelId: bachelors.id,
+      semesters: 8,
+      programDirectorId: teachers.bsseDirector.id,
+    },
+    create: {
+      departmentId: department.id,
+      disciplineId: softwareEngineering.id,
+      degreeLevelId: bachelors.id,
+      semesters: 8,
+      code: "BSSE-DEMO",
+      programDirectorId: teachers.bsseDirector.id,
+    },
+  });
+
+  const bscsDegreePlan = [
+    [
+      { code: "CS101-DEMO", title: "Programming Fundamentals", creditHours: 3 },
+      { code: "MTH101-DEMO", title: "Applied Calculus", creditHours: 3 },
+    ],
+    [
+      { code: "CS102-DEMO", title: "Object Oriented Programming", creditHours: 3 },
+      { code: "CS103-DEMO", title: "Discrete Structures", creditHours: 3 },
+    ],
+    [
+      { code: "CS201-DEMO", title: "Data Structures", creditHours: 3 },
+      { code: "CS202-DEMO", title: "Digital Logic", creditHours: 3 },
+    ],
+    [
+      { code: "CS203-DEMO", title: "Algorithms", creditHours: 3 },
+      { code: "CS204-DEMO", title: "Computer Networks", creditHours: 3 },
+    ],
+    [
+      { code: "CS301-DEMO", title: "Operating Systems", creditHours: 3 },
+      { code: "SE301-DEMO", title: "Software Engineering", creditHours: 3 },
+    ],
+    [
+      { code: "CS302-DEMO", title: "Database Systems", creditHours: 3 },
+      { code: "CS303-DEMO", title: "Web Engineering", creditHours: 3 },
+    ],
+    [
+      { code: "CS401-DEMO", title: "Artificial Intelligence", creditHours: 3 },
+      { code: "CS402-DEMO", title: "Information Security", creditHours: 3 },
+    ],
+    [
+      { code: "CS499-DEMO", title: "Final Year Project", creditHours: 6 },
+      { code: "CS403-DEMO", title: "Cloud Computing", creditHours: 3 },
+    ],
+  ] as const;
+
+  const bsseDegreePlan = [
+    [
+      { code: "SE101-DEMO", title: "Software Fundamentals", creditHours: 3 },
+      { code: "MTH111-DEMO", title: "Linear Algebra", creditHours: 3 },
+    ],
+    [
+      { code: "SE102-DEMO", title: "Requirements Engineering", creditHours: 3 },
+      { code: "CS102-DEMO", title: "Object Oriented Programming", creditHours: 3 },
+    ],
+    [
+      { code: "SE201-DEMO", title: "Software Design", creditHours: 3 },
+      { code: "CS201-DEMO", title: "Data Structures", creditHours: 3 },
+    ],
+    [
+      { code: "SE202-DEMO", title: "Software Architecture", creditHours: 3 },
+      { code: "CS204-DEMO", title: "Computer Networks", creditHours: 3 },
+    ],
+    [
+      { code: "SE301-DEMO", title: "Software Engineering", creditHours: 3 },
+      { code: "SE302-DEMO", title: "Software Quality", creditHours: 3 },
+    ],
+    [
+      { code: "CS302-DEMO", title: "Database Systems", creditHours: 3 },
+      { code: "SE303-DEMO", title: "DevOps Practices", creditHours: 3 },
+    ],
+    [
+      { code: "SE401-DEMO", title: "Project Management", creditHours: 3 },
+      { code: "CS402-DEMO", title: "Information Security", creditHours: 3 },
+    ],
+    [
+      { code: "SE499-DEMO", title: "Capstone Project", creditHours: 6 },
+      { code: "CS403-DEMO", title: "Cloud Computing", creditHours: 3 },
+    ],
+  ] as const;
+
+  async function seedCurriculum(
+    programId: number,
+    degreePlan: DegreePlan,
+    batchYears: number[],
+  ) {
+    const coursesByCode = new Map<string, Awaited<ReturnType<typeof ensureCourse>>>();
+    for (const semester of degreePlan) {
+      for (const courseSeed of semester) {
+        if (!coursesByCode.has(courseSeed.code)) {
+          coursesByCode.set(
+            courseSeed.code,
+            await ensureCourse({ ...courseSeed, departmentId: department.id }),
+          );
+        }
+      }
+    }
+
+    for (const batchYear of batchYears) {
+      for (const [semesterIndex, semester] of degreePlan.entries()) {
+        for (const courseSeed of semester) {
+          const course = coursesByCode.get(courseSeed.code)!;
+          await ensureCurriculum({
+            programId,
+            courseId: course.id,
+            semesterNumber: semesterIndex + 1,
+            batchYear,
+          });
+        }
+      }
+    }
+
+    return coursesByCode;
+  }
+
+  await seedCurriculum(bscsProgram.id, bscsDegreePlan, [
+    2023,
+    2024,
+    2025,
+    2026,
+  ]);
+  await seedCurriculum(bsseProgram.id, bsseDegreePlan, [2025, 2026]);
 
   const classServer = await ensureServer(
     "BSCS 6-A Hub",
     "CLASS",
-    hod.id,
+    teachers.hod.id,
     "Semester-specific updates, discussions, and course communication for BSCS 6-A.",
   );
+  const juniorClassServer = await ensureServer(
+    "BSCS 1-B Hub",
+    "CLASS",
+    teachers.hod.id,
+    "Freshman onboarding, class coordination, and first-semester course updates.",
+  );
+  const seClassServer = await ensureServer(
+    "BSSE 3-A Hub",
+    "CLASS",
+    teachers.hod.id,
+    "Software Engineering cohort updates and current-semester course communication.",
+  );
 
-  let classRecord = await prisma.class.findFirst({
-    where: {
-      programId: program.id,
-      currentSemester: 6,
-      admissionYear: 2023,
-      section: "A",
-    },
+  let classRecord = await ensureClass({
+    programId: bscsProgram.id,
+    currentSemester: 6,
+    academicYear: 2026,
+    admissionYear: 2023,
+    section: "A",
+    serverId: classServer.id,
   });
-
-  if (!classRecord) {
-    classRecord = await prisma.class.create({
-      data: {
-        programId: program.id,
-        currentSemester: 6,
-        academicYear: 2026,
-        admissionYear: 2023,
-        section: "A",
-        serverId: classServer.id,
-      },
-    });
-  } else if (classRecord.serverId !== classServer.id) {
-    classRecord = await prisma.class.update({
-      where: { id: classRecord.id },
-      data: { serverId: classServer.id },
-    });
-  }
+  let juniorClass = await ensureClass({
+    programId: bscsProgram.id,
+    currentSemester: 1,
+    academicYear: 2026,
+    admissionYear: 2026,
+    section: "B",
+    serverId: juniorClassServer.id,
+  });
+  let seClass = await ensureClass({
+    programId: bsseProgram.id,
+    currentSemester: 3,
+    academicYear: 2026,
+    admissionYear: 2025,
+    section: "A",
+    serverId: seClassServer.id,
+  });
 
   const cr = await upsertUser({
     email: "cr.demo@uniconnect.com",
@@ -518,23 +847,81 @@ async function seedDemoWorkspace() {
     password: DEMO_PASSWORD,
     departmentId: department.id,
   });
+  const juniorCr = await upsertUser({
+    email: "cr.junior.demo@uniconnect.com",
+    fullName: "Maham Javed",
+    phone: "03020000005",
+    gender: "FEMALE",
+    userType: "STUDENT",
+    password: DEMO_PASSWORD,
+    departmentId: department.id,
+  });
+  const juniorStudent = await upsertUser({
+    email: "student.junior.demo@uniconnect.com",
+    fullName: "Zain Ul Abidin",
+    phone: "03020000006",
+    gender: "MALE",
+    userType: "STUDENT",
+    password: DEMO_PASSWORD,
+    departmentId: department.id,
+  });
+  const juniorApplicant = await upsertUser({
+    email: "society.pending.demo@uniconnect.com",
+    fullName: "Nimra Shah",
+    phone: "03020000007",
+    gender: "FEMALE",
+    userType: "STUDENT",
+    password: DEMO_PASSWORD,
+    departmentId: department.id,
+  });
+  const seCr = await upsertUser({
+    email: "cr.se.demo@uniconnect.com",
+    fullName: "Danish Iqbal",
+    phone: "03020000008",
+    gender: "MALE",
+    userType: "STUDENT",
+    password: DEMO_PASSWORD,
+    departmentId: department.id,
+  });
+  const seStudent = await upsertUser({
+    email: "student.se.demo@uniconnect.com",
+    fullName: "Eman Zahra",
+    phone: "03020000009",
+    gender: "FEMALE",
+    userType: "STUDENT",
+    password: DEMO_PASSWORD,
+    departmentId: department.id,
+  });
 
   await Promise.all([
     ensureStudentInfo(cr.id, classRecord.id, "23-NTU-CS-0001"),
     ensureStudentInfo(president.id, classRecord.id, "23-NTU-CS-0002"),
     ensureStudentInfo(student.id, classRecord.id, "23-NTU-CS-0003"),
     ensureStudentInfo(channelModerator.id, classRecord.id, "23-NTU-CS-0004"),
+    ensureStudentInfo(juniorCr.id, juniorClass.id, "26-NTU-CS-0001"),
+    ensureStudentInfo(juniorStudent.id, juniorClass.id, "26-NTU-CS-0002"),
+    ensureStudentInfo(juniorApplicant.id, juniorClass.id, "26-NTU-CS-0003"),
+    ensureStudentInfo(seCr.id, seClass.id, "25-NTU-SE-0001"),
+    ensureStudentInfo(seStudent.id, seClass.id, "25-NTU-SE-0002"),
   ]);
 
   classRecord = await prisma.class.update({
     where: { id: classRecord.id },
     data: { crId: cr.id },
   });
+  juniorClass = await prisma.class.update({
+    where: { id: juniorClass.id },
+    data: { crId: juniorCr.id },
+  });
+  seClass = await prisma.class.update({
+    where: { id: seClass.id },
+    data: { crId: seCr.id },
+  });
 
   const societyServer = await ensureServer(
     "IEEE Student Society",
     "SOCIETY",
-    hod.id,
+    teachers.hod.id,
     "Community updates, event planning, and member announcements for IEEE student activities.",
   );
 
@@ -542,7 +929,7 @@ async function seedDemoWorkspace() {
     description: "Technical society for workshops, events, and student-led initiatives.",
     departmentId: department.id,
     presidentId: president.id,
-    convenorId: convenor.id,
+    convenorId: teachers.convenor.id,
     serverId: societyServer.id,
     status: "ACTIVE" as const,
     isDeleted: false,
@@ -565,53 +952,38 @@ async function seedDemoWorkspace() {
         },
       });
 
-  const course = await prisma.course.upsert({
-    where: { code: "CS301-DEMO" },
-    update: {
-      title: "Database Systems",
-      creditHours: 3,
-      departmentId: department.id,
-    },
-    create: {
-      title: "Database Systems",
-      code: "CS301-DEMO",
-      creditHours: 3,
-      departmentId: department.id,
-    },
-  });
-
-  await prisma.teaches.upsert({
-    where: {
-      teacherId_courseId_classId: {
-        teacherId: lecturer.id,
-        courseId: course.id,
-        classId: classRecord.id,
-      },
-    },
-    update: {},
-    create: {
-      teacherId: lecturer.id,
-      courseId: course.id,
-      classId: classRecord.id,
-    },
-  });
-
   await prisma.serverMembership.createMany({
     data: [
-      { userId: hod.id, serverId: departmentServer.id, isAutoJoined: true },
-      { userId: programDirector.id, serverId: departmentServer.id, isAutoJoined: true },
-      { userId: lecturer.id, serverId: departmentServer.id, isAutoJoined: true },
-      { userId: convenor.id, serverId: departmentServer.id, isAutoJoined: true },
-      { userId: serverModerator.id, serverId: departmentServer.id, isAutoJoined: true },
+      ...Object.values(teachers).map((teacher) => ({
+        userId: teacher.id,
+        serverId: departmentServer.id,
+        isAutoJoined: true,
+      })),
       { userId: cr.id, serverId: departmentServer.id, isAutoJoined: true },
       { userId: president.id, serverId: departmentServer.id, isAutoJoined: true },
       { userId: student.id, serverId: departmentServer.id, isAutoJoined: true },
       { userId: channelModerator.id, serverId: departmentServer.id, isAutoJoined: true },
+      { userId: juniorCr.id, serverId: departmentServer.id, isAutoJoined: true },
+      { userId: juniorStudent.id, serverId: departmentServer.id, isAutoJoined: true },
+      { userId: juniorApplicant.id, serverId: departmentServer.id, isAutoJoined: true },
+      { userId: seCr.id, serverId: departmentServer.id, isAutoJoined: true },
+      { userId: seStudent.id, serverId: departmentServer.id, isAutoJoined: true },
       { userId: cr.id, serverId: classServer.id, isAutoJoined: true },
       { userId: president.id, serverId: classServer.id, isAutoJoined: true },
       { userId: student.id, serverId: classServer.id, isAutoJoined: true },
       { userId: channelModerator.id, serverId: classServer.id, isAutoJoined: true },
-      { userId: convenor.id, serverId: societyServer.id, isAutoJoined: true },
+      { userId: teachers.databaseLecturer.id, serverId: classServer.id, isAutoJoined: true },
+      { userId: teachers.webLecturer.id, serverId: classServer.id, isAutoJoined: true },
+      { userId: juniorCr.id, serverId: juniorClassServer.id, isAutoJoined: true },
+      { userId: juniorStudent.id, serverId: juniorClassServer.id, isAutoJoined: true },
+      { userId: juniorApplicant.id, serverId: juniorClassServer.id, isAutoJoined: true },
+      { userId: teachers.databaseLecturer.id, serverId: juniorClassServer.id, isAutoJoined: true },
+      { userId: teachers.systemsLecturer.id, serverId: juniorClassServer.id, isAutoJoined: true },
+      { userId: seCr.id, serverId: seClassServer.id, isAutoJoined: true },
+      { userId: seStudent.id, serverId: seClassServer.id, isAutoJoined: true },
+      { userId: teachers.seLecturer.id, serverId: seClassServer.id, isAutoJoined: true },
+      { userId: teachers.databaseLecturer.id, serverId: seClassServer.id, isAutoJoined: true },
+      { userId: teachers.convenor.id, serverId: societyServer.id, isAutoJoined: true },
       { userId: president.id, serverId: societyServer.id, isAutoJoined: true },
       { userId: student.id, serverId: societyServer.id, isAutoJoined: false },
       { userId: channelModerator.id, serverId: societyServer.id, isAutoJoined: false },
@@ -623,7 +995,7 @@ async function seedDemoWorkspace() {
     serverId: departmentServer.id,
     name: "announcements",
     type: "ANNOUNCEMENT",
-    createdBy: hod.id,
+    createdBy: teachers.hod.id,
     description: "Official department announcements for all faculty and students.",
     isAutoCreated: true,
   });
@@ -631,7 +1003,7 @@ async function seedDemoWorkspace() {
     serverId: departmentServer.id,
     name: "general",
     type: "GENERAL",
-    createdBy: hod.id,
+    createdBy: teachers.hod.id,
     description: "General department-wide discussion and quick updates.",
     isAutoCreated: true,
   });
@@ -639,10 +1011,19 @@ async function seedDemoWorkspace() {
     serverId: departmentServer.id,
     name: "bscs-updates",
     type: "PROGRAM",
-    createdBy: programDirector.id,
+    createdBy: teachers.bscsDirector.id,
     description: "Program-specific updates for BSCS students and faculty.",
     isAutoCreated: true,
-    programId: program.id,
+    programId: bscsProgram.id,
+  });
+  const seProgramChannel = await ensureChannel({
+    serverId: departmentServer.id,
+    name: "bsse-updates",
+    type: "PROGRAM",
+    createdBy: teachers.bsseDirector.id,
+    description: "Program-specific updates for BSSE students and faculty.",
+    isAutoCreated: true,
+    programId: bsseProgram.id,
   });
 
   const classAnnouncements = await ensureChannel({
@@ -661,21 +1042,142 @@ async function seedDemoWorkspace() {
     description: "Class discussion and routine coordination for BSCS 6-A.",
     isAutoCreated: true,
   });
-  const courseChannel = await ensureChannel({
-    serverId: classServer.id,
-    name: "cs-301-database-systems",
-    type: "COURSE",
-    createdBy: lecturer.id,
-    description: "Course-specific updates and resources for Database Systems.",
+  const juniorClassAnnouncements = await ensureChannel({
+    serverId: juniorClassServer.id,
+    name: "announcements",
+    type: "ANNOUNCEMENT",
+    createdBy: juniorCr.id,
+    description: "Official class-level announcements for BSCS 1-B.",
     isAutoCreated: true,
-    courseId: course.id,
+  });
+  await ensureChannel({
+    serverId: juniorClassServer.id,
+    name: "general",
+    type: "GENERAL",
+    createdBy: juniorCr.id,
+    description: "Freshman class discussion and routine coordination.",
+    isAutoCreated: true,
+  });
+  const seClassAnnouncements = await ensureChannel({
+    serverId: seClassServer.id,
+    name: "announcements",
+    type: "ANNOUNCEMENT",
+    createdBy: seCr.id,
+    description: "Official class-level announcements for BSSE 3-A.",
+    isAutoCreated: true,
+  });
+  await ensureChannel({
+    serverId: seClassServer.id,
+    name: "general",
+    type: "GENERAL",
+    createdBy: seCr.id,
+    description: "BSSE class discussion and sprint coordination.",
+    isAutoCreated: true,
+  });
+
+  async function seedCurrentClassCourses(input: {
+    classId: number;
+    serverId: number;
+    programId: number;
+    semesterNumber: number;
+    batchYear: number;
+    assignments: Record<string, number>;
+  }) {
+    const currentCurriculum = await prisma.programCurriculum.findMany({
+      where: {
+        programId: input.programId,
+        semesterNumber: input.semesterNumber,
+        batchYear: input.batchYear,
+      },
+      select: {
+        courseId: true,
+        course: { select: { code: true, title: true } },
+      },
+      orderBy: { course: { code: "asc" } },
+    });
+    const currentCourseIds = currentCurriculum.map((entry) => entry.courseId);
+
+    await prisma.channel.updateMany({
+      where: {
+        serverId: input.serverId,
+        type: "COURSE",
+        isAutoCreated: true,
+        isDeleted: false,
+        courseId: { notIn: currentCourseIds },
+      },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: teachers.hod.id,
+        isLocked: true,
+        lockedBy: teachers.hod.id,
+        lockedAt: new Date(),
+      },
+    });
+
+    const channels: Record<string, Awaited<ReturnType<typeof ensureChannel>>> = {};
+    for (const entry of currentCurriculum) {
+      channels[entry.course.code] = await ensureChannel({
+        serverId: input.serverId,
+        name: entry.course.code.toLowerCase(),
+        type: "COURSE",
+        createdBy: input.assignments[entry.course.code] ?? teachers.hod.id,
+        description: `Course-specific updates and resources for ${entry.course.title}.`,
+        isAutoCreated: true,
+        courseId: entry.courseId,
+      });
+      const teacherId = input.assignments[entry.course.code];
+      if (teacherId) {
+        await ensureTeachingAssignment({
+          teacherId,
+          courseId: entry.courseId,
+          classId: input.classId,
+        });
+      }
+    }
+
+    return channels;
+  }
+
+  const bscsClassCourseChannels = await seedCurrentClassCourses({
+    classId: classRecord.id,
+    serverId: classServer.id,
+    programId: bscsProgram.id,
+    semesterNumber: classRecord.currentSemester,
+    batchYear: classRecord.admissionYear,
+    assignments: {
+      "CS302-DEMO": teachers.databaseLecturer.id,
+      "CS303-DEMO": teachers.webLecturer.id,
+    },
+  });
+  const juniorCourseChannels = await seedCurrentClassCourses({
+    classId: juniorClass.id,
+    serverId: juniorClassServer.id,
+    programId: bscsProgram.id,
+    semesterNumber: juniorClass.currentSemester,
+    batchYear: juniorClass.admissionYear,
+    assignments: {
+      "CS101-DEMO": teachers.databaseLecturer.id,
+      "MTH101-DEMO": teachers.systemsLecturer.id,
+    },
+  });
+  const seCourseChannels = await seedCurrentClassCourses({
+    classId: seClass.id,
+    serverId: seClassServer.id,
+    programId: bsseProgram.id,
+    semesterNumber: seClass.currentSemester,
+    batchYear: seClass.admissionYear,
+    assignments: {
+      "CS201-DEMO": teachers.databaseLecturer.id,
+      "SE201-DEMO": teachers.seLecturer.id,
+    },
   });
 
   const societyAnnouncements = await ensureChannel({
     serverId: societyServer.id,
     name: "announcements",
     type: "ANNOUNCEMENT",
-    createdBy: convenor.id,
+    createdBy: teachers.convenor.id,
     description: "Official IEEE announcements and event notices.",
     isAutoCreated: true,
   });
@@ -689,32 +1191,53 @@ async function seedDemoWorkspace() {
   });
 
   await ensureModeratorAssignment({
-    userId: serverModerator.id,
+    userId: teachers.serverModerator.id,
     serverId: departmentServer.id,
     scopeType: "SERVER",
-    assignedBy: hod.id,
+    assignedBy: teachers.hod.id,
   });
   await ensureModeratorAssignment({
     userId: channelModerator.id,
     serverId: departmentServer.id,
     channelId: departmentGeneral.id,
     scopeType: "CHANNEL",
-    assignedBy: hod.id,
+    assignedBy: teachers.hod.id,
   });
+
+  await Promise.all([
+    ensureSocietyMembershipRequest({
+      societyId: society.id,
+      userId: juniorApplicant.id,
+      status: "PENDING",
+    }),
+    ensureSocietyMembershipRequest({
+      societyId: society.id,
+      userId: seStudent.id,
+      status: "APPROVED",
+      reviewedBy: president.id,
+    }),
+  ]);
 
   await Promise.all([
     ensurePost({
       channelId: departmentAnnouncements.id,
-      authorId: hod.id,
+      authorId: teachers.hod.id,
       title: "Midterm timetable released",
       content: "The midterm timetable has been finalized. Please check the updated examination schedule by this evening.",
       priority: "IMPORTANT",
     }),
     ensurePost({
       channelId: programChannel.id,
-      authorId: programDirector.id,
+      authorId: teachers.bscsDirector.id,
       title: "BSCS roadmap for semester 6",
       content: "This week we are sharing the academic roadmap, advisory slots, and internship guidance for BSCS semester 6.",
+    }),
+    ensurePost({
+      channelId: seProgramChannel.id,
+      authorId: teachers.bsseDirector.id,
+      title: "BSSE design review calendar",
+      content: "The design review calendar for BSSE project teams is now available. Teams should confirm mentor slots by Friday.",
+      priority: "IMPORTANT",
     }),
     ensurePost({
       channelId: classAnnouncements.id,
@@ -723,14 +1246,44 @@ async function seedDemoWorkspace() {
       content: "Attendance sheets and lab grouping updates will be posted here before the next class meeting.",
     }),
     ensurePost({
-      channelId: courseChannel.id,
-      authorId: lecturer.id,
+      channelId: bscsClassCourseChannels["CS302-DEMO"].id,
+      authorId: teachers.databaseLecturer.id,
       title: "Database Systems lab plan",
       content: "Lab submissions open on Monday. Please review the normalization exercises before coming to the session.",
     }),
     ensurePost({
+      channelId: bscsClassCourseChannels["CS303-DEMO"].id,
+      authorId: teachers.webLecturer.id,
+      title: "Web Engineering sprint brief",
+      content: "Sprint one starts this week. Bring a user-story draft and a wireframe for review in the next lab.",
+    }),
+    ensurePost({
+      channelId: juniorClassAnnouncements.id,
+      authorId: juniorCr.id,
+      title: "Orientation checklist",
+      content: "Please complete your profile, join your course channels, and review the first-week lab safety briefing.",
+    }),
+    ensurePost({
+      channelId: juniorCourseChannels["CS101-DEMO"].id,
+      authorId: teachers.databaseLecturer.id,
+      title: "Programming lab setup",
+      content: "Install the required compiler and IDE before the first programming lab. Setup help will be available after class.",
+    }),
+    ensurePost({
+      channelId: seClassAnnouncements.id,
+      authorId: seCr.id,
+      title: "Design studio grouping",
+      content: "Design studio teams have been drafted. Check your group and report any conflicts before tomorrow afternoon.",
+    }),
+    ensurePost({
+      channelId: seCourseChannels["SE201-DEMO"].id,
+      authorId: teachers.seLecturer.id,
+      title: "Software Design case study",
+      content: "Read the case study before the next session. We will compare class diagrams and boundary decisions in groups.",
+    }),
+    ensurePost({
       channelId: societyAnnouncements.id,
-      authorId: convenor.id,
+      authorId: teachers.convenor.id,
       title: "IEEE workshop registration open",
       content: "Registrations are now open for the upcoming IEEE technical workshop. The first 50 students will receive priority seats.",
       priority: "IMPORTANT",
@@ -747,9 +1300,12 @@ async function seedDemoWorkspace() {
   console.warn("[SEED] Admin: admin@uniconnect.com /", ADMIN_PASSWORD);
   console.warn("[SEED] HOD: hod.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] Program Director: pd.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] BSSE Program Director: pd.se.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] Lecturer: lecturer.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] Convenor: convenor.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] CR: cr.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] Junior CR: cr.junior.demo@uniconnect.com /", DEMO_PASSWORD);
+  console.warn("[SEED] BSSE CR: cr.se.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] President: president.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] Student: student.demo@uniconnect.com /", DEMO_PASSWORD);
   console.warn("[SEED] Server Moderator: server.mod.demo@uniconnect.com /", DEMO_PASSWORD);
@@ -757,21 +1313,20 @@ async function seedDemoWorkspace() {
 
   return {
     admin,
-    hod,
-    programDirector,
-    lecturer,
-    convenor,
-    serverModerator,
+    ...teachers,
     cr,
+    juniorCr,
+    seCr,
     president,
     student,
     channelModerator,
     departmentServer,
     classServer,
+    juniorClassServer,
+    seClassServer,
     societyServer,
     departmentAnnouncements,
     departmentGeneral,
-    courseChannel,
     societyAnnouncements,
   };
 }

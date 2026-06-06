@@ -127,7 +127,7 @@ async function seedDesignations(pool: Pool) {
   );
 }
 
-async function seedModule3Permissions(pool: Pool) {
+async function seedServerChannelPermissions(pool: Pool) {
   await pool.query(
     `
       INSERT INTO roles (name, scope_type)
@@ -157,12 +157,12 @@ async function seedModule3Permissions(pool: Pool) {
   );
 }
 
-async function seedModule3Data(pool: Pool) {
+async function seedServerChannelData(pool: Pool) {
   const managerUserId = await findUserIdByEmail(pool, e2eUsers.moduleManager.email);
   const viewerUserId = await findUserIdByEmail(pool, e2eUsers.moduleViewer.email);
 
   if (!managerUserId || !viewerUserId) {
-    throw new Error('Module 3 E2E users were not created before seeding runtime data.');
+    throw new Error('Server-channel E2E users were not created before seeding runtime data.');
   }
 
   const serverResult = await pool.query<{ id: number }>(
@@ -173,15 +173,15 @@ async function seedModule3Data(pool: Pool) {
     `,
     [
       'Engineering Faculty Hub',
-      'Module 3 fixture server for channel-management and member-list coverage.',
+      'Server-channel fixture server for channel-management and member-list coverage.',
       'Department',
       managerUserId,
     ],
   );
-  const module3ServerId = serverResult.rows[0]?.id;
+  const serverChannelServerId = serverResult.rows[0]?.id;
 
-  if (!module3ServerId) {
-    throw new Error('Module 3 fixture server could not be created.');
+  if (!serverChannelServerId) {
+    throw new Error('Server-channel fixture server could not be created.');
   }
 
   await pool.query(
@@ -198,12 +198,12 @@ async function seedModule3Data(pool: Pool) {
       VALUES ($1, $2, $3, $4)
       RETURNING id
     `,
-    ['E2E Engineering Department', 'E2E-ENG', managerUserId, module3ServerId],
+    ['E2E Engineering Department', 'E2E-ENG', managerUserId, serverChannelServerId],
   );
   const departmentId = departmentResult.rows[0]?.id;
 
   if (!departmentId) {
-    throw new Error('Module 3 fixture department could not be created.');
+    throw new Error('Server-channel fixture department could not be created.');
   }
 
   await pool.query(
@@ -222,7 +222,7 @@ async function seedModule3Data(pool: Pool) {
         ($1, $3, false),
         ($2, $3, false)
     `,
-    [managerUserId, viewerUserId, module3ServerId],
+    [managerUserId, viewerUserId, serverChannelServerId],
   );
 
   const extraMembersResult = await pool.query<{ id: number }>(
@@ -259,7 +259,7 @@ async function seedModule3Data(pool: Pool) {
   const extraMemberIds = extraMembersResult.rows.map((row) => row.id);
 
   if (extraMemberIds.length === 0) {
-    throw new Error('Module 3 fixture members could not be created.');
+    throw new Error('Server-channel fixture members could not be created.');
   }
 
   await pool.query(
@@ -268,7 +268,7 @@ async function seedModule3Data(pool: Pool) {
       SELECT member_id, $2, false
       FROM unnest($1::int[]) AS member_id
     `,
-    [extraMemberIds, module3ServerId],
+    [extraMemberIds, serverChannelServerId],
   );
 
   await pool.query(
@@ -280,14 +280,14 @@ async function seedModule3Data(pool: Pool) {
         ($1, $11, $12, $9::channel_type, false, $6, NOW() - INTERVAL '5 minutes')
     `,
     [
-      module3ServerId,
+      serverChannelServerId,
       'announcements',
-      'Default announcement channel for Module 3 fixture server.',
+      'Default announcement channel for Server-channel fixture server.',
       'announcement',
       true,
       managerUserId,
       'general',
-      'General discussion for Module 3 runtime coverage.',
+      'General discussion for server-channel runtime coverage.',
       'general',
       true,
       'project-lab',
@@ -523,7 +523,7 @@ async function findChannelIdByServerAndName(pool: Pool, serverId: number, name: 
   return result.rows[0]?.id ?? null;
 }
 
-async function seedModule4Data(pool: Pool) {
+async function seedPostAnnouncementData(pool: Pool) {
   const managerUserId = await findUserIdByEmail(pool, e2eUsers.moduleManager.email);
   const serverResult = await pool.query<{ id: number }>(
     'SELECT id FROM servers WHERE name = $1 LIMIT 1',
@@ -532,13 +532,13 @@ async function seedModule4Data(pool: Pool) {
   const serverId = serverResult.rows[0]?.id ?? null;
 
   if (!managerUserId || !serverId) {
-    throw new Error('Module 4 E2E prerequisites were not created before seeding post data.');
+    throw new Error('Post announcement E2E prerequisites were not created before seeding post data.');
   }
 
   const announcementChannelId = await findChannelIdByServerAndName(pool, serverId, 'announcements');
 
   if (!announcementChannelId) {
-    throw new Error('Module 4 E2E announcement channel could not be found.');
+    throw new Error('Post announcement E2E announcement channel could not be found.');
   }
 
   await pool.query(
@@ -557,8 +557,8 @@ async function seedModule4Data(pool: Pool) {
     `,
     [
       serverId,
-      'module4-locked',
-      'Locked Module 4 fixture channel for publishing-affordance coverage.',
+      'post-flow-locked',
+      'Locked Post announcement fixture channel for publishing-affordance coverage.',
       managerUserId,
     ],
   );
@@ -584,11 +584,11 @@ async function seedModule4Data(pool: Pool) {
     [
       managerUserId,
       announcementChannelId,
-      'Module 4 Pinned Safety Bulletin',
-      '<p>Sanitized pinned content for Module 4 detail reading.</p>',
-      'Module 4 Important Date Filter',
+      'Pinned Safety Bulletin',
+      '<p>Sanitized pinned content for post detail reading.</p>',
+      'Important Date Filter',
       '<p>Important content for priority and date filtering.</p>',
-      'Module 4 Expired Edit Window',
+      'Expired Edit Window',
       '<p>This post is old enough that edit controls should be hidden.</p>',
     ],
   );
@@ -603,12 +603,12 @@ async function findUserIdByEmail(pool: Pool, email: string) {
   return result.rows[0]?.id ?? null;
 }
 
-async function seedModule2Data(pool: Pool) {
+async function seedShellData(pool: Pool) {
   const shellUserId = await findUserIdByEmail(pool, e2eUsers.moduleShell.email);
   const notificationUserId = await findUserIdByEmail(pool, e2eUsers.moduleNotifications.email);
 
   if (!shellUserId || !notificationUserId) {
-    throw new Error('Module 2 E2E users were not created before seeding runtime data.');
+    throw new Error('Shell E2E users were not created before seeding runtime data.');
   }
 
   const shellServerResult = await pool.query<{ id: number }>(
@@ -642,7 +642,7 @@ async function seedModule2Data(pool: Pool) {
   const notificationServerId = notificationServerResult.rows[0]?.id;
 
   if (!shellServerId || !notificationServerId) {
-    throw new Error('Module 2 E2E servers could not be created.');
+    throw new Error('Shell E2E servers could not be created.');
   }
 
   await pool.query(
@@ -731,7 +731,7 @@ async function seedModule2Data(pool: Pool) {
   const notificationChannelId = notificationChannelResult.rows[0]?.id;
 
   if (!shellAnnouncementChannelId || !shellGeneralChannelId || !notificationChannelId) {
-    throw new Error('Module 2 E2E channels could not be created.');
+    throw new Error('Shell E2E channels could not be created.');
   }
 
   await pool.query(
@@ -745,7 +745,7 @@ async function seedModule2Data(pool: Pool) {
     [
       shellUserId,
       shellAnnouncementChannelId,
-      'Module 2 Runtime Update',
+      'Runtime Update',
       'This post confirms the search-aware feed preview is wired for runtime validation.',
       'normal',
       'Searchable Architecture Notes',
@@ -773,7 +773,7 @@ async function seedModule2Data(pool: Pool) {
   const notificationPostId = notificationPostResult.rows[0]?.id;
 
   if (!notificationPostId) {
-    throw new Error('Module 2 E2E notification post could not be created.');
+    throw new Error('Shell E2E notification post could not be created.');
   }
 
   await pool.query(
@@ -844,7 +844,7 @@ async function createAcademicClass(
   return classRecord;
 }
 
-async function seedModule2AcademicHardeningData(pool: Pool) {
+async function seedAcademicWorkflowData(pool: Pool) {
   const hodId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicHod.email);
   const pdId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicPd.email);
   const oldTeacherId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicOldTeacher.email);
@@ -1132,12 +1132,12 @@ export default async function globalSetup() {
       await createUser(pool, user);
     }
 
-    await seedModule3Permissions(pool);
-    await seedModule2Data(pool);
-    await seedModule2AcademicHardeningData(pool);
-    await seedModule3Data(pool);
+    await seedServerChannelPermissions(pool);
+    await seedShellData(pool);
+    await seedAcademicWorkflowData(pool);
+    await seedServerChannelData(pool);
     await seedSocietyHardeningData(pool);
-    await seedModule4Data(pool);
+    await seedPostAnnouncementData(pool);
   } finally {
     await pool.end();
   }

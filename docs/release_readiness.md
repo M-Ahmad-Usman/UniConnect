@@ -48,6 +48,7 @@ Seed data should support manual validation for:
 
 ## Delegated Workflow Checklist
 Confirm these workflows are reachable without relying only on admin routes:
+- Program list and curriculum management under `/academics/programs`.
 - HOD/PD class workflows under `/academics/classes`.
 - Curriculum view under `/academics/programs/:id/curriculum`.
 - Society browsing and management under `/societies`.
@@ -69,7 +70,7 @@ Run sequentially:
 ```bash
 cd server
 timeout 120 npm run build
-timeout 120 npm test
+timeout 120 npm run test:coverage
 ```
 
 ```bash
@@ -77,6 +78,7 @@ cd client
 timeout 120 npm run type-check
 timeout 120 npm run lint
 timeout 120 npm run test
+timeout 120 npm run test:coverage
 timeout 120 npm run build
 timeout 300 npx playwright test
 ```

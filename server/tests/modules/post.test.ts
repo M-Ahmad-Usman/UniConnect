@@ -42,7 +42,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 9 - Posts & Announcements", () => {
+describe("Posts and announcements", () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // POST /api/channels/:id/posts
   // ═══════════════════════════════════════════════════════════════════════════

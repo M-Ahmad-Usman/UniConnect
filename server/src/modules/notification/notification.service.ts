@@ -183,56 +183,6 @@ function toPublicPreference<T extends {
 }
 
 /**
- * Get the list of user IDs who are subscribed to receive notifications
- * for a given channel in a server. Uses implicit subscription model:
- * - No preference record = subscribed (default)
- * - Only users with explicit isSubscribed=false are excluded
- * - Server-level unsubscribe suppresses all channel notifications
- */
-async function getSubscribedMemberIds(
-  serverId: number,
-  channelId: number,
-  excludeUserId: number,
-): Promise<number[]> {
-  // Get all server members except the excluded user (post author)
-  const members = await prisma.serverMembership.findMany({
-    where: {
-      serverId,
-      userId: { not: excludeUserId },
-      user: {
-        status: "ACTIVE",
-        isDeleted: false,
-      },
-    },
-    select: { userId: true },
-  });
-
-  if (members.length === 0) return [];
-
-  const memberIds = members.map((m) => m.userId);
-
-  // Find users who have explicitly unsubscribed (server-level or channel-level)
-  const unsubscribed = await prisma.notificationPreference.findMany({
-    where: {
-      userId: { in: memberIds },
-      notificationType: "NEW_POST",
-      isSubscribed: false,
-      OR: [
-        // Server-level unsubscribe
-        { scopeType: "SERVER", serverId },
-        // Channel-level unsubscribe
-        { scopeType: "CHANNEL", serverId, channelId },
-      ],
-    },
-    select: { userId: true },
-  });
-
-  const unsubscribedIds = new Set(unsubscribed.map((u) => u.userId));
-
-  return memberIds.filter((id) => !unsubscribedIds.has(id));
-}
-
-/**
  * Emit real-time notification event to a user via Socket.IO.
  */
 function emitToUser(userId: number, event: string, data: unknown): void {
@@ -305,57 +255,54 @@ export async function createPostNotifications(
 
   if (!channel) return;
 
-  const subscribedIds = await getSubscribedMemberIds(
-    serverId,
-    channelId,
-    authorId,
-  );
-
-  if (subscribedIds.length === 0) return;
-
-  // Build notification data
   const isUrgent = priority === "URGENT";
   const notificationTitle = isUrgent ? `🚨 [URGENT] ${title}` : title;
   const message = isUrgent
     ? `Urgent post in ${channel.server.name} / #${channel.name} requires your attention`
     : `New post in ${channel.server.name} / #${channel.name}`;
+  const notifications = await prisma.$queryRaw<Array<{ id: number }>>`
+    INSERT INTO "notifications" (
+      "user_id",
+      "post_id",
+      "type",
+      "title",
+      "message"
+    )
+    SELECT
+      membership."user_id",
+      ${postId},
+      'new_post'::"notification_type",
+      ${notificationTitle},
+      ${message}
+    FROM "server_memberships" AS membership
+    INNER JOIN "users" AS member ON member."id" = membership."user_id"
+    WHERE membership."server_id" = ${serverId}
+      AND membership."user_id" <> ${authorId}
+      AND member."status" = 'active'::"user_status"
+      AND member."is_deleted" = FALSE
+      AND NOT EXISTS (
+        SELECT 1
+        FROM "notification_preferences" AS preference
+        WHERE preference."user_id" = membership."user_id"
+          AND preference."notification_type" = 'new_post'::"notification_type"
+          AND preference."is_subscribed" = FALSE
+          AND (
+            (
+              preference."scope_type" = 'server'::"notification_scope_type"
+              AND preference."server_id" = ${serverId}
+              AND preference."channel_id" IS NULL
+            )
+            OR (
+              preference."scope_type" = 'channel'::"notification_scope_type"
+              AND preference."server_id" = ${serverId}
+              AND preference."channel_id" = ${channelId}
+            )
+          )
+      )
+    RETURNING "id"
+  `;
 
-  // Bulk create notifications
-  await prisma.notification.createMany({
-    data: subscribedIds.map((userId) => ({
-      userId,
-      postId,
-      type: "NEW_POST" as const,
-      title: notificationTitle,
-      message,
-    })),
-  });
-
-  // Compute unread counts for all recipients in a single query (avoids N+1)
-  const [unreadCounts, notifications] = await Promise.all([
-    prisma.notification.groupBy({
-      by: ["userId"],
-      where: { userId: { in: subscribedIds }, readAt: null },
-      _count: { _all: true },
-    }),
-    prisma.notification.findMany({
-      where: { postId, userId: { in: subscribedIds } },
-      select: { ...notificationListSelect, userId: true },
-    }),
-  ]);
-
-  const unreadCountMap = new Map(
-    unreadCounts.map((r) => [r.userId, r._count._all]),
-  );
-
-  // Emit real-time events using pre-computed counts — no per-user DB queries
-  for (const notification of notifications) {
-    const { userId, ...notificationData } = notification;
-    emitToUser(userId, "notification:new", toPublicNotification(notificationData));
-    emitToUser(notification.userId, "notification:unread-count", {
-      count: unreadCountMap.get(notification.userId) ?? 0,
-    });
-  }
+  await emitCreatedNotifications(notifications.map((notification) => notification.id));
 }
 
 export async function emitPostNotificationsDeleted(

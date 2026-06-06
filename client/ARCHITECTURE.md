@@ -540,10 +540,12 @@ export const router = createBrowserRouter([
                     path: 'academics',
                     element: <AcademicLayout />,
                     children: [
-                      { index: true, element: <Navigate to={ROUTES.ACADEMICS_CLASSES} replace /> },
+                      { index: true, element: <Navigate to={ROUTES.ACADEMICS_PROGRAMS} replace /> },
+                      { path: 'programs', element: <ProgramListPage /> },
+                      { path: 'programs/:programId/curriculum', element: <CurriculumPage /> },
                       { path: 'classes', element: <ClassListPage /> },
                       { path: 'classes/:classId', element: <ClassDetailPage /> },
-                      { path: 'programs/:programId/curriculum', element: <CurriculumPage /> },
+                      { path: 'courses', element: <CourseListPage /> },
                     ],
                   },
                 ],
@@ -878,7 +880,10 @@ Permission-sensitive UI now prefers backend-provided grouped capability payloads
 
 - `/api/permissions/me` drives global navigation and workspace entry.
 - `/academics/*` is guarded by `global.canAccessAcademicWorkspace`; legacy admin class
-  and curriculum routes redirect into the academic workspace.
+  and program/curriculum routes redirect into the academic workspace.
+- `/academics/programs` is the primary program catalog and curriculum entry point.
+  Admins see catalog create/edit actions; HOD/PD users see only their scoped
+  curriculum actions.
 - `GET /api/classes/:id` returns `permissions` for class-detail actions.
 - `GET /api/societies/:publicId` returns `viewer` and `permissions` for society-detail tabs, queries, and actions.
 - Local role helpers remain only for lightweight optimistic rendering and legacy channel affordances.

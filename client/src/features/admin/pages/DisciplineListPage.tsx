@@ -41,6 +41,7 @@ export function DisciplineListPage() {
         <DataState
           isLoading={disciplinesQuery.isLoading}
           isError={disciplinesQuery.isError}
+          error={disciplinesQuery.error}
           onRetry={() => void disciplinesQuery.refetch()}
           empty={disciplines.length === 0}
         >

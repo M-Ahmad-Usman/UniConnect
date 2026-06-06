@@ -85,7 +85,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 5 - Society Lifecycle and Notifications", () => {
+describe("Society lifecycle and notifications", () => {
   it("suspends and reactivates a society while preserving pending requests and freezing writes", async () => {
     const fixture = await createFixture();
     await addServerMembership(fixture.admin.id, fixture.server.id);

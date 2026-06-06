@@ -215,7 +215,7 @@ export async function loginAs(
   return (Array.isArray(cookies) ? cookies : cookies ? [cookies] : []) as string[];
 }
 
-// ─── Module 2 Helpers ──────────────────────────────────────────────────────
+// ─── User and academic fixture helpers ──────────────────────────────────────────────────────
 
 export async function createDiscipline(overrides?: { name?: string }) {
   return prisma.discipline.create({
@@ -401,7 +401,7 @@ export async function createStudentWithInfo(
   return student;
 }
 
-// ─── Module 4 Helpers ──────────────────────────────────────────────────────
+// ─── Course fixture helpers ──────────────────────────────────────────────────────
 
 export async function createCourse(
   departmentId: number,
@@ -417,7 +417,7 @@ export async function createCourse(
   });
 }
 
-// ─── Module 6 Helpers ──────────────────────────────────────────────────────
+// ─── Society fixture helpers ──────────────────────────────────────────────────────
 
 export async function createSociety(
   departmentId: number,
@@ -494,7 +494,7 @@ export function generateCSV(rows: Record<string, string>[]): Buffer {
   return Buffer.from(lines.join("\n"), "utf-8");
 }
 
-// ─── Module 7 Helpers ──────────────────────────────────────────────────────
+// ─── Role fixture helpers ──────────────────────────────────────────────────────
 
 export async function createChannel(
   serverId: number,
@@ -580,7 +580,7 @@ export async function createPlatformRoleAssignment(input: {
   });
 }
 
-// ─── Module 9 Helpers ──────────────────────────────────────────────────────
+// ─── Post fixture helpers ──────────────────────────────────────────────────────
 
 export async function createPost(
   channelId: number,
@@ -628,7 +628,7 @@ export async function createPostAttachment(
   });
 }
 
-// ─── Module 10 Helpers ─────────────────────────────────────────────────────
+// ─── Notification fixture helpers ─────────────────────────────────────────────────────
 
 export async function createNotification(
   userId: number,
@@ -676,7 +676,7 @@ export async function createNotificationPreference(
   });
 }
 
-// ─── Module 11 Helpers ─────────────────────────────────────────────────────
+// ─── Curriculum fixture helpers ─────────────────────────────────────────────────────
 
 export async function createTeachesRecord(
   teacherId: number,

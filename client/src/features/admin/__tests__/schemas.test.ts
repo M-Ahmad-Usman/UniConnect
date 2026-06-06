@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Gender, UserType } from '@/types';
 import {
   createUserSchema,
+  copyCurriculumBatchSchema,
+  curriculumSchema,
   globalProgramSchema,
   replaceTeacherSchema,
   teacherAssignmentSchema,
@@ -19,7 +21,7 @@ const baseInput = {
 const publicId = '018f47a2-5d6b-7c8d-9e0f-123456789abc';
 
 describe('createUserSchema', () => {
-  it('accepts admin users without academic fields', () => {
+  it('rejects admin users because admins are created outside the UI/API flow', () => {
     const result = createUserSchema.safeParse({
       ...baseInput,
       userType: UserType.ADMIN,
@@ -30,7 +32,7 @@ describe('createUserSchema', () => {
       designation: '',
     });
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it('accepts student users with NTU roll numbers and coerces ids', () => {
@@ -106,6 +108,41 @@ describe('teacherAssignmentSchema', () => {
 
   it('rejects empty selections', () => {
     expect(teacherAssignmentSchema.safeParse({ courseId: '', teacherPublicId: '' }).success).toBe(false);
+  });
+});
+
+describe('curriculum schemas', () => {
+  it('coerces multiple selected curriculum courses', () => {
+    expect(
+      curriculumSchema.parse({
+        courseIds: ['12', '13'],
+        semesterNumber: '2',
+        batchYear: '2026',
+      }),
+    ).toEqual({
+      courseIds: [12, 13],
+      semesterNumber: 2,
+      batchYear: 2026,
+    });
+  });
+
+  it('rejects empty course selections', () => {
+    expect(
+      curriculumSchema.safeParse({
+        courseIds: [],
+        semesterNumber: '1',
+        batchYear: '2026',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('requires different source and target batches for copy', () => {
+    expect(
+      copyCurriculumBatchSchema.safeParse({
+        sourceBatchYear: '2026',
+        targetBatchYear: '2026',
+      }).success,
+    ).toBe(false);
   });
 });
 

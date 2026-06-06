@@ -19,6 +19,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { getApiErrorMessage } from '@/features/auth/utils';
 import { formatDate } from '@/features/profile/utils';
+import { formatClassLabel } from '@/lib/academic-labels';
 import { useAuthStore } from '@/stores/auth.store';
 import { UserStatus, type DepartmentListItem } from '@/types';
 import {
@@ -208,7 +209,7 @@ export function UserDetailDialog({
                 {user.studentInfo ? (
                   <>
                     <DetailField label="Roll number" value={user.studentInfo.rollNumber} />
-                    <DetailField label="Class public ID" value={user.studentInfo.classPublicId} />
+                    <DetailField label="Class" value={formatClassLabel(user.studentInfo.class)} />
                   </>
                 ) : null}
                 {user.teacherInfo ? (

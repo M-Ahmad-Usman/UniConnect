@@ -5,6 +5,28 @@
 - Status: Complete
 - Plan reference: `docs/full_system_hardening_plan.md`
 
+## Post-Plan Audit Remediation
+
+- Completed: 2026-06-05
+- Canonical details: `docs/release_log.md` entry
+  `2026-06-05 - Production Readiness Audit Remediation`
+- Scope: delegated program/curriculum UX and permissions, strict
+  curriculum/class lifecycle coupling, curriculum bulk/copy workflows,
+  inline-first query error states, set-based notification fanout, HTTP timeout
+  cleanup, test naming cleanup, backend/frontend coverage gates, frontend
+  dependency audit cleanup, and documentation refresh.
+- Verification: backend build, active server `tsconfig.json` no-emit check,
+  backend coverage suite `23/23` and `509/509`, frontend lint/type-check/Vitest
+  `136/136`/coverage/build, frontend `npm audit` with `0` vulnerabilities, and
+  Playwright E2E `36/36`.
+- Later curriculum/class lifecycle verification: server build, focused backend
+  curriculum/class suites `93/93`, frontend type-check, frontend lint, frontend
+  Vitest `139/139`, frontend production build, and `git diff --check`.
+- Remaining follow-ups: Prisma adapter/`pg` transaction deprecation warning,
+  backend NodeNext TypeScript hardening if the compiler config is changed,
+  deliberate structured logging design, and shared Redis-backed infrastructure
+  before horizontal scaling.
+
 ## Status Legend
 - Not started: no implementation work has begun.
 - In progress: implementation has started.

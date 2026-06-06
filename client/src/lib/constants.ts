@@ -32,6 +32,7 @@ export const ROUTES = {
   ACADEMICS_CLASSES: '/academics/classes',
   ACADEMICS_CLASS: (classPublicId: string) => `/academics/classes/${classPublicId}`,
   ACADEMICS_COURSES: '/academics/courses',
+  ACADEMICS_PROGRAMS: '/academics/programs',
   ACADEMICS_PROGRAM_CURRICULUM: (programId: number | string) =>
     `/academics/programs/${programId}/curriculum`,
   PROFILE: '/profile',
@@ -43,9 +44,6 @@ export const ROUTES = {
   ADMIN_USERS_IMPORT: '/admin/users/import',
   ADMIN_DEPARTMENTS: '/admin/departments',
   ADMIN_DEPARTMENT: (departmentId: number | string) => `/admin/departments/${departmentId}`,
-  ADMIN_PROGRAMS: '/admin/programs',
-  ADMIN_PROGRAM_CURRICULUM: (programId: number | string) =>
-    `/admin/programs/${programId}/curriculum`,
   ADMIN_DISCIPLINES: '/admin/disciplines',
   ADMIN_CLASSES: '/admin/classes',
   ADMIN_CLASS: (classPublicId: string) => `/admin/classes/${classPublicId}`,

@@ -24,7 +24,7 @@ beforeEach(async () => {
   await resetDB();
 });
 
-describe("Module 1 - Schema Foundation", () => {
+describe("Schema foundation", () => {
   it("generates public UUIDv7 IDs and default lifecycle state for core entities", async () => {
     const admin = await createAdmin({ email: "schema-admin@test.com" });
     const department = await createDepartment({ code: "SCF-1", creatorId: admin.id });

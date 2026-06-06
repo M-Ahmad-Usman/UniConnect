@@ -1,6 +1,8 @@
 import type { Gender, UserStatus, UserType } from './enums';
 import type { ScopedRoleAssignment } from './role.types';
 
+export type CreatableUserType = Exclude<UserType, 'ADMIN'>;
+
 // ─── User Profile (from GET /users/me) ──────────────────────────────────────
 
 export interface UserProfile {
@@ -25,6 +27,9 @@ export interface StudentInfo {
   rollNumber: string;
   classPublicId: string;
   class: {
+    publicId: string;
+    currentSemester: number;
+    section: string;
     program: {
       code: string;
     };
@@ -69,7 +74,16 @@ export interface UserDetail {
   deletedByUser: { publicId: string; fullName: string; email: string } | null;
   mustChangePassword: boolean;
   createdAt: string;
-  studentInfo: { classPublicId: string; rollNumber: string } | null;
+  studentInfo: {
+    classPublicId: string;
+    rollNumber: string;
+    class: {
+      publicId: string;
+      currentSemester: number;
+      section: string;
+      program: { code: string };
+    };
+  } | null;
   teacherInfo: { designation: string } | null;
 }
 
@@ -92,7 +106,7 @@ export interface CreateUserRequest {
   email: string;
   phone: string;
   gender: Gender;
-  userType: UserType;
+  userType: CreatableUserType;
   departmentId?: number;
   classPublicId?: string;
   rollNumber?: string;
@@ -105,7 +119,7 @@ export interface CreateUserResponse {
   email: string;
   phone: string;
   gender: Gender;
-  userType: UserType;
+  userType: CreatableUserType;
   departmentId: number | null;
   status: UserStatus;
   mustChangePassword: boolean;

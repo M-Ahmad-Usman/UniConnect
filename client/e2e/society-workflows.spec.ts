@@ -4,8 +4,8 @@ import {
   clearSocietyRequestAndMembership,
   ensurePendingSocietyRequest,
   findSocietyByName,
-  module3Fixtures,
-} from './helpers/module3';
+  serverSocietyFixtures,
+} from './helpers/server-society-fixtures';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -15,11 +15,11 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/servers$/);
 }
 
-test.describe('Module 3 society hardening flows', () => {
+test.describe('Society workflows', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('unrelated teacher opens society overview without protected-tab errors', async ({ page }) => {
-    const society = await findSocietyByName(module3Fixtures.societyName);
+    const society = await findSocietyByName(serverSocietyFixtures.societyName);
     expect(society).not.toBeNull();
 
     await signIn(
@@ -29,7 +29,7 @@ test.describe('Module 3 society hardening flows', () => {
     );
     await page.goto(`/societies/${society!.publicId}?tab=members`);
 
-    await expect(page.getByRole('heading', { name: module3Fixtures.societyName })).toBeVisible();
+    await expect(page.getByRole('heading', { name: serverSocietyFixtures.societyName })).toBeVisible();
     await expect(page).toHaveURL(
       new RegExp(`/societies/${society!.publicId}\\?tab=overview&page=1$`),
     );
@@ -38,7 +38,7 @@ test.describe('Module 3 society hardening flows', () => {
   });
 
   test('student non-member can request to join', async ({ page }) => {
-    const society = await findSocietyByName(module3Fixtures.societyName);
+    const society = await findSocietyByName(serverSocietyFixtures.societyName);
     expect(society).not.toBeNull();
 
     await clearSocietyRequestAndMembership(society!.id, e2eUsers.moduleSocietyApplicant.email);
@@ -54,7 +54,7 @@ test.describe('Module 3 society hardening flows', () => {
   });
 
   test('society president can approve a request and see member list update', async ({ page }) => {
-    const society = await findSocietyByName(module3Fixtures.societyName);
+    const society = await findSocietyByName(serverSocietyFixtures.societyName);
     expect(society).not.toBeNull();
 
     await clearSocietyRequestAndMembership(society!.id, e2eUsers.moduleSocietyApplicant.email);

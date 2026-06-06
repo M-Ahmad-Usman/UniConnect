@@ -41,7 +41,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe("Module 8 - Server & Channel Management (Server Endpoints)", () => {
+describe("Server management endpoints", () => {
   // ─── GET /api/servers ────────────────────────────────────────────────
 
   describe("GET /api/servers", () => {

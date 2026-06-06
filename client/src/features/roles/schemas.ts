@@ -7,8 +7,6 @@ export const assignRoleFormSchema = z
       'hod',
       'program_director',
       'cr',
-      'society_president',
-      'society_convenor',
       'server_moderator',
       'channel_moderator',
     ]),

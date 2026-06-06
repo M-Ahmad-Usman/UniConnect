@@ -164,9 +164,11 @@ available.
 
 - `POST /`
   - Body: `{ fullName, email, phone, gender, userType, departmentId?, classPublicId?, rollNumber?, designation? }`
+  - `userType` accepts only `STUDENT` or `TEACHER`. Admin accounts are bootstrap/DB-managed, not created through the application API.
   - Student `rollNumber` uses NTU format such as `22-NTU-CS-1184`.
 - `POST /bulk-import`
   - Multipart field: `file` (CSV)
+  - CSV `userType` accepts only `STUDENT` or `TEACHER`.
 - `GET /me`
   - Returns profile plus scoped current-user roles for UI authorization:
     - `roles: Array<{ role, serverPublicId, channelPublicId?, scopeType, assignmentPublicId?, expiresAt? }>`
@@ -182,6 +184,7 @@ available.
   - `lifecycle`: `live`, `deleted`, or `all`; admin only, teachers always see live users in their HOD department scope
 - `GET /:publicId`
   - Admins can read deleted users; teachers can read live users in their HOD department scope.
+  - Student details include `studentInfo.class.{ publicId, currentSemester, section, program.code }` for display labels such as `BSCS-7-A` without an extra class lookup.
 - `GET /:publicId/deletion-impact`
   - Returns `{ user, canDelete, blockers }` with blocker groups for HOD departments, directed programs, CR classes, live society leadership, and active teaching assignments.
 - `PATCH /:publicId/status`
@@ -218,21 +221,49 @@ available.
 
 ### Programs (`/api/programs`)
 
+- `GET /`
+  - Query: `page?, limit?, departmentId?, departmentIds?, programIds?, disciplineId?, degreeLevelId?, search?`.
+  - `departmentId` is an exact filter. When it is omitted, `departmentIds` and
+    `programIds` are combined as a union for scoped Academics lists.
 - `GET /:id/deletion-impact`
   - Admin only. Returns bounded enrolled-class blockers plus curriculum cleanup
     and program-channel communication impact.
 - `PATCH /:id`
-  - Body: `{ semesters?, code? }`
+  - Body: `{ semesters?, code?, confirmSemesterReduction? }`
+  - Program code and semesters are locked once classes exist.
+  - Before class enrollment, semester reduction deletes future-semester
+    curriculum entries only when `confirmSemesterReduction: true` is supplied.
 - `GET /:id/curriculum`
   - Query: `semesterNumber?, batchYear?`
+  - Returns entries with `isLocked` and `lockedThroughSemester`. Locked entries
+    are for semesters already reached by an existing class in the same
+    program/batch and cannot be edited or removed.
 - `POST /:id/curriculum`
+  - Admin, own-department HOD, or directed-program Program Director.
   - Body: `{ courseId, semesterNumber, batchYear }`
+  - Single-course add returns duplicate conflicts; use bulk add for semester setup.
+- `POST /:id/curriculum/bulk`
+  - Admin, own-department HOD, or directed-program Program Director.
+  - Body: `{ courseIds, semesterNumber, batchYear }`
+  - Adds all non-duplicate courses for that semester. Existing program/batch
+    courses are skipped because a course can appear only once in a degree batch.
+- `POST /:id/curriculum/copy-batch`
+  - Admin, own-department HOD, or directed-program Program Director.
+  - Body: `{ sourceBatchYear, targetBatchYear }`
+  - Source batch must be complete for all program semesters; target duplicates
+    are skipped.
 - `DELETE /:id/curriculum/:curriculumId`
+  - Admin, own-department HOD, or directed-program Program Director.
+  - Blocked for locked semesters and for live class batches when removal would
+    make the batch curriculum incomplete.
 
 ### Classes (`/api/classes`)
 
 - `POST /`
   - Body: `{ programId, currentSemester, academicYear, admissionYear, section }`
+  - Requires a complete curriculum for all semesters of the class admission
+    year. Creates the class server, default channels, and current-semester
+    course channels from the curriculum.
 - `GET /`
   - Query: `page, limit, programId?, departmentId?, semester?, section?, status?`
   - `status` accepts `ACTIVE`, `GRADUATED`, or `ALL`; default is `ACTIVE`.
@@ -263,6 +294,9 @@ available.
 - `DELETE /:publicId/courses/:courseId`
 - `POST /:publicId/semester-progression`
   - Body: `{ teacherAssignments: [{ courseId, teacherPublicId }] }`
+  - Requires teacher assignments for every course in the target-semester
+    curriculum, rejects duplicate/extra assignments, archives previous active
+    course channels, and creates or reactivates target-semester course channels.
 - `POST /:publicId/graduation`
   - Final-semester active classes only; locks class channels and keeps history visible.
 
@@ -280,6 +314,8 @@ available.
 - `PATCH /:id`
   - Body: `{ title?, code?, creditHours? }`
   - Auth: admin only.
+  - Course details are locked after the course is used in curriculum, class
+    teaching assignments, or course channels.
 
 ### Societies (`/api/societies`)
 

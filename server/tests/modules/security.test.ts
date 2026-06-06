@@ -39,7 +39,7 @@ function createOversizedPng(width: number, height: number): Buffer {
   return buffer;
 }
 
-describe("Module 5 security hardening", () => {
+describe("Security hardening", () => {
   describe("CSRF protection", () => {
     const originalEnabled = env.CSRF_ENABLED;
     const originalOrigins = [...csrfTrustedOrigins];

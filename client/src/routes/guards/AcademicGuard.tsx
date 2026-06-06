@@ -1,13 +1,37 @@
 import { Link, Outlet } from 'react-router-dom';
+import { RotateCcw } from 'lucide-react';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ROUTES } from '@/lib/constants';
+import { getApiErrorCopy } from '@/lib/api-error';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
+import { ApiError } from '@/types';
 
 export function AcademicGuard() {
   const permissionsQuery = useMyPermissions();
 
   if (permissionsQuery.isLoading) {
     return <LoadingSpinner fullPage />;
+  }
+
+  if (permissionsQuery.isError) {
+    const copy = getApiErrorCopy(permissionsQuery.error);
+    const requestId =
+      permissionsQuery.error instanceof ApiError ? permissionsQuery.error.requestId : undefined;
+    const description = requestId
+      ? `${copy.message} Request ID: ${requestId}`
+      : copy.message;
+
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <EmptyState
+          icon={RotateCcw}
+          title={copy.title}
+          description={description}
+          action={copy.retryable ? { label: 'Retry', onClick: () => void permissionsQuery.refetch() } : undefined}
+        />
+      </div>
+    );
   }
 
   const canOpenAcademicRoute =

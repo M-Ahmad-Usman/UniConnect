@@ -35,7 +35,7 @@ type CreateUserInput = {
   email: string;
   phone: string;
   gender: "MALE" | "FEMALE";
-  userType: "STUDENT" | "TEACHER" | "ADMIN";
+  userType: "STUDENT" | "TEACHER";
   departmentId?: number;
   classPublicId?: string;
   rollNumber?: string;
@@ -79,7 +79,7 @@ function normalizeCsvRow(row: Record<string, string>): CreateUserInput {
     email: (row.email ?? "").trim(),
     phone: (row.phone ?? "").trim(),
     gender: gender as "MALE" | "FEMALE",
-    userType: userType as "STUDENT" | "TEACHER" | "ADMIN",
+    userType: userType as "STUDENT" | "TEACHER",
     departmentId: row.departmentId ? Number.parseInt(row.departmentId, 10) : undefined,
     classPublicId: row.classPublicId?.trim() || undefined,
     rollNumber: row.rollNumber?.trim() ? row.rollNumber.trim().toUpperCase() : undefined,
@@ -248,6 +248,31 @@ function hasDeletionBlockers(impact: UserDeletionImpact): boolean {
   return Object.values(impact.blockers).some((items) => items.length > 0);
 }
 
+function mapStudentInfo(
+  studentInfo: {
+    rollNumber: string;
+    class: {
+      publicId: string;
+      currentSemester: number;
+      section: string;
+      program: { code: string };
+    };
+  } | null
+) {
+  return studentInfo
+    ? {
+        rollNumber: studentInfo.rollNumber,
+        classPublicId: studentInfo.class.publicId,
+        class: {
+          publicId: studentInfo.class.publicId,
+          currentSemester: studentInfo.class.currentSemester,
+          section: studentInfo.class.section,
+          program: studentInfo.class.program,
+        },
+      }
+    : null;
+}
+
 // ─── Create User ───────────────────────────────────────────────────────────
 
 export async function createUser(input: CreateUserInput, auditContext?: AuditContext) {
@@ -272,7 +297,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
     let classServerId: number | undefined;
     let classDepartmentId: number | undefined;
 
-    if (input.userType !== "ADMIN" && input.departmentId) {
+    if (input.departmentId) {
       const department = await tx.department.findUnique({
         where: { id: input.departmentId },
         select: { id: true, serverId: true },
@@ -313,7 +338,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
         passwordHash,
         gender: input.gender,
         userType: input.userType,
-        departmentId: input.userType === "ADMIN" ? null : (input.departmentId ?? classDepartmentId ?? null),
+        departmentId: input.departmentId ?? classDepartmentId ?? null,
         status: "ACTIVE",
         isDeleted: false,
         mustChangePassword: true,
@@ -492,6 +517,8 @@ export async function getProfile(userId: number) {
           class: {
             select: {
               publicId: true,
+              currentSemester: true,
+              section: true,
               program: {
                 select: {
                   code: true,
@@ -516,13 +543,7 @@ export async function getProfile(userId: number) {
   const roles = await getPublicUserRoles(userId);
 
   const publicUser = mapLifecycleUser(user);
-  const studentInfo = publicUser.studentInfo
-    ? {
-        rollNumber: publicUser.studentInfo.rollNumber,
-        classPublicId: publicUser.studentInfo.class.publicId,
-        class: { program: publicUser.studentInfo.class.program },
-      }
-    : null;
+  const studentInfo = mapStudentInfo(publicUser.studentInfo);
 
   return {
     ...publicUser,
@@ -665,7 +686,14 @@ export async function getUserByPublicId(userPublicId: string, requestingUser: Au
     studentInfo: {
       select: {
         rollNumber: true,
-        class: { select: { publicId: true } },
+        class: {
+          select: {
+            publicId: true,
+            currentSemester: true,
+            section: true,
+            program: { select: { code: true } },
+          },
+        },
       },
     },
     teacherInfo: {
@@ -695,12 +723,7 @@ export async function getUserByPublicId(userPublicId: string, requestingUser: Au
     const publicUser = mapLifecycleUser(user);
     return {
       ...publicUser,
-      studentInfo: publicUser.studentInfo
-        ? {
-            classPublicId: publicUser.studentInfo.class.publicId,
-            rollNumber: publicUser.studentInfo.rollNumber,
-          }
-        : null,
+      studentInfo: mapStudentInfo(publicUser.studentInfo),
     };
   }
 
@@ -725,12 +748,7 @@ export async function getUserByPublicId(userPublicId: string, requestingUser: Au
   const publicUser = mapLifecycleUser(user);
   return {
     ...publicUser,
-    studentInfo: publicUser.studentInfo
-      ? {
-          classPublicId: publicUser.studentInfo.class.publicId,
-          rollNumber: publicUser.studentInfo.rollNumber,
-        }
-      : null,
+    studentInfo: mapStudentInfo(publicUser.studentInfo),
   };
 }
 

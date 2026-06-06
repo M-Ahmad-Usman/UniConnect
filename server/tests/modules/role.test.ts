@@ -53,7 +53,7 @@ beforeAll(async () => {
   await seedRolesAndPermissions();
 });
 
-describe("Module 4 - Platform RBAC", () => {
+describe("Platform RBAC", () => {
   it("uses canonical owner endpoints for academic assignments", async () => {
     const suffix = uid();
     const { cookies } = await createAdminSession();

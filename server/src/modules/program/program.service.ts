@@ -1,23 +1,30 @@
 import { prisma } from "../../config/prisma.js";
-import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../shared/errors/index.js";
+import { ApiErrorCode, ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../shared/errors/index.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import type { Prisma } from "../../generated/prisma/client.js";
-import { lockProgramForHodOrAdmin } from "../../shared/lifecycle/academic.js";
+import { lockProgramForHodPdOrAdmin } from "../../shared/lifecycle/academic.js";
 import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
+import {
+  assertCurriculumSemesterEditable,
+  assertFullCurriculumExists,
+} from "../../shared/curriculum/policy.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 type UpdateProgramInput = {
   semesters?: number;
   code?: string;
+  confirmSemesterReduction?: boolean;
 };
 
 type ListProgramsQuery = {
   page?: unknown;
   limit?: unknown;
   departmentId?: number;
+  departmentIds?: number[];
   disciplineId?: number;
   degreeLevelId?: number;
+  programIds?: number[];
   search?: string;
 };
 
@@ -25,6 +32,17 @@ type AddCurriculumInput = {
   courseId: number;
   semesterNumber: number;
   batchYear: number;
+};
+
+type BulkAddCurriculumInput = {
+  courseIds: number[];
+  semesterNumber: number;
+  batchYear: number;
+};
+
+type CopyCurriculumBatchInput = {
+  sourceBatchYear: number;
+  targetBatchYear: number;
 };
 
 type GetCurriculumFilters = {
@@ -136,24 +154,87 @@ async function assertHodOrAdmin(
   }
 }
 
+async function assertCoursesBelongToProgramDepartment(
+  tx: Prisma.TransactionClient,
+  courseIds: number[],
+  departmentId: number,
+) {
+  const uniqueCourseIds = [...new Set(courseIds)];
+  const courses = await tx.course.findMany({
+    where: { id: { in: uniqueCourseIds } },
+    select: { id: true, departmentId: true },
+  });
+  const foundIds = new Set(courses.map((course) => course.id));
+  const missingIds = uniqueCourseIds.filter((courseId) => !foundIds.has(courseId));
+  if (missingIds.length > 0) {
+    throw new NotFoundError(`Course(s) not found: ${missingIds.join(", ")}`);
+  }
+  const foreignIds = courses
+    .filter((course) => course.departmentId !== departmentId)
+    .map((course) => course.id);
+  if (foreignIds.length > 0) {
+    throw new ForbiddenError("All courses must belong to the same department as the program");
+  }
+}
+
+async function assertRemovalKeepsLiveBatchComplete(
+  tx: Prisma.TransactionClient,
+  entry: { id: number; programId: number; semesterNumber: number; batchYear: number },
+) {
+  const classCount = await tx.class.count({
+    where: { programId: entry.programId, admissionYear: entry.batchYear },
+  });
+  if (classCount === 0) return;
+
+  const remainingInSemester = await tx.programCurriculum.count({
+    where: {
+      programId: entry.programId,
+      batchYear: entry.batchYear,
+      semesterNumber: entry.semesterNumber,
+      id: { not: entry.id },
+    },
+  });
+  if (remainingInSemester === 0) {
+    throw new ConflictError(
+      `Semester ${entry.semesterNumber} must keep at least one curriculum course for existing batch ${entry.batchYear} classes`,
+    );
+  }
+}
+
 // ─── Service Functions ─────────────────────────────────────────────────────
 
 export async function listPrograms(query: ListProgramsQuery) {
   const { page, limit, skip, take } = parsePagination(query);
 
-  const where: Prisma.ProgramWhereInput = {};
-  if (query.departmentId !== undefined) where.departmentId = query.departmentId;
-  if (query.disciplineId !== undefined) where.disciplineId = query.disciplineId;
-  if (query.degreeLevelId !== undefined) where.degreeLevelId = query.degreeLevelId;
+  const andFilters: Prisma.ProgramWhereInput[] = [];
+  if (query.departmentId !== undefined) {
+    andFilters.push({ departmentId: query.departmentId });
+  } else {
+    const scopeFilters: Prisma.ProgramWhereInput[] = [];
+    if (query.departmentIds !== undefined) {
+      scopeFilters.push({ departmentId: { in: query.departmentIds } });
+    }
+    if (query.programIds !== undefined) {
+      scopeFilters.push({ id: { in: query.programIds } });
+    }
+    if (scopeFilters.length === 1) {
+      andFilters.push(scopeFilters[0]!);
+    } else if (scopeFilters.length > 1) {
+      andFilters.push({ OR: scopeFilters });
+    }
+  }
+  if (query.disciplineId !== undefined) andFilters.push({ disciplineId: query.disciplineId });
+  if (query.degreeLevelId !== undefined) andFilters.push({ degreeLevelId: query.degreeLevelId });
   if (query.search) {
-    where.OR = [
+    andFilters.push({ OR: [
       { code: { contains: query.search, mode: "insensitive" } },
       { department: { name: { contains: query.search, mode: "insensitive" } } },
       { department: { code: { contains: query.search, mode: "insensitive" } } },
       { discipline: { name: { contains: query.search, mode: "insensitive" } } },
       { degreeLevel: { level: { contains: query.search, mode: "insensitive" } } },
-    ];
+    ] });
   }
+  const where: Prisma.ProgramWhereInput = andFilters.length > 0 ? { AND: andFilters } : {};
 
   const [programs, total] = await prisma.$transaction([
     prisma.program.findMany({
@@ -278,23 +359,73 @@ export async function getProgramDeletionImpact(programId: number) {
 }
 
 export async function updateProgram(id: number, data: UpdateProgramInput) {
+  const { confirmSemesterReduction = false, ...programData } = data;
   const program = await prisma.program.findUnique({
     where: { id },
-    select: { id: true, code: true, departmentId: true },
+    select: { id: true, code: true, semesters: true, departmentId: true },
   });
 
   if (!program) {
     throw new NotFoundError("Program not found");
   }
 
+  if (programData.code && programData.code !== program.code) {
+    const existing = await prisma.program.findUnique({
+      where: { code: programData.code },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new ConflictError("A program with this code already exists", ApiErrorCode.DUPLICATE_PROGRAM_CODE);
+    }
+  }
+
   return prisma.$transaction(async (tx) => {
+    const [classCount, curriculumAboveNewSemesterCount] = await Promise.all([
+      tx.class.count({ where: { programId: id } }),
+      programData.semesters !== undefined && programData.semesters < program.semesters
+        ? tx.programCurriculum.count({
+            where: {
+              programId: id,
+              semesterNumber: { gt: programData.semesters },
+            },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    const codeChanged = programData.code !== undefined && programData.code !== program.code;
+    const semestersChanged = programData.semesters !== undefined && programData.semesters !== program.semesters;
+
+    if (classCount > 0 && (codeChanged || semestersChanged)) {
+      throw new ConflictError(
+        "Program code and semester count are locked after classes have been enrolled",
+        ApiErrorCode.RESOURCE_IN_USE,
+      );
+    }
+
+    if (curriculumAboveNewSemesterCount > 0 && !confirmSemesterReduction) {
+      throw new ConflictError(
+        `Reducing semesters will delete ${curriculumAboveNewSemesterCount} curriculum entr${curriculumAboveNewSemesterCount === 1 ? "y" : "ies"} above semester ${programData.semesters}. Resubmit with confirmation to continue.`,
+        ApiErrorCode.RESOURCE_IN_USE,
+      );
+    }
+
+    if (curriculumAboveNewSemesterCount > 0 && programData.semesters !== undefined) {
+      await tx.programCurriculum.deleteMany({
+        where: {
+          programId: id,
+          semesterNumber: { gt: programData.semesters },
+        },
+      });
+    }
+
     const updated = await tx.program.update({
       where: { id },
-      data,
+      data: programData,
       select: programSelect,
     });
 
-    if (data.code && data.code !== program.code) {
+    if (programData.code && programData.code !== program.code) {
       const department = await tx.department.findUnique({
         where: { id: program.departmentId },
         select: { serverId: true },
@@ -307,7 +438,7 @@ export async function updateProgram(id: number, data: UpdateProgramInput) {
             programId: program.id,
             isAutoCreated: true,
           },
-          data: { name: data.code },
+          data: { name: programData.code },
         });
       }
     }
@@ -332,10 +463,31 @@ export async function getCurriculum(programId: number, filters: GetCurriculumFil
   if (filters.semesterNumber) where.semesterNumber = filters.semesterNumber;
   if (filters.batchYear) where.batchYear = filters.batchYear;
 
-  return prisma.programCurriculum.findMany({
+  const entries = await prisma.programCurriculum.findMany({
     where,
     select: curriculumSelect,
     orderBy: [{ semesterNumber: "asc" }, { course: { code: "asc" } }],
+  });
+  const batchYears = [...new Set(entries.map((entry) => entry.batchYear))];
+  const classes = await prisma.class.findMany({
+    where: { programId, admissionYear: { in: batchYears } },
+    select: { admissionYear: true, currentSemester: true },
+  });
+  const lockedByBatchYear = new Map<number, number>();
+  for (const classRecord of classes) {
+    lockedByBatchYear.set(
+      classRecord.admissionYear,
+      Math.max(lockedByBatchYear.get(classRecord.admissionYear) ?? 0, classRecord.currentSemester),
+    );
+  }
+
+  return entries.map((entry) => {
+    const lockedThroughSemester = lockedByBatchYear.get(entry.batchYear) ?? 0;
+    return {
+      ...entry,
+      isLocked: entry.semesterNumber <= lockedThroughSemester,
+      lockedThroughSemester,
+    };
   });
 }
 
@@ -345,38 +497,140 @@ export async function addCurriculum(
   programId: number,
   data: AddCurriculumInput
 ) {
+  const result = await bulkAddCurriculum(userId, userType, programId, {
+    courseIds: [data.courseId],
+    semesterNumber: data.semesterNumber,
+    batchYear: data.batchYear,
+  });
+  if (result.skippedCourseIds.includes(data.courseId)) {
+    throw new ConflictError("This course is already in the curriculum for this program and batch year");
+  }
+  const entry = result.entries.find((item) => item.course.id === data.courseId);
+  if (!entry) {
+    throw new ConflictError("Curriculum entry could not be created");
+  }
+  return entry;
+}
+
+export async function bulkAddCurriculum(
+  userId: number,
+  userType: string,
+  programId: number,
+  data: BulkAddCurriculumInput,
+) {
   return prisma.$transaction(async (tx) => {
-    const program = await lockProgramForHodOrAdmin(programId, userId, userType, tx);
+    const program = await lockProgramForHodPdOrAdmin(programId, userId, userType, tx);
     if (data.semesterNumber > program.semesters) {
       throw new ValidationError(
         `Semester number (${data.semesterNumber}) exceeds program's total semesters (${program.semesters})`
       );
     }
-    const course = await tx.course.findUnique({
-      where: { id: data.courseId },
-      select: { id: true, departmentId: true },
+    await assertCurriculumSemesterEditable(tx, {
+      programId,
+      batchYear: data.batchYear,
+      semesterNumber: data.semesterNumber,
     });
-    if (!course) throw new NotFoundError("Course not found");
-    if (course.departmentId !== program.department_id) {
-      throw new ForbiddenError("Course must belong to the same department as the program");
-    }
-    const existing = await tx.programCurriculum.findUnique({
-      where: {
-        programId_courseId_batchYear: {
+    const uniqueCourseIds = [...new Set(data.courseIds)];
+    await assertCoursesBelongToProgramDepartment(tx, uniqueCourseIds, program.department_id);
+    const existing = await tx.programCurriculum.findMany({
+      where: { programId, batchYear: data.batchYear, courseId: { in: uniqueCourseIds } },
+      select: { courseId: true },
+    });
+    const existingCourseIds = new Set(existing.map((entry) => entry.courseId));
+    const newCourseIds = uniqueCourseIds.filter((courseId) => !existingCourseIds.has(courseId));
+    if (newCourseIds.length > 0) {
+      await tx.programCurriculum.createMany({
+        data: newCourseIds.map((courseId) => ({
           programId,
-          courseId: data.courseId,
+          courseId,
+          semesterNumber: data.semesterNumber,
           batchYear: data.batchYear,
-        },
-      },
-      select: { id: true },
-    });
-    if (existing) {
-      throw new ConflictError("This course is already in the curriculum for this program and batch year");
+        })),
+        skipDuplicates: true,
+      });
     }
-    return tx.programCurriculum.create({
-      data: { programId, courseId: data.courseId, semesterNumber: data.semesterNumber, batchYear: data.batchYear },
+    const entries = await tx.programCurriculum.findMany({
+      where: {
+        programId,
+        batchYear: data.batchYear,
+        courseId: { in: newCourseIds },
+      },
       select: curriculumSelect,
+      orderBy: { course: { code: "asc" } },
     });
+    return {
+      entries,
+      addedCount: entries.length,
+      skippedCourseIds: uniqueCourseIds.filter((courseId) => existingCourseIds.has(courseId)),
+    };
+  });
+}
+
+export async function copyCurriculumBatch(
+  userId: number,
+  userType: string,
+  programId: number,
+  data: CopyCurriculumBatchInput,
+) {
+  return prisma.$transaction(async (tx) => {
+    const program = await lockProgramForHodPdOrAdmin(programId, userId, userType, tx);
+    const sourceEntries = await tx.programCurriculum.findMany({
+      where: { programId, batchYear: data.sourceBatchYear },
+      select: {
+        courseId: true,
+        semesterNumber: true,
+      },
+      orderBy: [{ semesterNumber: "asc" }, { course: { code: "asc" } }],
+    });
+    await assertFullCurriculumExists(tx, {
+      programId,
+      programSemesters: program.semesters,
+      batchYear: data.sourceBatchYear,
+    });
+    const targetExisting = await tx.programCurriculum.findMany({
+      where: {
+        programId,
+        batchYear: data.targetBatchYear,
+        courseId: { in: sourceEntries.map((entry) => entry.courseId) },
+      },
+      select: { courseId: true },
+    });
+    const existingCourseIds = new Set(targetExisting.map((entry) => entry.courseId));
+    const entriesToCreate = sourceEntries.filter((entry) => !existingCourseIds.has(entry.courseId));
+    for (const entry of entriesToCreate) {
+      await assertCurriculumSemesterEditable(tx, {
+        programId,
+        batchYear: data.targetBatchYear,
+        semesterNumber: entry.semesterNumber,
+      });
+    }
+    if (entriesToCreate.length > 0) {
+      await tx.programCurriculum.createMany({
+        data: entriesToCreate.map((entry) => ({
+          programId,
+          courseId: entry.courseId,
+          semesterNumber: entry.semesterNumber,
+          batchYear: data.targetBatchYear,
+        })),
+        skipDuplicates: true,
+      });
+    }
+    const entries = await tx.programCurriculum.findMany({
+      where: {
+        programId,
+        batchYear: data.targetBatchYear,
+        courseId: { in: entriesToCreate.map((entry) => entry.courseId) },
+      },
+      select: curriculumSelect,
+      orderBy: [{ semesterNumber: "asc" }, { course: { code: "asc" } }],
+    });
+    return {
+      entries,
+      addedCount: entries.length,
+      skippedCourseIds: sourceEntries
+        .filter((entry) => existingCourseIds.has(entry.courseId))
+        .map((entry) => entry.courseId),
+    };
   });
 }
 
@@ -387,14 +641,16 @@ export async function removeCurriculum(
   curriculumId: number
 ) {
   await prisma.$transaction(async (tx) => {
-    await lockProgramForHodOrAdmin(programId, userId, userType, tx);
+    await lockProgramForHodPdOrAdmin(programId, userId, userType, tx);
     const entry = await tx.programCurriculum.findUnique({
       where: { id: curriculumId },
-      select: { id: true, programId: true },
+      select: { id: true, programId: true, semesterNumber: true, batchYear: true },
     });
     if (!entry || entry.programId !== programId) {
       throw new NotFoundError("Curriculum entry not found");
     }
+    await assertCurriculumSemesterEditable(tx, entry);
+    await assertRemovalKeepsLiveBatchComplete(tx, entry);
     await tx.programCurriculum.delete({ where: { id: curriculumId } });
   });
 }

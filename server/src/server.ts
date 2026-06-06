@@ -8,6 +8,15 @@ import { captureException } from "./config/telemetry.js";
 
 const server = http.createServer(app);
 
+const REQUEST_TIMEOUT_MS = 30_000;
+const HEADERS_TIMEOUT_MS = 10_000;
+const KEEP_ALIVE_TIMEOUT_MS = 5_000;
+
+server.requestTimeout = REQUEST_TIMEOUT_MS;
+server.timeout = REQUEST_TIMEOUT_MS;
+server.headersTimeout = HEADERS_TIMEOUT_MS;
+server.keepAliveTimeout = KEEP_ALIVE_TIMEOUT_MS;
+
 // ─── Socket.IO ──────────────────────────────────────────────────────────────
 initializeSocket(server);
 

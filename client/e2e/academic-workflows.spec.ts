@@ -5,8 +5,8 @@ import {
   findClassStatus,
   findClassStudentClassId,
   findCourseTeacherName,
-  module2Fixtures,
-} from './helpers/module2';
+  academicShellFixtures,
+} from './helpers/academic-shell-fixtures';
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -16,11 +16,11 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/servers$/);
 }
 
-test.describe.serial('Module 2 academic hardening flows', () => {
+test.describe.serial('Academic management workflows', () => {
   test.setTimeout(90_000);
 
   test('HOD transfers a student between managed classes', async ({ page }) => {
-    const targetClass = await findClassByServerName(module2Fixtures.transferTargetServerName);
+    const targetClass = await findClassByServerName(academicShellFixtures.transferTargetServerName);
     const student = await findUserByEmail(e2eUsers.moduleAcademicTransferStudent.email);
 
     expect(targetClass).not.toBeNull();
@@ -40,7 +40,7 @@ test.describe.serial('Module 2 academic hardening flows', () => {
   });
 
   test('PD replaces a teacher with a cross-department teacher', async ({ page }) => {
-    const klass = await findClassByServerName(module2Fixtures.replacementServerName);
+    const klass = await findClassByServerName(academicShellFixtures.replacementServerName);
     const crossTeacher = await findUserByEmail(e2eUsers.moduleAcademicCrossTeacher.email);
 
     expect(klass).not.toBeNull();
@@ -65,7 +65,7 @@ test.describe.serial('Module 2 academic hardening flows', () => {
   });
 
   test('HOD advances a class semester with required teacher assignments', async ({ page }) => {
-    const klass = await findClassByServerName(module2Fixtures.progressionServerName);
+    const klass = await findClassByServerName(academicShellFixtures.progressionServerName);
     const teacher = await findUserByEmail(e2eUsers.moduleAcademicProgressTeacher.email);
 
     expect(klass).not.toBeNull();
@@ -86,7 +86,7 @@ test.describe.serial('Module 2 academic hardening flows', () => {
   });
 
   test('HOD graduates a final-semester class', async ({ page }) => {
-    const klass = await findClassByServerName(module2Fixtures.graduationServerName);
+    const klass = await findClassByServerName(academicShellFixtures.graduationServerName);
 
     expect(klass).not.toBeNull();
 

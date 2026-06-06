@@ -43,6 +43,7 @@ export interface CreateProgramRequest {
 export interface UpdateProgramRequest {
   semesters?: number;
   code?: string;
+  confirmSemesterReduction?: boolean;
 }
 
 export interface CreateClassRequest {
@@ -70,6 +71,23 @@ export interface AddCurriculumRequest {
   courseId: number;
   semesterNumber: number;
   batchYear: number;
+}
+
+export interface BulkAddCurriculumRequest {
+  courseIds: number[];
+  semesterNumber: number;
+  batchYear: number;
+}
+
+export interface CopyCurriculumBatchRequest {
+  sourceBatchYear: number;
+  targetBatchYear: number;
+}
+
+export interface CurriculumWriteResult {
+  entries: CurriculumEntry[];
+  addedCount: number;
+  skippedCourseIds: number[];
 }
 
 export interface CurriculumParams {
@@ -135,8 +153,15 @@ export const catalogApi = {
   },
 
   async listPrograms(params: ProgramListParams) {
+    const { departmentIds, programIds, ...rest } = params;
     const response = await apiClient.get<PaginatedResponse<ProgramDetail>>('/programs', {
-      params,
+      params: {
+        ...rest,
+        ...(departmentIds && departmentIds.length > 0
+          ? { departmentIds: departmentIds.join(',') }
+          : {}),
+        ...(programIds && programIds.length > 0 ? { programIds: programIds.join(',') } : {}),
+      },
     });
     return response.data;
   },
@@ -168,6 +193,22 @@ export const catalogApi = {
   async addCurriculum(programId: number, payload: AddCurriculumRequest) {
     const response = await apiClient.post<CurriculumEntry>(
       `/programs/${programId}/curriculum`,
+      payload,
+    );
+    return response.data;
+  },
+
+  async bulkAddCurriculum(programId: number, payload: BulkAddCurriculumRequest) {
+    const response = await apiClient.post<CurriculumWriteResult>(
+      `/programs/${programId}/curriculum/bulk`,
+      payload,
+    );
+    return response.data;
+  },
+
+  async copyCurriculumBatch(programId: number, payload: CopyCurriculumBatchRequest) {
+    const response = await apiClient.post<CurriculumWriteResult>(
+      `/programs/${programId}/curriculum/copy-batch`,
       payload,
     );
     return response.data;

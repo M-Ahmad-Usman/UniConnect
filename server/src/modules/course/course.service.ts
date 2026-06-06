@@ -225,11 +225,31 @@ export async function getCourseDeletionImpact(courseId: number) {
 export async function updateCourse(id: number, data: UpdateCourseInput) {
   const course = await prisma.course.findUnique({
     where: { id },
-    select: { id: true, code: true },
+    select: { id: true, title: true, code: true, creditHours: true },
   });
 
   if (!course) {
     throw new NotFoundError("Course not found");
+  }
+
+  const changed =
+    (data.title !== undefined && data.title !== course.title) ||
+    (data.code !== undefined && data.code !== course.code) ||
+    (data.creditHours !== undefined && data.creditHours !== course.creditHours);
+
+  if (changed) {
+    const [curriculumCount, teachingCount, channelCount] = await Promise.all([
+      prisma.programCurriculum.count({ where: { courseId: id } }),
+      prisma.teaches.count({ where: { courseId: id } }),
+      prisma.channel.count({ where: { courseId: id } }),
+    ]);
+
+    if (curriculumCount > 0 || teachingCount > 0 || channelCount > 0) {
+      throw new ConflictError(
+        "Course details are locked after the course is used in curriculum, class assignments, or course channels",
+        ApiErrorCode.RESOURCE_IN_USE,
+      );
+    }
   }
 
   if (data.code && data.code !== course.code) {
