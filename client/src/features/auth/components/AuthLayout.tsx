@@ -10,16 +10,12 @@ interface AuthLayoutProps {
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">
-      <Card className="w-full max-w-md border-border bg-card py-0 shadow-lg shadow-foreground/5">
-        <CardHeader className="justify-items-center gap-4 border-b px-6 py-8 text-center">
-          <div className="flex size-20 items-center justify-center overflow-hidden rounded-full border border-border bg-white p-2 shadow-sm">
-            <img src="/logo.svg" alt="" className="size-full object-contain" />
-          </div>
+      <Card className="w-full max-w-md border-border/80 bg-card/95 py-0 shadow-xl shadow-primary/10">
+        <CardHeader className="justify-items-center gap-4 border-b bg-muted/20 px-6 py-8 text-center">
+          <img src="/logo.svg" alt="" className="size-24 object-contain" />
           <div className="space-y-1.5">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">
-              UniConnect
-            </p>
-            <CardTitle className="text-2xl font-semibold tracking-tight text-card-foreground">
+            <p className="text-xs font-semibold uppercase text-primary">UniConnect</p>
+            <CardTitle className="text-2xl font-semibold text-card-foreground">
               {title}
             </CardTitle>
             {subtitle ? (

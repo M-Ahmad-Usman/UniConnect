@@ -71,7 +71,7 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
   const hasNavigationError = serverQuery.isError || channelQuery.isError;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="flex h-16 items-center justify-between gap-4 px-4 lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
           {!isWorkspaceRoute ? (
@@ -90,14 +90,12 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
             type="button"
             onClick={() => navigate(ROUTES.SERVERS)}
             className={cn(
-              'inline-flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold tracking-tight transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'inline-flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               !isWorkspaceRoute && 'lg:hidden',
             )}
             aria-label="Go to UniConnect home"
           >
-            <span className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-border bg-white p-0.5">
-              <img src="/logo.svg" alt="" className="size-full object-contain" />
-            </span>
+            <img src="/logo.svg" alt="" className="size-8 shrink-0 object-contain" />
             <span className="hidden sm:inline">UniConnect</span>
           </button>
           <div className="hidden min-w-0 md:block">

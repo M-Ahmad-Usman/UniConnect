@@ -75,9 +75,9 @@ export function ServerSidebar({
               to={ROUTES.SERVERS}
               aria-label="Go to UniConnect home"
               onClick={onSelectServer}
-              className="flex size-12 items-center justify-center overflow-hidden rounded-full border border-border bg-white p-1 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex size-12 items-center justify-center rounded-xl transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <img src="/logo.svg" alt="" className="size-full object-contain" />
+              <img src="/logo.svg" alt="" className="size-10 object-contain" />
             </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right">UniConnect home</TooltipContent>
