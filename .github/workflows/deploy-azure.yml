@@ -58,7 +58,9 @@ jobs:
 
       - name: Generate Prisma client
         working-directory: server
-        run: npx prisma generate
+        run: |
+          echo "DATABASE_URL=postgresql://dummy_user:dummy_pass@localhost:5432/dummy_db" > .env
+          npx prisma generate
 
       - name: Run database migrations (test DB)
         working-directory: server
@@ -142,7 +144,9 @@ jobs:
 
       - name: Generate Prisma client
         working-directory: server
-        run: npx prisma generate
+        run: |
+          echo "DATABASE_URL=postgresql://dummy_user:dummy_pass@localhost:5432/dummy_db" > .env
+          npx prisma generate
 
       - name: Run database migrations (e2e DB)
         working-directory: server
@@ -275,7 +279,9 @@ jobs:
 
       - name: Generate Prisma client
         working-directory: server
-        run: npx prisma generate
+        run: |
+          echo "DATABASE_URL=postgresql://dummy_user:dummy_pass@localhost:5432/dummy_db" > .env
+          npx prisma generate
 
       - name: Run production database migrations
         working-directory: server
