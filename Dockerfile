@@ -60,7 +60,7 @@ COPY --from=server-builder /build/server/dist ./dist
 # Copy the generated Prisma client
 # The client is generated into src/generated/prisma/ and referenced at runtime
 # We copy from the builder's src/generated so the path matches dist imports
-COPY --from=server-builder /build/server/src/generated ./src/generated
+COPY --from=server-builder /build/server/src/generated ./dist/generated
 
 # Copy Prisma schema and migrations (needed for prisma migrate deploy at startup)
 COPY --from=server-builder /build/server/prisma ./prisma
