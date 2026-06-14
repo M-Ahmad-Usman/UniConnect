@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import fs from "node:fs";
+import path from "node:path";
 import "./config/telemetry.js";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -99,6 +101,22 @@ app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/notification-preferences", notificationPreferenceRoutes);
 app.use("/api/admin", adminRoutes);
+
+// ─── Production Frontend ────────────────────────────────────────────────────
+const frontendDistPath = path.resolve(process.cwd(), "public");
+const frontendIndexPath = path.join(frontendDistPath, "index.html");
+const shouldServeFrontend = env.NODE_ENV === "production" && fs.existsSync(frontendIndexPath);
+
+if (shouldServeFrontend) {
+  app.use(express.static(frontendDistPath, { index: false }));
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api") || !["GET", "HEAD"].includes(req.method)) {
+      return next();
+    }
+
+    res.sendFile(frontendIndexPath);
+  });
+}
 
 // ─── Event Listeners ────────────────────────────────────────────────────────
 registerNotificationListeners();
