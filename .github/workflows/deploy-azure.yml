@@ -306,10 +306,13 @@ jobs:
         with:
           azcliversion: latest
           inlineScript: |
+            # Convert the image reference to strict lowercase to match ghcr.io rules
+            LOWERCAL_IMAGE=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" | tr '[:upper:]' '[:lower:]')
+            
             az webapp config container set \
-              --name ${{ secrets.AZURE_WEBAPP_NAME }} \
-              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+              --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+              --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+              --container-image-name "$LOWERCAL_IMAGE"
 
       - name: Restart App Service to pull new image
         uses: azure/cli@v2
