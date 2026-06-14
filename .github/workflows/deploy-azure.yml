@@ -158,8 +158,10 @@ jobs:
         working-directory: client
         run: npm ci
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Browsers and OS Dependencies
         working-directory: client
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
