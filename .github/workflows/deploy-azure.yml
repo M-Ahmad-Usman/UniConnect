@@ -153,7 +153,7 @@ jobs:
       - name: Run database migrations (e2e DB)
         working-directory: server
         env:
-          DATABASE_URL: postgresql://uniconnect:uniconnect@localhost:5433/uniconnect_test
+          DATABASE_URL: postgresql://uniconnect:uniconnect@postgres:5432/uniconnect_test
         run: npx prisma migrate deploy
 
       - name: Install client dependencies
@@ -164,7 +164,7 @@ jobs:
         working-directory: client
         env:
           NODE_ENV: test
-          DATABASE_URL: postgresql://uniconnect:uniconnect@localhost:5433/uniconnect_test
+          DATABASE_URL: postgresql://uniconnect:uniconnect@postgres:5432/uniconnect_test
           JWT_ACCESS_SECRET: test-access-secret-at-least-32-characters-long
           JWT_REFRESH_SECRET: test-refresh-secret-at-least-32-characters-long
           JWT_ACCESS_EXPIRY: 15m
