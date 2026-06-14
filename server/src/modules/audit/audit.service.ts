@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "../../generated/prisma/client.js";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 
 export type AuditContext = {

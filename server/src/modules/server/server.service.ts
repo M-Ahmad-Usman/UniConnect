@@ -1,4 +1,4 @@
-import type { ServerType } from "../../generated/prisma/enums.js";
+import type { ServerType } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import {
   cleanupCloudinaryUploads,

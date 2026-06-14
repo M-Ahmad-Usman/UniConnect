@@ -1,7 +1,7 @@
 import { prisma } from "../../config/prisma.js";
 import { ApiErrorCode, ConflictError, ForbiddenError, NotFoundError } from "../../shared/errors/index.js";
 import { parsePagination, buildPaginationResponse } from "../../shared/utils/pagination.js";
-import type { Prisma } from "../../generated/prisma/client.js";
+import type { Prisma } from "@prisma/client";
 import { lockDepartmentForHodOrAdmin } from "../../shared/lifecycle/academic.js";
 import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 

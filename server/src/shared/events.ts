@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import type { PostPriority, ServerType } from "../generated/prisma/enums.js";
+import type { PostPriority, ServerType } from "@prisma/client";
 
 // ─── Event Payload Types ────────────────────────────────────────────────────
 

@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type {
+  Prisma,
   MembershipRequestStatus,
   SocietyStatus,
-} from "../../generated/prisma/enums.js";
-import type { Prisma } from "../../generated/prisma/client.js";
+} from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import {
   ApiErrorCode,

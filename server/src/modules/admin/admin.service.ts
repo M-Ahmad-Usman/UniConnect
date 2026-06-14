@@ -1,8 +1,7 @@
 import { prisma } from "../../config/prisma.js";
 import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
 import type { PaginatedResponse } from "../../shared/types/index.js";
-import type { Prisma } from "../../generated/prisma/client.js";
-import type { UserStatus } from "../../generated/prisma/enums.js";
+import type { Prisma, UserStatus  } from "@prisma/client";
 import { mapUserPublicDto } from "../../shared/ids/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────

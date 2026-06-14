@@ -3,7 +3,7 @@ import type {
   NotificationScopeType,
   PostPriority,
   ServerType,
-} from "../../generated/prisma/enums.js";
+} from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import {
   ApiErrorCode,

@@ -1,4 +1,3 @@
-
 # Stage 1: Build the React frontend
 FROM node:24-alpine AS client-builder
 
@@ -28,13 +27,13 @@ COPY server/tsconfig.json ./
 COPY server/src/ ./src/
 COPY server/prisma/ ./prisma/
 
-# Generate Prisma client into src/generated/prisma/
+# Generate Prisma client natively into node_modules/.prisma/client
 RUN npx prisma generate
 
 # Compile TypeScript → dist/
 RUN npm run build
 
-# Prune to production dependencies only
+# Prune to production dependencies only (Prisma client engine remains safe inside node_modules)
 RUN npm prune --omit=dev
 
 
@@ -51,16 +50,11 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy production node_modules from builder
+# Copy production node_modules from builder (contains optimized Prisma Client)
 COPY --from=server-builder /build/server/node_modules ./node_modules
 
 # Copy compiled backend
 COPY --from=server-builder /build/server/dist ./dist
-
-# Copy the generated Prisma client
-# The client is generated into src/generated/prisma/ and referenced at runtime
-# We copy from the builder's src/generated so the path matches dist imports
-COPY --from=server-builder /build/server/src/generated ./dist/generated
 
 # Copy Prisma schema and migrations (needed for prisma migrate deploy at startup)
 COPY --from=server-builder /build/server/prisma ./prisma
@@ -79,6 +73,5 @@ USER appuser
 EXPOSE 4000
 
 # dumb-init ensures SIGTERM is forwarded correctly to the Node process
-# This gives Express a chance to drain connections before the container stops
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "dist/server.js"]

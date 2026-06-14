@@ -1,4 +1,4 @@
-import type { PostPriority, ServerType } from "../../generated/prisma/enums.js";
+import type { Prisma, PostPriority, ServerType } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import {
   cleanupCloudinaryUploads,
@@ -20,7 +20,6 @@ import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
 import { emitPostNotificationsDeleted } from "../notification/notification.service.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
-import type { Prisma } from "../../generated/prisma/client.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
 import { emitToChannel } from "../../socket/index.js";
 import type { UserRole } from "../../shared/types/index.js";

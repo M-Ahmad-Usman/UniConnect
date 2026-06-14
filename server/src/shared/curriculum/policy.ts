@@ -1,4 +1,4 @@
-import type { Prisma } from "../../generated/prisma/client.js";
+import type { Prisma } from "@prisma/client";
 import { ConflictError, ValidationError } from "../errors/index.js";
 
 type CurriculumPrisma = Pick<

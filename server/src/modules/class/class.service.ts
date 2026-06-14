@@ -20,7 +20,7 @@ import { getServerCommunicationImpact } from "../../shared/lifecycle/communicati
 import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import { disconnectUserSockets } from "../../socket/index.js";
-import type { Prisma } from "../../generated/prisma/client.js";
+import type { Prisma } from "@prisma/client";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 

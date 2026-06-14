@@ -3,8 +3,7 @@ import crypto from "crypto";
 import csvParser from "csv-parser";
 import { Readable } from "stream";
 import { prisma } from "../../config/prisma.js";
-import type { Prisma } from "../../generated/prisma/client.js";
-import type { UserStatus } from "../../generated/prisma/enums.js";
+import type { Prisma, UserStatus } from "@prisma/client";
 import { emailService } from "../../config/email.js";
 import {
   cleanupCloudinaryUploads,
