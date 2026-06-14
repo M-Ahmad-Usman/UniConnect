@@ -100,15 +100,15 @@ jobs:
           node --experimental-vm-modules node_modules/.bin/jest --runInBand --forceExit
 
 
-  # Job 2: E2E tests
-  # Runs Playwright in client/ against a PostgreSQL 18 service container.
-  # Playwright's webServer config starts the backend (dev:e2e) and frontend
-  # (vite dev) automatically. This job runs in parallel with docker-build
+  # Job 2: E2E tests (Using Microsoft's Official Container)
+  # This job runs in parallel with docker-build
   # but does NOT block deploy — it is informational on main branch.
   # Run it on pull requests to catch regressions before merge.
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.1-noble
 
     services:
       postgres:
@@ -138,6 +138,8 @@ jobs:
             server/package-lock.json
             client/package-lock.json
 
+      # Playwright browser downloads are skipped here because they are native to the image!
+
       - name: Install server dependencies
         working-directory: server
         run: npm ci
@@ -158,33 +160,9 @@ jobs:
         working-directory: client
         run: npm ci
 
-      - name: Cache Playwright Browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('client/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Install Playwright Browsers and OS Dependencies
-        working-directory: client
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: npx playwright install --with-deps chromium
-
-      - name: Install Playwright System Dependencies Only
-        working-directory: client
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: npx playwright install-deps chromium
-
       - name: Run E2E tests
         working-directory: client
         env:
-          # Backend env — consumed by Playwright's webServer (dev:e2e)
           NODE_ENV: test
           DATABASE_URL: postgresql://uniconnect:uniconnect@localhost:5433/uniconnect_test
           JWT_ACCESS_SECRET: test-access-secret-at-least-32-characters-long
@@ -202,13 +180,12 @@ jobs:
           CSRF_ENABLED: "true"
           CSRF_SECRET: test-csrf-secret-at-least-32-characters-long
           CSRF_TRUSTED_ORIGINS: http://127.0.0.1:5173
-          AUTH_COOKIE_SAME_SITE: strict
-          AUTH_COOKIE_SECURE: "false"
-          # Playwright reads these to know where to bind and connect
           E2E_FRONTEND_HOST: "127.0.0.1"
           E2E_FRONTEND_PORT: "5173"
           E2E_BACKEND_HOST: "127.0.0.1"
           E2E_BACKEND_PORT: "4100"
+          AUTH_COOKIE_SAME_SITE: strict
+          AUTH_COOKIE_SECURE: "false"
         run: npx playwright test
 
       - name: Upload Playwright report
