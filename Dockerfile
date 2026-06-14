@@ -10,7 +10,7 @@ RUN npm ci
 
 # Copy source and build
 COPY client/ ./
-RUN npm run build
+RUN npx vite build
 # Output: /build/client/dist
 
 
