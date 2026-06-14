@@ -1,0 +1,1618 @@
+import { prisma } from "../../config/prisma.js";
+import {
+  ApiErrorCode,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "../../shared/errors/index.js";
+import { buildPaginationResponse, parsePagination } from "../../shared/utils/pagination.js";
+import { buildClassPermissions, getPermissionContext } from "../../shared/permissions/index.js";
+import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
+import { resolveUserPublicId } from "../../shared/ids/index.js";
+import {
+  lockClassForAcademicWrite,
+  lockProgramForHodOrAdmin,
+  lockStudentProfileForTransfer,
+} from "../../shared/lifecycle/academic.js";
+import { assertFullCurriculumExists } from "../../shared/curriculum/policy.js";
+import { getServerCommunicationImpact } from "../../shared/lifecycle/communication-impact.js";
+import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
+import { invalidateSystemStatsCache } from "../admin/admin.service.js";
+import { disconnectUserSockets } from "../../socket/index.js";
+import type { Prisma } from "../../generated/prisma/client.js";
+
+// ─── Types ─────────────────────────────────────────────────────────────────
+
+type ClassStatusFilter = "ACTIVE" | "GRADUATED" | "ALL";
+
+type CreateClassInput = {
+  programId: number;
+  currentSemester: number;
+  academicYear: number;
+  admissionYear: number;
+  section: "A" | "B";
+};
+
+type AssignCourseInput = {
+  courseId: number;
+  teacherPublicId: string;
+};
+
+type ListClassesQuery = {
+  programId?: number;
+  departmentId?: number;
+  semester?: number;
+  section?: "A" | "B";
+  status?: ClassStatusFilter;
+  page?: number;
+  limit?: number;
+};
+
+type CandidateQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+type TeacherAssignment = {
+  courseId: number;
+  teacherPublicId: string;
+};
+
+type InternalTeacherAssignment = {
+  courseId: number;
+  teacherId: number;
+};
+
+type SemesterProgressionInput = {
+  teacherAssignments: TeacherAssignment[];
+};
+
+// ─── Selects ───────────────────────────────────────────────────────────────
+
+const classListSelect = {
+  id: true,
+  publicId: true,
+  currentSemester: true,
+  academicYear: true,
+  admissionYear: true,
+  section: true,
+  serverId: true,
+  server: { select: { publicId: true } },
+  status: true,
+  graduatedAt: true,
+  graduator: { select: { publicId: true } },
+  program: {
+    select: {
+      id: true,
+      code: true,
+      department: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+        },
+      },
+      discipline: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      degreeLevel: {
+        select: {
+          id: true,
+          level: true,
+        },
+      },
+    },
+  },
+  cr: {
+    select: {
+      studentId: true,
+      user: {
+        select: {
+          publicId: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  },
+} as const;
+
+const classDetailSelect = {
+  id: true,
+  publicId: true,
+  currentSemester: true,
+  academicYear: true,
+  admissionYear: true,
+  section: true,
+  serverId: true,
+  server: { select: { publicId: true } },
+  status: true,
+  graduatedAt: true,
+  graduator: { select: { publicId: true } },
+  program: {
+    select: {
+      id: true,
+      code: true,
+      semesters: true,
+      department: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+        },
+      },
+    },
+  },
+  cr: {
+    select: {
+      studentId: true,
+      user: {
+        select: {
+          publicId: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      students: true,
+      teaches: true,
+    },
+  },
+} as const;
+
+const courseAssignmentSelect = {
+  courseId: true,
+  teacherId: true,
+  classId: true,
+  class: { select: { publicId: true } },
+  course: {
+    select: {
+      id: true,
+      title: true,
+      code: true,
+      creditHours: true,
+    },
+  },
+  teacher: {
+    select: {
+      teacherId: true,
+      designation: true,
+      user: {
+        select: {
+          fullName: true,
+          email: true,
+          publicId: true,
+        },
+      },
+    },
+  },
+} as const;
+
+const studentTransferSelect = {
+  studentId: true,
+  classId: true,
+  user: {
+    select: {
+      id: true,
+      status: true,
+      isDeleted: true,
+      userType: true,
+      departmentId: true,
+    },
+  },
+  class: {
+    select: {
+      id: true,
+      serverId: true,
+      crId: true,
+      program: { select: { departmentId: true } },
+    },
+  },
+} as const;
+
+type TransferStudent = Prisma.StudentInfoGetPayload<{ select: typeof studentTransferSelect }>;
+
+const classStudentSelect = {
+  studentId: true,
+  rollNumber: true,
+  user: {
+    select: {
+      id: true,
+      publicId: true,
+      fullName: true,
+      email: true,
+      departmentId: true,
+    },
+  },
+  class: {
+    select: {
+      id: true,
+      publicId: true,
+      currentSemester: true,
+      section: true,
+      program: { select: { id: true, code: true } },
+    },
+  },
+} as const;
+
+const teacherCandidateSelect = {
+  teacherId: true,
+  designation: true,
+  user: {
+    select: {
+      id: true,
+      publicId: true,
+      fullName: true,
+      email: true,
+      departmentId: true,
+    },
+  },
+} as const;
+
+function omitStudentInternalId<T extends { studentId: number }>(student: T): Omit<T, "studentId"> {
+  const { studentId: _studentId, ...data } = student;
+  return data;
+}
+
+function toPublicClass<T extends {
+  id: number;
+  serverId: number;
+  server: { publicId: string };
+  graduatedBy?: number | null;
+  graduator: { publicId: string } | null;
+  cr: ({ studentId: number; user: { publicId: string } } & Record<string, unknown>) | null;
+}>(
+  classRecord: T,
+): Omit<T, "id" | "serverId" | "server" | "graduatedBy" | "graduator" | "cr"> & {
+  serverPublicId: string;
+  graduatedByPublicId: string | null;
+  cr: Omit<NonNullable<T["cr"]>, "studentId"> | null;
+} {
+  const {
+    id: _id,
+    serverId: _serverId,
+    server,
+    graduatedBy: _graduatedBy,
+    graduator,
+    cr,
+    ...classData
+  } = classRecord;
+  const publicCr = cr ? omitStudentInternalId(cr) : null;
+  return {
+    ...classData,
+    serverPublicId: server.publicId,
+    graduatedByPublicId: graduator?.publicId ?? null,
+    cr: publicCr,
+  };
+}
+
+function toPublicCourseAssignment<T extends {
+  teacherId: number;
+  classId: number;
+  class: { publicId: string };
+  teacher: { teacherId: number; user: { publicId: string } };
+}>(assignment: T) {
+  const { teacherId: _teacherId, classId: _classId, class: classRecord, teacher, ...data } =
+    assignment;
+  const { teacherId: _nestedTeacherId, user, ...teacherData } = teacher;
+  return {
+    ...data,
+    classPublicId: classRecord.publicId,
+    teacherPublicId: user.publicId,
+    teacher: { ...teacherData, user },
+  };
+}
+
+function toPublicClassStudent<T extends {
+  studentId: number;
+  user: { id: number; publicId: string };
+  class: { id: number; publicId: string };
+}>(student: T) {
+  const { studentId: _studentId, user, class: classRecord, ...data } = student;
+  const { id: _userId, publicId: studentPublicId, ...userData } = user;
+  const { id: _classId, publicId: classPublicId, ...classData } = classRecord;
+  return {
+    ...data,
+    studentPublicId,
+    user: userData,
+    class: { ...classData, publicId: classPublicId },
+  };
+}
+
+function toPublicTeacherCandidate<T extends {
+  teacherId: number;
+  user: { id: number; publicId: string };
+}>(teacher: T) {
+  const { teacherId: _teacherId, user, ...data } = teacher;
+  const { id: _userId, publicId: teacherPublicId, ...userData } = user;
+  return { ...data, teacherPublicId, user: userData };
+}
+
+// ─── Authorization Helpers ─────────────────────────────────────────────────
+
+async function assertHodOrAdmin(
+  userId: number,
+  userType: string,
+  departmentId: number
+): Promise<void> {
+  if (userType === "ADMIN") return;
+
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
+    select: { hodId: true },
+  });
+
+  if (!department || department.hodId !== userId) {
+    throw new ForbiddenError("Only the HOD of this department can perform this action");
+  }
+}
+
+async function assertHodOrPdOrAdmin(
+  userId: number,
+  userType: string,
+  departmentId: number,
+  programId: number
+): Promise<void> {
+  if (userType === "ADMIN") return;
+
+  const [department, program] = await Promise.all([
+    prisma.department.findUnique({
+      where: { id: departmentId },
+      select: { hodId: true },
+    }),
+    prisma.program.findUnique({
+      where: { id: programId },
+      select: { programDirectorId: true },
+    }),
+  ]);
+
+  const isHod = department?.hodId === userId;
+  const isPd = program?.programDirectorId === userId;
+
+  if (!isHod && !isPd) {
+    throw new ForbiddenError("Only the HOD or Program Director can perform this action");
+  }
+}
+
+function assertClassIsActive(classRecord: { status: string }): void {
+  if (classRecord.status === "GRADUATED") {
+    throw new ConflictError("Graduated classes are read-only", ApiErrorCode.CLASS_GRADUATED);
+  }
+}
+
+function assertStudentCanTransfer(
+  student: TransferStudent | null,
+  targetClassId: number,
+  targetDepartmentId: number
+): asserts student is TransferStudent {
+  if (!student) {
+    throw new NotFoundError("Student not found");
+  }
+  if (student.user.status !== "ACTIVE" || student.user.isDeleted || student.user.userType !== "STUDENT") {
+    throw new ValidationError("Student must be an active student user");
+  }
+  if (student.classId === targetClassId) {
+    throw new ConflictError("Student is already assigned to this class");
+  }
+  if (
+    student.user.departmentId !== targetDepartmentId ||
+    student.class.program.departmentId !== targetDepartmentId
+  ) {
+    throw new ForbiddenError(
+      "Student transfer is limited to the same department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+  if (student.class.crId === student.studentId) {
+    throw new ConflictError("Reassign or remove the class representative role before transfer");
+  }
+}
+
+function buildClassPermissionTarget(classRecord: {
+  id: number;
+  serverId: number;
+  status: string;
+  cr: { studentId: number } | null;
+  program: { id: number; department: { id: number } };
+}) {
+  return {
+    id: classRecord.id,
+    serverId: classRecord.serverId,
+    crId: classRecord.cr?.studentId ?? null,
+    programId: classRecord.program.id,
+    departmentId: classRecord.program.department.id,
+    status: classRecord.status,
+  };
+}
+
+async function getManagedClassOrThrow(classId: number) {
+  const classRecord = await prisma.class.findUnique({
+    where: { id: classId },
+    select: {
+      id: true,
+      currentSemester: true,
+      admissionYear: true,
+      section: true,
+      serverId: true,
+      status: true,
+      programId: true,
+      program: {
+        select: {
+          id: true,
+          code: true,
+          semesters: true,
+          departmentId: true,
+        },
+      },
+    },
+  });
+
+  if (!classRecord) {
+    throw new NotFoundError("Class not found");
+  }
+
+  return classRecord;
+}
+
+async function assertActiveTeacher(teacherId: number): Promise<void> {
+  const teacher = await prisma.teacherInfo.findUnique({
+    where: { teacherId },
+    select: {
+      teacherId: true,
+      user: { select: { status: true, isDeleted: true, userType: true } },
+    },
+  });
+
+  if (!teacher) {
+    throw new NotFoundError("Teacher not found");
+  }
+
+  if (teacher.user.status !== "ACTIVE" || teacher.user.isDeleted || teacher.user.userType !== "TEACHER") {
+    throw new ValidationError("Teacher must be an active teacher user");
+  }
+}
+
+async function assertCourseInCurrentCurriculum(classRecord: {
+  programId: number;
+  currentSemester: number;
+  admissionYear: number;
+}, courseId: number): Promise<void> {
+  const curriculumEntry = await prisma.programCurriculum.findFirst({
+    where: {
+      programId: classRecord.programId,
+      courseId,
+      semesterNumber: classRecord.currentSemester,
+      batchYear: classRecord.admissionYear,
+    },
+    select: { id: true },
+  });
+
+  if (!curriculumEntry) {
+    throw new ValidationError("Course must belong to the class current-semester curriculum");
+  }
+}
+
+function assertCanReadManagedClass(
+  context: Awaited<ReturnType<typeof getPermissionContext>>,
+  classRecord: { program: { id: number; department: { id: number } } },
+): void {
+  const canRead =
+    context.user?.status === "ACTIVE" &&
+    (context.user.userType === "ADMIN" ||
+      context.scopes.hodDepartmentIds.includes(classRecord.program.department.id) ||
+      context.scopes.directedProgramIds.includes(classRecord.program.id));
+
+  if (!canRead) {
+    throw new ForbiddenError(
+      "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
+  }
+}
+
+async function cleanupAutoClassMembershipIfUnused(
+  tx: Prisma.TransactionClient,
+  userId: number,
+  classId: number,
+  serverId: number
+): Promise<boolean> {
+  const [membership, teachesCount, moderatorCount] = await Promise.all([
+    tx.serverMembership.findUnique({
+      where: { userId_serverId: { userId, serverId } },
+      select: { isAutoJoined: true },
+    }),
+    tx.teaches.count({ where: { classId, teacherId: userId } }),
+    tx.userRoleAssignment.count({
+      where: { AND: [activePlatformRoleAssignmentWhere(), { userId, serverId }] },
+    }),
+  ]);
+
+  if (membership?.isAutoJoined && teachesCount === 0 && moderatorCount === 0) {
+    await tx.serverMembership.delete({
+      where: { userId_serverId: { userId, serverId } },
+    });
+    return true;
+  }
+
+  return false;
+}
+
+function buildScopedClassWhere(
+  query: ListClassesQuery,
+  context: Awaited<ReturnType<typeof getPermissionContext>>
+): Prisma.ClassWhereInput {
+  if (context.user?.status !== "ACTIVE") {
+    throw new ForbiddenError(
+      "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+
+  const where: Prisma.ClassWhereInput = {};
+  if (query.programId) where.programId = query.programId;
+  if (query.departmentId) where.program = { departmentId: query.departmentId };
+  if (query.semester) where.currentSemester = query.semester;
+  if (query.section) where.section = query.section;
+  if (!query.status || query.status === "ACTIVE") where.status = "ACTIVE";
+  else if (query.status === "GRADUATED") where.status = "GRADUATED";
+
+  if (context.user.userType === "ADMIN") {
+    return where;
+  }
+
+  const scopedConditions: Prisma.ClassWhereInput[] = [];
+  if (context.scopes.hodDepartmentIds.length > 0) {
+    scopedConditions.push({
+      program: { departmentId: { in: context.scopes.hodDepartmentIds } },
+    });
+  }
+  if (context.scopes.directedProgramIds.length > 0) {
+    scopedConditions.push({ programId: { in: context.scopes.directedProgramIds } });
+  }
+
+  if (scopedConditions.length === 0) {
+    throw new ForbiddenError(
+      "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+
+  where.AND = [...(Array.isArray(where.AND) ? where.AND : []), { OR: scopedConditions }];
+  return where;
+}
+
+// ─── Service Functions ─────────────────────────────────────────────────────
+
+export async function createClass(data: CreateClassInput, userId: number, userType: string) {
+  const program = await prisma.program.findUnique({
+    where: { id: data.programId },
+    select: {
+      id: true,
+      code: true,
+      semesters: true,
+      departmentId: true,
+    },
+  });
+
+  if (!program) {
+    throw new NotFoundError("Program not found");
+  }
+
+  if (data.currentSemester > program.semesters) {
+    throw new ConflictError(
+      `Current semester (${data.currentSemester}) exceeds program's total semesters (${program.semesters})`
+    );
+  }
+
+  await assertHodOrAdmin(userId, userType, program.departmentId);
+  await assertFullCurriculumExists(prisma, {
+    programId: data.programId,
+    programSemesters: program.semesters,
+    batchYear: data.admissionYear,
+  });
+
+  const classRecord = await prisma.$transaction(async (tx) => {
+    await lockProgramForHodOrAdmin(data.programId, userId, userType, tx);
+    await assertFullCurriculumExists(tx, {
+      programId: data.programId,
+      programSemesters: program.semesters,
+      batchYear: data.admissionYear,
+    });
+    const currentCurriculum = await tx.programCurriculum.findMany({
+      where: {
+        programId: data.programId,
+        semesterNumber: data.currentSemester,
+        batchYear: data.admissionYear,
+      },
+      select: {
+        courseId: true,
+        course: { select: { code: true } },
+      },
+      orderBy: { course: { code: "asc" } },
+    });
+    const serverName = `${program.code} - S${data.currentSemester} - Section ${data.section}`;
+
+    const server = await tx.server.create({
+      data: {
+        name: serverName,
+        type: "CLASS",
+        createdBy: userId,
+      },
+    });
+
+    const createdClass = await tx.class.create({
+      data: {
+        programId: data.programId,
+        currentSemester: data.currentSemester,
+        academicYear: data.academicYear,
+        admissionYear: data.admissionYear,
+        section: data.section,
+        serverId: server.id,
+      },
+      select: classListSelect,
+    });
+
+    await tx.channel.createMany({
+      data: [
+        {
+          serverId: server.id,
+          name: "announcements",
+          type: "ANNOUNCEMENT",
+          isAutoCreated: true,
+          createdBy: userId,
+        },
+        {
+          serverId: server.id,
+          name: "general",
+          type: "GENERAL",
+          isAutoCreated: true,
+          createdBy: userId,
+        },
+        ...currentCurriculum.map((entry) => ({
+          serverId: server.id,
+          name: entry.course.code,
+          type: "COURSE" as const,
+          courseId: entry.courseId,
+          isAutoCreated: true,
+          createdBy: userId,
+        })),
+      ],
+    });
+
+    return createdClass;
+  });
+
+  invalidateSystemStatsCache();
+  return toPublicClass(classRecord);
+}
+
+export async function listClasses(query: ListClassesQuery, callerUserId: number) {
+  const { page, limit, skip, take } = parsePagination(query);
+  const context = await getPermissionContext(callerUserId);
+  const where = buildScopedClassWhere(query, context);
+
+  const [classes, total] = await Promise.all([
+    prisma.class.findMany({
+      where,
+      select: classListSelect,
+      orderBy: [{ academicYear: "desc" }, { currentSemester: "asc" }, { section: "asc" }],
+      skip,
+      take,
+    }),
+    prisma.class.count({ where }),
+  ]);
+
+  return {
+    data: classes.map(toPublicClass),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function getClassById(id: number, callerUserId: number) {
+  const classRecord = await prisma.class.findUnique({
+    where: { id },
+    select: classDetailSelect,
+  });
+
+  if (!classRecord) {
+    throw new NotFoundError("Class not found");
+  }
+
+  const context = await getPermissionContext(callerUserId);
+  assertCanReadManagedClass(context, classRecord);
+  const permissions = buildClassPermissions(context, buildClassPermissionTarget(classRecord));
+
+  return {
+    ...toPublicClass(classRecord),
+    permissions,
+  };
+}
+
+export async function assignCourseToClass(
+  classId: number,
+  data: AssignCourseInput,
+  userId: number,
+  userType: string
+) {
+  const teacher = await resolveUserPublicId(data.teacherPublicId, { field: "teacherPublicId" });
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+
+  await assertHodOrPdOrAdmin(
+    userId,
+    userType,
+    classRecord.program.departmentId,
+    classRecord.programId
+  );
+
+  const course = await prisma.course.findUnique({
+    where: { id: data.courseId },
+    select: { id: true, code: true, title: true, departmentId: true },
+  });
+
+  if (!course) {
+    throw new NotFoundError("Course not found");
+  }
+
+  if (course.departmentId !== classRecord.program.departmentId) {
+    throw new ForbiddenError("Course must belong to the same department as the class");
+  }
+
+  await assertCourseInCurrentCurriculum(classRecord, data.courseId);
+  await assertActiveTeacher(teacher.id);
+
+  const existingAssignment = await prisma.teaches.findUnique({
+    where: {
+      classId_courseId: {
+        classId,
+        courseId: data.courseId,
+      },
+    },
+    select: { teacherId: true },
+  });
+
+  if (existingAssignment) {
+    if (existingAssignment.teacherId === teacher.id) {
+      throw new ConflictError("This course is already assigned to this teacher for this class");
+    }
+
+    throw new ConflictError("Use teacher replacement for an already assigned class course");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
+    const lockedAssignment = await tx.teaches.findUnique({
+      where: { classId_courseId: { classId, courseId: data.courseId } },
+      select: { teacherId: true },
+    });
+    if (lockedAssignment) {
+      if (lockedAssignment.teacherId === teacher.id) {
+        throw new ConflictError("This course is already assigned to this teacher for this class");
+      }
+      throw new ConflictError("Use teacher replacement for an already assigned class course");
+    }
+    const assignment = await tx.teaches.create({
+      data: {
+        teacherId: teacher.id,
+        courseId: data.courseId,
+        classId,
+      },
+      select: courseAssignmentSelect,
+    });
+
+    const existingChannel = await tx.channel.findFirst({
+      where: {
+        serverId: classRecord.serverId,
+        courseId: data.courseId,
+        isDeleted: false,
+      },
+      select: { id: true, isArchived: true, isLocked: true },
+    });
+
+    if (!existingChannel) {
+      await tx.channel.create({
+        data: {
+          serverId: classRecord.serverId,
+          name: course.code,
+          type: "COURSE",
+          courseId: data.courseId,
+          isAutoCreated: true,
+          createdBy: userId,
+        },
+      });
+    } else if (existingChannel.isArchived || existingChannel.isLocked) {
+      await tx.channel.update({
+        where: { id: existingChannel.id },
+        data: {
+          isArchived: false,
+          archivedAt: null,
+          archivedBy: null,
+          isLocked: false,
+          lockedAt: null,
+          lockedBy: null,
+        },
+      });
+    }
+
+    await tx.serverMembership.upsert({
+      where: {
+        userId_serverId: {
+          userId: teacher.id,
+          serverId: classRecord.serverId,
+        },
+      },
+      create: {
+        userId: teacher.id,
+        serverId: classRecord.serverId,
+        isAutoJoined: true,
+      },
+      update: {},
+    });
+
+    return toPublicCourseAssignment(assignment);
+  });
+}
+
+export async function listClassCourses(classId: number, callerUserId: number) {
+  await getClassById(classId, callerUserId);
+
+  const assignments = await prisma.teaches.findMany({
+    where: { classId },
+    select: courseAssignmentSelect,
+    orderBy: { course: { code: "asc" } },
+  });
+  return assignments.map(toPublicCourseAssignment);
+}
+
+export async function replaceClassCourseTeacher(
+  classId: number,
+  courseId: number,
+  data: { teacherPublicId: string },
+  userId: number,
+  userType: string
+) {
+  const teacher = await resolveUserPublicId(data.teacherPublicId, { field: "teacherPublicId" });
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+
+  await assertHodOrPdOrAdmin(
+    userId,
+    userType,
+    classRecord.program.departmentId,
+    classRecord.programId
+  );
+  await assertCourseInCurrentCurriculum(classRecord, courseId);
+  await assertActiveTeacher(teacher.id);
+
+  const existingAssignment = await prisma.teaches.findUnique({
+    where: { classId_courseId: { classId, courseId } },
+    select: { teacherId: true },
+  });
+
+  if (!existingAssignment) {
+    throw new NotFoundError("Course is not assigned to this class");
+  }
+
+  if (existingAssignment.teacherId === teacher.id) {
+    throw new ConflictError("This course is already assigned to this teacher");
+  }
+
+  const { updated, removedUserIds } = await prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
+    const lockedAssignment = await tx.teaches.findUnique({
+      where: { classId_courseId: { classId, courseId } },
+      select: { teacherId: true },
+    });
+    if (!lockedAssignment) {
+      throw new NotFoundError("Course is not assigned to this class");
+    }
+    if (lockedAssignment.teacherId === teacher.id) {
+      throw new ConflictError("This course is already assigned to this teacher");
+    }
+    const removedUserIds = new Set<number>();
+    const updated = await tx.teaches.update({
+      where: { classId_courseId: { classId, courseId } },
+      data: { teacherId: teacher.id },
+      select: courseAssignmentSelect,
+    });
+
+    await tx.serverMembership.upsert({
+      where: { userId_serverId: { userId: teacher.id, serverId: classRecord.serverId } },
+      create: {
+        userId: teacher.id,
+        serverId: classRecord.serverId,
+        isAutoJoined: true,
+      },
+      update: {},
+    });
+
+    if (
+      await cleanupAutoClassMembershipIfUnused(
+        tx,
+        lockedAssignment.teacherId,
+        classId,
+        classRecord.serverId
+      )
+    ) {
+      removedUserIds.add(lockedAssignment.teacherId);
+    }
+
+    return { updated, removedUserIds: Array.from(removedUserIds) };
+  });
+
+  removedUserIds.forEach(disconnectUserSockets);
+  return toPublicCourseAssignment(updated);
+}
+
+export async function removeCourseFromClass(
+  classId: number,
+  courseId: number,
+  userId: number,
+  userType: string
+) {
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+
+  await assertHodOrPdOrAdmin(
+    userId,
+    userType,
+    classRecord.program.departmentId,
+    classRecord.programId
+  );
+
+  const assignments = await prisma.teaches.findMany({
+    where: { classId, courseId },
+    select: { teacherId: true },
+  });
+
+  if (assignments.length === 0) {
+    throw new NotFoundError("Course is not assigned to this class");
+  }
+
+  const removedUserIds = await prisma.$transaction(async (tx) => {
+    await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
+    const lockedAssignments = await tx.teaches.findMany({
+      where: { classId, courseId },
+      select: { teacherId: true },
+    });
+    if (lockedAssignments.length === 0) {
+      throw new NotFoundError("Course is not assigned to this class");
+    }
+    const removedUserIds = new Set<number>();
+    await tx.teaches.deleteMany({ where: { classId, courseId } });
+
+    await tx.channel.updateMany({
+      where: {
+        serverId: classRecord.serverId,
+        courseId,
+        isAutoCreated: true,
+        isArchived: false,
+      },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: userId,
+      },
+    });
+
+    for (const assignment of lockedAssignments) {
+      if (
+        await cleanupAutoClassMembershipIfUnused(
+          tx,
+          assignment.teacherId,
+          classId,
+          classRecord.serverId
+        )
+      ) {
+        removedUserIds.add(assignment.teacherId);
+      }
+    }
+
+    return Array.from(removedUserIds);
+  });
+
+  removedUserIds.forEach(disconnectUserSockets);
+}
+
+export async function listClassStudents(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  userType: string
+) {
+  const classRecord = await getManagedClassOrThrow(classId);
+  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+
+  const { page, limit, skip, take } = parsePagination(query);
+  const where: Prisma.StudentInfoWhereInput = {
+    classId,
+    ...(query.search
+      ? {
+          user: {
+            OR: [
+              { fullName: { contains: query.search, mode: "insensitive" } },
+              { email: { contains: query.search, mode: "insensitive" } },
+            ],
+          },
+        }
+      : {}),
+  };
+
+  const [students, total] = await prisma.$transaction([
+    prisma.studentInfo.findMany({
+      where,
+      select: classStudentSelect,
+      orderBy: { user: { fullName: "asc" } },
+      skip,
+      take,
+    }),
+    prisma.studentInfo.count({ where }),
+  ]);
+
+  return {
+    data: students.map(toPublicClassStudent),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function listStudentCandidates(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  userType: string
+) {
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+
+  const { page, limit, skip, take } = parsePagination(query);
+  const where: Prisma.StudentInfoWhereInput = {
+    classId: { not: classId },
+    user: {
+      status: "ACTIVE",
+      isDeleted: false,
+      userType: "STUDENT",
+      departmentId: classRecord.program.departmentId,
+      ...(query.search
+        ? {
+            OR: [
+              { fullName: { contains: query.search, mode: "insensitive" } },
+              { email: { contains: query.search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+  };
+
+  const [students, total] = await prisma.$transaction([
+    prisma.studentInfo.findMany({
+      where,
+      select: classStudentSelect,
+      orderBy: { user: { fullName: "asc" } },
+      skip,
+      take,
+    }),
+    prisma.studentInfo.count({ where }),
+  ]);
+
+  return {
+    data: students.map(toPublicClassStudent),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function transferStudentToClass(
+  classId: number,
+  data: { studentPublicId: string },
+  userId: number,
+  userType: string
+) {
+  const resolvedStudent = await resolveUserPublicId(data.studentPublicId, {
+    field: "studentPublicId",
+  });
+  const targetClass = await getManagedClassOrThrow(classId);
+  assertClassIsActive(targetClass);
+  await assertHodOrAdmin(userId, userType, targetClass.program.departmentId);
+
+  const student = await prisma.studentInfo.findUnique({
+    where: { studentId: resolvedStudent.id },
+    select: studentTransferSelect,
+  });
+
+  assertStudentCanTransfer(student, classId, targetClass.program.departmentId);
+
+  const { updatedStudent, removedUserIds } = await prisma.$transaction(async (tx) => {
+    await lockStudentProfileForTransfer(resolvedStudent.id, tx);
+    const lockedStudent = await tx.studentInfo.findUnique({
+      where: { studentId: resolvedStudent.id },
+      select: studentTransferSelect,
+    });
+    assertStudentCanTransfer(lockedStudent, classId, targetClass.program.departmentId);
+
+    for (const lockedClassId of [...new Set([lockedStudent.classId, classId])].sort(
+      (left, right) => left - right
+    )) {
+      await lockClassForAcademicWrite(lockedClassId, userId, userType, "HOD", tx);
+    }
+    const currentStudent = await tx.studentInfo.findUnique({
+      where: { studentId: resolvedStudent.id },
+      select: studentTransferSelect,
+    });
+    assertStudentCanTransfer(currentStudent, classId, targetClass.program.departmentId);
+
+    const removedUserIds = new Set<number>();
+    const updated = await tx.studentInfo.update({
+      where: { studentId: resolvedStudent.id },
+      data: { classId },
+      select: classStudentSelect,
+    });
+
+    await tx.serverMembership.upsert({
+      where: { userId_serverId: { userId: resolvedStudent.id, serverId: targetClass.serverId } },
+      create: {
+        userId: resolvedStudent.id,
+        serverId: targetClass.serverId,
+        isAutoJoined: true,
+      },
+      update: {},
+    });
+
+    if (
+      await cleanupAutoClassMembershipIfUnused(
+        tx,
+        resolvedStudent.id,
+        currentStudent.classId,
+        currentStudent.class.serverId
+      )
+    ) {
+      removedUserIds.add(resolvedStudent.id);
+    }
+
+    return { updatedStudent: updated, removedUserIds: Array.from(removedUserIds) };
+  });
+
+  removedUserIds.forEach(disconnectUserSockets);
+  return toPublicClassStudent(updatedStudent);
+}
+
+export async function listTeacherCandidates(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  userType: string
+) {
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+  await assertHodOrPdOrAdmin(
+    userId,
+    userType,
+    classRecord.program.departmentId,
+    classRecord.programId
+  );
+
+  const { page, limit, skip, take } = parsePagination(query);
+  const where: Prisma.TeacherInfoWhereInput = {
+    user: {
+      status: "ACTIVE",
+      isDeleted: false,
+      userType: "TEACHER",
+      ...(query.search
+        ? {
+            OR: [
+              { fullName: { contains: query.search, mode: "insensitive" } },
+              { email: { contains: query.search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+  };
+
+  const [teachers, total] = await prisma.$transaction([
+    prisma.teacherInfo.findMany({
+      where,
+      select: teacherCandidateSelect,
+      orderBy: { user: { fullName: "asc" } },
+      skip,
+      take,
+    }),
+    prisma.teacherInfo.count({ where }),
+  ]);
+
+  return {
+    data: teachers.map(toPublicTeacherCandidate),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+// ─── Semester Progression ──────────────────────────────────────────────────
+
+export async function advanceSemester(
+  classId: number,
+  data: SemesterProgressionInput,
+  userId: number,
+  userType: string
+) {
+  const teacherAssignments: InternalTeacherAssignment[] = await Promise.all(
+    data.teacherAssignments.map(async (assignment) => ({
+      courseId: assignment.courseId,
+      teacherId: (
+        await resolveUserPublicId(assignment.teacherPublicId, { field: "teacherPublicId" })
+      ).id,
+    })),
+  );
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+
+  if (classRecord.currentSemester >= classRecord.program.semesters) {
+    throw new ValidationError(
+      `Class is already at the maximum semester (${classRecord.program.semesters})`
+    );
+  }
+
+  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+
+  const newSemester = classRecord.currentSemester + 1;
+
+  const curriculum = await prisma.programCurriculum.findMany({
+    where: {
+      programId: classRecord.programId,
+      semesterNumber: newSemester,
+      batchYear: classRecord.admissionYear,
+    },
+    select: {
+      courseId: true,
+      course: {
+        select: { id: true, code: true },
+      },
+    },
+  });
+
+  if (curriculum.length > 0) {
+    const curriculumCourseIds = curriculum.map((c) => c.courseId);
+    const assignedCourseIds = teacherAssignments.map((a) => a.courseId);
+
+    const assignmentSet = new Set<number>();
+    const duplicateAssignments: number[] = [];
+    for (const courseId of assignedCourseIds) {
+      if (assignmentSet.has(courseId)) {
+        duplicateAssignments.push(courseId);
+      } else {
+        assignmentSet.add(courseId);
+      }
+    }
+    if (duplicateAssignments.length > 0) {
+      throw new ValidationError(
+        `Duplicate teacher assignments found for course IDs: ${[
+          ...new Set(duplicateAssignments),
+        ].join(", ")}`
+      );
+    }
+
+    const extraAssignments = assignedCourseIds.filter((id) => !curriculumCourseIds.includes(id));
+    if (extraAssignments.length > 0) {
+      throw new ValidationError(
+        `Teacher assignments contain courses not in the target semester curriculum: ${[
+          ...new Set(extraAssignments),
+        ].join(", ")}`
+      );
+    }
+
+    const missingCourses = curriculumCourseIds.filter((id) => !assignedCourseIds.includes(id));
+    if (missingCourses.length > 0) {
+      throw new ValidationError(
+        `Teacher assignments are required for all curriculum courses. Missing assignments for course IDs: ${missingCourses.join(", ")}`,
+        undefined,
+        ApiErrorCode.CURRICULUM_TEACHER_ASSIGNMENT_REQUIRED
+      );
+    }
+
+    for (const teacherId of [...new Set(teacherAssignments.map((a) => a.teacherId))]) {
+      await assertActiveTeacher(teacherId);
+    }
+  } else {
+    throw new ValidationError(
+      `Curriculum is required for semester ${newSemester} before this class can advance`
+    );
+  }
+
+  const previousTeacherIds = await prisma.teaches.findMany({
+    where: { classId },
+    select: { teacherId: true },
+    distinct: ["teacherId"],
+  });
+
+  const { advancedClass, removedUserIds } = await prisma.$transaction(async (tx) => {
+    const lockedClass = await lockClassForAcademicWrite(classId, userId, userType, "HOD", tx);
+    if (lockedClass.currentSemester !== classRecord.currentSemester) {
+      throw new ConflictError("Class semester changed; reload and try again");
+    }
+    const removedUserIds = new Set<number>();
+    await tx.channel.updateMany({
+      where: {
+        serverId: classRecord.serverId,
+        type: "COURSE",
+        isDeleted: false,
+        isArchived: false,
+      },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: userId,
+        isLocked: true,
+        lockedBy: userId,
+        lockedAt: new Date(),
+      },
+    });
+
+    await tx.teaches.deleteMany({ where: { classId } });
+
+    const updatedClass = await tx.class.update({
+      where: { id: classId },
+      data: { currentSemester: newSemester },
+      select: classDetailSelect,
+    });
+
+    await tx.server.update({
+      where: { id: classRecord.serverId },
+      data: {
+        name: `${classRecord.program.code} - S${newSemester} - Section ${classRecord.section}`,
+      },
+    });
+
+    if (curriculum.length > 0) {
+      for (const entry of curriculum) {
+        const existingChannel = await tx.channel.findFirst({
+          where: {
+            serverId: classRecord.serverId,
+            courseId: entry.courseId,
+            isDeleted: false,
+          },
+          select: { id: true },
+        });
+
+        if (existingChannel) {
+          await tx.channel.update({
+            where: { id: existingChannel.id },
+            data: {
+              isArchived: false,
+              archivedAt: null,
+              archivedBy: null,
+              isLocked: false,
+              lockedBy: null,
+              lockedAt: null,
+            },
+          });
+        } else {
+          await tx.channel.create({
+            data: {
+              serverId: classRecord.serverId,
+              name: entry.course.code,
+              type: "COURSE",
+              courseId: entry.courseId,
+              isAutoCreated: true,
+              createdBy: userId,
+            },
+          });
+        }
+
+        const assignment = teacherAssignments.find((a) => a.courseId === entry.courseId);
+        if (assignment) {
+          await tx.teaches.create({
+            data: {
+              teacherId: assignment.teacherId,
+              courseId: entry.courseId,
+              classId,
+            },
+          });
+
+          await tx.serverMembership.upsert({
+            where: {
+              userId_serverId: {
+                userId: assignment.teacherId,
+                serverId: classRecord.serverId,
+              },
+            },
+            create: {
+              userId: assignment.teacherId,
+              serverId: classRecord.serverId,
+              isAutoJoined: true,
+            },
+            update: {},
+          });
+        }
+      }
+    }
+
+    for (const previousTeacher of previousTeacherIds) {
+      if (
+        await cleanupAutoClassMembershipIfUnused(
+          tx,
+          previousTeacher.teacherId,
+          classId,
+          classRecord.serverId
+        )
+      ) {
+        removedUserIds.add(previousTeacher.teacherId);
+      }
+    }
+
+    return { advancedClass: updatedClass, removedUserIds: Array.from(removedUserIds) };
+  });
+
+  removedUserIds.forEach(disconnectUserSockets);
+
+  return {
+    ...toPublicClass(advancedClass),
+    permissions: buildClassPermissions(
+      await getPermissionContext(userId),
+      buildClassPermissionTarget(advancedClass)
+    ),
+  };
+}
+
+export async function graduateClass(classId: number, userId: number, userType: string) {
+  const classRecord = await getManagedClassOrThrow(classId);
+  assertClassIsActive(classRecord);
+  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+
+  if (classRecord.currentSemester !== classRecord.program.semesters) {
+    throw new ValidationError(
+      "Only final-semester classes can be graduated",
+      undefined,
+      ApiErrorCode.CLASS_FINAL_SEMESTER_REQUIRED
+    );
+  }
+
+  const graduatedClass = await prisma.$transaction(async (tx) => {
+    const lockedClass = await lockClassForAcademicWrite(classId, userId, userType, "HOD", tx);
+    if (lockedClass.currentSemester !== classRecord.currentSemester) {
+      throw new ConflictError("Class semester changed; reload and try again");
+    }
+    const now = new Date();
+    const updatedClass = await tx.class.update({
+      where: { id: classId },
+      data: {
+        status: "GRADUATED",
+        graduatedAt: now,
+        graduatedBy: userId,
+      },
+      select: classDetailSelect,
+    });
+
+    await tx.channel.updateMany({
+      where: {
+        serverId: classRecord.serverId,
+        type: "COURSE",
+        isDeleted: false,
+        isArchived: false,
+      },
+      data: {
+        isArchived: true,
+        archivedBy: userId,
+        archivedAt: now,
+      },
+    });
+
+    await tx.channel.updateMany({
+      where: {
+        serverId: classRecord.serverId,
+        type: "COURSE",
+        isDeleted: false,
+        isLocked: false,
+      },
+      data: {
+        isLocked: true,
+        lockedBy: userId,
+        lockedAt: now,
+      },
+    });
+
+    return updatedClass;
+  });
+
+  return {
+    ...toPublicClass(graduatedClass),
+    permissions: buildClassPermissions(
+      await getPermissionContext(userId),
+      buildClassPermissionTarget(graduatedClass)
+    ),
+  };
+}
+
+export async function getClassDeletionImpact(classId: number) {
+  const classRecord = await prisma.class.findUnique({
+    where: { id: classId },
+    select: {
+      publicId: true,
+      currentSemester: true,
+      admissionYear: true,
+      academicYear: true,
+      section: true,
+      status: true,
+      serverId: true,
+      server: { select: { publicId: true } },
+      program: {
+        select: {
+          id: true,
+          code: true,
+          department: { select: { id: true, name: true, code: true } },
+        },
+      },
+    },
+  });
+
+  if (!classRecord) {
+    throw new NotFoundError("Class not found");
+  }
+
+  const [studentCount, studentPreview, teachingCount, teachingPreview, communicationImpact] =
+    await Promise.all([
+      prisma.studentInfo.count({ where: { classId } }),
+      prisma.studentInfo.findMany({
+        where: { classId },
+        select: {
+          rollNumber: true,
+          user: {
+            select: {
+              publicId: true,
+              fullName: true,
+              email: true,
+              status: true,
+              isDeleted: true,
+            },
+          },
+        },
+        orderBy: { rollNumber: "asc" },
+        take: IMPACT_PREVIEW_LIMIT,
+      }),
+      prisma.teaches.count({ where: { classId } }),
+      prisma.teaches.findMany({
+        where: { classId },
+        select: {
+          course: { select: { id: true, code: true, title: true } },
+          teacher: {
+            select: {
+              designation: true,
+              user: { select: { publicId: true, fullName: true, email: true } },
+            },
+          },
+        },
+        orderBy: { course: { code: "asc" } },
+        take: IMPACT_PREVIEW_LIMIT,
+      }),
+      getServerCommunicationImpact(classRecord.serverId),
+    ]);
+
+  const canDelete = studentCount === 0 && teachingCount === 0;
+
+  return {
+    class: {
+      publicId: classRecord.publicId,
+      programId: classRecord.program.id,
+      programCode: classRecord.program.code,
+      department: classRecord.program.department,
+      section: classRecord.section,
+      currentSemester: classRecord.currentSemester,
+      academicYear: classRecord.academicYear,
+      admissionYear: classRecord.admissionYear,
+      status: classRecord.status,
+      serverPublicId: classRecord.server.publicId,
+    },
+    canDelete,
+    checksComplete: true,
+    pendingChecks: [] as string[],
+    blockers: {
+      enrolledStudents: buildImpactGroup(studentCount, studentPreview),
+      activeTeachingAssignments: buildImpactGroup(teachingCount, teachingPreview),
+    },
+    communicationImpact,
+  };
+}

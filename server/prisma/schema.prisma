@@ -1,0 +1,680 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Gender {
+  MALE   @map("male")
+  FEMALE @map("female")
+
+  @@map("gender")
+}
+
+enum UserType {
+  TEACHER @map("Teacher")
+  STUDENT @map("Student")
+  ADMIN   @map("Admin")
+
+  @@map("user_type")
+}
+
+enum UserStatus {
+  ACTIVE    @map("active")
+  SUSPENDED @map("suspended")
+
+  @@map("user_status")
+}
+
+enum SocietyStatus {
+  ACTIVE    @map("active")
+  SUSPENDED @map("suspended")
+
+  @@map("society_status")
+}
+
+enum ServerType {
+  DEPARTMENT @map("Department")
+  CLASS      @map("Class")
+  SOCIETY    @map("Society")
+
+  @@map("server_type")
+}
+
+enum ChannelType {
+  ANNOUNCEMENT @map("announcement")
+  COURSE       @map("course")
+  GENERAL      @map("general")
+  PROGRAM      @map("program")
+
+  @@map("channel_type")
+}
+
+enum PostPriority {
+  NORMAL    @map("normal")
+  IMPORTANT @map("important")
+  URGENT    @map("urgent")
+
+  @@map("post_priority")
+}
+
+enum Section {
+  A @map("A")
+  B @map("B")
+
+  @@map("section")
+}
+
+enum PlatformRoleScopeType {
+  SERVER  @map("server")
+  CHANNEL @map("channel")
+
+  @@map("platform_role_scope_type")
+}
+
+enum NotificationType {
+  NEW_POST                 @map("new_post")
+  ROLE_ASSIGNED            @map("role_assigned")
+  SOCIETY_REQUEST_REVIEWED @map("society_request_reviewed")
+  SOCIETY_SUSPENDED        @map("society_suspended")
+  SOCIETY_ACTIVATED        @map("society_activated")
+  SOCIETY_DELETED          @map("society_deleted")
+  SOCIETY_RESTORED         @map("society_restored")
+
+  @@map("notification_type")
+}
+
+enum NotificationScopeType {
+  SERVER  @map("server")
+  CHANNEL @map("channel")
+
+  @@map("notification_scope_type")
+}
+
+enum MembershipRequestStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+
+  @@map("membership_request_status")
+}
+
+enum ClassStatus {
+  ACTIVE    @map("active")
+  GRADUATED @map("graduated")
+
+  @@map("class_status")
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────
+
+model DegreeLevel {
+  id       Int       @id @default(autoincrement())
+  level    String    @unique @db.VarChar(50)
+  programs Program[]
+
+  @@map("degree_levels")
+}
+
+model Discipline {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique @db.VarChar(100)
+  programs Program[]
+
+  @@map("disciplines")
+}
+
+model Designation {
+  value       String        @id @db.VarChar(50)
+  label       String        @db.VarChar(100)
+  description String?       @db.VarChar(500)
+  teachers    TeacherInfo[]
+
+  @@map("designations")
+}
+
+model Department {
+  id       Int    @id @default(autoincrement())
+  name     String @unique @db.VarChar(100)
+  code     String @unique @db.VarChar(20)
+  hodId    Int?   @unique @map("hod_id")
+  serverId Int    @unique @map("server_id")
+
+  hod    TeacherInfo? @relation("DepartmentHOD", fields: [hodId], references: [teacherId], onDelete: Restrict)
+  server Server       @relation("DepartmentServer", fields: [serverId], references: [id], onDelete: Restrict)
+
+  programs  Program[]
+  users     User[]
+  societies Society[]
+  courses   Course[]
+
+  @@map("departments")
+}
+
+model Program {
+  id                Int    @id @default(autoincrement())
+  departmentId      Int    @map("department_id")
+  disciplineId      Int    @map("discipline_id")
+  degreeLevelId     Int    @map("degree_level_id")
+  semesters         Int
+  code              String @unique @db.VarChar(20)
+  programDirectorId Int?   @unique @map("program_director_id")
+
+  department      Department   @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  discipline      Discipline   @relation(fields: [disciplineId], references: [id], onDelete: Restrict)
+  degreeLevel     DegreeLevel  @relation(fields: [degreeLevelId], references: [id], onDelete: Restrict)
+  programDirector TeacherInfo? @relation("ProgramDirector", fields: [programDirectorId], references: [teacherId], onDelete: Restrict)
+
+  classes    Class[]
+  channels   Channel[]           @relation("ProgramChannel")
+  curriculum ProgramCurriculum[]
+
+  @@unique([departmentId, disciplineId, degreeLevelId])
+  @@map("programs")
+}
+
+model User {
+  id                     Int        @id @default(autoincrement())
+  publicId               String     @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  fullName               String     @map("full_name") @db.VarChar(100)
+  email                  String     @db.VarChar(255)
+  phone                  String     @db.VarChar(20)
+  passwordHash           String     @map("password_hash") @db.VarChar(255)
+  gender                 Gender
+  profilePictureUrl      String?    @map("profile_picture_url")
+  bio                    String?
+  userType               UserType   @map("user_type")
+  departmentId           Int?       @map("department_id")
+  status                 UserStatus @default(ACTIVE)
+  isDeleted              Boolean    @default(false) @map("is_deleted")
+  deletedAt              DateTime?  @map("deleted_at")
+  deletedBy              Int?       @map("deleted_by")
+  mustChangePassword     Boolean    @default(false) @map("must_change_password")
+  passwordResetTokenHash String?    @map("password_reset_token_hash") @db.VarChar(255)
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
+
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  deletedByUser User?       @relation("UserDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+
+  studentInfo       StudentInfo?
+  teacherInfo       TeacherInfo?
+  serverMemberships ServerMembership[]
+  createdServers    Server[]           @relation("ServerCreator")
+  deletedServers    Server[]           @relation("ServerDeleter")
+  lockedChannels    Channel[]          @relation("ChannelLocker")
+  deletedChannels   Channel[]          @relation("ChannelDeleter")
+  createdChannels   Channel[]          @relation("ChannelCreator")
+  archivedChannels  Channel[]          @relation("ChannelArchiver")
+
+  authoredPosts Post[] @relation("PostAuthor")
+  deletedPosts  Post[] @relation("PostDeleter")
+  updatedPosts  Post[] @relation("PostUpdater")
+  pinnedPosts   Post[] @relation("PostPinner")
+
+  platformRoleAssignments         UserRoleAssignment[] @relation("PlatformRoleUser")
+  platformRoleAssignmentsCreated  UserRoleAssignment[] @relation("PlatformRoleAssigner")
+  platformRoleAssignmentsRevoked  UserRoleAssignment[] @relation("PlatformRoleRevoker")
+
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  refreshTokens           RefreshToken[]
+  graduatedClasses        Class[]                  @relation("ClassGraduator")
+  auditLogs               AuditLog[]               @relation("AuditActor")
+
+  deletedUsers               User[]                     @relation("UserDeleter")
+  deletedSocieties           Society[]                  @relation("SocietyDeleter")
+  societyMembershipRequests  SocietyMembershipRequest[] @relation("MembershipRequester")
+  reviewedMembershipRequests SocietyMembershipRequest[] @relation("MembershipReviewer")
+
+  @@index([departmentId, userType, status])
+  @@map("users")
+}
+
+model StudentInfo {
+  studentId  Int    @id @map("student_id")
+  classId    Int    @map("class_id")
+  rollNumber String @unique @map("roll_number") @db.VarChar(30)
+
+  user  User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class Class @relation(fields: [classId], references: [id], onDelete: Restrict)
+
+  crOfClass          Class?   @relation("ClassCR")
+  presidentOfSociety Society? @relation("SocietyPresident")
+
+  @@index([classId])
+  @@map("student_info")
+}
+
+model TeacherInfo {
+  teacherId   Int    @id @map("teacher_id")
+  designation String @db.VarChar(50)
+
+  user              User        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  designationRecord Designation @relation(fields: [designation], references: [value], onDelete: Restrict, onUpdate: Cascade)
+
+  hodOfDepartment          Department? @relation("DepartmentHOD")
+  programDirectorOfProgram Program?    @relation("ProgramDirector")
+  convenorOfSociety        Society?    @relation("SocietyConvenor")
+
+  teaches Teaches[]
+
+  @@map("teacher_info")
+}
+
+model Class {
+  id              Int         @id @default(autoincrement())
+  publicId        String      @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  programId       Int         @map("program_id")
+  currentSemester Int         @map("current_semester")
+  academicYear    Int         @map("academic_year")
+  admissionYear   Int         @map("admission_year")
+  section         Section
+  crId            Int?        @unique @map("cr_id")
+  serverId        Int         @unique @map("server_id")
+  status          ClassStatus @default(ACTIVE)
+  graduatedAt     DateTime?   @map("graduated_at")
+  graduatedBy     Int?        @map("graduated_by")
+
+  program   Program      @relation(fields: [programId], references: [id], onDelete: Restrict)
+  cr        StudentInfo? @relation("ClassCR", fields: [crId], references: [studentId], onDelete: Restrict)
+  server    Server       @relation("ClassServer", fields: [serverId], references: [id], onDelete: Restrict)
+  graduator User?        @relation("ClassGraduator", fields: [graduatedBy], references: [id], onDelete: SetNull)
+
+  students StudentInfo[]
+  teaches  Teaches[]
+
+  @@unique([programId, currentSemester, section, admissionYear])
+  @@index([status])
+  @@map("classes")
+}
+
+model Society {
+  id               Int           @id @default(autoincrement())
+  publicId         String        @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  name             String        @db.VarChar(100)
+  description      String?
+  departmentId     Int           @map("department_id")
+  presidentId      Int           @unique @map("president_id")
+  convenorId       Int           @unique @map("convenor_id")
+  serverId         Int           @unique @map("server_id")
+  status           SocietyStatus @default(ACTIVE)
+  isDeleted        Boolean       @default(false) @map("is_deleted")
+  deletedAt        DateTime?     @map("deleted_at")
+  deletedBy        Int?          @map("deleted_by")
+  deletedCascadeId String?       @map("deleted_cascade_id") @db.Uuid
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  department    Department  @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  president     StudentInfo @relation("SocietyPresident", fields: [presidentId], references: [studentId], onDelete: Restrict)
+  convenor      TeacherInfo @relation("SocietyConvenor", fields: [convenorId], references: [teacherId], onDelete: Restrict)
+  server        Server      @relation("SocietyServer", fields: [serverId], references: [id], onDelete: Restrict)
+  deletedByUser User?       @relation("SocietyDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+
+  membershipRequests SocietyMembershipRequest[]
+  notifications      Notification[]
+
+  @@index([departmentId, isDeleted])
+  @@index([status, isDeleted])
+  @@map("societies")
+}
+
+model Server {
+  id               Int        @id @default(autoincrement())
+  publicId         String     @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  name             String     @db.VarChar(100)
+  description      String?
+  type             ServerType
+  iconUrl          String?    @map("icon_url")
+  isDeleted        Boolean    @default(false) @map("is_deleted")
+  deletedAt        DateTime?  @map("deleted_at")
+  deletedBy        Int?       @map("deleted_by")
+  deletedCascadeId String?    @map("deleted_cascade_id") @db.Uuid
+  createdBy        Int?       @map("created_by")
+  createdAt        DateTime   @default(now()) @map("created_at")
+
+  creator       User? @relation("ServerCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  deletedByUser User? @relation("ServerDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+
+  department Department? @relation("DepartmentServer")
+  class      Class?      @relation("ClassServer")
+  society    Society?    @relation("SocietyServer")
+
+  channels    Channel[]
+  memberships ServerMembership[]
+
+  platformRoleAssignments UserRoleAssignment[]
+  notificationPreferences NotificationPreference[]
+
+  @@index([type, isDeleted])
+  @@map("servers")
+}
+
+model Channel {
+  id          Int         @id @default(autoincrement())
+  publicId    String      @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  serverId    Int         @map("server_id")
+  name        String      @db.VarChar(100)
+  description String?
+  type        ChannelType
+
+  courseId  Int? @map("course_id")
+  programId Int? @map("program_id")
+
+  isLocked Boolean   @default(false) @map("is_locked")
+  lockedBy Int?      @map("locked_by")
+  lockedAt DateTime? @map("locked_at")
+
+  isDeleted        Boolean   @default(false) @map("is_deleted")
+  deletedAt        DateTime? @map("deleted_at")
+  deletedBy        Int?      @map("deleted_by")
+  deletedCascadeId String?   @map("deleted_cascade_id") @db.Uuid
+
+  isAutoCreated Boolean  @default(false) @map("is_auto_created")
+  createdAt     DateTime @default(now()) @map("created_at")
+  createdBy     Int?     @map("created_by")
+
+  server  Server   @relation(fields: [serverId], references: [id], onDelete: Restrict)
+  course  Course?  @relation("CourseChannel", fields: [courseId], references: [id], onDelete: Restrict)
+  program Program? @relation("ProgramChannel", fields: [programId], references: [id], onDelete: Restrict)
+
+  isArchived Boolean   @default(false) @map("is_archived")
+  archivedAt DateTime? @map("archived_at")
+  archivedBy Int?      @map("archived_by")
+
+  locker   User? @relation("ChannelLocker", fields: [lockedBy], references: [id], onDelete: SetNull)
+  deleter  User? @relation("ChannelDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+  creator  User? @relation("ChannelCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  archiver User? @relation("ChannelArchiver", fields: [archivedBy], references: [id], onDelete: SetNull)
+
+  posts                   Post[]
+  platformRoleAssignments UserRoleAssignment[]
+
+  @@unique([id, serverId])
+  notificationPreferences NotificationPreference[]
+
+  @@index([serverId, isDeleted, isArchived])
+  @@index([courseId, isDeleted])
+  @@index([programId, isDeleted])
+  @@map("channels")
+}
+
+model ServerMembership {
+  userId       Int      @map("user_id")
+  serverId     Int      @map("server_id")
+  joinedAt     DateTime @default(now()) @map("joined_at")
+  isAutoJoined Boolean  @default(false) @map("is_auto_joined")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@id([userId, serverId])
+  @@index([serverId])
+  @@index([userId])
+  @@map("server_memberships")
+}
+
+model SocietyMembershipRequest {
+  id          Int                     @id @default(autoincrement())
+  societyId   Int                     @map("society_id")
+  userId      Int                     @map("user_id")
+  status      MembershipRequestStatus @default(PENDING)
+  requestedAt DateTime                @default(now()) @map("requested_at")
+  reviewedBy  Int?                    @map("reviewed_by")
+  reviewedAt  DateTime?               @map("reviewed_at")
+
+  society  Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  user     User    @relation("MembershipRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User?   @relation("MembershipReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@unique([societyId, userId])
+  @@index([societyId, status, requestedAt])
+  @@index([userId, status])
+  @@map("society_membership_requests")
+}
+
+model Course {
+  id           Int    @id @default(autoincrement())
+  title        String @db.VarChar(50)
+  code         String @unique @db.VarChar(50)
+  creditHours  Int    @map("credit_hours")
+  departmentId Int    @map("department_id")
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  channels   Channel[]           @relation("CourseChannel")
+  teaches    Teaches[]
+  curriculum ProgramCurriculum[]
+
+  @@index([departmentId])
+  @@map("courses")
+}
+
+model Teaches {
+  teacherId Int @map("teacher_id")
+  courseId  Int @map("course_id")
+  classId   Int @map("class_id")
+
+  teacher TeacherInfo @relation(fields: [teacherId], references: [teacherId], onDelete: Restrict)
+  course  Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  class   Class       @relation(fields: [classId], references: [id], onDelete: Restrict)
+
+  @@id([teacherId, courseId, classId])
+  @@unique([classId, courseId])
+  @@index([courseId])
+  @@map("teaches")
+}
+
+model Post {
+  id        Int          @id @default(autoincrement())
+  publicId  String       @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  authorId  Int          @map("author_id")
+  channelId Int          @map("channel_id")
+  title     String       @db.VarChar(100)
+  content   String
+  priority  PostPriority @default(NORMAL)
+
+  isPinned Boolean   @default(false) @map("is_pinned")
+  pinnedBy Int?      @map("pinned_by")
+  pinnedAt DateTime? @map("pinned_at")
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy Int?      @map("deleted_by")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  updatedBy Int?      @map("updated_by")
+
+  author  User    @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  deleter User? @relation("PostDeleter", fields: [deletedBy], references: [id], onDelete: SetNull)
+  updater User? @relation("PostUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  pinner  User? @relation("PostPinner", fields: [pinnedBy], references: [id], onDelete: SetNull)
+
+  attachments   PostAttachment[]
+  notifications Notification[]
+
+  @@index([channelId, isDeleted, isPinned, createdAt(sort: Desc)])
+  @@index([authorId])
+  @@map("posts")
+}
+
+model PostAttachment {
+  id         Int      @id @default(autoincrement())
+  postId     Int      @map("post_id")
+  fileUrl    String   @map("file_url")
+  fileType   String   @map("file_type") @db.VarChar(50)
+  fileSize   Int      @map("file_size")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("post_attachments")
+}
+
+model Role {
+  id        Int                   @id @default(autoincrement())
+  name      String                @unique @db.VarChar(100)
+  scopeType PlatformRoleScopeType @map("scope_type")
+
+  permissions RolePermission[]
+  assignments UserRoleAssignment[]
+
+  @@unique([id, scopeType])
+  @@map("roles")
+}
+
+model Permission {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+/// The Module 4 SQL migration adds composite role/scope and channel/server
+/// foreign keys plus the non-overlapping-period exclusion constraint. Prisma's
+/// schema DSL cannot represent those safeguards; review generated migrations
+/// so they do not drop the SQL-only constraints.
+model UserRoleAssignment {
+  id        Int    @id @default(autoincrement())
+  publicId  String @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  userId    Int    @map("user_id")
+  roleId    Int    @map("role_id")
+  scopeType PlatformRoleScopeType @map("scope_type")
+  serverId  Int    @map("server_id")
+  channelId Int?   @map("channel_id")
+
+  assignedBy Int?      @map("assigned_by")
+  assignedAt DateTime  @default(now()) @map("assigned_at") @db.Timestamptz(3)
+  expiresAt  DateTime? @map("expires_at") @db.Timestamptz(3)
+  revokedBy  Int?      @map("revoked_by")
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  user     User     @relation("PlatformRoleUser", fields: [userId], references: [id], onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  server   Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channel  Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  assigner User?    @relation("PlatformRoleAssigner", fields: [assignedBy], references: [id], onDelete: SetNull)
+  revoker  User?    @relation("PlatformRoleRevoker", fields: [revokedBy], references: [id], onDelete: SetNull)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([roleId, serverId, revokedAt, expiresAt])
+  @@index([serverId, revokedAt, expiresAt])
+  @@index([channelId, revokedAt, expiresAt])
+  @@index([assignedAt])
+  @@map("user_role_assignments")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  postId    Int?             @map("post_id")
+  societyId Int?             @map("society_id")
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  message   String?
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  society Society? @relation(fields: [societyId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt])
+  @@index([userId, type, createdAt])
+  @@index([postId])
+  @@index([societyId])
+  @@map("notifications")
+}
+
+/// The Module 5 SQL migration adds null-safe uniqueness, scope/type checks,
+/// and a composite channel/server foreign key. Prisma's schema DSL cannot
+/// represent every safeguard; review generated migrations before applying.
+model NotificationPreference {
+  id               Int                   @id @default(autoincrement())
+  userId           Int                   @map("user_id")
+  notificationType NotificationType      @default(NEW_POST) @map("notification_type")
+  scopeType        NotificationScopeType @map("scope_type")
+  serverId         Int                   @map("server_id")
+  channelId        Int?                  @map("channel_id")
+  isSubscribed     Boolean               @default(true) @map("is_subscribed")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  server  Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationType, scopeType, serverId, channelId])
+  @@index([serverId])
+  @@index([channelId])
+  @@map("notification_preferences")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actorUserId Int?     @map("actor_user_id")
+  action      String   @db.VarChar(100)
+  targetType  String   @map("target_type") @db.VarChar(100)
+  targetId    String?  @map("target_id") @db.VarChar(100)
+  summary     Json?
+  ipAddress   String?  @map("ip_address") @db.VarChar(64)
+  userAgent   String?  @map("user_agent") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model ProgramCurriculum {
+  id             Int @id @default(autoincrement())
+  programId      Int @map("program_id")
+  courseId       Int @map("course_id")
+  semesterNumber Int @map("semester_number")
+  batchYear      Int @map("batch_year")
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@unique([programId, courseId, batchYear])
+  @@index([courseId])
+  @@map("program_curriculum")
+}

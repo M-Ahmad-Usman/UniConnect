@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg" href="/logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UniConnect</title>
+    <script>
+      (function () {
+        var match = document.cookie.match(/(?:^|;\s*)uniconnect_theme=([^;]+)/);
+        var preference = match ? decodeURIComponent(match[1]) : 'system';
+        if (preference !== 'light' && preference !== 'dark' && preference !== 'system') {
+          preference = 'system';
+        }
+        var isDark =
+          preference === 'dark' ||
+          (preference === 'system' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
