@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+docs/
+*.md
+AGENTS.md
+
+# Local environment files — never baked into the image
+**/.env
+**/.env.*
+!server/.env.example
+
+# Test files — not needed in production image
+server/tests/
+client/e2e/
+client/src/test/
+
+# Build output that will be re-generated inside Docker
+server/dist/
+client/dist/
+server/src/generated/
+
+# Local dev Docker artefacts
+server/docker-compose.yml
+server/docker/
+
+# Node modules — installed fresh inside each build stage
+**/node_modules/
+
+# Coverage reports
+**/coverage/
+
+# Playwright artefacts
+client/playwright-report/
+client/test-results/
+
+# IDE and OS noise
+.vscode/
+.idea/
+**/.DS_Store
+**/Thumbs.db
+
+# TypeScript build info cache
+**/*.tsbuildinfo
