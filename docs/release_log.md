@@ -57,6 +57,71 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-14 - Production Deployment Complete
+- Deployed UniConnect to Azure App Service for Linux (B1 Basic plan, Central
+  India region) as a Docker container.
+- Added three-stage multi-stage `Dockerfile` at the repository root:
+  - Stage 1 (`client-builder`): installs client dependencies and runs
+    `npx vite build` to produce the React production build.
+  - Stage 2 (`server-builder`): installs all server dependencies, runs
+    `npx prisma generate` explicitly (no `postinstall` script exists), compiles
+    TypeScript, then strips devDependencies with `npm prune --omit=dev`.
+  - Stage 3 (`production`): clean `node:24-alpine` image with `dumb-init` for
+    correct signal handling, runs as a non-root user, receives only the pruned
+    `node_modules`, `dist/`, `prisma/`, and the React build (`public/`).
+  - Prisma client is generated into the default `node_modules/.prisma/client`
+    location and travels into the production stage with `node_modules`.
+- Added `.dockerignore` at the repository root excluding `.env` files, test
+  files, node_modules, coverage reports, and build artefacts.
+- Added `.github/workflows/deploy-azure.yml` with a four-job CI/CD pipeline:
+  - `integration-tests`: runs Jest against a `postgres:18-bookworm` service
+    container; gates the Docker build. Uses the Microsoft Playwright container
+    pattern for the e2e job.
+  - `e2e-tests`: runs Playwright inside `mcr.microsoft.com/playwright:v1.58.2-noble`
+    against its own PostgreSQL service container; informational on `main`,
+    gates pull requests.
+  - `docker-build-push`: builds the multi-stage image and pushes to
+    `ghcr.io` using the automatic `GITHUB_TOKEN`; tags with `latest` and a
+    short SHA tag.
+  - `deploy`: installs server deps, generates Prisma client, runs
+    `npx prisma migrate deploy` against `uniconnect_prod`, updates the App
+    Service container image via Azure CLI, restarts the App Service, and polls
+    `/api/health` until HTTP 200 or 4-minute timeout.
+- Configured Azure infrastructure:
+  - Resource group: `rg-uniconnect-prod` (Central India).
+  - PostgreSQL Flexible Server (PostgreSQL 18, B1ms Burstable): three databases
+    provisioned — `uniconnect_prod`, `uniconnect_demo`, `uniconnect_test`.
+  - App Service created in Container mode (not Code mode), B1 Basic plan.
+  - Application settings configured with all production secrets and
+    environment variables; `PORT` is not set manually (Azure injects it).
+  - Azure service principal created with `contributor` scope on the resource
+    group, stored as `AZURE_CREDENTIALS` in GitHub Secrets.
+- Acquired and wired custom domain `uni-connect.dev`:
+  - DNS records added at registrar for Azure App Service domain verification
+    and A record.
+  - Azure App Service managed certificate provisioned (free, auto-renews).
+  - Resend domain verified with DKIM/SPF DNS records; outbound email now
+    sends from `noreply@uni-connect.dev`.
+  - `CORS_ORIGIN` and `CSRF_TRUSTED_ORIGINS` updated to `https://uni-connect.dev`.
+- Node runtime: 24 (both in the Docker image and the Azure App Service runtime
+  stack). All previous Node 20 references in docs were incorrect and have been
+  updated.
+- WebSockets confirmed working: Linux App Service has WebSockets permanently
+  enabled with no portal toggle; Socket.IO connects correctly in production.
+- Added `docs/deployment.md` (full step-by-step deployment and operations
+  guide) and `docs/azure_concepts.md` (concepts reference for developers new
+  to Azure).
+- Updated `README.md`, `AGENTS.md`, `.github/copilot-instructions.md`,
+  `docs/README.md`, `docs/backend.md`, and `server/README.md` to reflect
+  production deployment status, correct Node version, Docker/CI context, and
+  new doc references.
+- Known follow-ups carried forward:
+  - Prisma adapter/`pg` transaction deprecation warning before `pg@9` upgrade.
+  - Structured async logging (Pino) as a separate future task.
+  - Redis adapter for Socket.IO before horizontal scaling.
+  - MFA for admin accounts before live institutional data.
+  - Capacitor Android wrapper phase (separate project phase).
+
 ### 2026-06-06 - Documentation Artifact Cleanup
 - Removed the temporary audit remediation memory file now that the production
   readiness changes are recorded in canonical release/progress docs.

@@ -15,7 +15,7 @@ This service provides the UniConnect backend API, authentication, authorization,
 - Dependency version audit: `../docs/dependency_version_audit.md`
 
 ## Prerequisites
-- Node.js 20+
+- Node.js 24+
 - Docker and Docker Compose
 
 ## Environment Setup
@@ -65,6 +65,7 @@ npm run dev
 
 ## Scripts
 - `npm run dev`: start backend in watch mode
+- `npm run dev:e2e`: start backend in watch mode using `.env.e2e` (used by Playwright)
 - `npm run build`: compile TypeScript
 - `npm run start`: run compiled app from `dist/`
 - `npm test`: run full Jest suite against test DB
@@ -114,6 +115,21 @@ Common prep for a fresh machine:
 ```bash
 npm run db:migrate:test
 ```
+
+## Production Deployment
+This server runs in production as a Docker container on Azure App Service.
+The `Dockerfile` and `.dockerignore` are at the **repository root**, not inside
+`server/`. Key facts:
+
+- `prisma generate` is called explicitly in Docker Stage 2 (before `tsc`).
+  There is no `postinstall` script — omitting it causes a runtime crash.
+- `prisma migrate deploy` runs in the GitHub Actions **deploy job** against
+  `uniconnect_prod`, not inside the image.
+- Production secrets are set as Azure App Service application settings.
+  Never commit secrets or set `PORT` manually (Azure injects it).
+- Live URL: `https://uni-connect.dev`
+
+See `docs/deployment.md` for the full operations guide.
 
 ## E2E (Playwright)
 - `npm run dev:e2e` runs the backend with `.env.e2e`.

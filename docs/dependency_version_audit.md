@@ -204,12 +204,15 @@ risk. Broader lint/runtime major upgrades remain separate decisions.
 **Why this is deferred**
 
 - This is not a runtime library; it defines the TypeScript view of the Node API.
-- The repo currently documents Node 20 as the baseline in both the client and server READMEs.
-- Moving to Node 25 type definitions before moving the runtime baseline can create false confidence by exposing types for APIs not guaranteed in production.
+- The project runs on Node 24 in both development and production (Docker image
+  uses `node:24-alpine`; `@types/node` is currently at `^24.10.1`).
+- Moving to Node 25 type definitions before moving the runtime baseline can
+  create false confidence by exposing types for APIs not guaranteed in production.
 
 **Decision**
 
-- Keep Node types aligned with the actual runtime target, not the newest published major.
+- Keep Node types aligned with the actual runtime target (Node 24), not the
+  newest published major.
 
 ### 6. DefinitelyTyped package updates
 

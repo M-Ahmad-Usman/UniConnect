@@ -8,7 +8,7 @@
 - Active release log: `docs/release_log.md`
 
 ## Current Architecture
-- Runtime: Node.js, native ESM, strict TypeScript.
+- Runtime: Node.js 24, native ESM, strict TypeScript.
 - Framework: Express 5 with async-aware handlers.
 - Database: PostgreSQL through Prisma 7 and `@prisma/adapter-pg`.
 - Auth: JWT in httpOnly cookies, access cookie at `/api`, refresh cookie at
@@ -16,6 +16,8 @@
 - Validation: Zod schemas at request boundaries.
 - Realtime: Socket.IO with cookie authentication.
 - Testing: Jest and Supertest integration suites.
+- Production: Docker container on Azure App Service, deployed via
+  `ghcr.io` image pushed by the GitHub Actions CI/CD pipeline.
 
 Request flow:
 
@@ -71,3 +73,7 @@ are now captured here and in `docs/security.md`:
   behavior changes.
 - Log future release work in `docs/release_log.md`, not a backend-local progress
   file.
+- Do not modify `Dockerfile`, `.dockerignore`, or `.github/workflows/deploy-azure.yml`
+  without reading `docs/deployment.md`. The deploy pipeline has specific ordering
+  requirements: `prisma generate` must run in Docker Stage 2 before `tsc`;
+  migrations run in the deploy job, not inside the image.

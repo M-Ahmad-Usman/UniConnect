@@ -8,16 +8,22 @@ and society servers with scoped role-based access control.
 - Backend: complete and hardened.
 - Frontend: complete and hardened.
 - Full-system hardening Modules 1-7: complete.
+- Production deployment: live on Azure App Service via Docker container.
 - Current follow-ups are tracked through the release readiness and release log
   docs.
 
 ## Repository Layout
 ```text
-UniConnect-development/
-├── client/   # React 19 + Vite frontend
-├── server/   # Express 5 + Prisma backend
-├── docs/     # Project-level docs, release readiness, security, requirements
-└── AGENTS.md # Coding-agent operating instructions
+UniConnect/
+├── client/          # React 19 + Vite frontend
+├── server/          # Express 5 + Prisma backend
+├── docs/            # Project-level docs, release readiness, security, requirements
+├── Dockerfile       # Multi-stage production image (client build + server build)
+├── .dockerignore    # Docker build context exclusions
+├── .github/
+│   └── workflows/
+│       └── deploy-azure.yml  # CI/CD: test → build → push → deploy
+└── AGENTS.md        # Coding-agent operating instructions
 ```
 
 This is not a root workspace. Run app commands inside the relevant directory.
@@ -49,8 +55,8 @@ npm run db:migrate:dev -- --name short_descriptive_name
 Useful backend checks:
 ```bash
 cd server
-timeout 120 npm run build
-timeout 120 npm test
+npm run build
+npm test
 ```
 
 ## Frontend Quick Start
@@ -63,10 +69,10 @@ npm run dev
 Useful frontend checks:
 ```bash
 cd client
-timeout 120 npm run type-check
-timeout 120 npm run lint
-timeout 120 npm run test
-timeout 120 npm run build
+npm run type-check
+npm run lint
+npm run test
+npm run build
 ```
 
 ## Runtime Model
@@ -74,6 +80,31 @@ timeout 120 npm run build
 - Production default is same-origin frontend/backend deployment.
 - Auth is cookie-based with CSRF protection for unsafe methods.
 - Optional Sentry telemetry is disabled unless DSN environment variables are set.
+
+## Production Deployment
+UniConnect is deployed as a Docker container on Azure App Service. Every push
+to `main` triggers a four-job pipeline:
+
+```
+push to main
+  ├── integration-tests   Jest + PostgreSQL service container
+  │     └── gates → docker-build-push
+  ├── e2e-tests           Playwright in official MS container (informational, parallel)
+  ├── docker-build-push   Multi-stage image → ghcr.io
+  └── deploy              prisma migrate deploy → update App Service → health check
+```
+
+Key deployment facts:
+- Container registry: GitHub Container Registry (`ghcr.io`)
+- Hosting: Azure App Service for Linux, B1 Basic plan
+- Node runtime: 24 (inside the Docker image)
+- Database: Azure Database for PostgreSQL Flexible Server, PostgreSQL 18
+- Live URL: `https://uni-connect.dev`
+- E2E tests run in parallel and do not block the deploy on `main`. They gate
+  pull requests via the `pull_request` trigger.
+
+See `docs/deployment.md` for the full deployment guide and
+`docs/azure_concepts.md` for concepts and troubleshooting.
 
 ## Documentation Rule
 Root `docs/` owns cross-system navigation, security posture, and release state.

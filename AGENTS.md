@@ -8,10 +8,15 @@ This is a two-app monorepo. Each app is fully independent — no shared packages
 
 ```
 uniconnect/
-├── client/        # React 19 + Vite frontend
-├── server/        # Express 5 + Prisma backend
-├── docs/          # Shared documentation
-└── AGENTS.md      # This file
+├── client/          # React 19 + Vite frontend
+├── server/          # Express 5 + Prisma backend
+├── docs/            # Shared documentation
+├── Dockerfile       # Multi-stage production image (root of repo)
+├── .dockerignore    # Docker build context exclusions
+├── .github/
+│   └── workflows/
+│       └── deploy-azure.yml  # CI/CD pipeline
+└── AGENTS.md        # This file
 ```
 
 **CRITICAL:** Always `cd` into the correct workspace before running commands.
@@ -143,6 +148,7 @@ console.error('[USER] Unexpected error creating user', { error });
 - Enum-like values use Prisma enums or string literals matching the schema.
 - When applying existing migrations: `npm run db:migrate` (dev) or `npm run db:migrate:test` (test DB).
 - When creating a new Prisma migration after intentional schema edits: `npm run db:migrate:dev -- --name <change-name>`.
+    - In CI and production, migrations run via `npx prisma migrate deploy` with `DATABASE_URL` set directly in the environment — not via the npm scripts, which use dotenv-cli.
 
 ### TypeScript Rules (Backend)
 - Native ESM: all source imports must include `.js` extension.
@@ -284,6 +290,7 @@ import { PasswordField } from './PasswordField';
 | Create dev DB migration | `npm run db:migrate:dev -- --name <change-name>` |
 | Test DB migration | `npm run db:migrate:test` |
 | Seed | `npm run db:seed` |
+| Dev server (e2e mode) | `npm run dev:e2e` |
 | Single Jest test | `npm test -- tests/modules/file.test.ts` |
 
 ### Frontend (`client/`)
@@ -341,6 +348,30 @@ import { PasswordField } from './PasswordField';
 - Write self-documenting code — JSDoc only for complex/non-obvious functions.
 - Avoid magic numbers — use constants from `server/src/shared/constants.ts` or `client/src/lib/constants.ts`.
 
+## Deployment Architecture
+UniConnect is deployed as a Docker container on Azure App Service. The CI/CD
+pipeline runs on every push to `main` and every pull request:
+
+```
+push to main / pull request
+  ├── integration-tests   Jest + PostgreSQL 18 service container  → gates docker build
+  ├── e2e-tests           Playwright (MS official container)       → informational on main, gates PRs
+  ├── docker-build-push   Multi-stage image → ghcr.io             → needs: integration-tests
+  └── deploy              migrate → update App Service → health   → needs: docker-build-push (main only)
+```
+
+Critical facts for agents working on deployment-related files:
+- `Dockerfile` and `.dockerignore` are at the **repository root**.
+- `prisma generate` runs explicitly in Docker Stage 2. There is no `postinstall`
+  script — omitting it from the Dockerfile causes a runtime crash.
+- The Prisma client lands in `node_modules/.prisma/client` (default location)
+  and travels into the production stage with `node_modules`.
+- Migrations run in the **deploy job**, not inside the image.
+- Production database: `uniconnect_prod` on Azure PostgreSQL 18 (Central India).
+- Live URL: `https://uni-connect.dev`
+- Do not modify `Dockerfile`, `.dockerignore`, or `deploy-azure.yml` without
+  reading `docs/deployment.md` first.
+
 ## Reference Documents
 | Document | Location |
 |----------|----------|
@@ -350,6 +381,8 @@ import { PasswordField } from './PasswordField';
 | Security posture | `docs/security.md` |
 | Backend summary | `docs/backend.md` |
 | Frontend summary | `docs/frontend.md` |
+| Deployment guide | `docs/deployment.md` |
+| Azure concepts guide | `docs/azure_concepts.md` |
 | Frontend architecture | `client/ARCHITECTURE.md` |
 | Frontend implementation plan | `client/FRONTEND_IMPLEMENTATION_PLAN.md` |
 | API contract | `client/API_CONTRACT.md` |

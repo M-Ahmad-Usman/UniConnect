@@ -7,6 +7,7 @@ This is the primary documentation entry point. It points to the canonical source
 - Backend functional modules are complete.
 - Frontend functional modules are complete.
 - Full-system hardening Modules 1-7 are complete.
+- Production deployment is live on Azure App Service (`https://uni-connect.dev`).
 - Current release log: `docs/release_log.md`.
 - Release gate/checklist: `docs/release_readiness.md`.
 
@@ -18,6 +19,8 @@ This is the primary documentation entry point. It points to the canonical source
 | Backend overview and conventions | `docs/backend.md` |
 | Frontend overview and conventions | `docs/frontend.md` |
 | Cross-system security posture | `docs/security.md` |
+| Production deployment guide | `docs/deployment.md` |
+| Azure concepts and troubleshooting | `docs/azure_concepts.md` |
 | Release readiness and final gate | `docs/release_readiness.md` |
 | Active implementation/release log | `docs/release_log.md` |
 | Schema/lifecycle/public-ID refactor plan | `docs/schema_lifecycle_refactor_plan.md` |
@@ -53,7 +56,9 @@ This is the primary documentation entry point. It points to the canonical source
 2. `docs/README.md` for the current documentation map.
 3. `docs/release_readiness.md` and `docs/release_log.md` for active work.
 4. `docs/security.md` for auth, CSRF, audit, telemetry, and error policy.
-5. `docs/schema_lifecycle_refactor_plan.md` and
+5. `docs/deployment.md` when working on infrastructure, CI/CD, Docker, or Azure
+   configuration.
+6. `docs/schema_lifecycle_refactor_plan.md` and
    `docs/entity_deletion_policy.md` when working on the schema/lifecycle
    refactor.
-6. App-local docs only for the subsystem being changed.
+7. App-local docs only for the subsystem being changed.
