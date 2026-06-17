@@ -66,5 +66,9 @@
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@hono/node-server": "^1.19.13",
+    "js-yaml": "^4.2.0"
   }
 }
