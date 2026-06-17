@@ -64,7 +64,10 @@ app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
 app.use("/api", (req, res, next) => {
   // exclude authentication lifecycle paths from checking CSRF headers
-  if (req.path.startsWith("/auth/refresh") || req.path.startsWith("/auth/csrf")) {
+  if (
+    req.originalUrl === "/api/auth/refresh" || 
+    req.originalUrl === "/api/auth/csrf"
+  ) {
     return next();
   }
   return csrfProtection(req, res, next);
