@@ -62,7 +62,13 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
-app.use("/api", csrfProtection);
+app.use("/api", (req, res, next) => {
+  // exclude authentication lifecycle paths from checking CSRF headers
+  if (req.path.startsWith("/auth/refresh") || req.path.startsWith("/auth/csrf")) {
+    return next();
+  }
+  return csrfProtection(req, res, next);
+});
 
 // ─── HTTP Request Logging ────────────────────────────────────────────────────
 if (env.NODE_ENV !== "test") {

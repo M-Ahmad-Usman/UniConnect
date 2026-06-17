@@ -172,10 +172,8 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const token = await ensureCsrfToken();
         await axios.post('/api/auth/refresh', null, {
           withCredentials: true,
-          headers: { [CSRF_HEADER_NAME]: token },
         });
         return apiClient(originalRequest);
       } catch {
