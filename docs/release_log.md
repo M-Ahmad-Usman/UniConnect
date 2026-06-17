@@ -57,6 +57,25 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-17 - Android Mobile Wrapper Scaffold
+- Added `mobile/` Capacitor 8 Android wrapper project. The app loads the hosted
+  production site at `https://uni-connect.dev` through a WebView so cookies,
+  CSRF, and Socket.IO use the same same-origin runtime model as the browser app.
+- App ID/package name is `dev.uniconnect.app`; display name is `UniConnect`;
+  minSdk is 26 and compile/target SDK are pinned to 35 for the configured
+  Windows Android SDK.
+- Added Android App Links intent filter for `https://uni-connect.dev` and
+  public `GET /.well-known/assetlinks.json` backend route with the release
+  certificate SHA-256 fingerprint.
+- Added generated launcher icons and splash asset from `client/public/logo.svg`.
+- Release signing is wired through ignored `mobile/android/app/key.properties`;
+  keystore files and signing credentials remain outside version control.
+- Known follow-ups:
+  - Build/sign the APK or AAB from Windows Android Studio or Windows Gradle.
+  - Install on a real Android device and complete the manual auth, CSRF,
+    Socket.IO, upload, offline, back-button, and deep-link checklist.
+  - FCM push notifications, iOS, and Play Store listing remain future phases.
+
 ### 2026-06-14 - Production Deployment Complete
 - Deployed UniConnect to Azure App Service for Linux (B1 Basic plan, Central
   India region) as a Docker container.

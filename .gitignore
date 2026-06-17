@@ -184,6 +184,17 @@ prisma/dev.db
 dump.rdb
 
 # ==============================
+# Mobile
+# ==============================
+mobile/android/app/key.properties
+mobile/android/*.jks
+mobile/android/*.keystore
+mobile/android/.gradle/
+mobile/android/local.properties
+*.jks
+*.keystore
+
+# ==============================
 # Firebase
 # ==============================
 .firebase/

@@ -36,6 +36,19 @@ import adminRoutes from "./modules/admin/admin.routes.js";
 
 const app = express();
 
+const androidAssetLinks = [
+  {
+    relation: ["delegate_permission/common.handle_all_urls"],
+    target: {
+      namespace: "android_app",
+      package_name: "dev.uniconnect.app",
+      sha256_cert_fingerprints: [
+        "77:50:D0:97:F9:39:A4:76:33:D5:A2:3C:C6:08:38:89:80:6F:33:A6:9F:BE:52:90:7B:73:D3:5B:8B:5A:0B:64",
+      ],
+    },
+  },
+];
+
 // ─── Reverse Proxy Trust ─────────────────────────────────────────────────────
 // Required for PaaS (Render, Railway, etc.) so req.ip and rate limiters
 // see the real client IP instead of the proxy's IP.
@@ -62,6 +75,14 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 app.use(cookieParser());
+
+// Android App Links domain verification. This route is intentionally public and
+// outside /api so package-manager verification is not blocked by API middleware.
+app.get("/.well-known/assetlinks.json", (_req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.json(androidAssetLinks);
+});
+
 app.use("/api", (req, res, next) => {
   // exclude authentication lifecycle paths from checking CSRF headers
   if (

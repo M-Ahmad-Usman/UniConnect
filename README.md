@@ -106,6 +106,18 @@ Key deployment facts:
 See `docs/deployment.md` for the full deployment guide and
 `docs/azure_concepts.md` for concepts and troubleshooting.
 
+## Mobile App (Android)
+UniConnect has an Android wrapper built with Capacitor. It loads the live hosted
+app at `https://uni-connect.dev` inside a WebView.
+
+- Wrapper project: `mobile/`
+- Setup and build guide: `mobile/README.md`
+- App ID: `dev.uniconnect.app`
+- Min Android SDK: 26 (Android 8.0)
+- Deep links from `https://uni-connect.dev` open the app after Android verifies
+  `/.well-known/assetlinks.json`.
+- FCM push notifications are planned for a future phase.
+
 ## Documentation Rule
 Root `docs/` owns cross-system navigation, security posture, and release state.
 Backend-local and frontend-local docs remain authoritative for subsystem-specific

@@ -1,0 +1,24 @@
+{
+  "name": "uniconnect-mobile",
+  "version": "1.0.0",
+  "description": "UniConnect Android wrapper (Capacitor)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "build:android": "cap sync android && cap build android",
+    "generate:assets": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.0",
+    "typescript": "^6.0.3"
+  }
+}
