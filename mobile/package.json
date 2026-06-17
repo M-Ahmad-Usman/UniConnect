@@ -11,14 +11,14 @@
     "generate:assets": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "^8.0.0",
-    "@capacitor/cli": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/splash-screen": "^8.0.0",
-    "@capacitor/status-bar": "^8.0.0"
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
   },
   "devDependencies": {
-    "sharp": "^0.34.0",
+    "sharp": "^0.35.1",
     "typescript": "^6.0.3"
   }
 }

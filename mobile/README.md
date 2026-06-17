@@ -18,7 +18,7 @@ Android APK (Capacitor)
 - Node.js 24
 - npm 10+
 - Java 17 or 21 JDK for Android Gradle builds
-- Android Studio with SDK Platform 35 and Build Tools 35.0.0
+- Android Studio with Android SDK Platform 36 and current matching Build Tools
 - Windows `ANDROID_HOME` set to `D:\AndroidStudio\SDK`
 - Windows `Path` includes `%ANDROID_HOME%\platform-tools`
 
@@ -88,8 +88,9 @@ fingerprint must match the release signing certificate.
 ## Capacitor Version
 
 This project uses Capacitor 8. The official Capacitor support policy marks v8 as
-active and v6 as end-of-support, so the original v6 plan was updated before
-implementation.
+active and v6 as end-of-support, so the original v6 plan was updated. Current
+installed package baselines are Capacitor core/CLI/Android 8.4.x, Splash Screen
+8.0.x, and Status Bar 8.0.x.
 
 ## Deferred
 

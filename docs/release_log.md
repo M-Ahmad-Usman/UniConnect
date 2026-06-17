@@ -62,8 +62,8 @@ This is the single active implementation and release log going forward. Older ba
   production site at `https://uni-connect.dev` through a WebView so cookies,
   CSRF, and Socket.IO use the same same-origin runtime model as the browser app.
 - App ID/package name is `dev.uniconnect.app`; display name is `UniConnect`;
-  minSdk is 26 and compile/target SDK are pinned to 35 for the configured
-  Windows Android SDK.
+  minSdk is 26 and compile/target SDK use Android API 36, matching the current
+  Capacitor 8 Android template defaults.
 - Added Android App Links intent filter for `https://uni-connect.dev` and
   public `GET /.well-known/assetlinks.json` backend route with the release
   certificate SHA-256 fingerprint.
