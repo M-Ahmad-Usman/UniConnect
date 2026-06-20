@@ -1,8 +1,35 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
+import pino from "pino";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { TEMP_PASSWORD_PREFIX } from "../src/shared/constants.js";
+
+const seedLogger = pino({
+  level: process.env.LOG_LEVEL ?? "info",
+  base: {
+    service: "uniconnect-seed",
+    environment: process.env.NODE_ENV ?? "development",
+    module: "seed",
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
+  redact: {
+    paths: ["*.password", "*.passwordHash", "*.token", "*.secret"],
+    censor: "[REDACTED]",
+  },
+  transport:
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "SYS:standard",
+            ignore: "pid,hostname",
+            singleLine: true,
+          },
+        },
+});
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -1296,20 +1323,26 @@ async function seedDemoWorkspace() {
     }),
   ]);
 
-  console.warn("[SEED] Demo workspace seeded");
-  console.warn("[SEED] Admin: admin@uniconnect.com /", ADMIN_PASSWORD);
-  console.warn("[SEED] HOD: hod.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Program Director: pd.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] BSSE Program Director: pd.se.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Lecturer: lecturer.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Convenor: convenor.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] CR: cr.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Junior CR: cr.junior.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] BSSE CR: cr.se.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] President: president.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Student: student.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Server Moderator: server.mod.demo@uniconnect.com /", DEMO_PASSWORD);
-  console.warn("[SEED] Channel Moderator: channel.mod.demo@uniconnect.com /", DEMO_PASSWORD);
+  seedLogger.info(
+    {
+      users: [
+        "admin@uniconnect.com",
+        "hod.demo@uniconnect.com",
+        "pd.demo@uniconnect.com",
+        "pd.se.demo@uniconnect.com",
+        "lecturer.demo@uniconnect.com",
+        "convenor.demo@uniconnect.com",
+        "cr.demo@uniconnect.com",
+        "cr.junior.demo@uniconnect.com",
+        "cr.se.demo@uniconnect.com",
+        "president.demo@uniconnect.com",
+        "student.demo@uniconnect.com",
+        "server.mod.demo@uniconnect.com",
+        "channel.mod.demo@uniconnect.com",
+      ],
+    },
+    "Demo workspace seeded",
+  );
 
   return {
     admin,
@@ -1332,19 +1365,19 @@ async function seedDemoWorkspace() {
 }
 
 async function seed() {
-  console.warn("[SEED] Seeding database...");
+  seedLogger.info("Seeding database");
 
   await seedRolesAndPermissions();
-  console.warn("[SEED] Roles and permissions seeded");
+  seedLogger.info("Roles and permissions seeded");
 
   await seedDemoWorkspace();
 
-  console.warn("[SEED] Seeding complete");
+  seedLogger.info("Seeding complete");
 }
 
 seed()
   .catch((error) => {
-    console.error("[SEED] Seed failed", { error });
+    seedLogger.error({ err: error }, "Seed failed");
     process.exit(1);
   })
   .finally(async () => {

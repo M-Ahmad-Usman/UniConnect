@@ -22,6 +22,8 @@ This service provides the UniConnect backend API, authentication, authorization,
 1. Copy `.env.example` values into your local `.env`.
 2. Ensure `.env.test` exists for test commands.
 3. Confirm `DATABASE_URL` points to the dev database.
+4. Keep `LOG_LEVEL` unset or set to `debug` locally. Production defaults to
+   `info`; tests default to `silent`.
 
 ## First-Time Local Setup
 1. Install dependencies.
@@ -77,6 +79,12 @@ npm run dev
 - `npm run db:seed`: seed dev DB
 - `npm run db:reset`: reset dev DB
 - `npm run db:studio`: open Prisma Studio
+
+## Logging
+Backend runtime logs use Pino. Use `getModuleLogger()` from
+`src/config/logger.ts` for app logs and log errors with `{ err }`. HTTP logs are
+completion-only, reuse `X-Request-ID`, omit successful `/api/health` checks, and
+write production JSON to stdout for the platform log pipeline.
 
 ## Migration Command Guidance
 Use `npm run db:migrate` for fresh setup, pulls, and presentation/demo refreshes.

@@ -5,6 +5,7 @@ import type {
   ServerType,
 } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
+import { getModuleLogger } from "../../config/logger.js";
 import {
   ApiErrorCode,
   ConflictError,
@@ -21,6 +22,8 @@ import type { PrismaTransaction } from "../../shared/lifecycle/society.js";
 import { resolveServerPublicId } from "../../shared/ids/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
+
+const notificationLogger = getModuleLogger("notification");
 
 type CreatePostNotificationsInput = {
   postId: number;
@@ -576,7 +579,7 @@ export async function markAsRead(notificationId: number, userId: number) {
   });
 
   void emitUnreadCount(userId).catch((error) => {
-    console.error("[NOTIFICATION] Failed to emit unread count", { error });
+    notificationLogger.error({ err: error, userId }, "Failed to emit unread count");
   });
 
   return updated;
@@ -589,7 +592,7 @@ export async function markAllAsRead(userId: number) {
   });
 
   void emitUnreadCount(userId).catch((error) => {
-    console.error("[NOTIFICATION] Failed to emit unread count", { error });
+    notificationLogger.error({ err: error, userId }, "Failed to emit unread count");
   });
 
   return { count: result.count };

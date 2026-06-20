@@ -8,10 +8,12 @@ import {
 } from "../shared/errors/index.js";
 import { env } from "../config/env.js";
 import { captureException } from "../config/telemetry.js";
+import { getModuleLogger } from "../config/logger.js";
 
 // Prisma error codes
 const PRISMA_UNIQUE_CONSTRAINT = "P2002";
 const PRISMA_NOT_FOUND = "P2025";
+const errorLogger = getModuleLogger("error");
 
 interface PrismaKnownRequestError {
   code: string;
@@ -142,7 +144,19 @@ export function errorHandler(
   }
 
   // Log unexpected errors
-  console.error("[ERROR] Unhandled error", { error: err, requestId, path: req.path });
+  const logger = req.log ?? errorLogger;
+  logger.error(
+    {
+      err,
+      requestId,
+      method: req.method,
+      path: req.path,
+      route: req.route && typeof req.route.path === "string" ? `${req.baseUrl}${req.route.path}` : req.path,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      userId: req.user?.id,
+    },
+    "Unhandled request error",
+  );
   captureException(err, { requestId, path: req.path, method: req.method });
 
   // Generic fallback

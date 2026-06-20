@@ -54,6 +54,9 @@ are now captured here and in `docs/security.md`:
 - Added standardized frontend-facing API error codes and request IDs.
 - Added optional Sentry telemetry for unexpected server failures, disabled unless
   `SENTRY_DSN` is configured.
+- Added structured Pino logging with request IDs, safe redaction, env-controlled
+  log levels, JSON stdout production output, pretty development output, silent
+  test defaults, and Prisma warn/error event forwarding.
 - Migrated server, channel, and post HTTP contracts to strict UUIDv7 public IDs
   with request-local target resolution while keeping numeric database keys
   internal.
@@ -66,8 +69,9 @@ are now captured here and in `docs/security.md`:
 ## Current Maintenance Rules
 - Run backend commands inside `server/`.
 - Do not add ad-hoc error responses in controllers/services; use typed errors.
-- Do not introduce a logger library without a specific decision; current app
-  logging uses prefixed `console.warn`/`console.error`.
+- Use Pino module loggers from `server/src/config/logger.ts`; do not add new
+  backend runtime `console.*` logging except minimal env/bootstrap failure
+  fallbacks before the logger is available.
 - Update `server/docs/API_ERROR_CODES.md` when adding or changing emitted codes.
 - Update `server/docs/FRONTEND_BACKEND_CONTRACT.md` when API request/response
   behavior changes.

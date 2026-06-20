@@ -68,6 +68,12 @@ Notes:
 - Cloudinary uploads are restricted to known image folders.
 - Privileged successful writes are persisted in `AuditLog` with redacted field summaries.
 - Error-handler response avoids leaking internal DB details.
+- Backend application and HTTP logs use Pino. Production emits structured JSON
+  to stdout for the platform log pipeline; development uses `pino-pretty`; tests
+  default to `silent`. Runtime logs must use module child loggers from
+  `src/config/logger.ts`, include request IDs where available, and avoid emails,
+  names, roll numbers, tokens, cookies, auth headers, request bodies, raw queries,
+  passwords, hashes, secrets, and upload/post content.
 - Pre-production follow-up: add MFA for admin accounts before any real deployment with live institutional data.
 
 ## Test Standard

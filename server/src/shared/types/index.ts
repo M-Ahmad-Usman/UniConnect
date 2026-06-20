@@ -1,3 +1,5 @@
+import type { Logger } from "pino";
+
 // ─── Standard API Response Types ────────────────────────────────────────────
 
 export interface ApiResponse<T> {
@@ -86,6 +88,7 @@ declare global {
       user?: AuthUser;
       userRoles?: UserRole[];
       requestId?: string;
+      log?: Logger;
       communicationTarget?: ResolvedCommunicationTarget;
       classTarget?: ResolvedClassTarget;
     }

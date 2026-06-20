@@ -2,11 +2,11 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
-import morgan from "morgan";
 import fs from "node:fs";
 import path from "node:path";
 import "./config/telemetry.js";
 import { env } from "./config/env.js";
+import { httpLogger } from "./config/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { csrfProtection } from "./middleware/csrf.js";
@@ -56,6 +56,7 @@ app.set("trust proxy", 1);
 
 // ─── Security & Parsing Middleware ──────────────────────────────────────────
 app.use(requestId);
+app.use(httpLogger);
 app.use(
   helmet({
     // API-only server: disable HTML-focused headers that add no value
@@ -93,11 +94,6 @@ app.use("/api", (req, res, next) => {
   }
   return csrfProtection(req, res, next);
 });
-
-// ─── HTTP Request Logging ────────────────────────────────────────────────────
-if (env.NODE_ENV !== "test") {
-  app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
-}
 
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get("/api/health", async (_req, res) => {

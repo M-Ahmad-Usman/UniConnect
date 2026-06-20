@@ -30,10 +30,18 @@ function emptyStringToUndefined(value: unknown): unknown {
 }
 
 const defaultCsrfEnabled = process.env.NODE_ENV === "test" ? "false" : "true";
+const logLevelDefaultByEnv = {
+  development: "debug",
+  test: "silent",
+  production: "info",
+} as const;
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+    .optional(),
 
   DATABASE_URL: z.string().min(1, { error: "DATABASE_URL is required" }),
 
@@ -125,7 +133,10 @@ function validateEnv() {
     process.exit(1);
   }
 
-  return result.data;
+  return {
+    ...result.data,
+    LOG_LEVEL: result.data.LOG_LEVEL ?? logLevelDefaultByEnv[result.data.NODE_ENV],
+  };
 }
 
 export const env = validateEnv();
@@ -134,4 +145,4 @@ export const csrfTrustedOrigins = env.CSRF_TRUSTED_ORIGINS
   ? parseStringList(env.CSRF_TRUSTED_ORIGINS)
   : parseStringList(env.CORS_ORIGIN);
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = ReturnType<typeof validateEnv>;

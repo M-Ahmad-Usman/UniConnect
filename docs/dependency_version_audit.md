@@ -42,6 +42,9 @@ This document records the direct dependency audit for the UniConnect client and 
 | `@prisma/client` | `^7.4.2` | `7.4.2` | Current | Generation client layer. |
 | `prisma` | `^7.4.2` | `7.4.2` | Current | Data framework platform baseline. |
 | `pg` | `^8.20.0` | `8.20.0` | Current | Core database connection protocol interface. |
+| `pino` | `^10.3.1` | `10.3.1` | Current | Structured backend application logger. |
+| `pino-http` | `^11.0.0` | `11.0.0` | Current | Express HTTP completion logging middleware. |
+| `pino-pretty` | `^13.1.3` | `13.1.3` | Current | Development-only log formatter. |
 | `resend` | `^6.9.3` | `6.9.3` | Current | Active email communications delivery framework. |
 | `@types/multer` | `^2.1.0` | `2.1.0` | Current | Multiform streaming upload typing constraints. |
 | `@types/pg` | `^8.18.0` | `8.18.0` | Current | Core engine connection typing layouts. |

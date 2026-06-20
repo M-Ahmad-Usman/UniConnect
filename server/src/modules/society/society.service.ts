@@ -5,6 +5,7 @@ import type {
   SocietyStatus,
 } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
+import { getModuleLogger } from "../../config/logger.js";
 import {
   ApiErrorCode,
   ConflictError,
@@ -34,6 +35,8 @@ import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import type { AuditContext } from "../audit/audit.service.js";
 import { recordAuditLog } from "../audit/audit.service.js";
 import * as notificationService from "../notification/notification.service.js";
+
+const societyLogger = getModuleLogger("society");
 
 type CreateSocietyInput = {
   name: string;
@@ -339,7 +342,7 @@ async function emitLifecycleEffects(
   try {
     await notificationService.emitCreatedNotifications(result.notificationIds);
   } catch (error) {
-    console.error("[SOCIETY] Failed to emit lifecycle notifications", { error });
+    societyLogger.error({ err: error, societyPublicId }, "Failed to emit lifecycle notifications");
   }
   for (const userId of result.refreshUserIds) {
     emitToUser(userId, "auth:roles-updated", {});
@@ -596,7 +599,10 @@ export async function reviewJoinRequest(societyPublicId: string, requestId: numb
       status,
     });
   } catch (error) {
-    console.error("[SOCIETY] Failed to create membership review notification", { error });
+    societyLogger.error(
+      { err: error, societyPublicId, userId: result.userId, status },
+      "Failed to create membership review notification",
+    );
   }
   return result.updated;
 }

@@ -96,6 +96,7 @@ rest). The following must be present:
 
 ```
 NODE_ENV                    production
+LOG_LEVEL                   info
 DATABASE_URL                postgresql://...uniconnect_prod?sslmode=require
 JWT_ACCESS_SECRET           <32+ random chars>
 JWT_REFRESH_SECRET          <32+ random chars>
@@ -121,6 +122,11 @@ SENTRY_TRACES_SAMPLE_RATE   0
 ```
 
 Do **not** set `PORT`. Azure injects it into the container automatically.
+
+Production application logs are structured Pino JSON written to stdout/stderr
+for Azure App Service container log collection or a future external log
+pipeline. The app does not write or rotate local log files. Keep `LOG_LEVEL=info`
+unless temporarily diagnosing an incident, then return it to `info`.
 
 ## Database Usage
 
@@ -275,8 +281,10 @@ at hostname `postgres` (the service name), not `localhost`. The workflow sets
 Before scaling or adding real institutional users:
 
 1. Move PostgreSQL to a paid tier with point-in-time restore enabled.
-2. Enable Sentry: set `SENTRY_DSN` and `SENTRY_TRACES_SAMPLE_RATE=0.1`.
-3. Add uptime monitoring (Azure Application Insights or external).
+2. Enable Sentry: set `SENTRY_DSN` and keep `SENTRY_TRACES_SAMPLE_RATE` low or
+   `0` unless tracing is intentionally needed.
+3. Add uptime/log monitoring (Azure Application Insights or external) and set
+   retention/alerting for stdout JSON logs.
 4. Add Redis for rate-limit coordination and Socket.IO adapter before
    horizontal scaling beyond one App Service instance.
 5. Add MFA for admin accounts before live institutional data is in the system.

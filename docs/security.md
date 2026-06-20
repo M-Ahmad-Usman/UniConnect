@@ -71,6 +71,12 @@
   `rel` values.
 
 ## Telemetry
+- Backend logs use Pino with structured JSON in production, pretty output in
+  development, and silent defaults in tests. Logs go to stdout for the deployment
+  platform or external log pipeline; the app does not manage local log files.
+- Pino redaction covers cookies, authorization/CSRF headers, passwords, tokens,
+  hashes, secrets, and common credential field names. HTTP logs intentionally do
+  not include request bodies, cookie values, auth headers, or query values.
 - Sentry is optional and disabled by default.
 - Backend telemetry uses `@sentry/node` when `SENTRY_DSN` is configured.
 - Frontend telemetry uses `@sentry/react` when `VITE_SENTRY_DSN` is configured.

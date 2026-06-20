@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma.js";
 import type { Prisma } from "@prisma/client";
+import { getModuleLogger } from "../../config/logger.js";
 import {
   ApiErrorCode,
   ConflictError,
@@ -34,6 +35,8 @@ import {
 } from "../../shared/lifecycle/academic.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
+
+const roleLogger = getModuleLogger("role");
 
 type ModeratorRole = "server_moderator" | "channel_moderator";
 type AssignableRole = "hod" | "program_director" | "cr" | ModeratorRole;
@@ -198,9 +201,9 @@ async function notifyRoleAssigned(
       channelId,
     });
   } catch (error) {
-    console.error(
-      "[RoleService] Failed to create role assignment notification:",
-      error,
+    roleLogger.error(
+      { err: error, userId, role, serverId, channelId },
+      "Failed to create role assignment notification",
     );
   }
 }

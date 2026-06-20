@@ -307,7 +307,8 @@ Add production-oriented security controls that complement the existing cookie au
   - add image dimension or pixel-count limits if practical.
   - ensure Cloudinary uploads use restricted folders/resource types.
 - Review logging:
-  - replace remaining unprefixed or inappropriate console calls in app code with prefixed `console.warn`/`console.error` where aligned with project rules.
+  - use backend Pino module loggers for runtime app logs; reserve console only
+    for minimal bootstrap failures before the logger is available.
   - avoid logging sensitive request data.
 - Document admin MFA as a pre-production follow-up:
   - expected users: admins only.

@@ -134,11 +134,17 @@ export const createUserSchema = {
 ```
 
 ### Logging
-Currently project uses prefixed console methods. Do NOT use any logger library.
+Backend application logs use Pino through `server/src/config/logger.ts`.
+Create module loggers with `getModuleLogger('<module>')` and log errors as
+`logger.error({ err }, 'message')`.
 ```typescript
-console.warn('[AUTH] Failed login attempt', { email, reason: 'invalid_credentials', timestamp: new Date().toISOString() });
-console.error('[USER] Unexpected error creating user', { error });
+const authLogger = getModuleLogger('auth');
+authLogger.warn({ reason: 'invalid_credentials' }, 'Failed login attempt');
+authLogger.error({ err, userId }, 'Failed to send reset-password email');
 ```
+Production logs are JSON to stdout. Development uses `pino-pretty`. Tests default
+to silent logging. Do not log passwords, tokens, cookies, auth headers, request
+bodies, emails, names, roll numbers, raw queries, or upload/post content.
 
 ### Prisma Rules
 - Always use explicit `select` or `include` — never return the full Prisma model.
@@ -323,7 +329,7 @@ import { PasswordField } from './PasswordField';
 - Do NOT fetch more Prisma fields than needed — always use explicit `select`/`include`.
 - Do NOT use raw SQL strings unless there is a documented reason.
 - Do NOT skip the `validate` middleware for routes that accept user input.
-- Do NOT log with `console.log` — use `console.warn` or `console.error` with a `[MODULE]` prefix.
+- Do NOT use `console.log`, `console.warn`, or `console.error` for backend runtime logs. Use Pino module loggers from `config/logger.ts`; only minimal pre-logger bootstrap failures may use console.
 
 ### Frontend
 - Do NOT use `any` type.

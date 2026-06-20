@@ -57,6 +57,23 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-06-20 - Backend Structured Logging
+- Replaced backend Morgan/prefixed-console runtime logging with Pino and
+  pino-http. Production logs are lean JSON to stdout, development uses
+  `pino-pretty`, tests default to `silent`, and `LOG_LEVEL` can override the
+  environment defaults.
+- HTTP logs are completion-only, reuse `X-Request-ID`, include safe operational
+  context such as route, status, response time, IP, user-agent, and numeric
+  `userId` when authenticated, and omit request bodies, cookie values, auth
+  headers, and query values. Successful `/api/health` checks are silent; failed
+  health checks are logged.
+- Routed Prisma warn/error events through Pino and kept query logging disabled by
+  default for performance and sensitive-data safety.
+- Kept Sentry as explicit exception telemetry only, with existing event
+  scrubbing as a second safety layer.
+- Stopped printing demo seed passwords; seeded account emails remain logged for
+  demo setup reference.
+
 ### 2026-06-17 - Android Mobile Wrapper Scaffold
 - Added `mobile/` Capacitor 8 Android wrapper project. The app loads the hosted
   production site at `https://uni-connect.dev` through a WebView so cookies,
@@ -136,7 +153,6 @@ This is the single active implementation and release log going forward. Older ba
   new doc references.
 - Known follow-ups carried forward:
   - Prisma adapter/`pg` transaction deprecation warning before `pg@9` upgrade.
-  - Structured async logging (Pino) as a separate future task.
   - Redis adapter for Socket.IO before horizontal scaling.
   - MFA for admin accounts before live institutional data.
   - Capacitor Android wrapper phase (separate project phase).
@@ -273,10 +289,6 @@ This is the single active implementation and release log going forward. Older ba
     NodeNext compatibility check surfaces many existing Prisma transaction/type
     inference issues, so switching from `moduleResolution: "bundler"` should be
     treated as a separate backend TypeScript hardening task.
-  - Structured async logging with request IDs, redaction, and log levels is a
-    high-value production upgrade. The current repo standard still uses
-    prefixed console methods, so a Pino migration should be handled as an
-    explicit logging-design change rather than a drive-by dependency addition.
   - Before horizontal scaling, add shared infrastructure for cross-instance
     behavior: Redis-backed rate-limit/session-style coordination where needed
     and the Socket.IO Redis adapter for room/event fanout.

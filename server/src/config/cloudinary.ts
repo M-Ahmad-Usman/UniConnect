@@ -1,6 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import { env } from "./env.js";
+import { getModuleLogger } from "./logger.js";
 import { ValidationError } from "../shared/errors/index.js";
+
+const uploadLogger = getModuleLogger("upload");
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -63,10 +66,10 @@ export async function cleanupCloudinaryUploads(
   );
   results.forEach((result, index) => {
     if (result.status === "rejected") {
-      console.warn("[UPLOAD] Failed to clean up Cloudinary image", {
+      uploadLogger.warn({
         publicId: uploads[index]?.publicId,
-        error: result.reason,
-      });
+        err: result.reason,
+      }, "Failed to clean up Cloudinary image");
     }
   });
 }

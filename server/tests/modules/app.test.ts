@@ -1,6 +1,8 @@
 import request from "supertest";
 import { app } from "../../src/app.js";
 import { prisma } from "../../src/config/prisma.js";
+import { getHttpLogLevel, logger } from "../../src/config/logger.js";
+import type { Request, Response } from "express";
 
 describe("Express App Foundation", () => {
   describe("GET /api/health", () => {
@@ -9,6 +11,26 @@ describe("Express App Foundation", () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ success: true, message: "OK", db: "ok" });
+    });
+
+    it("should silence successful health-check auto logs", () => {
+      const req = { method: "GET", path: "/api/health" } as Request;
+      const res = { statusCode: 200 } as Response;
+
+      expect(getHttpLogLevel(req, res)).toBe("silent");
+    });
+
+    it("should log failed health checks as errors", () => {
+      const req = { method: "GET", path: "/api/health" } as Request;
+      const res = { statusCode: 503 } as Response;
+
+      expect(getHttpLogLevel(req, res)).toBe("error");
+    });
+  });
+
+  describe("Logging", () => {
+    it("should default to silent logging in test", () => {
+      expect(logger.level).toBe("silent");
     });
   });
 

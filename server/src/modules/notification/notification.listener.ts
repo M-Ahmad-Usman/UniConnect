@@ -1,7 +1,9 @@
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
+import { getModuleLogger } from "../../config/logger.js";
 import { createPostNotifications } from "./notification.service.js";
 
 let listenersRegistered = false;
+const notificationLogger = getModuleLogger("notification");
 
 /**
  * Register event listeners for the notification module.
@@ -16,7 +18,7 @@ export function registerNotificationListeners(): void {
     try {
       await createPostNotifications(payload);
     } catch (error) {
-      console.error("[NOTIFICATION] Failed to create post notifications", { error });
+      notificationLogger.error({ err: error }, "Failed to create post notifications");
     }
   });
 

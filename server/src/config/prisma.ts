@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { env } from "./env.js";
+import { getModuleLogger } from "./logger.js";
 
 const adapter = new PrismaPg({
   connectionString: env.DATABASE_URL,
@@ -8,5 +9,18 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({
   adapter,
-  log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  log: [
+    { emit: "event", level: "warn" },
+    { emit: "event", level: "error" },
+  ],
+});
+
+const prismaLogger = getModuleLogger("prisma");
+
+prisma.$on("warn", (event) => {
+  prismaLogger.warn({ message: event.message, target: event.target }, "Prisma warning");
+});
+
+prisma.$on("error", (event) => {
+  prismaLogger.error({ message: event.message, target: event.target }, "Prisma error");
 });

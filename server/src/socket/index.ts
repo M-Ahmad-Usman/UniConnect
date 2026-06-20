@@ -3,6 +3,7 @@ import type http from "node:http";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { prisma } from "../config/prisma.js";
+import { getModuleLogger } from "../config/logger.js";
 import type { AuthUser } from "../shared/types/index.js";
 import { isPublicId, parsePublicId } from "../shared/ids/index.js";
 
@@ -16,6 +17,7 @@ interface AccessTokenPayload {
 }
 
 let io: SocketIOServer | null = null;
+const socketLogger = getModuleLogger("socket");
 
 // ─── Connection Rate Limiting ────────────────────────────────────────────────
 
@@ -196,11 +198,11 @@ export function initializeSocket(server: http.Server): SocketIOServer {
         socket.join(`channel:${channelId}`);
         joinedChannelIds.set(channelPublicId, channelId);
       } catch (error) {
-        console.warn("[SOCKET] Failed to join channel", {
+        socketLogger.warn({
           userId: user.id,
           channelPublicId,
-          error: error instanceof Error ? error.message : String(error),
-        });
+          err: error,
+        }, "Failed to join channel");
       } finally {
         pendingChannelPublicIds.delete(channelPublicId);
       }

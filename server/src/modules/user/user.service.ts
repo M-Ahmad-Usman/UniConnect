@@ -5,6 +5,7 @@ import { Readable } from "stream";
 import { prisma } from "../../config/prisma.js";
 import type { Prisma, UserStatus } from "@prisma/client";
 import { emailService } from "../../config/email.js";
+import { getModuleLogger } from "../../config/logger.js";
 import {
   cleanupCloudinaryUploads,
   cloudinaryService,
@@ -63,6 +64,8 @@ interface ListUsersQuery {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
+
+const userLogger = getModuleLogger("user");
 
 function generateTempPassword(): string {
   const randomPart = crypto.randomBytes(4).toString("hex");
@@ -418,7 +421,7 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
   try {
     await emailService.sendTempPasswordEmail(createdUser.email, tempPassword);
   } catch (error) {
-    console.error("[USER] Failed to send temp-password email", { error });
+    userLogger.error({ err: error, userId: createdUser.id }, "Failed to send temp-password email");
     invalidateSystemStatsCache();
     return {
       ...mapLifecycleUser(createdUser),

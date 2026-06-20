@@ -5,12 +5,15 @@ import crypto from "crypto";
 import { prisma } from "../../config/prisma.js";
 import { env } from "../../config/env.js";
 import { emailService } from "../../config/email.js";
+import { getModuleLogger } from "../../config/logger.js";
 import { UnauthorizedError } from "../../shared/errors/index.js";
 import { parseExpiry } from "../../shared/utils/parseExpiry.js";
 import { BCRYPT_ROUNDS } from "../../shared/constants.js";
 import { recordAuditLog, type AuditContext } from "../audit/audit.service.js";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+const authLogger = getModuleLogger("auth");
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -56,13 +59,13 @@ export async function login(email: string, password: string) {
   });
 
   if (!user || !canAuthenticate(user)) {
-    console.warn("[AUTH] Failed login attempt", { email, reason: "invalid_credentials", timestamp: new Date().toISOString() });
+    authLogger.warn({ reason: "invalid_credentials" }, "Failed login attempt");
     throw new UnauthorizedError("Invalid credentials");
   }
 
   const passwordValid = await bcrypt.compare(password, user.passwordHash);
   if (!passwordValid) {
-    console.warn("[AUTH] Failed login attempt", { email, reason: "invalid_credentials", timestamp: new Date().toISOString() });
+    authLogger.warn({ reason: "invalid_credentials" }, "Failed login attempt");
     throw new UnauthorizedError("Invalid credentials");
   }
 
@@ -191,7 +194,7 @@ export async function logout(
     );
   }
 
-  console.warn("[AUTH] Session revoked", { reason: "logout", timestamp: new Date().toISOString() });
+  authLogger.info({ userId, reason: "logout" }, "Session revoked");
 }
 
 // ─── Forgot Password ───────────────────────────────────────────────────────
@@ -222,7 +225,7 @@ export async function forgotPassword(email: string): Promise<void> {
   } catch (error) {
     // Log but don't throw — forgotPassword must always return silently
     // to prevent user enumeration via error responses
-    console.error("[AUTH] Failed to send reset-password email", { error });
+    authLogger.error({ err: error, userId: user.id }, "Failed to send reset-password email");
   }
 }
 
@@ -291,7 +294,7 @@ export async function resetPassword(
     );
   });
 
-  console.warn("[AUTH] Password reset completed", { userId, timestamp: new Date().toISOString() });
+  authLogger.warn({ userId }, "Password reset completed");
 }
 
 // ─── Change Password ───────────────────────────────────────────────────────
@@ -342,7 +345,7 @@ export async function changePassword(
     );
   });
 
-  console.warn("[AUTH] Password changed", { userId, timestamp: new Date().toISOString() });
+  authLogger.warn({ userId }, "Password changed");
 }
 
 // ─── Stale Token Cleanup ────────────────────────────────────────────────────
@@ -364,7 +367,7 @@ export async function purgeStaleRefreshTokens(retentionDays = 7): Promise<number
   });
 
   if (count > 0) {
-    console.warn("[AUTH] Purged stale refresh tokens", { count, timestamp: new Date().toISOString() });
+    authLogger.info({ count }, "Purged stale refresh tokens");
   }
 
   return count;

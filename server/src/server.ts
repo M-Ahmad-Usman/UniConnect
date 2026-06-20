@@ -5,8 +5,10 @@ import { env } from "./config/env.js";
 import { prisma } from "./config/prisma.js";
 import { initializeSocket, getIO } from "./socket/index.js";
 import { captureException } from "./config/telemetry.js";
+import { getModuleLogger } from "./config/logger.js";
 
 const server = http.createServer(app);
+const serverLogger = getModuleLogger("server");
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const HEADERS_TIMEOUT_MS = 10_000;
@@ -21,21 +23,21 @@ server.keepAliveTimeout = KEEP_ALIVE_TIMEOUT_MS;
 initializeSocket(server);
 
 server.listen(env.PORT, () => {
-  console.warn("[SERVER] UniConnect server started", {
+  serverLogger.info({
     port: env.PORT,
     environment: env.NODE_ENV,
-  });
+  }, "UniConnect server started");
 });
 
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 const gracefulShutdown = async (signal: string) => {
-  console.warn("[SERVER] Shutdown signal received", { signal });
+  serverLogger.warn({ signal }, "Shutdown signal received");
 
   // Force exit if graceful shutdown takes too long
   const forceExit = setTimeout(() => {
-    console.error("[SERVER] Graceful shutdown timed out. Forcing exit.");
+    serverLogger.fatal("Graceful shutdown timed out. Forcing exit.");
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS);
   forceExit.unref();
@@ -46,7 +48,7 @@ const gracefulShutdown = async (signal: string) => {
   }
   server.close(async () => {
     await prisma.$disconnect();
-    console.warn("[SERVER] Server closed");
+    serverLogger.info("Server closed");
     process.exit(0);
   });
 };
@@ -56,13 +58,13 @@ process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 // ─── Process Error Handlers ─────────────────────────────────────────────────
 process.on("unhandledRejection", (reason) => {
-  console.error("[SERVER] Unhandled rejection", { reason });
+  serverLogger.fatal({ err: reason }, "Unhandled rejection");
   captureException(reason, { source: "unhandledRejection" });
   process.exit(1);
 });
 
 process.on("uncaughtException", (error) => {
-  console.error("[SERVER] Uncaught exception", { error });
+  serverLogger.fatal({ err: error }, "Uncaught exception");
   captureException(error, { source: "uncaughtException" });
   process.exit(1);
 });
