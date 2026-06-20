@@ -46,6 +46,10 @@ describe('StableAvatar', () => {
       createdImages[0]?.onload?.(new Event('load'));
     });
 
+    act(() => {
+      createdImages[1]?.onload?.(new Event('load'));
+    });
+
     expect(screen.getByAltText('Server')).toHaveAttribute(
       'src',
       'https://cdn.example.test/server.png',

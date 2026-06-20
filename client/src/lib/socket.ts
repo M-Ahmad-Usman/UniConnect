@@ -5,6 +5,7 @@ import { useNotificationStore } from '@/stores/notification.store';
 import { queryClient } from '@/lib/query-client';
 import { queryKeys, ROUTES } from '@/lib/constants';
 import { invalidateRoleSensitiveQueries, refreshRoleSensitiveSession } from '@/lib/role-session';
+import { authApi } from '@/api/endpoints/auth.api';
 import { PostPriority } from '@/types';
 import { removeNotificationsFromCache } from '@/features/notifications/cache';
 import type {
@@ -94,6 +95,26 @@ export function connectSocket(): void {
 
   socket.on('society:lifecycle-updated', () => {
     invalidateRoleSensitiveQueries();
+  });
+
+  socket.on('disconnect', (reason) => {
+    if (reason === 'io server disconnect') {
+      socket?.connect();
+    }
+  });
+
+  socket.on('connect_error', async (err) => {
+    if (err.message === 'Authentication required') {
+      try {
+        await authApi.refresh();
+        socket?.connect();
+      } catch {
+        disconnectSocket();
+        useAuthStore.getState().clearUser();
+        queryClient.clear();
+        window.location.href = ROUTES.LOGIN;
+      }
+    }
   });
 
   socket.on('auth:expired', () => {

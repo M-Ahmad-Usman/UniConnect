@@ -156,7 +156,6 @@ export function initializeSocket(server: http.Server): SocketIOServer {
     const tokenExp = socket.data.tokenExp as number;
     const msUntilExpiry = tokenExp * 1000 - Date.now();
     const disconnectTimer = setTimeout(() => {
-      socket.emit("auth:expired");
       socket.disconnect(true);
     }, Math.max(msUntilExpiry, 0));
 
