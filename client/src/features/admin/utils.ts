@@ -12,7 +12,7 @@ export function parsePositiveInt(value: string | null) {
 }
 
 export function parseUserType(value: string | null) {
-  if (value === UserType.ADMIN || value === UserType.TEACHER || value === UserType.STUDENT) {
+  if (value === UserType.STAFF || value === UserType.TEACHER || value === UserType.STUDENT) {
     return value;
   }
 

@@ -3,7 +3,7 @@
 export const UserType = {
   TEACHER: 'TEACHER',
   STUDENT: 'STUDENT',
-  ADMIN: 'ADMIN',
+  STAFF: 'STAFF',
 } as const;
 export type UserType = (typeof UserType)[keyof typeof UserType];
 
@@ -62,6 +62,8 @@ export type ClassStatus = (typeof ClassStatus)[keyof typeof ClassStatus];
 export const PlatformRoleScopeType = {
   SERVER: 'server',
   CHANNEL: 'channel',
+  DEPARTMENT: 'department',
+  GLOBAL: 'global',
 } as const;
 export type PlatformRoleScopeType =
   (typeof PlatformRoleScopeType)[keyof typeof PlatformRoleScopeType];

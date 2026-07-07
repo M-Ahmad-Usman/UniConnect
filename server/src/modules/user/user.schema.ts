@@ -2,8 +2,8 @@ import { z } from "zod";
 import { publicIdSchema } from "../../shared/ids/index.js";
 import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
-const userTypeEnum = z.enum(["STUDENT", "TEACHER", "ADMIN"]);
-const creatableUserTypeEnum = z.enum(["STUDENT", "TEACHER"]);
+const userTypeEnum = z.enum(["STUDENT", "TEACHER", "STAFF"]);
+const creatableUserTypeEnum = z.enum(["STUDENT", "TEACHER", "STAFF"]);
 const genderEnum = z.enum(["MALE", "FEMALE"]);
 const userStatusEnum = z.enum(["ACTIVE", "SUSPENDED"]);
 const lifecycleReasonSchema = z.string().trim().min(1).max(500).optional();
@@ -29,7 +29,7 @@ export const createUserBodySchema = z
     rollNumber: rollNumberSchema.optional(),
     designation: z.string().min(1, { error: "Designation is required" }).max(100).optional(),
   })
-  .refine((data) => data.departmentId !== undefined, {
+  .refine((data) => data.userType === "STAFF" || data.departmentId !== undefined, {
     error: "departmentId is required for STUDENT and TEACHER",
     path: ["departmentId"],
   })

@@ -506,7 +506,7 @@ function assertCanReadManagedClass(
 ): void {
   const canRead =
     context.user?.status === "ACTIVE" &&
-    (context.user.userType === "ADMIN" ||
+    (context.isAdmin ||
       context.scopes.hodDepartmentIds.includes(classRecord.program.department.id) ||
       context.scopes.directedProgramIds.includes(classRecord.program.id));
 
@@ -564,7 +564,7 @@ function buildScopedClassWhere(
   if (!query.status || query.status === "ACTIVE") where.status = "ACTIVE";
   else if (query.status === "GRADUATED") where.status = "GRADUATED";
 
-  if (context.user.userType === "ADMIN") {
+  if (context.isAdmin) {
     return where;
   }
 

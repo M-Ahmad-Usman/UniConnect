@@ -38,6 +38,8 @@ const DEMO_PASSWORD = "Demo@1234";
 const ADMIN_PASSWORD = `${TEMP_PASSWORD_PREFIX}Admin@123`;
 
 const ROLES = [
+  { name: "admin", scopeType: "GLOBAL" },
+  { name: "enrollment_officer", scopeType: "DEPARTMENT" },
   { name: "server_moderator", scopeType: "SERVER" },
   { name: "channel_moderator", scopeType: "CHANNEL" },
 ] as const;
@@ -78,7 +80,7 @@ interface SeedUserInput {
   fullName: string;
   phone: string;
   gender: "MALE" | "FEMALE";
-  userType: "ADMIN" | "TEACHER" | "STUDENT";
+  userType: "STAFF" | "TEACHER" | "STUDENT";
   password: string;
   departmentId?: number | null;
   mustChangePassword?: boolean;
@@ -106,7 +108,7 @@ async function seedRolesAndPermissions() {
   }
 
   await prisma.designation.createMany({
-    data: DESIGNATIONS,
+    data: [...DESIGNATIONS],
     skipDuplicates: true,
   });
 
@@ -183,6 +185,44 @@ async function upsertUser(input: SeedUserInput) {
     data: {
       ...userData,
       email: input.email,
+    },
+  });
+}
+
+async function ensureStaffRoleAssignment(input: {
+  userId: number;
+  roleName: "admin" | "enrollment_officer";
+  scopeType: "GLOBAL" | "DEPARTMENT";
+  departmentId?: number | null;
+  assignedBy?: number | null;
+}) {
+  const role = await prisma.role.findUniqueOrThrow({
+    where: { name: input.roleName },
+    select: { id: true },
+  });
+
+  const existing = await prisma.staffRoleAssignment.findFirst({
+    where: {
+      userId: input.userId,
+      roleId: role.id,
+      scopeType: input.scopeType,
+      departmentId: input.departmentId ?? null,
+      revokedAt: null,
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.staffRoleAssignment.create({
+    data: {
+      userId: input.userId,
+      roleId: role.id,
+      scopeType: input.scopeType,
+      departmentId: input.departmentId ?? null,
+      assignedBy: input.assignedBy ?? null,
     },
   });
 }
@@ -505,9 +545,14 @@ async function seedDemoWorkspace() {
     fullName: "Super Admin",
     phone: "03000000000",
     gender: "MALE",
-    userType: "ADMIN",
+    userType: "STAFF",
     password: ADMIN_PASSWORD,
     mustChangePassword: true,
+  });
+  await ensureStaffRoleAssignment({
+    userId: admin.id,
+    roleName: "admin",
+    scopeType: "GLOBAL",
   });
 
   const teachers = {

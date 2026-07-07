@@ -3,6 +3,7 @@ import { prisma } from "../config/prisma.js";
 import { ForbiddenError, UnauthorizedError } from "../shared/errors/index.js";
 import {
   ACADEMIC_ROLE_PERMISSIONS,
+  activeStaffRoleAssignmentWhere,
   activePlatformRoleAssignmentWhere,
 } from "../shared/roles/index.js";
 import type { UserRole } from "../shared/types/index.js";
@@ -111,11 +112,26 @@ function checkScopedPermission(
   return false;
 }
 
+function userTypeMatches(user: NonNullable<Request["user"]>, allowedTypes: string[]): boolean {
+  return allowedTypes.some((type) => {
+    if (type === "ADMIN") return user.isAdmin;
+    return user.baseUserType === type || user.userType === type;
+  });
+}
+
 // ─── Role Resolver ─────────────────────────────────────────────────────────
 
 export async function getUserRoles(userId: number): Promise<UserRole[]> {
   const now = new Date();
-  const [hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, platformAssignments] =
+  const [
+    hodDepartments,
+    directedPrograms,
+    crClasses,
+    presidentSocieties,
+    convenorSocieties,
+    platformAssignments,
+    staffAssignments,
+  ] =
     await Promise.all([
       prisma.department.findMany({
         where: { hodId: userId, server: { isDeleted: false } },
@@ -163,6 +179,18 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
           role: { select: { name: true } },
         },
       }),
+      prisma.staffRoleAssignment.findMany({
+        where: {
+          AND: [activeStaffRoleAssignmentWhere(now), { userId }],
+        },
+        select: {
+          publicId: true,
+          departmentId: true,
+          scopeType: true,
+          expiresAt: true,
+          role: { select: { name: true } },
+        },
+      }),
     ]);
 
   const roles: UserRole[] = [];
@@ -198,12 +226,22 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
     });
   }
 
+  for (const assignment of staffAssignments) {
+    roles.push({
+      role: assignment.role.name,
+      departmentId: assignment.departmentId,
+      scopeType: assignment.scopeType === "GLOBAL" ? "global" : "department",
+      assignmentPublicId: assignment.publicId,
+      expiresAt: assignment.expiresAt,
+    });
+  }
+
   return roles;
 }
 
 export async function getPublicUserRoles(userId: number) {
   const roles = await getUserRoles(userId);
-  const serverIds = [...new Set(roles.map((role) => role.serverId))];
+  const serverIds = [...new Set(roles.flatMap((role) => role.serverId === undefined ? [] : [role.serverId]))];
   const channelIds = [
     ...new Set(
       roles.flatMap((role) => role.channelId === null || role.channelId === undefined
@@ -211,7 +249,14 @@ export async function getPublicUserRoles(userId: number) {
         : [role.channelId]),
     ),
   ];
-  const [servers, channels] = await Promise.all([
+  const departmentIds = [
+    ...new Set(
+      roles.flatMap((role) => role.departmentId === null || role.departmentId === undefined
+        ? []
+        : [role.departmentId]),
+    ),
+  ];
+  const [servers, channels, departments] = await Promise.all([
     prisma.server.findMany({
       where: { id: { in: serverIds } },
       select: { id: true, publicId: true },
@@ -220,11 +265,38 @@ export async function getPublicUserRoles(userId: number) {
       where: { id: { in: channelIds } },
       select: { id: true, publicId: true },
     }),
+    prisma.department.findMany({
+      where: { id: { in: departmentIds } },
+      select: { id: true, name: true },
+    }),
   ]);
   const serverPublicIds = new Map(servers.map((server) => [server.id, server.publicId]));
   const channelPublicIds = new Map(channels.map((channel) => [channel.id, channel.publicId]));
+  const departmentNames = new Map(departments.map((department) => [department.id, department.name]));
 
-  return roles.map(({ serverId, channelId, ...role }) => {
+  return roles.map(({ serverId, channelId, departmentId, ...role }) => {
+    if (role.scopeType === "global") {
+      return role;
+    }
+
+    if (role.scopeType === "department") {
+      const departmentName =
+        departmentId === null || departmentId === undefined
+          ? null
+          : departmentNames.get(departmentId);
+      if (!departmentName) {
+        throw new Error("Role department could not be resolved");
+      }
+      return {
+        ...role,
+        departmentId,
+        departmentName,
+      };
+    }
+
+    if (serverId === undefined) {
+      throw new Error("Role server ID could not be resolved");
+    }
     const serverPublicId = serverPublicIds.get(serverId);
     if (!serverPublicId) {
       throw new Error("Role server public ID could not be resolved");
@@ -256,12 +328,12 @@ export function authorize(options: AuthorizeOptions) {
       throw new UnauthorizedError("Authentication required");
     }
 
-    if (options.adminBypass !== false && user.userType === "ADMIN") {
+    if (options.adminBypass !== false && user.isAdmin) {
       next();
       return;
     }
 
-    if (options.userTypes && !options.userTypes.includes(user.userType)) {
+    if (options.userTypes && !userTypeMatches(user, options.userTypes)) {
       throw new ForbiddenError("Insufficient permissions");
     }
 

@@ -6,6 +6,8 @@ import type {
   PaginatedResponse,
   PlatformAssignment,
   PlatformAssignmentHistoryParams,
+  StaffAssignment,
+  TransferAdminRequest,
   RevokeRoleRequest,
   RevokableRoleAssignment,
   RevokableRolesParams,
@@ -14,6 +16,7 @@ import type {
   RoleScopeOption,
   RoleUserOption,
   AssignRoleRequest,
+  CreateStaffAssignmentRequest,
   UpdatePlatformAssignmentExpiryRequest,
   UserRole,
 } from '@/types';
@@ -80,15 +83,36 @@ export const rolesApi = {
       });
       return response.data;
     }
-    const response = await apiClient.post<PlatformAssignment>(
-      '/roles/platform-assignments',
-      payload,
+    if (payload.role === 'enrollment_officer') {
+      const response = await apiClient.post<StaffAssignment>('/roles/staff-assignments', payload);
+      return response.data;
+    }
+    const response = await apiClient.post<PlatformAssignment>('/roles/platform-assignments', payload);
+    return response.data;
+  },
+
+  async assignStaff(payload: CreateStaffAssignmentRequest) {
+    const response = await apiClient.post<StaffAssignment>('/roles/staff-assignments', payload);
+    return response.data;
+  },
+
+  async revokeStaffAssignment(assignmentPublicId: string) {
+    const response = await apiClient.delete<StaffAssignment>(
+      `/roles/staff-assignments/${assignmentPublicId}`,
     );
+    return response.data;
+  },
+
+  async transferAdmin(payload: TransferAdminRequest) {
+    const response = await apiClient.post<StaffAssignment>('/roles/admin/transfer', payload);
     return response.data;
   },
 
   async revoke(payload: RevokeRoleRequest) {
     if ('assignmentPublicId' in payload) {
+      if (payload.assignmentType === 'staff') {
+        return rolesApi.revokeStaffAssignment(payload.assignmentPublicId);
+      }
       const response = await apiClient.delete<PlatformAssignment>(
         `/roles/platform-assignments/${payload.assignmentPublicId}`,
       );

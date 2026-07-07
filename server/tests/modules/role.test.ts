@@ -249,11 +249,7 @@ describe("Platform RBAC", () => {
 
   it("filters admin users from moderator candidate lists", async () => {
     const fixture = await createPlatformFixture();
-    const adminTarget = await createUser({
-      email: `role-admin-target-${uid()}@test.com`,
-      password: "Pass@1234",
-      userType: "ADMIN",
-    });
+    const adminTarget = fixture.admin;
     await addServerMembership(adminTarget.id, fixture.server.id);
 
     const response = await request(app)
@@ -269,12 +265,7 @@ describe("Platform RBAC", () => {
 
   it("rejects admin moderator assignments", async () => {
     const fixture = await createPlatformFixture();
-    const adminTarget = await createUser({
-      email: `role-admin-assign-${uid()}@test.com`,
-      password: "Pass@1234",
-      userType: "ADMIN",
-    });
-    await addServerMembership(adminTarget.id, fixture.server.id);
+    const adminTarget = fixture.admin;
 
     const response = await request(app)
       .post("/api/roles/platform-assignments")

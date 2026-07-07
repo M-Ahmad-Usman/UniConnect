@@ -26,7 +26,7 @@ import { parseRouteParamPublicId } from '@/lib/route-params';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
-import { UserType } from '@/types';
+import { isAdminUser } from '@/lib/roles';
 
 export function UserDropdown() {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ export function UserDropdown() {
   const logout = useLogout();
   const permissionsQuery = useMyPermissions();
   const canAccessAdminDashboard =
-    permissionsQuery.data?.global.canAccessAdminDashboard ?? (user?.userType === UserType.ADMIN);
+    permissionsQuery.data?.global.canAccessAdminDashboard ?? isAdminUser(user);
   const canManageRoles = permissionsQuery.data?.roleWorkspace.canOpenRoleManagement ?? false;
   const canAccessAcademics = permissionsQuery.data?.global.canAccessAcademicWorkspace ?? false;
 

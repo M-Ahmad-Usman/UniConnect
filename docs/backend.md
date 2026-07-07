@@ -13,6 +13,9 @@
 - Database: PostgreSQL through Prisma 7 and `@prisma/adapter-pg`.
 - Auth: JWT in httpOnly cookies, access cookie at `/api`, refresh cookie at
   `/api/auth/refresh`.
+- Authorization: persisted base user types are `STAFF`, `TEACHER`, and
+  `STUDENT`. Admin authority is an active global staff-role assignment, exposed
+  to middleware as the effective `ADMIN` role for existing authorization rules.
 - Validation: Zod schemas at request boundaries.
 - Realtime: Socket.IO with cookie authentication.
 - Testing: Jest and Supertest integration suites.
@@ -65,6 +68,13 @@ are now captured here and in `docs/security.md`:
   membership revalidation where required.
 - Hardened Socket.IO channel subscriptions with public-ID envelopes, lifecycle
   checks, bounded join attempts, and a concurrency-safe 32-room cap.
+- Added the Phase 1 redesign authorization foundation: `StaffRoleAssignment`,
+  global Admin as a direct staff role, department-scoped enrollment officer
+  role support, exactly-one active Admin enforcement in service flows, and an
+  atomic Admin transfer endpoint.
+- Staff-role migrations are split so PostgreSQL enum values are committed before
+  use. SQL-only exclusion constraints prevent overlapping staff-role periods and
+  overlapping global Admin assignments.
 
 ## Current Maintenance Rules
 - Run backend commands inside `server/`.
@@ -75,6 +85,9 @@ are now captured here and in `docs/security.md`:
 - Update `server/docs/API_ERROR_CODES.md` when adding or changing emitted codes.
 - Update `server/docs/FRONTEND_BACKEND_CONTRACT.md` when API request/response
   behavior changes.
+- Keep Admin checks backed by active `staff_role_assignments` rows. Do not add
+  a persisted `ADMIN` user type or grant Admin through generic role-permission
+  lookup.
 - Log future release work in `docs/release_log.md`, not a backend-local progress
   file.
 - Do not modify `Dockerfile`, `.dockerignore`, or `.github/workflows/deploy-azure.yml`

@@ -1,7 +1,7 @@
 import type { Gender, UserStatus, UserType } from './enums';
 import type { ScopedRoleAssignment } from './role.types';
 
-export type CreatableUserType = Exclude<UserType, 'ADMIN'>;
+export type CreatableUserType = UserType;
 
 // ─── User Profile (from GET /users/me) ──────────────────────────────────────
 

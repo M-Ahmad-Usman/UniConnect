@@ -28,6 +28,16 @@
 - Capability data drives high-risk UI for classes, societies, and role
   management.
 - Scoped managers receive backend-scoped options instead of broad global lists.
+- Persisted user types are `STAFF`, `TEACHER`, and `STUDENT`. Admin is a direct
+  active global staff role, not a base user type and not a generic
+  `ROLE_PERMISSION` grant.
+- Exactly one active Admin is enforced by staff-role transfer flows; Admin
+  transfer revokes the previous assignment and creates the new assignment in one
+  transaction.
+- Database exclusion constraints backstop staff-role period overlap and global
+  Admin overlap, so concurrency cannot create duplicate active staff authority.
+- Non-admin staff roles do not inherit Admin bypass or posting privileges unless
+  explicitly added by future phases.
 
 ## API Errors
 - Standard shape:
@@ -86,7 +96,7 @@
 - User context may include numeric user ID only, not email or name.
 
 ## Deferred Security Follow-up
-- Add MFA for admin accounts before any real deployment with live institutional
+- Add MFA for the active Admin staff account before any real deployment with live institutional
   data.
 - Revisit cross-origin runtime support only if deployment actually separates the
   frontend and API origins.

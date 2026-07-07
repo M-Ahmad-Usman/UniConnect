@@ -6,6 +6,7 @@ import { prisma } from "../config/prisma.js";
 import { getModuleLogger } from "../config/logger.js";
 import type { AuthUser } from "../shared/types/index.js";
 import { isPublicId, parsePublicId } from "../shared/ids/index.js";
+import { hasActiveAdminRole } from "../shared/roles/index.js";
 
 interface AccessTokenPayload {
   sub: string;
@@ -124,11 +125,15 @@ export function initializeSocket(server: http.Server): SocketIOServer {
         return next(new Error("Password change required"));
       }
 
+      const isAdmin = user.userType === "STAFF" && (await hasActiveAdminRole(user.id));
+
       // Attach user data to the socket
       socket.data.user = {
         id: user.id,
         email: user.email,
-        userType: user.userType,
+        userType: isAdmin ? "ADMIN" : user.userType,
+        baseUserType: user.userType,
+        isAdmin,
         departmentId: user.departmentId,
         mustChangePassword: user.mustChangePassword,
       } satisfies AuthUser;

@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import supertest from "supertest";
 import { prisma } from "../../src/config/prisma.js";
-import { TEMP_PASSWORD_PREFIX } from "../../src/shared/constants.js";
 import { app } from "../../src/app.js";
 import { clearRolePermissionCache } from "../../src/middleware/authorize.js";
 
@@ -55,6 +54,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   channel_moderator: ["post:channel"],
 };
 
+const ROLE_SCOPES = {
+  admin: "GLOBAL",
+  enrollment_officer: "DEPARTMENT",
+  server_moderator: "SERVER",
+  channel_moderator: "CHANNEL",
+} as const;
+
 const TEST_DESIGNATIONS = [
   { value: "Professor", label: "Professor" },
   { value: "Associate Professor", label: "Associate Professor" },
@@ -73,14 +79,14 @@ export async function seedRolesAndPermissions() {
     "assign:hod", "assign:program_director", "assign:cr",
     "assign:society_president", "assign:society_convenor", "assign:server_moderator", "assign:channel_moderator",
   ];
-  const roleNames = Object.keys(ROLE_PERMISSIONS);
+  const roleNames = Object.keys(ROLE_SCOPES);
 
   // Batch-create roles and permissions (skipDuplicates avoids upsert overhead)
   await Promise.all([
     prisma.role.createMany({
       data: roleNames.map((name) => ({
         name,
-        scopeType: name === "server_moderator" ? "SERVER" as const : "CHANNEL" as const,
+        scopeType: ROLE_SCOPES[name as keyof typeof ROLE_SCOPES],
       })),
       skipDuplicates: true,
     }),
@@ -142,30 +148,85 @@ async function ensureCreatorUser(userId?: number): Promise<number> {
     return userId;
   }
 
+  const activeAdmin = await findActiveAdminUser();
+  if (activeAdmin) {
+    return activeAdmin.id;
+  }
+
   const creator = await createAdmin({ email: `creator-${uniqueSuffix()}@test.com` });
   return creator.id;
+}
+
+async function findActiveAdminUser() {
+  const assignment = await prisma.staffRoleAssignment.findFirst({
+    where: {
+      revokedAt: null,
+      scopeType: "GLOBAL",
+      departmentId: null,
+      role: { name: "admin", scopeType: "GLOBAL" },
+      user: { status: "ACTIVE", isDeleted: false, userType: "STAFF" },
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    select: { user: { select: { id: true } } },
+    orderBy: { assignedAt: "desc" },
+  });
+  return assignment?.user ?? null;
+}
+
+async function assignExclusiveAdminRole(userId: number): Promise<void> {
+  const role = await prisma.role.upsert({
+    where: { name: "admin" },
+    update: { scopeType: "GLOBAL" },
+    create: { name: "admin", scopeType: "GLOBAL" },
+    select: { id: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.staffRoleAssignment.updateMany({
+      where: {
+        revokedAt: null,
+        scopeType: "GLOBAL",
+        departmentId: null,
+        roleId: role.id,
+      },
+      data: { revokedAt: new Date(), revokedBy: null },
+    });
+
+    await tx.staffRoleAssignment.create({
+      data: {
+        userId,
+        roleId: role.id,
+        scopeType: "GLOBAL",
+        assignedBy: null,
+      },
+    });
+  });
 }
 
 /**
  * Create an admin user in the test database.
  */
-export async function createAdmin(overrides?: { email?: string; fullName?: string }) {
-  const passwordHash = await bcrypt.hash(`${TEMP_PASSWORD_PREFIX}admin123`, 1);
+export async function createAdmin(overrides?: { email?: string; fullName?: string; password?: string }) {
+  const passwordHash = await bcrypt.hash(overrides?.password ?? "Pass@1234", 1);
 
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       fullName: overrides?.fullName ?? "Super Admin",
       email: overrides?.email ?? "admin@uniconnect.com",
       phone: "03001234567",
       passwordHash,
       gender: "MALE",
-      userType: "ADMIN",
+      userType: "STAFF",
       departmentId: null,
       status: "ACTIVE",
       isDeleted: false,
       mustChangePassword: true,
     },
   });
+
+  await assignExclusiveAdminRole(user.id);
+
+  return user;
 }
 
 /**
@@ -175,7 +236,7 @@ export async function createUser(overrides: {
   email?: string;
   fullName?: string;
   password?: string;
-  userType?: "ADMIN" | "TEACHER" | "STUDENT";
+  userType?: "ADMIN" | "STAFF" | "TEACHER" | "STUDENT";
   status?: "ACTIVE" | "SUSPENDED";
   mustChangePassword?: boolean;
   departmentId?: number | null;
@@ -184,20 +245,27 @@ export async function createUser(overrides: {
   const passwordHash = await bcrypt.hash(password, 1);
   const status = overrides.status ?? "ACTIVE";
 
-  return prisma.user.create({
+  const requestedUserType = overrides.userType ?? "STUDENT";
+  const user = await prisma.user.create({
     data: {
       fullName: overrides.fullName ?? "Test User",
       email: overrides.email ?? `testuser-${uniqueSuffix()}@test.com`,
       phone: "03001234567",
       passwordHash,
       gender: "MALE",
-      userType: overrides.userType ?? "STUDENT",
+      userType: requestedUserType === "ADMIN" ? "STAFF" : requestedUserType,
       departmentId: overrides.departmentId ?? null,
       status,
       isDeleted: false,
       mustChangePassword: overrides.mustChangePassword ?? false,
     },
   });
+
+  if (requestedUserType === "ADMIN") {
+    await assignExclusiveAdminRole(user.id);
+  }
+
+  return user;
 }
 
 /**

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { prisma } from "../config/prisma.js";
 import { ApiErrorCode, UnauthorizedError, ForbiddenError } from "../shared/errors/index.js";
+import { hasActiveAdminRole } from "../shared/roles/index.js";
 
 interface AccessTokenPayload {
   sub: string;
@@ -44,10 +45,14 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       throw new UnauthorizedError("Authentication required");
     }
 
+    const isAdmin = user.userType === "STAFF" && (await hasActiveAdminRole(user.id));
+
     req.user = {
       id: user.id,
       email: user.email,
-      userType: user.userType,
+      userType: isAdmin ? "ADMIN" : user.userType,
+      baseUserType: user.userType,
+      isAdmin,
       departmentId: user.departmentId,
       mustChangePassword: user.mustChangePassword,
     };

@@ -5,6 +5,7 @@ export interface AdminStats {
     total: number;
     students: number;
     teachers: number;
+    staff: number;
     admins: number;
     active: number;
   };

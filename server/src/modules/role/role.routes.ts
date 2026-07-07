@@ -7,14 +7,18 @@ import {
   assignableScopesSchema,
   assignableUsersSchema,
   createPlatformAssignmentSchema,
+  createStaffAssignmentSchema,
   getUserRolesSchema,
   listPlatformAssignmentHistorySchema,
   platformAssignmentParamSchema,
   revokableRolesSchema,
+  staffAssignmentParamSchema,
+  transferAdminSchema,
   updatePlatformAssignmentExpirySchema,
 } from "./role.schema.js";
 import {
   handleCreatePlatformAssignment,
+  handleCreateStaffAssignment,
   handleGetAssignableRoles,
   handleGetUserRoles,
   handleListAssignableChannels,
@@ -23,6 +27,8 @@ import {
   handleListPlatformAssignmentHistory,
   handleListRevokableRoles,
   handleRevokePlatformAssignment,
+  handleRevokeStaffAssignment,
+  handleTransferAdmin,
   handleUpdatePlatformAssignmentExpiry,
 } from "./role.controller.js";
 
@@ -40,5 +46,8 @@ router.get("/platform-assignments/history", authenticate, authorize({ userTypes:
 router.post("/platform-assignments", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(createPlatformAssignmentSchema), handleCreatePlatformAssignment);
 router.patch("/platform-assignments/:assignmentPublicId/expiry", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(updatePlatformAssignmentExpirySchema), handleUpdatePlatformAssignmentExpiry);
 router.delete("/platform-assignments/:assignmentPublicId", authenticate, authorize({ userTypes: workspaceUserTypes }), validate(platformAssignmentParamSchema), handleRevokePlatformAssignment);
+router.post("/staff-assignments", authenticate, authorize({ userTypes: ["ADMIN"] }), validate(createStaffAssignmentSchema), handleCreateStaffAssignment);
+router.delete("/staff-assignments/:assignmentPublicId", authenticate, authorize({ userTypes: ["ADMIN"] }), validate(staffAssignmentParamSchema), handleRevokeStaffAssignment);
+router.post("/admin/transfer", authenticate, authorize({ userTypes: ["ADMIN"] }), validate(transferAdminSchema), handleTransferAdmin);
 
 export default router;

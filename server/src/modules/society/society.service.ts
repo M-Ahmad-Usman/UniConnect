@@ -25,7 +25,10 @@ import {
   buildSocietyPermissions,
   getPermissionContext,
 } from "../../shared/permissions/index.js";
-import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
+import {
+  activePlatformRoleAssignmentWhere,
+  activeStaffRoleAssignmentWhere,
+} from "../../shared/roles/index.js";
 import {
   buildPaginationResponse,
   parsePagination,
@@ -313,13 +316,11 @@ async function collectLifecycleRefreshUserIds(
     },
     select: { userId: true },
   });
-  const admins = await client.user.findMany({
+  const admins = await client.staffRoleAssignment.findMany({
     where: {
-      userType: "ADMIN",
-      status: "ACTIVE",
-      isDeleted: false,
+      AND: [activeStaffRoleAssignmentWhere(), { role: { name: "admin" } }],
     },
-    select: { id: true },
+    select: { userId: true },
   });
   const department = await client.department.findUnique({
     where: { id: departmentId },
@@ -329,7 +330,7 @@ async function collectLifecycleRefreshUserIds(
     ...new Set([
       actorUserId,
       ...members.map((member) => member.userId),
-      ...admins.map((admin) => admin.id),
+      ...admins.map((admin) => admin.userId),
       ...(department?.hodId ? [department.hodId] : []),
     ]),
   ];

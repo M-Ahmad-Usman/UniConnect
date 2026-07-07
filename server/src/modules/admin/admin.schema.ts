@@ -5,7 +5,7 @@ import { paginationQuerySchema } from "../../shared/utils/pagination.js";
 
 export const adminListUsersSchema = {
   query: paginationQuerySchema.extend({
-    userType: z.enum(["STUDENT", "TEACHER", "ADMIN"]).optional(),
+    userType: z.enum(["STUDENT", "TEACHER", "STAFF"]).optional(),
     departmentId: z.coerce.number().int().positive().optional(),
     status: z.enum(["ACTIVE", "SUSPENDED"]).optional(),
     lifecycle: z.enum(["live", "deleted", "all"]).optional(),

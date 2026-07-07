@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
 import type { InfiniteData } from '@tanstack/react-query';
 import { MAX_ATTACHMENTS, MAX_FILE_SIZE } from '@/lib/constants';
+import { isAdminUser } from '@/lib/roles';
 import {
   ChannelType,
   PostPriority,
@@ -253,7 +254,7 @@ export function canPostInChannelClient({
     return false;
   }
 
-  if (user.userType === UserType.ADMIN) {
+  if (isAdminUser(user)) {
     return true;
   }
 
@@ -297,7 +298,7 @@ export function canDeletePostClient(
   post: Pick<PostListItem | PostDetail, 'author'>,
   user: AuthUser | null | undefined,
 ) {
-  return user?.email === post.author.email || user?.userType === UserType.ADMIN;
+  return user?.email === post.author.email || isAdminUser(user);
 }
 
 export function detailToListItem(post: PostDetail): PostListItem {

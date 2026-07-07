@@ -20,21 +20,27 @@
 
 ### 2.1 Role Structure
 
-| Type        | Roles                                                                        |
-| ----------- | ---------------------------------------------------------------------------- |
-| **Admin**   | -                                                                            |
-| **Teacher** | HOD, Program Director, Society Convenor, Server Moderator, Channel Moderator |
-| **Student** | CR, Society President, Server Moderator, Channel Moderator                   |
+| Type        | Roles                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| **Staff**   | Admin, Enrollment Officer                                                                 |
+| **Teacher** | HOD, Program Director, Society Convenor, Server Moderator, Channel Moderator              |
+| **Student** | CR, Society President, Server Moderator, Channel Moderator                                |
 
 **Note:**
 
 - Users can have **multiple roles** simultaneously.
 - Roles are **scoped** (e.g., CR of CS-7th-A, President of IEEE, Server Moderator of CS Department Server, Channel Moderator of #general).
+- Admin is a global staff role, not a separate base user type. Exactly one active
+  Admin must exist, and Admin authority is transferred atomically.
+- Non-admin staff roles are role-scoped only and are not auto-members of
+  department, class, or society servers.
 
 ### 2.2 Role Scope Rules
 
 | Role              | Scope Constraint   | Example                             |
 | ----------------- | ------------------ | ----------------------------------- |
+| Admin             | One active global  | Registrar Office Admin              |
+| Enrollment Officer| Department scoped  | Officer for Computer Science        |
 | HOD               | One per department | Dr. Ali is HOD of Computer Science  |
 | Program Director  | One per program    | Dr. Sara is PD of CS program        |
 | Society Convenor  | One per society    | Mr. Ali is Convenor of IEEE         |
@@ -185,6 +191,9 @@
 - The role-management workspace loads only backend-scoped assignable roles, scopes, users, channels, and revokable assignments for the current caller.
 - Program Directors can assign/revoke CRs for active classes in their own program.
 - Generic role assignment/revocation does not manage society president or society convenor roles; those leadership changes stay on society endpoints.
+- Generic role assignment does not revoke the active Admin role directly. Admin
+  transfer uses the dedicated staff-role transfer flow so the system never has
+  zero or multiple active Admins during normal operation.
 - Filled unique scopes such as HOD, Program Director, and CR are visible as unavailable options until the current assignment is revoked or changed through the appropriate workflow.
 
 #### 4.9 Society Membership
@@ -281,6 +290,8 @@ The backend exposes grouped boolean capabilities for permission-aware UI. Capabi
 1. **One email = One account** - No duplicate registrations
 2. **Auto-membership** - Students auto-join class + department servers on registration
 3. **Teacher auto-membership** - Teachers auto-join department server on registration
+4. **Staff membership** - Staff users do not auto-join academic servers unless a
+   future role explicitly grants that behavior.
 
 ### 6.2 Role Uniqueness Rules
 
@@ -292,7 +303,7 @@ The backend exposes grouped boolean capabilities for permission-aware UI. Capabi
 
 ### 6.3 Role Assignment Rules
 
-14. **Admin** - Can assign any role to any user
+14. **Admin** - Can assign any role to any eligible user
 15. **HOD** - Can assign CR, Program Director, Society Convenor within their department
 16. **HOD** - Can assign server-level and channel-level moderators in department, class, and society servers within their department
 17. **CR** - Can assign server-level and channel-level moderators in their class server

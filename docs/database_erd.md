@@ -101,8 +101,8 @@ USER {
   gender VARCHAR(10) // NOT NULL enum ['male', 'female']
   profile_picture_url TEXT
   bio TEXT
-  user_type VARCHAR(20) // NOT NULL enum ['Teacher', 'Student', 'Admin']
-  department_id INTEGER FK // Will be NULL only for admin user type
+  user_type VARCHAR(20) // NOT NULL enum ['Staff', 'Teacher', 'Student']
+  department_id INTEGER FK // NULL allowed for staff; required by application for teachers/students
   status VARCHAR(20) // NOT NULL enum ['active', 'suspended']; defaults to active
   is_deleted BOOLEAN // DEFAULT FALSE
   deleted_at TIMESTAMP
@@ -114,6 +114,29 @@ USER {
 // One department can have many users.
 // One user can be in only one department
 DEPARTMENT.id < USER.department_id
+
+STAFF_ROLE_ASSIGNMENT {
+  id SERIAL PK
+  public_id UUID // NOT NULL UNIQUE DEFAULT uuidv7()
+  user_id INTEGER FK // NOT NULL; must reference a STAFF user
+  role_id INTEGER FK // NOT NULL; staff roles include global admin and department enrollment officer
+  scope_type VARCHAR(20) // NOT NULL enum ['global', 'department']
+  department_id INTEGER FK // Required for department scope, NULL for global scope
+  assigned_by INTEGER FK
+  assigned_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  expires_at TIMESTAMP
+  revoked_at TIMESTAMP
+  revoked_by INTEGER FK
+  revocation_reason TEXT
+  created_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP // DEFAULT CURRENT_TIMESTAMP
+}
+
+USER.id < STAFF_ROLE_ASSIGNMENT.user_id
+ROLE.id < STAFF_ROLE_ASSIGNMENT.role_id
+DEPARTMENT.id < STAFF_ROLE_ASSIGNMENT.department_id
+USER.id < STAFF_ROLE_ASSIGNMENT.assigned_by
+USER.id < STAFF_ROLE_ASSIGNMENT.revoked_by
 
 // For users who have student role
 STUDENT_INFO {

@@ -57,6 +57,28 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-07-07 - Phase 1 Staff Role Authorization Foundation
+- Replaced persisted `ADMIN` user type with `STAFF`; Admin is now resolved from
+  an active global staff-role assignment in HTTP auth, Socket.IO auth,
+  authorization middleware, and permission capabilities.
+- Added split Prisma migrations for staff role scopes and
+  `staff_role_assignments`. The split avoids PostgreSQL enum transaction
+  hazards, and SQL-only exclusion constraints prevent overlapping staff-role
+  periods and overlapping global Admin assignments.
+- Added Admin-only staff-role assignment/revocation and atomic Admin transfer
+  endpoints. Generic staff revocation cannot revoke Admin; Admin changes must
+  use the transfer endpoint to preserve the one-active-Admin invariant.
+- Updated role management so Admin can discover, assign, list, and revoke
+  department-scoped `enrollment_officer` assignments through scoped option APIs.
+- Updated frontend role/user types, Admin guards, role badges, admin user
+  creation/listing, and role-workspace mutation routing for `STAFF`,
+  `admin`, and `enrollment_officer`.
+- Hardened test factories to preserve the single-active-Admin invariant instead
+  of minting multiple active Admin fixtures.
+- No intentional quick fixes remain in Phase 1. The enrollment officer role is
+  intentionally authorization-scoped only until Phase 2 wires its class creation
+  and student transfer permissions.
+
 ### 2026-06-20 - Backend Structured Logging
 - Replaced backend Morgan/prefixed-console runtime logging with Pino and
   pino-http. Production logs are lean JSON to stdout, development uses

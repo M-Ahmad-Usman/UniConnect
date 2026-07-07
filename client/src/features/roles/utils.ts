@@ -52,6 +52,17 @@ export function buildAssignPayload(input: {
       : null;
   }
 
+  if (input.role === 'enrollment_officer') {
+    return input.scopeId
+      ? {
+          userPublicId: input.userPublicId,
+          role: 'enrollment_officer',
+          departmentId: input.scopeId,
+          expiresAt: input.expiresAt,
+        }
+      : null;
+  }
+
   return input.scopeId
     ? { userPublicId: input.userPublicId, role: input.role, scopeId: input.scopeId }
     : null;

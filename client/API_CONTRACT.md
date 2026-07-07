@@ -752,7 +752,17 @@ POST /api/auth/login
     publicId: string;
     fullName: string;
     email: string;
-    userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    userType: 'STAFF' | 'TEACHER' | 'STUDENT';
+    roles: Array<{
+      role: 'admin' | 'enrollment_officer' | string;
+      scopeType: 'global' | 'department' | 'server' | 'channel';
+      departmentId?: number;
+      departmentName?: string;
+      serverPublicId?: string;
+      channelPublicId?: string | null;
+      assignmentPublicId?: string;
+      expiresAt?: string | null;
+    }>;
     mustChangePassword: boolean;
   }
   message: 'Login successful' | 'Login successful. Password change required.';
@@ -1054,7 +1064,7 @@ POST /api/users
   email: string;      // Valid email
   phone: string;      // Format: 03XXXXXXXXX
   gender: 'MALE' | 'FEMALE';
-  userType: 'TEACHER' | 'STUDENT';
+  userType: 'STAFF' | 'TEACHER' | 'STUDENT';
 
   // Conditional fields based on userType:
   // TEACHER:
@@ -1079,7 +1089,7 @@ POST /api/users
     fullName: string;
     phone: string;
     gender: 'MALE' | 'FEMALE';
-    userType: 'TEACHER' | 'STUDENT';
+    userType: 'STAFF' | 'TEACHER' | 'STUDENT';
     departmentId: number | null;
     status: 'ACTIVE' | 'SUSPENDED';
     mustChangePassword: true;
@@ -1090,7 +1100,7 @@ POST /api/users
 }
 ```
 
-**Note:** Backend emails the generated temporary password to the user. The frontend should not display the password to admins. User must change password on first login. Admin accounts are not created through this endpoint; bootstrap or add them directly in the database.
+**Note:** Backend emails the generated temporary password to the user. The frontend should not display the password to admins. User must change password on first login. Staff accounts can be created here, but Admin authority is granted only through the dedicated staff-role transfer/assignment flow.
 
 #### Bulk Import Users (CSV)
 
@@ -1115,7 +1125,7 @@ John Doe,john@ntu.edu.pk,03001234567,MALE,STUDENT,1,018f47a2-5d6b-7c8d-9e0f-1234
 Jane Smith,jane@ntu.edu.pk,03009876543,FEMALE,TEACHER,1,,,Associate Professor
 ```
 
-CSV `userType` supports `STUDENT` and `TEACHER` only. Admin accounts are not created through bulk import.
+CSV `userType` supports `STUDENT` and `TEACHER` only. Staff accounts are created individually.
 
 **Response:**
 
@@ -1148,7 +1158,7 @@ GET /api/users
 {
   page?: number;        // Default: 1
   limit?: number;       // Default: 20, Max: 50
-  userType?: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  userType?: 'STAFF' | 'TEACHER' | 'STUDENT';
   departmentId?: number;
   status?: 'ACTIVE' | 'SUSPENDED';
   lifecycle?: 'live' | 'deleted' | 'all'; // Admin only. Teachers always see live users.
@@ -1166,7 +1176,7 @@ GET /api/users
     fullName: string;
     email: string;
     phone: string;
-    userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+    userType: 'STAFF' | 'TEACHER' | 'STUDENT';
     departmentId: number | null;
     status: 'ACTIVE' | 'SUSPENDED';
     isDeleted: boolean;
@@ -1210,7 +1220,7 @@ GET /api/users/:publicId/deletion-impact
       publicId: string;
       fullName: string;
       email: string;
-      userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+      userType: 'STAFF' | 'TEACHER' | 'STUDENT';
       status: 'ACTIVE' | 'SUSPENDED';
       isDeleted: boolean;
     }
@@ -2729,9 +2739,15 @@ GET /api/roles/assignable
 
 ```typescript
 type RoleOption = {
-  role: 'hod' | 'program_director' | 'cr' | 'server_moderator' | 'channel_moderator';
+  role:
+    | 'enrollment_officer'
+    | 'hod'
+    | 'program_director'
+    | 'cr'
+    | 'server_moderator'
+    | 'channel_moderator';
   label: string;
-  targetUserTypes: Array<'ADMIN' | 'TEACHER' | 'STUDENT'>;
+  targetUserTypes: Array<'STAFF' | 'TEACHER' | 'STUDENT'>;
   scopeKind: 'department' | 'program' | 'class' | 'server';
   requiresServer: boolean;
   requiresChannel: boolean;
@@ -2761,7 +2777,7 @@ GET /api/roles/assignable-users?role=&scopeId=&classPublicId=&serverPublicId=&ch
 ```
 
 Returns paginated active users valid for the selected role/scope. Moderator candidates are active members of the selected server and exclude users already assigned for the same moderator scope.
-Moderator candidates exclude `ADMIN` users (only `TEACHER` and `STUDENT` are eligible).
+Moderator candidates exclude `STAFF` users (only `TEACHER` and `STUDENT` are eligible).
 
 #### Get Revokable Assignments
 
@@ -2791,6 +2807,9 @@ POST   /api/roles/platform-assignments
 DELETE /api/roles/platform-assignments/:assignmentPublicId
 PATCH  /api/roles/platform-assignments/:assignmentPublicId/expiry
 GET    /api/roles/platform-assignments/history
+POST   /api/roles/staff-assignments
+DELETE /api/roles/staff-assignments/:assignmentPublicId
+POST   /api/roles/admin/transfer
 ```
 
 Create body:
@@ -2809,6 +2828,24 @@ Expiry update body: `{ expiresAt: string | null }`.
 
 Assignments are append-only periods. Revocation retains history. The history
 endpoint is admin-only and paginated.
+
+Staff assignment create body:
+
+```typescript
+{
+  userPublicId: string;
+  role: 'enrollment_officer';
+  departmentId: number;
+  expiresAt?: string | null;
+}
+```
+
+Admin transfer body: `{ userPublicId: string }`. Admin is a global staff role;
+transfer is the supported way to change the single active Admin.
+
+Staff revocation payloads returned by `GET /api/roles/revokable` use
+`{ assignmentPublicId, assignmentType: 'staff' }`. Platform moderator revocation
+payloads use `assignmentType: 'platform'`.
 
 **Realtime:** Successful assignment, revocation, and expiry editing emit
 `auth:roles-updated` to the affected user.
@@ -2833,6 +2870,8 @@ GET /api/roles/users/:userPublicId
       | 'cr'
       | 'society_president'
       | 'society_convenor'
+      | 'admin'
+      | 'enrollment_officer'
       | 'server_moderator'
       | 'channel_moderator';
     departmentId?: number;
@@ -2847,7 +2886,7 @@ GET /api/roles/users/:userPublicId
     serverName?: string;
     channelPublicId?: string | null;
     channelName?: string | null;
-    scopeType?: 'server' | 'channel';
+    scopeType?: 'global' | 'department' | 'server' | 'channel';
     expiresAt?: string | null;
     scopeContext?: string; // e.g., "HOD of Computer Science Department"
   }>;
@@ -3008,7 +3047,7 @@ GET /api/servers/:publicId/members
       publicId: string;
       fullName: string;
       email: string;
-      userType: 'ADMIN' | 'TEACHER' | 'STUDENT';
+      userType: 'STAFF' | 'TEACHER' | 'STUDENT';
       profilePictureUrl: string | null;
     };
     badges: string[];  // e.g., ['hod'], ['cr', 'server_moderator']
@@ -3642,6 +3681,7 @@ GET /api/admin/stats
   data: {
     totalUsers: number;
     totalAdmins: number;
+    totalStaff: number;
     totalTeachers: number;
     totalStudents: number;
     activeUsers: number;
@@ -3670,7 +3710,7 @@ GET /api/admin/users
 {
   page?: number;
   limit?: number;
-  userType?: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  userType?: 'STAFF' | 'TEACHER' | 'STUDENT';
   departmentId?: number;
   status?: 'ACTIVE' | 'SUSPENDED';
   lifecycle?: 'live' | 'deleted' | 'all';

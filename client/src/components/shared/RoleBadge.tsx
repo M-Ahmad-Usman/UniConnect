@@ -2,7 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const roleStyles: Record<string, string> = {
-  ADMIN: 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200',
+  STAFF:
+    'border-slate-200 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200',
+  admin: 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200',
   HOD: 'border-primary/25 bg-primary/10 text-primary',
   hod: 'border-primary/25 bg-primary/10 text-primary',
   CR: 'border-primary/25 bg-primary/10 text-primary',
@@ -32,7 +34,9 @@ const roleLabels: Record<string, string> = {
   program_director: 'Director',
   server_moderator: 'Server Moderator',
   channel_moderator: 'Channel Moderator',
-  ADMIN: 'Admin',
+  STAFF: 'Staff',
+  admin: 'Admin',
+  enrollment_officer: 'Enrollment Officer',
 };
 
 interface RoleBadgeProps {

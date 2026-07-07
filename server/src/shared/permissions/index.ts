@@ -1,5 +1,8 @@
 import { prisma } from "../../config/prisma.js";
-import { activePlatformRoleAssignmentWhere } from "../roles/index.js";
+import {
+  activePlatformRoleAssignmentWhere,
+  activeStaffRoleAssignmentWhere,
+} from "../roles/index.js";
 
 export interface GlobalPermissions {
   canAccessAdminDashboard: boolean;
@@ -57,6 +60,8 @@ export interface PermissionScopeSummary {
   societyLeadershipIds: number[];
   moderatorServerIds: number[];
   moderatorChannelIds: number[];
+  staffRoleNames: string[];
+  enrollmentOfficerDepartmentIds: number[];
 }
 
 export interface PermissionContext {
@@ -72,6 +77,7 @@ export interface PermissionContext {
   directedProgramServerIds: number[];
   crServerIds: number[];
   societyLeadershipServerIds: number[];
+  isAdmin: boolean;
 }
 
 export interface ClassPermissionTarget {
@@ -158,7 +164,16 @@ export function emptyRoleWorkspacePermissions(): RoleWorkspacePermissions {
 
 export async function getPermissionContext(userId: number): Promise<PermissionContext> {
   const now = new Date();
-  const [user, hodDepartments, directedPrograms, crClasses, presidentSocieties, convenorSocieties, platformAssignments] =
+  const [
+    user,
+    hodDepartments,
+    directedPrograms,
+    crClasses,
+    presidentSocieties,
+    convenorSocieties,
+    platformAssignments,
+    staffAssignments,
+  ] =
     await Promise.all([
       prisma.user.findFirst({
         where: { id: userId, isDeleted: false },
@@ -194,6 +209,16 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
         },
         select: { serverId: true, channelId: true, scopeType: true },
       }),
+      prisma.staffRoleAssignment.findMany({
+        where: {
+          AND: [activeStaffRoleAssignmentWhere(now), { userId }],
+        },
+        select: {
+          departmentId: true,
+          scopeType: true,
+          role: { select: { name: true } },
+        },
+      }),
     ]);
 
   const societyLeadershipIds = uniqueNumbers([
@@ -212,6 +237,9 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
       .filter((assignment) => assignment.scopeType === "CHANNEL" && assignment.channelId !== null)
       .map((assignment) => assignment.channelId)
   );
+  const isAdmin = staffAssignments.some(
+    (assignment) => assignment.role.name === "admin" && assignment.scopeType === "GLOBAL",
+  );
 
   return {
     user,
@@ -222,12 +250,19 @@ export async function getPermissionContext(userId: number): Promise<PermissionCo
       societyLeadershipIds,
       moderatorServerIds,
       moderatorChannelIds,
+      staffRoleNames: uniqueStrings(staffAssignments.map((assignment) => assignment.role.name)),
+      enrollmentOfficerDepartmentIds: uniqueNumbers(
+        staffAssignments
+          .filter((assignment) => assignment.role.name === "enrollment_officer")
+          .map((assignment) => assignment.departmentId),
+      ),
     },
     hodServerIds: hodDepartments.map((department) => department.serverId),
     directedProgramDepartmentIds: directedPrograms.map((program) => program.departmentId),
     directedProgramServerIds: directedPrograms.map((program) => program.department.serverId),
     crServerIds: crClasses.map((classRecord) => classRecord.serverId),
     societyLeadershipServerIds,
+    isAdmin,
   };
 }
 
@@ -236,7 +271,7 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
     return emptyGlobalPermissions();
   }
 
-  if (context.user.userType === "ADMIN") {
+  if (context.isAdmin) {
     return {
       canAccessAdminDashboard: true,
       canAccessAcademicWorkspace: true,
@@ -274,7 +309,7 @@ export function buildRoleWorkspacePermissions(context: PermissionContext): RoleW
     return emptyRoleWorkspacePermissions();
   }
 
-  if (context.user.userType === "ADMIN") {
+  if (context.isAdmin) {
     return {
       canOpenRoleManagement: true,
       canAssignHod: true,
@@ -316,7 +351,7 @@ export function buildClassPermissions(
     return emptyClassPermissions();
   }
 
-  if (context.user.userType === "ADMIN") {
+  if (context.isAdmin) {
     return classRecord.status === "GRADUATED"
       ? readOnlyClassPermissions(true)
       : allClassPermissions();
@@ -354,7 +389,7 @@ export function buildSocietyPermissions(
     return emptySocietyPermissions();
   }
 
-  const isAdmin = context.user.userType === "ADMIN";
+  const isAdmin = context.isAdmin;
   const isLeader =
     society.presidentUserId === context.user.id ||
     society.convenorUserId === context.user.id ||
@@ -433,4 +468,8 @@ function readOnlyClassPermissions(canViewStudents: boolean): ClassPermissions {
 
 function uniqueNumbers(values: Array<number | null>): number[] {
   return [...new Set(values.filter((value): value is number => typeof value === "number"))];
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)];
 }

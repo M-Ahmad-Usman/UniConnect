@@ -177,30 +177,33 @@ export function CreateUserPage() {
               className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               {...register('userType')}
             >
+              <option value={UserType.STAFF}>Staff</option>
               <option value={UserType.STUDENT}>Student</option>
               <option value={UserType.TEACHER}>Teacher</option>
             </select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="create-user-department">Department</Label>
-            <select
-              id="create-user-department"
-              disabled={createUser.isPending || departmentsQuery.isLoading}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              {...register('departmentId')}
-            >
-              <option value="">Select department</option>
-              {departmentOptions.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.code} · {department.name}
-                </option>
-              ))}
-            </select>
-            {'departmentId' in errors && errors.departmentId ? (
-              <p className="text-sm text-destructive">{errors.departmentId.message}</p>
-            ) : null}
-          </div>
+          {userType !== UserType.STAFF ? (
+            <div className="space-y-2">
+              <Label htmlFor="create-user-department">Department</Label>
+              <select
+                id="create-user-department"
+                disabled={createUser.isPending || departmentsQuery.isLoading}
+                className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                {...register('departmentId')}
+              >
+                <option value="">Select department</option>
+                {departmentOptions.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.code} · {department.name}
+                  </option>
+                ))}
+              </select>
+              {'departmentId' in errors && errors.departmentId ? (
+                <p className="text-sm text-destructive">{errors.departmentId.message}</p>
+              ) : null}
+            </div>
+          ) : null}
 
           {userType === UserType.TEACHER ? (
             <div className="space-y-2">

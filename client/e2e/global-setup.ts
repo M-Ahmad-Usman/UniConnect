@@ -18,7 +18,7 @@ interface SeedUser {
   password: string;
   fullName: string;
   mustChangePassword: boolean;
-  userType?: 'Teacher' | 'Student' | 'Admin';
+  userType?: 'Staff' | 'Teacher' | 'Student';
 }
 
 interface SeededUserRow {

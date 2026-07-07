@@ -35,15 +35,18 @@ export interface AuthUser {
   id: number;
   email: string;
   userType: string;
+  baseUserType: string;
+  isAdmin: boolean;
   departmentId: number | null;
   mustChangePassword: boolean;
 }
 
 export interface UserRole {
   role: string;
-  serverId: number;
+  serverId?: number;
   channelId?: number | null;
-  scopeType: "server" | "channel";
+  departmentId?: number | null;
+  scopeType: "server" | "channel" | "department" | "global";
   assignmentPublicId?: string;
   expiresAt?: Date | null;
 }

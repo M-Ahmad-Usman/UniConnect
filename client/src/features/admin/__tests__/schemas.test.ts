@@ -21,10 +21,10 @@ const baseInput = {
 const publicId = '018f47a2-5d6b-7c8d-9e0f-123456789abc';
 
 describe('createUserSchema', () => {
-  it('rejects admin users because admins are created outside the UI/API flow', () => {
+  it('accepts staff users without academic department fields', () => {
     const result = createUserSchema.safeParse({
       ...baseInput,
-      userType: UserType.ADMIN,
+      userType: UserType.STAFF,
       departmentId: '',
       programId: '',
       classPublicId: '',
@@ -32,7 +32,7 @@ describe('createUserSchema', () => {
       designation: '',
     });
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it('accepts student users with NTU roll numbers and coerces ids', () => {

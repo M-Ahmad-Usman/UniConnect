@@ -179,9 +179,9 @@ describe('edit and permission helpers', () => {
         publicId: '0198f1f0-0000-7000-8000-000000000011',
         fullName: 'Admin',
         email: 'admin@example.com',
-        userType: UserType.ADMIN,
+        userType: UserType.STAFF,
         mustChangePassword: false,
-        roles: [],
+        roles: [{ role: 'admin', scopeType: 'global' }],
       }),
     ).toBe(true);
   });

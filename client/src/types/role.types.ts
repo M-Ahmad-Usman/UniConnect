@@ -1,6 +1,8 @@
 import type { PlatformRoleScopeType } from './enums';
 
 export type RoleName =
+  | 'admin'
+  | 'enrollment_officer'
   | 'hod'
   | 'program_director'
   | 'cr'
@@ -10,15 +12,18 @@ export type RoleName =
   | 'channel_moderator';
 
 export type ModerationRoleName = 'server_moderator' | 'channel_moderator';
-export type RevokableRoleName = Exclude<RoleName, 'society_president' | 'society_convenor'>;
-export type AssignableRoleName = Exclude<RoleName, 'society_president' | 'society_convenor'>;
+export type StaffRoleName = 'admin' | 'enrollment_officer';
+export type RevokableRoleName = Exclude<RoleName, 'admin' | 'society_president' | 'society_convenor'>;
+export type AssignableRoleName = Exclude<RoleName, 'admin' | 'society_president' | 'society_convenor'>;
 
 export interface ScopedRoleAssignment {
   assignmentPublicId?: string;
   role: RoleName;
-  serverPublicId: string;
+  serverPublicId?: string;
   channelPublicId?: string | null;
-  scopeType: 'server' | 'channel';
+  departmentId?: number;
+  departmentName?: string;
+  scopeType: 'server' | 'channel' | 'department' | 'global';
   expiresAt?: string | null;
 }
 
@@ -54,12 +59,26 @@ export interface CreatePlatformAssignmentRequest {
   expiresAt?: string | null;
 }
 
-export type AssignRoleRequest = AcademicAssignRoleRequest | CreatePlatformAssignmentRequest;
+export interface CreateStaffAssignmentRequest {
+  userPublicId: string;
+  role: 'enrollment_officer';
+  departmentId: number;
+  expiresAt?: string | null;
+}
+
+export interface TransferAdminRequest {
+  userPublicId: string;
+}
+
+export type AssignRoleRequest =
+  | AcademicAssignRoleRequest
+  | CreatePlatformAssignmentRequest
+  | CreateStaffAssignmentRequest;
 
 export type RevokeRoleRequest =
   | { role: 'hod' | 'program_director'; scopeId: number }
   | { role: 'cr'; classPublicId: string }
-  | { assignmentPublicId: string };
+  | { assignmentPublicId: string; assignmentType?: 'platform' | 'staff' };
 
 export interface UpdatePlatformAssignmentExpiryRequest {
   assignmentPublicId: string;
@@ -81,10 +100,25 @@ export interface PlatformAssignment {
   revokedBy: { publicId: string; fullName: string } | null;
 }
 
+export interface StaffAssignment {
+  assignmentPublicId: string;
+  role: StaffRoleName;
+  scopeType: 'global' | 'department';
+  departmentId: number | null;
+  assignedAt: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  state: 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+  user: { publicId: string; fullName: string; email: string; userType: string };
+  department: { id: number; name: string; code: string } | null;
+  assignedBy: { publicId: string; fullName: string } | null;
+  revokedBy: { publicId: string; fullName: string } | null;
+}
+
 export interface RoleOption {
   role: AssignableRoleName;
   label: string;
-  targetUserTypes: Array<'ADMIN' | 'TEACHER' | 'STUDENT'>;
+  targetUserTypes: Array<'STAFF' | 'TEACHER' | 'STUDENT'>;
   scopeKind: 'department' | 'program' | 'class' | 'server';
   requiresServer: boolean;
   requiresChannel: boolean;

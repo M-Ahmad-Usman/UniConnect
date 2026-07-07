@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
+export * from "./staff.js";
+
 export const PLATFORM_ROLE_NAMES = ["server_moderator", "channel_moderator"] as const;
 export type PlatformRoleName = (typeof PLATFORM_ROLE_NAMES)[number];
 

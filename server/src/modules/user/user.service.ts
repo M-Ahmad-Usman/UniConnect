@@ -35,7 +35,7 @@ type CreateUserInput = {
   email: string;
   phone: string;
   gender: "MALE" | "FEMALE";
-  userType: "STUDENT" | "TEACHER";
+  userType: "STUDENT" | "TEACHER" | "STAFF";
   departmentId?: number;
   classPublicId?: string;
   rollNumber?: string;
@@ -81,7 +81,7 @@ function normalizeCsvRow(row: Record<string, string>): CreateUserInput {
     email: (row.email ?? "").trim(),
     phone: (row.phone ?? "").trim(),
     gender: gender as "MALE" | "FEMALE",
-    userType: userType as "STUDENT" | "TEACHER",
+    userType: userType as "STUDENT" | "TEACHER" | "STAFF",
     departmentId: row.departmentId ? Number.parseInt(row.departmentId, 10) : undefined,
     classPublicId: row.classPublicId?.trim() || undefined,
     rollNumber: row.rollNumber?.trim() ? row.rollNumber.trim().toUpperCase() : undefined,
@@ -90,14 +90,14 @@ function normalizeCsvRow(row: Record<string, string>): CreateUserInput {
 }
 
 function parseUserListFilters(query: ListUsersQuery): {
-  userType?: "STUDENT" | "TEACHER" | "ADMIN";
+  userType?: "STUDENT" | "TEACHER" | "STAFF";
   departmentId?: number;
   status?: UserStatus;
   lifecycle: "live" | "deleted" | "all";
   search?: string;
 } {
   const filters: {
-    userType?: "STUDENT" | "TEACHER" | "ADMIN";
+    userType?: "STUDENT" | "TEACHER" | "STAFF";
     departmentId?: number;
     status?: UserStatus;
     lifecycle: "live" | "deleted" | "all";
@@ -106,7 +106,7 @@ function parseUserListFilters(query: ListUsersQuery): {
 
   if (query.userType && typeof query.userType === "string") {
     const userType = query.userType.toUpperCase();
-    if (userType === "STUDENT" || userType === "TEACHER" || userType === "ADMIN") {
+    if (userType === "STUDENT" || userType === "TEACHER" || userType === "STAFF") {
       filters.userType = userType;
     }
   }
@@ -607,7 +607,7 @@ export async function listUsers(
   const filters = parseUserListFilters(query);
 
   const where: {
-    userType?: "STUDENT" | "TEACHER" | "ADMIN";
+    userType?: "STUDENT" | "TEACHER" | "STAFF";
     departmentId?: number;
     status?: UserStatus;
     isDeleted?: boolean;

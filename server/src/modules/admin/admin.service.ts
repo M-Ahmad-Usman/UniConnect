@@ -3,6 +3,7 @@ import { buildPaginationResponse, parsePagination } from "../../shared/utils/pag
 import type { PaginatedResponse } from "../../shared/types/index.js";
 import type { Prisma, UserStatus  } from "@prisma/client";
 import { mapUserPublicDto } from "../../shared/ids/index.js";
+import { activeStaffRoleAssignmentWhere } from "../../shared/roles/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ interface SystemStats {
     total: number;
     students: number;
     teachers: number;
+    staff: number;
     admins: number;
     active: number;
   };
@@ -52,7 +54,7 @@ interface UserListItem {
 
 function parseAdminUserFilters(query: AdminListUsersQuery) {
   const filters: {
-    userType?: "STUDENT" | "TEACHER" | "ADMIN";
+    userType?: "STUDENT" | "TEACHER" | "STAFF";
     departmentId?: number;
     status?: UserStatus;
     lifecycle: "live" | "deleted" | "all";
@@ -61,7 +63,7 @@ function parseAdminUserFilters(query: AdminListUsersQuery) {
 
   if (query.userType && typeof query.userType === "string") {
     const userType = query.userType.toUpperCase();
-    if (userType === "STUDENT" || userType === "TEACHER" || userType === "ADMIN") {
+    if (userType === "STUDENT" || userType === "TEACHER" || userType === "STAFF") {
       filters.userType = userType;
     }
   }
@@ -139,14 +141,19 @@ export async function getSystemStats(): Promise<SystemStats> {
     prisma.post.count({ where: { isDeleted: false } }),
   ]);
 
-  const userCounts = { students: 0, teachers: 0, admins: 0, total: 0 };
+  const userCounts = { students: 0, teachers: 0, staff: 0, admins: 0, total: 0 };
   for (const group of usersByType) {
     const count = group._count._all;
     userCounts.total += count;
     if (group.userType === "STUDENT") userCounts.students = count;
     else if (group.userType === "TEACHER") userCounts.teachers = count;
-    else if (group.userType === "ADMIN") userCounts.admins = count;
+    else if (group.userType === "STAFF") userCounts.staff = count;
   }
+  userCounts.admins = await prisma.staffRoleAssignment.count({
+    where: {
+      AND: [activeStaffRoleAssignmentWhere(), { role: { name: "admin" } }],
+    },
+  });
 
   const serverCounts = { department: 0, class: 0, society: 0, total: 0 };
   for (const group of serversByType) {
@@ -162,6 +169,7 @@ export async function getSystemStats(): Promise<SystemStats> {
       total: userCounts.total,
       students: userCounts.students,
       teachers: userCounts.teachers,
+      staff: userCounts.staff,
       admins: userCounts.admins,
       active: activeUsers,
     },

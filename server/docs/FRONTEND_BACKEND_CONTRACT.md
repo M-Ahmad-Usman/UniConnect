@@ -164,16 +164,16 @@ available.
 
 - `POST /`
   - Body: `{ fullName, email, phone, gender, userType, departmentId?, classPublicId?, rollNumber?, designation? }`
-  - `userType` accepts only `STUDENT` or `TEACHER`. Admin accounts are bootstrap/DB-managed, not created through the application API.
+  - `userType` accepts `STAFF`, `STUDENT`, or `TEACHER`. Admin authority is assigned through staff-role assignment/transfer endpoints, not persisted as a user type.
   - Student `rollNumber` uses NTU format such as `22-NTU-CS-1184`.
 - `POST /bulk-import`
   - Multipart field: `file` (CSV)
   - CSV `userType` accepts only `STUDENT` or `TEACHER`.
 - `GET /me`
   - Returns profile plus scoped current-user roles for UI authorization:
-    - `roles: Array<{ role, serverPublicId, channelPublicId?, scopeType, assignmentPublicId?, expiresAt? }>`
-    - Role values currently include `hod`, `program_director`, `cr`, `society_president`, `society_convenor`, `server_moderator`, `channel_moderator`
-    - `scopeType` is `"server"` or `"channel"`
+    - `roles: Array<{ role, departmentId?, departmentName?, serverPublicId?, channelPublicId?, scopeType, assignmentPublicId?, expiresAt? }>`
+    - Role values currently include `admin`, `enrollment_officer`, `hod`, `program_director`, `cr`, `society_president`, `society_convenor`, `server_moderator`, `channel_moderator`
+    - `scopeType` is `"global"`, `"department"`, `"server"`, or `"channel"`
 - `PATCH /me`
   - Body: `{ bio? }`
 - `PATCH /me/profile-picture`
@@ -374,7 +374,7 @@ writes, including lifecycle-scoped server/channel/post/moderator mutations.
 
 - `GET /assignable`
   - Returns only caller-assignable role options.
-  - Role values are `hod | program_director | cr | server_moderator | channel_moderator`.
+  - Role values are `enrollment_officer | hod | program_director | cr | server_moderator | channel_moderator`.
   - Society president/convenor are intentionally excluded; use society update endpoints for leadership changes.
 - `GET /assignable-scopes`
   - Query: `role, page, limit, search?`
@@ -387,10 +387,11 @@ writes, including lifecycle-scoped server/channel/post/moderator mutations.
   - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns paginated active users valid for the selected role/scope.
   - Moderator candidates are active server members and exclude users already assigned for the same moderator scope.
-  - Moderator candidates exclude `ADMIN` users (only `TEACHER` and `STUDENT` are eligible).
+  - Moderator candidates exclude `STAFF` users (only `TEACHER` and `STUDENT` are eligible).
 - `GET /revokable`
   - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns only caller-revokable assignments with a server-provided `revokePayload`.
+  - Staff-role revocation payloads include `{ assignmentPublicId, assignmentType: "staff" }`; platform moderator payloads include `assignmentType: "platform"`.
 - `POST /platform-assignments`
   - Body: `{ userPublicId, role, serverPublicId, channelPublicId?, expiresAt? }`
   - `role` is `server_moderator | channel_moderator`; omitted/null expiry means permanent.
@@ -400,6 +401,14 @@ writes, including lifecycle-scoped server/channel/post/moderator mutations.
   - Body: `{ expiresAt: string | null }`
 - `GET /platform-assignments/history`
   - Admin-only paginated history. Query: `state?, role?, userPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
+- `POST /staff-assignments`
+  - Body: `{ userPublicId, role: "enrollment_officer", departmentId, expiresAt? }`
+  - Admin-only. Assigns department-scoped staff roles to active `STAFF` users.
+- `DELETE /staff-assignments/:assignmentPublicId`
+  - Admin-only. Revokes revokable staff-role assignments; the active Admin role is changed only through Admin transfer.
+- `POST /admin/transfer`
+  - Body: `{ userPublicId }`
+  - Admin-only. Atomically transfers the single active global Admin role to another active `STAFF` user.
 - `GET /users/:userPublicId`
   - Returns contextual role assignments for the target user, including department/program/class/society metadata and explicit moderation roles
   - Role changes emit `auth:roles-updated` to affected users so clients can refetch `/api/users/me`
@@ -494,7 +503,7 @@ Academic role writes use their owning modules:
 
 - `GET /stats`
 - `GET /users`
-  - Query: `page, limit, userType?, departmentId?, status?, lifecycle?, search?`
+  - Query: `page, limit, userType?, departmentId?, status?, lifecycle?, search?`; `userType` is `STAFF | TEACHER | STUDENT`.
 
 ## References
 

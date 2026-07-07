@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useServerDetail } from '@/features/servers/hooks/useServerDetail';
 import type { ClassPermissions, ScopedRoleAssignment, SocietyPermissions } from '@/types';
-import { ServerType, UserType } from '@/types';
+import { ServerType } from '@/types';
 import { useAuthStore } from '@/stores/auth.store';
+import { hasAdminRole } from '@/lib/roles';
 
 const CHANNEL_MANAGEMENT_ROLE_MAP: Record<(typeof ServerType)[keyof typeof ServerType], string[]> = {
   DEPARTMENT: ['hod'],
@@ -65,10 +66,9 @@ export function getSocietyPermissions(
 export function canManageChannelsInServer(
   serverPublicId: string | null,
   serverType: (typeof ServerType)[keyof typeof ServerType] | null,
-  userType: (typeof UserType)[keyof typeof UserType] | null,
   userRoles: ScopedRoleAssignment[],
 ) {
-  if (userType === UserType.ADMIN) {
+  if (hasAdminRole(userRoles)) {
     return true;
   }
 
@@ -88,7 +88,6 @@ export function usePermissions(serverPublicId: string | null) {
     const canManage = canManageChannelsInServer(
       serverPublicId,
       serverQuery.data?.type ?? null,
-      user?.userType ?? null,
       user?.roles ?? [],
     );
 
@@ -119,5 +118,5 @@ export function usePermissions(serverPublicId: string | null) {
       canLockChannels: canManage,
       canDeleteChannels: canManage,
     };
-  }, [serverPublicId, serverQuery.data?.type, serverQuery.isLoading, user?.roles, user?.userType]);
+  }, [serverPublicId, serverQuery.data?.type, serverQuery.isLoading, user?.roles]);
 }

@@ -11,6 +11,7 @@ export async function resetDB(): Promise<void> {
     "notifications",
     "post_attachments",
     "posts",
+    "staff_role_assignments",
     "user_role_assignments",
     "role_permissions",
     "permissions",

@@ -8,6 +8,7 @@ import { RoleBadge } from '@/components/shared/RoleBadge';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants';
+import { isAdminUser } from '@/lib/roles';
 import { useAuthStore } from '@/stores/auth.store';
 import {
   AdminPageHeader,
@@ -39,7 +40,9 @@ function toLocalDateTimeInput(value: string | null | undefined) {
 }
 
 function getPlatformAssignmentPublicId(payload: RevokeRoleRequest) {
-  return 'assignmentPublicId' in payload ? payload.assignmentPublicId : null;
+  return 'assignmentPublicId' in payload && payload.assignmentType !== 'staff'
+    ? payload.assignmentPublicId
+    : null;
 }
 
 function getScopeServerPublicId(
@@ -83,7 +86,8 @@ export function RoleManagementPage() {
   const assignRole = useAssignRole();
   const revokeRole = useRevokeRole();
   const updateExpiry = useUpdatePlatformAssignmentExpiry();
-  const historyQuery = usePlatformAssignmentHistory({}, showHistory && user?.userType === 'ADMIN');
+  const canViewHistory = isAdminUser(user);
+  const historyQuery = usePlatformAssignmentHistory({}, showHistory && canViewHistory);
 
   const roleOptions = assignableRolesQuery.data ?? [];
   const effectiveRole =
@@ -92,6 +96,7 @@ export function RoleManagementPage() {
       : chooseInitialRole(roleOptions);
   const selectedRole = roleOptions.find((option) => option.role === effectiveRole) ?? null;
   const roleIsModerator = effectiveRole ? isModeratorRole(effectiveRole) : false;
+  const roleSupportsExpiry = roleIsModerator || effectiveRole === 'enrollment_officer';
 
   const scopesQuery = useAssignableRoleScopes(
     effectiveRole
@@ -353,7 +358,7 @@ export function RoleManagementPage() {
                 </span>
               ) : null}
             </label>
-            {roleIsModerator ? (
+            {roleSupportsExpiry ? (
               <label className="space-y-1.5">
                 <span className="text-sm font-medium">Expiry</span>
                 <input
@@ -415,7 +420,7 @@ export function RoleManagementPage() {
                           assignment.server?.label ??
                           'Scoped role'}
                       </p>
-                      {'assignmentPublicId' in assignment.revokePayload ? (
+                      {getPlatformAssignmentPublicId(assignment.revokePayload) ? (
                         <p className="mt-1 text-xs text-muted-foreground">
                           {assignment.expiresAt
                             ? `Expires ${new Date(assignment.expiresAt).toLocaleString()}`
@@ -424,7 +429,7 @@ export function RoleManagementPage() {
                       ) : null}
                     </div>
                     <div className="flex gap-2">
-                      {'assignmentPublicId' in assignment.revokePayload ? (
+                      {getPlatformAssignmentPublicId(assignment.revokePayload) ? (
                         <Button
                           type="button"
                           variant="outline"
@@ -464,9 +469,9 @@ export function RoleManagementPage() {
                     </div>
                   </div>
                   {editingExpiry &&
-                  'assignmentPublicId' in assignment.revokePayload &&
+                  getPlatformAssignmentPublicId(assignment.revokePayload) &&
                   editingExpiry.assignmentPublicId ===
-                    assignment.revokePayload.assignmentPublicId ? (
+                    getPlatformAssignmentPublicId(assignment.revokePayload) ? (
                     <div className="mt-3 flex flex-wrap items-end gap-2">
                       <label className="space-y-1">
                         <span className="block text-xs font-medium">New expiry</span>
@@ -510,7 +515,7 @@ export function RoleManagementPage() {
           </DataState>
         </section>
       </div>
-      {user?.userType === 'ADMIN' ? (
+      {canViewHistory ? (
         <section className="rounded-lg border bg-background p-4">
           <Button type="button" variant="outline" onClick={() => setShowHistory((value) => !value)}>
             <History className="size-4" />

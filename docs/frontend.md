@@ -34,6 +34,9 @@ society management, and role management.
 - Same-origin deployment remains the runtime default. Cross-origin deployment is
   documented but not enabled by extra frontend runtime configuration in Module 7.
 - Role management lives outside admin routes because scoped managers can use it.
+- Admin navigation is gated by backend capability data and active global admin
+  staff role membership, not by `userType === 'ADMIN'`. The frontend user type
+  enum is `STAFF | TEACHER | STUDENT`.
 - Academic delegated workflows live under `/academics/*`; admin routes may wrap
   or redirect but must not be the only path.
 - Rare academic/catalog deletion-impact reports are exposed through typed
@@ -72,5 +75,7 @@ Use `client/ARCHITECTURE.md` for detailed rules. Current standards include:
 - Keep endpoint functions in `client/src/api/endpoints`.
 - Keep detailed frontend architecture decisions in `client/ARCHITECTURE.md`.
 - Keep frontend integration examples and client behavior in `client/API_CONTRACT.md`.
+- Keep role helpers centralized when checking Admin authority in UI code; do
+  not reintroduce direct `UserType.ADMIN` comparisons.
 - Log future release work in `docs/release_log.md`, not a frontend-local progress
   file.

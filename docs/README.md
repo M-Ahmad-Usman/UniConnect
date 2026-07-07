@@ -23,6 +23,8 @@ This is the primary documentation entry point. It points to the canonical source
 | Azure concepts and troubleshooting | `docs/azure_concepts.md` |
 | Release readiness and final gate | `docs/release_readiness.md` |
 | Active implementation/release log | `docs/release_log.md` |
+| Production redesign plan | `docs/production_redesign_plan.md` |
+| Production redesign progress and phase handoff | `docs/production_redesign_progress.md` |
 | Schema/lifecycle/public-ID refactor plan | `docs/schema_lifecycle_refactor_plan.md` |
 | Schema/lifecycle/public-ID refactor progress | `docs/schema_lifecycle_refactor_progress.md` |
 | Entity deletion and lifecycle policy | `docs/entity_deletion_policy.md` |
@@ -43,8 +45,10 @@ This is the primary documentation entry point. It points to the canonical source
 - `server/` owns backend implementation standards and emitted API contracts.
 - `client/` owns frontend architecture, UI conventions, and client-side API
   integration behavior.
-- Historical implementation notes should be summarized into `docs/release_log.md`
-  instead of creating new long-lived progress files.
+- Historical implementation notes should usually be summarized into
+  `docs/release_log.md`. The production redesign is the current exception and keeps
+  `docs/production_redesign_progress.md` as its active phase handoff until the redesign
+  is complete.
 - Completed refactor plans may retain their plan/progress docs as historical
   records, but canonical decisions should be summarized into the release log and
   current policy docs.
@@ -54,7 +58,8 @@ This is the primary documentation entry point. It points to the canonical source
 ## Agent Reading Order
 1. `AGENTS.md` for command and coding rules.
 2. `docs/README.md` for the current documentation map.
-3. `docs/release_readiness.md` and `docs/release_log.md` for active work.
+3. `docs/production_redesign_plan.md`, `docs/production_redesign_progress.md`,
+   `docs/release_readiness.md`, and `docs/release_log.md` for active work.
 4. `docs/security.md` for auth, CSRF, audit, telemetry, and error policy.
 5. `docs/deployment.md` when working on infrastructure, CI/CD, Docker, or Azure
    configuration.

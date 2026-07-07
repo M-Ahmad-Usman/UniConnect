@@ -1,12 +1,16 @@
 import { Link, Outlet } from 'react-router-dom';
-import { useAuthStore } from '@/stores/auth.store';
-import { UserType } from '@/types/enums';
 import { ROUTES } from '@/lib/constants';
+import { useMyPermissions } from '@/hooks/useMyPermissions';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 export function AdminGuard() {
-  const user = useAuthStore((state) => state.user);
+  const permissionsQuery = useMyPermissions();
 
-  if (user?.userType !== UserType.ADMIN) {
+  if (permissionsQuery.isLoading) {
+    return <LoadingSpinner fullPage />;
+  }
+
+  if (!permissionsQuery.data?.global.canAccessAdminDashboard) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <h1 className="text-2xl font-bold">Access Denied</h1>

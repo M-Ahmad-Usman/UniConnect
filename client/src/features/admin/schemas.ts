@@ -30,7 +30,7 @@ const baseUserFields = {
 export const createUserSchema = z
   .object({
     ...baseUserFields,
-    userType: z.enum([UserType.TEACHER, UserType.STUDENT]),
+    userType: z.enum([UserType.STAFF, UserType.TEACHER, UserType.STUDENT]),
     departmentId: optionalNumericIdSchema,
     programId: optionalNumericIdSchema,
     classPublicId: optionalPublicIdSchema,
@@ -38,7 +38,7 @@ export const createUserSchema = z
     designation: z.string().trim().max(100),
   })
   .superRefine((values, context) => {
-    if (!values.departmentId) {
+    if (values.userType !== UserType.STAFF && !values.departmentId) {
       context.addIssue({
         code: 'custom',
         path: ['departmentId'],
@@ -102,6 +102,10 @@ export function toCreateUserPayload(values: CreateUserFormValues) {
       departmentId: values.departmentId!,
       designation: values.designation!.trim(),
     };
+  }
+
+  if (values.userType === UserType.STAFF) {
+    return base;
   }
 
   return {

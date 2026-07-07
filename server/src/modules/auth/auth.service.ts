@@ -10,6 +10,7 @@ import { UnauthorizedError } from "../../shared/errors/index.js";
 import { parseExpiry } from "../../shared/utils/parseExpiry.js";
 import { BCRYPT_ROUNDS } from "../../shared/constants.js";
 import { recordAuditLog, type AuditContext } from "../audit/audit.service.js";
+import { getPublicUserRoles } from "../../middleware/authorize.js";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ export async function login(email: string, password: string) {
     throw new UnauthorizedError("Invalid credentials");
   }
 
+  const roles = await getPublicUserRoles(user.id);
+
   const accessToken = generateAccessToken({
     id: user.id,
     email: user.email,
@@ -89,6 +92,7 @@ export async function login(email: string, password: string) {
       email: user.email,
       userType: user.userType,
       mustChangePassword: user.mustChangePassword,
+      roles,
     },
   };
 }

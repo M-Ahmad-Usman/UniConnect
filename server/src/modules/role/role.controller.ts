@@ -56,6 +56,36 @@ export async function handleCreatePlatformAssignment(req: Request, res: Response
   res.status(StatusCodes.CREATED).json(response);
 }
 
+export async function handleCreateStaffAssignment(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.createStaffAssignment(req.body, callerFrom(req), auditFrom(req));
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Staff role assigned successfully",
+  };
+  res.status(StatusCodes.CREATED).json(response);
+}
+
+export async function handleRevokeStaffAssignment(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.revokeStaffAssignment(String(req.params.assignmentPublicId), callerFrom(req), auditFrom(req));
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Staff role revoked successfully",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
+export async function handleTransferAdmin(req: Request, res: Response): Promise<void> {
+  const assignment = await roleService.transferAdminRole(req.body, callerFrom(req), auditFrom(req));
+  const response: ApiResponse<typeof assignment> = {
+    success: true,
+    data: assignment,
+    message: "Admin role transferred successfully",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
 export async function handleRevokePlatformAssignment(req: Request, res: Response): Promise<void> {
   const assignment = await roleService.revokePlatformAssignment(String(req.params.assignmentPublicId), callerFrom(req), auditFrom(req));
   const response: ApiResponse<typeof assignment> = {

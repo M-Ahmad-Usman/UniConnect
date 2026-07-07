@@ -4,8 +4,7 @@ import { useMemo, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '@/lib/constants';
-import { useAuthStore } from '@/stores/auth.store';
-import { SocietyStatus, UserType } from '@/types';
+import { SocietyStatus } from '@/types';
 import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { parsePositiveInt } from '@/features/admin/utils';
 import { useDepartments } from '@/features/admin/hooks/useDepartments';
@@ -22,7 +21,6 @@ import type { SocietyFormValues } from '../schemas';
 export function SocietyListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
-  const user = useAuthStore((state) => state.user);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const departmentId = parsePositiveInt(searchParams.get('departmentId'));
   const status =
@@ -37,17 +35,19 @@ export function SocietyListPage() {
   const departmentsQuery = useDepartments();
   const permissionsQuery = useMyPermissions();
   const createSociety = useCreateSociety();
+  const canAccessAllDepartments =
+    permissionsQuery.data?.global.canAccessAdminDashboard ?? false;
   const departments = useMemo(() => {
     const allDepartments = departmentsQuery.data ?? [];
-    if (user?.userType === UserType.ADMIN) {
+    if (canAccessAllDepartments) {
       return allDepartments;
     }
 
     const hodDepartmentIds = new Set(permissionsQuery.data?.scopes.hodDepartmentIds ?? []);
     return allDepartments.filter((department) => hodDepartmentIds.has(department.id));
-  }, [departmentsQuery.data, permissionsQuery.data, user?.userType]);
+  }, [canAccessAllDepartments, departmentsQuery.data, permissionsQuery.data]);
   const lockedDepartment =
-    user?.userType !== UserType.ADMIN && departments.length === 1 ? departments[0] : null;
+    !canAccessAllDepartments && departments.length === 1 ? departments[0] : null;
   const effectiveDepartmentId = lockedDepartment?.id ?? departmentId;
   const societiesQuery = useSocieties({
     page,
@@ -58,7 +58,7 @@ export function SocietyListPage() {
   });
   const canCreate = permissionsQuery.data?.global.canCreateSociety ?? false;
   const canManageLifecycle =
-    user?.userType === UserType.ADMIN ||
+    canAccessAllDepartments ||
     (permissionsQuery.data?.scopes.hodDepartmentIds.length ?? 0) > 0;
 
   function updateFilter(
@@ -208,7 +208,7 @@ export function SocietyListPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         departments={departments}
-        lockDepartment={user?.userType !== UserType.ADMIN}
+        lockDepartment={!canAccessAllDepartments}
         loading={createSociety.isPending}
         onSubmit={handleCreate}
       />

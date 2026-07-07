@@ -19,6 +19,7 @@ import {
   resolveUserPublicId,
 } from "../../shared/ids/index.js";
 import {
+  activeStaffRoleAssignmentWhere,
   activePlatformRoleAssignmentWhere,
   activePlatformRoleServerWhere,
   type PlatformRoleName,
@@ -39,8 +40,10 @@ import {
 const roleLogger = getModuleLogger("role");
 
 type ModeratorRole = "server_moderator" | "channel_moderator";
-type AssignableRole = "hod" | "program_director" | "cr" | ModeratorRole;
-type NonModeratorAssignableRole = Exclude<AssignableRole, ModeratorRole>;
+type StaffAssignableRole = "enrollment_officer";
+type AcademicAssignableRole = "hod" | "program_director" | "cr";
+type AssignableRole = StaffAssignableRole | AcademicAssignableRole | ModeratorRole;
+type NonModeratorAssignableRole = Exclude<AcademicAssignableRole, "cr">;
 
 type CallerInfo = {
   id: number;
@@ -81,7 +84,7 @@ type RevokableRolesQuery = OptionQuery & {
 type RoleOption = {
   role: AssignableRole;
   label: string;
-  targetUserTypes: Array<"ADMIN" | "TEACHER" | "STUDENT">;
+  targetUserTypes: Array<"STAFF" | "TEACHER" | "STUDENT">;
   scopeKind: "department" | "program" | "class" | "server";
   requiresServer: boolean;
   requiresChannel: boolean;
@@ -141,10 +144,18 @@ type RevokableAssignment = {
   revokePayload:
     | { role: NonModeratorAssignableRole; scopeId: number }
     | { role: "cr"; classPublicId: string }
-    | { assignmentPublicId: string };
+    | { assignmentPublicId: string; assignmentType: "platform" | "staff" };
 };
 
 const ROLE_OPTIONS: Record<AssignableRole, RoleOption> = {
+  enrollment_officer: {
+    role: "enrollment_officer",
+    label: "Enrollment Officer",
+    targetUserTypes: ["STAFF"],
+    scopeKind: "department",
+    requiresServer: false,
+    requiresChannel: false,
+  },
   hod: {
     role: "hod",
     label: "HOD",
@@ -253,10 +264,10 @@ function assertStudent(
   }
 }
 
-function formatUserTypeLabel(userType: "ADMIN" | "TEACHER" | "STUDENT") {
+function formatUserTypeLabel(userType: "STAFF" | "TEACHER" | "STUDENT") {
   switch (userType) {
-    case "ADMIN":
-      return "an admin";
+    case "STAFF":
+      return "staff";
     case "TEACHER":
       return "a teacher";
     case "STUDENT":
@@ -550,6 +561,7 @@ export async function getAssignableRoles(
 ): Promise<RoleOption[]> {
   if (caller.userType === "ADMIN") {
     return [
+      ROLE_OPTIONS.enrollment_officer,
       ROLE_OPTIONS.hod,
       ROLE_OPTIONS.program_director,
       ROLE_OPTIONS.cr,
@@ -587,8 +599,10 @@ export async function listAssignableScopes(
   await assertCallerCanOpenRoleManagement(caller);
 
   switch (query.role) {
+    case "enrollment_officer":
+      return listAssignableDepartmentScopes(query, caller, "enrollment_officer");
     case "hod":
-      return listAssignableDepartmentScopes(query, caller);
+      return listAssignableDepartmentScopes(query, caller, "hod");
     case "program_director":
       return listAssignableProgramScopes(query, caller);
     case "cr":
@@ -604,6 +618,7 @@ export async function listAssignableScopes(
 async function listAssignableDepartmentScopes(
   query: OptionQuery,
   caller: CallerInfo,
+  role: "enrollment_officer" | "hod",
 ) {
   if (caller.userType !== "ADMIN") {
     return emptyPaginated<ScopeOption>(query);
@@ -647,11 +662,11 @@ async function listAssignableDepartmentScopes(
         id: department.id,
         label: `${department.code} · ${department.name}`,
         kind: "department",
-        disabled: department.hod !== null,
-        disabledReason: department.hod
+        disabled: role === "hod" && department.hod !== null,
+        disabledReason: role === "hod" && department.hod
           ? `Already assigned to ${labelUser(department.hod.user)}`
           : undefined,
-        currentAssignee: department.hod?.user,
+        currentAssignee: role === "hod" ? department.hod?.user : undefined,
       }),
     ),
     pagination: buildPaginationResponse(page, limit, total),
@@ -901,6 +916,8 @@ export async function listAssignableUsers(
   await assertCallerCanOpenRoleManagement(caller);
 
   switch (query.role) {
+    case "enrollment_officer":
+      return listEnrollmentOfficerCandidateUsers(query, caller);
     case "hod":
       return listHodCandidateUsers(query, caller);
     case "program_director":
@@ -913,6 +930,78 @@ export async function listAssignableUsers(
     default:
       return emptyPaginated<UserOption>(query);
   }
+}
+
+async function listEnrollmentOfficerCandidateUsers(
+  query: AssignableUsersQuery,
+  caller: CallerInfo,
+) {
+  const scopeId = positiveInt(query.scopeId);
+  if (caller.userType !== "ADMIN" || !scopeId) {
+    return emptyPaginated<UserOption>(query);
+  }
+
+  const [department, role] = await Promise.all([
+    prisma.department.findUnique({
+      where: { id: scopeId },
+      select: { id: true },
+    }),
+    prisma.role.findFirst({
+      where: { name: "enrollment_officer", scopeType: "DEPARTMENT" },
+      select: { id: true },
+    }),
+  ]);
+  if (!department) {
+    throw new NotFoundError("Department not found");
+  }
+  if (!role) {
+    throw new NotFoundError("Staff role definition not found");
+  }
+
+  const { page, limit, skip, take } = parsePagination(query);
+  const search = normalizeSearch(query.search);
+  const userSearch = buildUserSearch(search);
+  const where: Prisma.UserWhereInput = {
+    ...(userSearch ?? {}),
+    userType: "STAFF",
+    status: "ACTIVE",
+    isDeleted: false,
+    staffRoleAssignments: {
+      none: {
+        AND: [
+          activeStaffRoleAssignmentWhere(),
+          {
+            roleId: role.id,
+            scopeType: "DEPARTMENT",
+            departmentId: department.id,
+          },
+        ],
+      },
+    },
+  };
+
+  const [users, total] = await prisma.$transaction([
+    prisma.user.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { fullName: "asc" },
+      select: {
+        publicId: true,
+        fullName: true,
+        email: true,
+        userType: true,
+        departmentId: true,
+      },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    success: true as const,
+    data: users,
+    pagination: buildPaginationResponse(page, limit, total),
+  };
 }
 
 async function listHodCandidateUsers(
@@ -1151,6 +1240,8 @@ export async function listRevokableRoles(
   await assertCallerCanOpenRoleManagement(caller);
 
   switch (query.role) {
+    case "enrollment_officer":
+      return listRevokableStaffAssignments(query, caller);
     case "hod":
       return listRevokableHodAssignments(query, caller);
     case "program_director":
@@ -1163,6 +1254,83 @@ export async function listRevokableRoles(
     default:
       return emptyPaginated<RevokableAssignment>(query);
   }
+}
+
+async function listRevokableStaffAssignments(
+  query: RevokableRolesQuery,
+  caller: CallerInfo,
+) {
+  if (caller.userType !== "ADMIN") {
+    return emptyPaginated<RevokableAssignment>(query);
+  }
+
+  const scopeId = positiveInt(query.scopeId);
+  const search = normalizeSearch(query.search);
+  const { page, limit, skip, take } = parsePagination(query);
+  const where: Prisma.StaffRoleAssignmentWhereInput = {
+    AND: [
+      activeStaffRoleAssignmentWhere(),
+      {
+        role: { name: "enrollment_officer" },
+        scopeType: "DEPARTMENT",
+        ...(scopeId ? { departmentId: scopeId } : {}),
+      },
+    ],
+  };
+
+  if (search) {
+    where.OR = [
+      { user: { fullName: { contains: search, mode: "insensitive" } } },
+      { user: { email: { contains: search, mode: "insensitive" } } },
+      { department: { is: { name: { contains: search, mode: "insensitive" } } } },
+      { department: { is: { code: { contains: search, mode: "insensitive" } } } },
+    ];
+  }
+
+  const [assignments, total] = await prisma.$transaction([
+    prisma.staffRoleAssignment.findMany({
+      where,
+      skip,
+      take,
+      orderBy: [{ assignedAt: "desc" }],
+      select: {
+        publicId: true,
+        expiresAt: true,
+        user: {
+          select: {
+            publicId: true,
+            fullName: true,
+            email: true,
+            userType: true,
+            departmentId: true,
+          },
+        },
+        department: { select: { id: true, code: true, name: true } },
+      },
+    }),
+    prisma.staffRoleAssignment.count({ where }),
+  ]);
+
+  return {
+    success: true as const,
+    data: assignments.map(
+      (assignment): RevokableAssignment => ({
+        assignmentKey: `enrollment_officer:${assignment.publicId}`,
+        role: "enrollment_officer",
+        expiresAt: assignment.expiresAt,
+        user: assignment.user,
+        scope: assignment.department
+          ? {
+              id: assignment.department.id,
+              kind: "department",
+              label: `${assignment.department.code} · ${assignment.department.name}`,
+            }
+          : undefined,
+        revokePayload: { assignmentPublicId: assignment.publicId, assignmentType: "staff" },
+      }),
+    ),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
 }
 
 async function listRevokableHodAssignments(
@@ -1532,7 +1700,7 @@ async function listRevokableModeratorAssignments(
             publicId: assignment.channel.publicId,
             label: `#${assignment.channel.name}`,
           },
-          revokePayload: { assignmentPublicId: assignment.publicId },
+          revokePayload: { assignmentPublicId: assignment.publicId, assignmentType: "platform" },
         };
       }
 
@@ -1546,7 +1714,7 @@ async function listRevokableModeratorAssignments(
           label: assignment.server.name,
           type: assignment.server.type,
         },
-        revokePayload: { assignmentPublicId: assignment.publicId },
+        revokePayload: { assignmentPublicId: assignment.publicId, assignmentType: "platform" },
       };
     }),
     pagination: buildPaginationResponse(page, limit, total),
@@ -2107,6 +2275,17 @@ type PlatformAssignmentHistoryQuery = OptionQuery & {
   channelPublicId?: string;
 };
 
+type CreateStaffAssignmentInput = {
+  userPublicId: string;
+  role: "enrollment_officer";
+  departmentId: number;
+  expiresAt?: string | null;
+};
+
+type TransferAdminInput = {
+  userPublicId: string;
+};
+
 const platformAssignmentSelect = {
   publicId: true,
   scopeType: true,
@@ -2117,6 +2296,21 @@ const platformAssignmentSelect = {
   role: { select: { name: true } },
   server: { select: { publicId: true, name: true, type: true } },
   channel: { select: { publicId: true, name: true } },
+  assigner: { select: { publicId: true, fullName: true } },
+  revoker: { select: { publicId: true, fullName: true } },
+} as const;
+
+const staffAssignmentSelect = {
+  id: true,
+  publicId: true,
+  scopeType: true,
+  departmentId: true,
+  assignedAt: true,
+  expiresAt: true,
+  revokedAt: true,
+  user: { select: { publicId: true, fullName: true, email: true, userType: true } },
+  role: { select: { name: true } },
+  department: { select: { id: true, name: true, code: true } },
   assigner: { select: { publicId: true, fullName: true } },
   revoker: { select: { publicId: true, fullName: true } },
 } as const;
@@ -2136,6 +2330,14 @@ function isOverlapConstraintError(error: unknown): boolean {
   return (
     error instanceof Error &&
     error.message.includes("user_role_assignments_no_overlapping_periods")
+  );
+}
+
+function isStaffOverlapConstraintError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("staff_role_assignments_no_overlapping_periods") ||
+      error.message.includes("staff_global_role_assignments_no_overlapping_periods"))
   );
 }
 
@@ -2168,6 +2370,47 @@ function mapPlatformAssignment(
     assignedBy: assignment.assigner,
     revokedBy: assignment.revoker,
   };
+}
+
+function mapStaffAssignment(
+  assignment: Prisma.StaffRoleAssignmentGetPayload<{
+    select: typeof staffAssignmentSelect;
+  }>,
+) {
+  return {
+    assignmentPublicId: assignment.publicId,
+    role: assignment.role.name,
+    scopeType: assignment.scopeType.toLowerCase(),
+    departmentId: assignment.departmentId,
+    assignedAt: assignment.assignedAt,
+    expiresAt: assignment.expiresAt,
+    revokedAt: assignment.revokedAt,
+    state: platformAssignmentState(assignment),
+    user: assignment.user,
+    department: assignment.department,
+    assignedBy: assignment.assigner,
+    revokedBy: assignment.revoker,
+  };
+}
+
+async function assertActiveStaffUser(userPublicId: string) {
+  const resolved = await resolveUserPublicId(userPublicId);
+  const user = await prisma.user.findUnique({
+    where: { id: resolved.id },
+    select: {
+      id: true,
+      publicId: true,
+      fullName: true,
+      email: true,
+      userType: true,
+      status: true,
+      isDeleted: true,
+    },
+  });
+  if (!user || user.isDeleted || user.status !== "ACTIVE" || user.userType !== "STAFF") {
+    throw new ValidationError("Target user must be an active staff user");
+  }
+  return user;
 }
 
 async function resolvePlatformScope(input: {
@@ -2455,6 +2698,239 @@ export async function listPlatformAssignmentHistory(
     data: assignments.map(mapPlatformAssignment),
     pagination: buildPaginationResponse(page, limit, total),
   };
+}
+
+// ─── Staff Role Assignments ────────────────────────────────────────────────
+
+async function findStaffAssignmentByIdOrThrow(id: number) {
+  return prisma.staffRoleAssignment.findUniqueOrThrow({
+    where: { id },
+    select: staffAssignmentSelect,
+  });
+}
+
+async function findCurrentStaffAssignmentOrThrow(assignmentPublicId: string) {
+  const assignment = await prisma.staffRoleAssignment.findFirst({
+    where: {
+      publicId: assignmentPublicId,
+      AND: [activeStaffRoleAssignmentWhere()],
+    },
+    select: { id: true, userId: true, role: { select: { name: true } } },
+  });
+  if (!assignment) {
+    throw new NotFoundError("Active staff role assignment not found");
+  }
+  return assignment;
+}
+
+export async function createStaffAssignment(
+  input: CreateStaffAssignmentInput,
+  caller: CallerInfo,
+  auditContext: AuditContext,
+) {
+  if (caller.userType !== "ADMIN") {
+    throw new ForbiddenError("Only Admin can assign staff roles");
+  }
+
+  const [targetUser, department, role] = await Promise.all([
+    assertActiveStaffUser(input.userPublicId),
+    prisma.department.findUnique({
+      where: { id: input.departmentId },
+      select: { id: true, name: true },
+    }),
+    prisma.role.findFirst({
+      where: { name: input.role, scopeType: "DEPARTMENT" },
+      select: { id: true },
+    }),
+  ]);
+
+  if (!department) throw new NotFoundError("Department not found");
+  if (!role) throw new NotFoundError("Staff role definition not found");
+
+  const expiresAt = parseFutureExpiry(input.expiresAt);
+
+  try {
+    const assignmentId = await prisma.$transaction(async (tx) => {
+      const duplicate = await tx.staffRoleAssignment.findFirst({
+        where: {
+          AND: [
+            activeStaffRoleAssignmentWhere(),
+            {
+              userId: targetUser.id,
+              roleId: role.id,
+              scopeType: "DEPARTMENT",
+              departmentId: department.id,
+            },
+          ],
+        },
+        select: { id: true },
+      });
+      if (duplicate) {
+        throw new ConflictError("User already has this active staff role assignment");
+      }
+
+      const created = await tx.staffRoleAssignment.create({
+        data: {
+          userId: targetUser.id,
+          roleId: role.id,
+          scopeType: "DEPARTMENT",
+          departmentId: department.id,
+          assignedBy: caller.id,
+          expiresAt,
+        },
+        select: { id: true, publicId: true },
+      });
+      await recordAuditLog(
+        {
+          action: "role.staff.assign",
+          targetType: "staff_role_assignment",
+          targetId: created.publicId,
+          summary: {
+            role: input.role,
+            userPublicId: targetUser.publicId,
+            departmentId: department.id,
+            expiresAt,
+          },
+        },
+        auditContext,
+        tx,
+      );
+      return created.id;
+    });
+
+    const assignment = await findStaffAssignmentByIdOrThrow(assignmentId);
+    emitRolesUpdated(targetUser.id);
+    return mapStaffAssignment(assignment);
+  } catch (error) {
+    if (isStaffOverlapConstraintError(error)) {
+      throw new ConflictError("User already has an overlapping staff role assignment");
+    }
+    throw error;
+  }
+}
+
+export async function revokeStaffAssignment(
+  assignmentPublicId: string,
+  caller: CallerInfo,
+  auditContext: AuditContext,
+) {
+  if (caller.userType !== "ADMIN") {
+    throw new ForbiddenError("Only Admin can revoke staff roles");
+  }
+
+  const current = await findCurrentStaffAssignmentOrThrow(assignmentPublicId);
+  if (current.role.name === "admin") {
+    throw new ValidationError("Use Admin transfer to change the active Admin");
+  }
+
+  const revokedAt = new Date();
+  await prisma.$transaction(async (tx) => {
+    const update = await tx.staffRoleAssignment.updateMany({
+      where: { id: current.id, revokedAt: null },
+      data: { revokedAt, revokedBy: caller.id },
+    });
+    if (update.count !== 1) {
+      throw new ConflictError("Staff role assignment was already changed");
+    }
+    await recordAuditLog(
+      {
+        action: "role.staff.revoke",
+        targetType: "staff_role_assignment",
+        targetId: assignmentPublicId,
+        summary: { revokedAt },
+      },
+      auditContext,
+      tx,
+    );
+  });
+
+  const assignment = await findStaffAssignmentByIdOrThrow(current.id);
+  emitRolesUpdated(current.userId);
+  return mapStaffAssignment(assignment);
+}
+
+export async function transferAdminRole(
+  input: TransferAdminInput,
+  caller: CallerInfo,
+  auditContext: AuditContext,
+) {
+  if (caller.userType !== "ADMIN") {
+    throw new ForbiddenError("Only Admin can transfer Admin authority");
+  }
+
+  const targetUser = await assertActiveStaffUser(input.userPublicId);
+  const adminRole = await prisma.role.findFirst({
+    where: { name: "admin", scopeType: "GLOBAL" },
+    select: { id: true },
+  });
+  if (!adminRole) throw new NotFoundError("Admin role definition not found");
+
+  let assignmentId: number;
+  try {
+    assignmentId = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "staff_role_assignments" WHERE "revoked_at" IS NULL FOR UPDATE`;
+      const activeAdmins = await tx.staffRoleAssignment.findMany({
+        where: {
+          AND: [
+            activeStaffRoleAssignmentWhere(),
+            { roleId: adminRole.id, scopeType: "GLOBAL", departmentId: null },
+          ],
+        },
+        select: { id: true, userId: true, publicId: true },
+      });
+
+      if (activeAdmins.length !== 1 || activeAdmins[0]?.userId !== caller.id) {
+        throw new ConflictError("Admin transfer requires exactly one active current Admin");
+      }
+
+      if (targetUser.id === caller.id) {
+        return activeAdmins[0].id;
+      }
+
+      const now = new Date();
+      await tx.staffRoleAssignment.updateMany({
+        where: { id: { in: activeAdmins.map((assignment) => assignment.id) }, revokedAt: null },
+        data: { revokedAt: now, revokedBy: caller.id },
+      });
+
+      const created = await tx.staffRoleAssignment.create({
+        data: {
+          userId: targetUser.id,
+          roleId: adminRole.id,
+          scopeType: "GLOBAL",
+          departmentId: null,
+          assignedBy: caller.id,
+        },
+        select: { id: true, publicId: true },
+      });
+
+      await recordAuditLog(
+        {
+          action: "role.admin.transfer",
+          targetType: "staff_role_assignment",
+          targetId: created.publicId,
+          summary: {
+            previousAdminUserId: caller.id,
+            newAdminPublicId: targetUser.publicId,
+          },
+        },
+        auditContext,
+        tx,
+      );
+
+      return created.id;
+    });
+  } catch (error) {
+    if (isStaffOverlapConstraintError(error)) {
+      throw new ConflictError("Admin role transfer conflicts with an overlapping staff assignment");
+    }
+    throw error;
+  }
+
+  const assignment = await findStaffAssignmentByIdOrThrow(assignmentId);
+  emitRolesUpdated(caller.id);
+  emitRolesUpdated(targetUser.id);
+  return mapStaffAssignment(assignment);
 }
 
 // ─── Get User Roles ────────────────────────────────────────────────────────

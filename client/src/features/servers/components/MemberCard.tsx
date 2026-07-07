@@ -10,8 +10,8 @@ interface MemberCardProps {
 
 function getUserTypeLabel(userType: ServerMember['user']['userType']) {
   switch (userType) {
-    case UserType.ADMIN:
-      return 'Admin';
+    case UserType.STAFF:
+      return 'Staff';
     case UserType.TEACHER:
       return 'Teacher';
     case UserType.STUDENT:

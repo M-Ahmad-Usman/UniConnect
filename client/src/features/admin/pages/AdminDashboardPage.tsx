@@ -31,7 +31,7 @@ export function AdminDashboardPage() {
       title: 'Total users',
       value: users.total,
       icon: Users,
-      detail: `${users.admins} admins · ${users.teachers} teachers · ${users.students} students`,
+      detail: `${users.admins} admin · ${users.staff} staff · ${users.teachers} teachers · ${users.students} students`,
     },
     {
       title: 'Active users',

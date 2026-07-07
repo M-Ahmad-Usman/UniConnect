@@ -3,12 +3,23 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "../../shared/constants.js";
 import { publicIdSchema } from "../../shared/ids/index.js";
 
 const roleEnum = z.enum(
-  ["hod", "program_director", "cr", "server_moderator", "channel_moderator"],
+  [
+    "enrollment_officer",
+    "hod",
+    "program_director",
+    "cr",
+    "server_moderator",
+    "channel_moderator",
+  ],
   { error: "Invalid role" },
 );
 
 const platformRoleEnum = z.enum(["server_moderator", "channel_moderator"], {
   error: "Invalid platform role",
+});
+
+const staffRoleEnum = z.enum(["enrollment_officer"], {
+  error: "Invalid staff role",
 });
 
 const paginatedSearchSchema = {
@@ -128,5 +139,26 @@ export const listPlatformAssignmentHistorySchema = {
     userPublicId: publicIdSchema.optional(),
     serverPublicId: publicIdSchema.optional(),
     channelPublicId: publicIdSchema.optional(),
+  }),
+};
+
+export const createStaffAssignmentSchema = {
+  body: z.object({
+    userPublicId: publicIdSchema,
+    role: staffRoleEnum,
+    departmentId: z.number().int().positive({ error: "Department ID must be a positive integer" }),
+    expiresAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  }),
+};
+
+export const staffAssignmentParamSchema = {
+  params: z.object({
+    assignmentPublicId: publicIdSchema,
+  }),
+};
+
+export const transferAdminSchema = {
+  body: z.object({
+    userPublicId: publicIdSchema,
   }),
 };

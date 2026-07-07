@@ -103,6 +103,9 @@ router.post(
   handleCreateUser
 );
 ```
+`ADMIN` in route authorization is an effective runtime role. Persisted
+`User.userType` values are `STAFF`, `TEACHER`, and `STUDENT`; Admin authority
+comes from an active global staff-role assignment.
 
 ### Error Classes
 Always use typed errors from `src/shared/errors/index.ts`. Never build ad-hoc error responses.
@@ -222,7 +225,7 @@ export function useLogin() {
 - Use `import type` for type-only imports.
 - Enums as const objects:
   ```typescript
-  export const UserType = { TEACHER: 'TEACHER', STUDENT: 'STUDENT', ADMIN: 'ADMIN' } as const;
+  export const UserType = { STAFF: 'STAFF', TEACHER: 'TEACHER', STUDENT: 'STUDENT' } as const;
   export type UserType = (typeof UserType)[keyof typeof UserType];
   ```
 - Tailwind v4 is imported via `@import 'tailwindcss';` in `src/index.css` — never via PostCSS config.
