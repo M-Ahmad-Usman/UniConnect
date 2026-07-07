@@ -27,7 +27,7 @@ test.describe.serial('UI and accessibility workflows', () => {
   test('theme, role management, class detail, and mobile shell stay accessible', async ({
     page,
   }) => {
-    const klass = await findClassByServerName(academicShellFixtures.transferTargetServerName);
+    const klass = await findClassByServerName(academicShellFixtures.progressionServerName);
     expect(klass).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
@@ -64,11 +64,11 @@ test.describe.serial('UI and accessibility workflows', () => {
       page.getByRole('heading', { name: 'Assigned courses', exact: true }),
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'Transfer student' }).focus();
+    await page.getByRole('button', { name: 'Semester progression' }).focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('dialog', { name: 'Transfer student' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Advance semester' })).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog', { name: 'Transfer student' })).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: 'Advance semester' })).toHaveCount(0);
     await expectNoPageOverflow(page);
   });
 

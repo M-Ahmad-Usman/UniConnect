@@ -39,6 +39,7 @@ export function UserDropdown() {
     permissionsQuery.data?.global.canAccessAdminDashboard ?? isAdminUser(user);
   const canManageRoles = permissionsQuery.data?.roleWorkspace.canOpenRoleManagement ?? false;
   const canAccessAcademics = permissionsQuery.data?.global.canAccessAcademicWorkspace ?? false;
+  const canAccessEnrollment = permissionsQuery.data?.global.canAccessEnrollmentWorkspace ?? false;
 
   if (!user) {
     return null;
@@ -93,6 +94,12 @@ export function UserDropdown() {
             <DropdownMenuItem onClick={() => navigate(ROUTES.ACADEMICS_PROGRAMS)}>
               <GraduationCap className="size-4" />
               Academics
+            </DropdownMenuItem>
+          ) : null}
+          {canAccessEnrollment ? (
+            <DropdownMenuItem onClick={() => navigate(ROUTES.ENROLLMENT_CLASSES)}>
+              <User className="size-4" />
+              Enrollment
             </DropdownMenuItem>
           ) : null}
           {canManageRoles ? (

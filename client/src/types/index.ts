@@ -153,6 +153,23 @@ export type {
   MyPermissions,
 } from './permission.types';
 
+// Enrollment
+export type {
+  EnrollmentBootstrap,
+  EnrollmentProgramParams,
+  EnrollmentClassParams,
+  EnrollmentCandidateParams,
+  EnrollmentCreateClassRequest,
+  EnrollmentCreateStudentRequest,
+  EnrollmentClassListItem,
+  EnrollmentClassDetail,
+  EnrollmentClassStudent,
+  EnrollmentProgram,
+  EnrollmentCurriculumEntry,
+  EnrollmentCreateStudentResponse,
+  EnrollmentImportResult,
+} from './enrollment.types';
+
 // Societies
 export type {
   SocietyListItem,

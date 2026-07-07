@@ -101,7 +101,7 @@
 | ID    | Requirement                                                                                                 |
 | ----- | ----------------------------------------------------------------------------------------------------------- |
 | FR-9  | Admin can create department, class, and society servers                                                     |
-| FR-10 | HOD can create classes for programs offered by his department. Class server should be automatically created |
+| FR-10 | Admin and department-scoped Enrollment Officer can create classes for assigned departments. Class server should be automatically created |
 | FR-11 | HOD can create societies in his department                                                                  |
 | FR-12 | Society Convenor and Society president must be specified when creating a new society                        |
 | FR-13 | Students are auto-added to their class and department servers based on their academic info                  |
@@ -230,7 +230,8 @@
 | ----- | --------------------------------------------------------------------------------- |
 | FR-74 | Admin can view a list of all users with filtering by type, department, and status |
 | FR-75 | Admin can view system statistics (total users, servers, posts)                    |
-| FR-76 | HOD can view all students and teachers in their department                        |
+| FR-76 | HOD can view live students and teachers in their department, but student enrollment mutations are handled by Admin or Enrollment Officer |
+| FR-77 | Enrollment Officer can create students, import student CSV rows, view rosters, and transfer same-department students only within assigned departments |
 
 ## 5. Permissions & Responsibilites
 

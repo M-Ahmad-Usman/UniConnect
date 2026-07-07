@@ -39,6 +39,10 @@ society management, and role management.
   enum is `STAFF | TEACHER | STUDENT`.
 - Academic delegated workflows live under `/academics/*`; admin routes may wrap
   or redirect but must not be the only path.
+- Enrollment delegated workflows live under `/enrollment/*` and are gated by
+  backend enrollment capability data. Enrollment forms call
+  `client/src/api/endpoints/enrollment.api.ts` through TanStack Query hooks and
+  do not reuse generic admin user-management routes for student placement.
 - Rare academic/catalog deletion-impact reports are exposed through typed
   catalog API methods and TanStack Query hooks; visible destructive UI remains
   deferred.

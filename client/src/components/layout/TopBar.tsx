@@ -28,17 +28,19 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
   const channelPublicId = parseRouteParamPublicId(params.channelPublicId);
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
   const isAcademicRoute = location.pathname.startsWith('/academics');
-  const isWorkspaceRoute = isAdminRoute || isAcademicRoute;
+  const isEnrollmentRoute = location.pathname.startsWith(ROUTES.ENROLLMENT);
+  const isWorkspaceRoute = isAdminRoute || isAcademicRoute || isEnrollmentRoute;
   const isChannelRoute = serverPublicId !== null && channelPublicId !== null && !isWorkspaceRoute;
   const serverQuery = useServerDetail(serverPublicId);
   const channelQuery = useServerChannels(serverPublicId, true);
   const searchParamValue = parseSearchParam(searchParams.get('search'));
-  const [searchInput, setSearchInput] = useState(() => searchParamValue);
+  const [searchState, setSearchState] = useState({
+    source: searchParamValue,
+    value: searchParamValue,
+  });
+  const searchInput =
+    searchState.source === searchParamValue ? searchState.value : searchParamValue;
   const debouncedSearchInput = useDebouncedValue(searchInput, 500);
-
-  useEffect(() => {
-    setSearchInput(searchParamValue);
-  }, [searchParamValue]);
 
   useEffect(() => {
     if (!isChannelRoute) {
@@ -100,9 +102,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
           </button>
           <div className="hidden min-w-0 md:block">
             <div className="flex min-w-0 items-center gap-2 text-sm font-medium">
-              {isAdminRoute || isAcademicRoute ? (
+              {isAdminRoute || isAcademicRoute || isEnrollmentRoute ? (
                 <>
-                  <span>{isAdminRoute ? 'Admin' : 'Academics'}</span>
+                  <span>{isAdminRoute ? 'Admin' : isAcademicRoute ? 'Academics' : 'Enrollment'}</span>
                   <Badge variant="outline">Workspace</Badge>
                 </>
               ) : (
@@ -127,7 +129,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
               {isWorkspaceRoute
                 ? isAdminRoute
                   ? 'System administration and catalog maintenance.'
-                  : 'Delegated academic class operations.'
+                  : isAcademicRoute
+                    ? 'Delegated academic class operations.'
+                    : 'Class enrollment and student placement.'
                 : hasNavigationError
                   ? 'Some workspace details failed to load. You can still navigate and retry by refreshing.'
                   : (activeChannel?.description ??
@@ -147,7 +151,9 @@ export function TopBar({ onOpenNavigation }: TopBarProps) {
             <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
             <Input
               value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
+              onChange={(event) =>
+                setSearchState({ source: searchParamValue, value: event.target.value })
+              }
               disabled={!isChannelRoute}
               placeholder={
                 isChannelRoute ? 'Search posts in this channel' : 'Open a channel to search posts'

@@ -15,7 +15,7 @@ were folded into the production redesign plan and this progress file.
 | Phase | Status | Notes |
 | --- | --- | --- |
 | Phase 1: Role And Authorization Foundation | Complete | Hardened and fully verified on 2026-07-07. |
-| Phase 2: Enrollment And HOD Responsibility Split | Not started | Next phase. Enrollment Officer exists as a role but does not yet have enrollment business permissions. |
+| Phase 2: Enrollment And HOD Responsibility Split | Implemented | Backend/frontend implementation and focused validation complete; broader regression still pending before marking complete. |
 | Phase 3: Society Leadership Rules | Not started | Plan already captures university-wide leadership candidates and one-active-leadership-position constraints. |
 | Phase 4: Teaching Assignment And Course-Channel Access | Not started | Must preserve the moderator-assignment verification item for course-only teachers. |
 | Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy | Not started | Depends on Phase 4 teaching/channel access foundations. |
@@ -127,6 +127,42 @@ Known validation noise:
 
 ## Phase 2 Handoff
 
+Implementation status on 2026-07-07:
+
+- Added dedicated `/api/enrollment` routes for bootstrap, scoped programs,
+  curriculum read, class list/detail/create, rosters, transfer candidates,
+  transfers, single-student creation, and student-only CSV import.
+- Added `/enrollment` frontend workspace with class list/detail, create class,
+  create student, import, and transfer workflows.
+- Admin can use enrollment across all departments; Enrollment Officer can use it
+  only in active assigned departments.
+- HOD no longer has enrollment mutations through class routes; HOD retains
+  read-only roster visibility and academic permissions.
+- Legacy `/api/classes` class creation is Admin-only; HOD class creation must go
+  through the Enrollment Officer workflow instead.
+- Generic Admin `/api/users/bulk-import` now rejects `STAFF` rows.
+
+Focused validation:
+
+- `server`: `npm run build`
+- `server`: `npm test -- tests/modules/enrollment.test.ts` -> 7 focused
+  enrollment workspace tests passed
+- `server`: `npm test -- tests/modules/class.test.ts tests/modules/permission.test.ts tests/modules/enrollment.test.ts` -> 76 focused integration tests passed
+- `server`: `npx tsc -p tests/tsconfig.json --noEmit --pretty false`
+- `client`: `npm run type-check`
+- `client`: `npm run lint`
+- `client`: `npm run test -- src/features/enrollment/__tests__/schemas.test.ts src/features/admin/__tests__/schemas.test.ts src/features/admin/__tests__/utils.test.ts` -> 29 tests passed
+- `client`: `npx playwright test e2e/academic-workflows.spec.ts --project=chromium` -> 5 tests passed
+- `client`: `npx playwright test e2e/ui-accessibility.spec.ts --project=chromium` -> 2 tests passed
+
+Remaining before Phase 2 complete:
+
+- Keep stale test expectations aligned with the Phase 2 split:
+  - HOD is read-only for rosters and cannot use enrollment APIs.
+  - Legacy class student-transfer mutation is Admin-only.
+  - Enrollment Officer owns browser-level student placement flows.
+- Run full backend and frontend suites again after the focused slices pass.
+
 Primary goal:
 
 - Wire the existing `enrollment_officer` staff role into real enrollment workflows.
@@ -171,6 +207,9 @@ Suggested Phase 2 validation:
 - Backend tests proving HOD no longer creates classes or transfers students.
 - Frontend tests for enrollment forms and action visibility.
 - E2E smoke for Enrollment Officer class creation and student import/transfer.
+- E2E regression proving HOD cannot open the enrollment workspace.
+- Permission bootstrap regression proving Enrollment Officer department scopes are
+  exposed to the frontend guard contract.
 
 ## Later-Phase Context To Preserve
 

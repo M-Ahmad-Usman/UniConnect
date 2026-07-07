@@ -168,7 +168,7 @@ available.
   - Student `rollNumber` uses NTU format such as `22-NTU-CS-1184`.
 - `POST /bulk-import`
   - Multipart field: `file` (CSV)
-  - CSV `userType` accepts only `STUDENT` or `TEACHER`.
+  - CSV `userType` accepts only `STUDENT` or `TEACHER`; `STAFF` rows are rejected.
 - `GET /me`
   - Returns profile plus scoped current-user roles for UI authorization:
     - `roles: Array<{ role, departmentId?, departmentName?, serverPublicId?, channelPublicId?, scopeType, assignmentPublicId?, expiresAt? }>`
@@ -196,6 +196,37 @@ available.
 - `PATCH /:publicId/restore`
   - Body: `{ reason? }`
   - Restores the user with the preserved status. A restored suspended user remains unable to authenticate.
+
+### Enrollment (`/api/enrollment`)
+
+- Auth: active global Admin or active department-scoped `enrollment_officer`
+  staff-role assignment.
+- `GET /bootstrap`
+  - Returns assigned departments, default department, and enrollment capability flags.
+- `GET /programs`
+  - Query: `page, limit, departmentId?, search?`
+  - Results are scoped to authorized departments.
+- `GET /programs/:programId/curriculum`
+  - Query: `semesterNumber?, batchYear?`
+  - Read-only curriculum view for class creation.
+- `GET /classes`
+  - Query: `page, limit, departmentId?, programId?, semester?, section?, status?`
+- `POST /classes`
+  - Body: `{ programId, currentSemester, academicYear, admissionYear, section }`
+  - Preserves full-curriculum requirement and class-server/channel creation behavior.
+- `GET /classes/:publicId`
+- `GET /classes/:publicId/students`
+- `GET /classes/:publicId/transfer-candidates`
+  - Query: `page, limit, search?`
+- `POST /classes/:publicId/transfers`
+  - Body: `{ studentPublicId }`
+  - Transfers an active same-department student; CR transfer remains blocked.
+- `POST /students`
+  - Body: `{ fullName, email, phone, gender, classPublicId, rollNumber }`
+  - Always creates a student; department is derived from the class.
+- `POST /students/import`
+  - Multipart field: `file` (CSV)
+  - Student-only partial-success import with per-row errors.
 
 ### Disciplines (`/api/disciplines`)
 
@@ -261,6 +292,8 @@ available.
 
 - `POST /`
   - Body: `{ programId, currentSemester, academicYear, admissionYear, section }`
+  - Auth: Admin only. Enrollment Officer class creation uses
+    `/api/enrollment/classes`.
   - Requires a complete curriculum for all semesters of the class admission
     year. Creates the class server, default channels, and current-semester
     course channels from the curriculum.
@@ -282,11 +315,15 @@ available.
   - Course must be in the class current-semester curriculum; teacher must be active.
 - `GET /:publicId/courses`
 - `GET /:publicId/students`
+  - Auth: Admin or own-department HOD for read-only roster visibility. Enrollment
+    Officer roster reads use `/api/enrollment/classes/:publicId/students`.
 - `GET /:publicId/student-candidates`
   - Query: `page, limit, search?`
+  - Auth: Admin only. Enrollment Officer transfer candidates use `/api/enrollment`.
 - `POST /:publicId/students`
   - Body: `{ studentPublicId }`
-  - Transfers an existing same-department active student into the target class.
+  - Admin-only legacy transfer endpoint. Enrollment Officer transfer uses
+    `/api/enrollment/classes/:publicId/transfers`.
 - `GET /:publicId/teacher-candidates`
   - Query: `page, limit, search?`
 - `PATCH /:publicId/courses/:courseId/teacher`

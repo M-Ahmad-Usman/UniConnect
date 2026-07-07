@@ -100,6 +100,23 @@ export async function lockProgramForHodOrAdmin(
   return program;
 }
 
+export async function lockProgramForEnrollmentWrite(
+  programId: number,
+  userId: number,
+  allowedDepartmentIds: number[] | null,
+  client: PrismaTransaction = prisma,
+): Promise<ProgramAuthorityRow> {
+  await lockActiveActor(userId, client);
+  const program = await lockProgramAuthority(programId, client);
+  if (allowedDepartmentIds !== null && !allowedDepartmentIds.includes(program.department_id)) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this department",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
+  }
+  return program;
+}
+
 export async function lockProgramForHodPdOrAdmin(
   programId: number,
   userId: number,
@@ -200,6 +217,57 @@ export async function lockClassForAcademicWrite(
   if (!allowed) {
     throw new ForbiddenError(
       "You do not have permission to manage this class",
+      ApiErrorCode.SCOPE_FORBIDDEN,
+    );
+  }
+  if (classRecord.status !== "ACTIVE") {
+    throw new ConflictError("Graduated classes are read-only", ApiErrorCode.CLASS_GRADUATED);
+  }
+  return classRecord;
+}
+
+export async function lockClassForEnrollmentWrite(
+  classId: number,
+  userId: number,
+  allowedDepartmentIds: number[] | null,
+  client: PrismaTransaction = prisma,
+): Promise<AcademicClassWriteRow> {
+  await lockActiveActor(userId, client);
+  const rows = await client.$queryRaw<AcademicClassSqlRow[]>`
+    SELECT
+      academic_class."id",
+      academic_class."status",
+      academic_class."current_semester",
+      academic_class."admission_year",
+      academic_class."server_id",
+      program."id" AS "program_id",
+      program."semesters" AS "program_semesters",
+      department."id" AS "department_id",
+      department."hod_id",
+      program."program_director_id"
+    FROM "classes" AS academic_class
+    INNER JOIN "programs" AS program ON program."id" = academic_class."program_id"
+    INNER JOIN "departments" AS department ON department."id" = program."department_id"
+    WHERE academic_class."id" = ${classId}
+    FOR UPDATE OF department, program, academic_class
+  `;
+  const row = rows[0];
+  if (!row) throw new NotFoundError("Class not found");
+  const classRecord: AcademicClassWriteRow = {
+    id: row.id,
+    status: row.status === "active" ? "ACTIVE" : "GRADUATED",
+    currentSemester: row.current_semester,
+    admissionYear: row.admission_year,
+    serverId: row.server_id,
+    programId: row.program_id,
+    programSemesters: row.program_semesters,
+    departmentId: row.department_id,
+    hodId: row.hod_id,
+    programDirectorId: row.program_director_id,
+  };
+  if (allowedDepartmentIds !== null && !allowedDepartmentIds.includes(classRecord.departmentId)) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this department",
       ApiErrorCode.SCOPE_FORBIDDEN,
     );
   }

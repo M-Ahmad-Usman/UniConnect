@@ -7,8 +7,10 @@ import {
 export interface GlobalPermissions {
   canAccessAdminDashboard: boolean;
   canAccessAcademicWorkspace: boolean;
+  canAccessEnrollmentWorkspace: boolean;
   canAccessRoleManagement: boolean;
   canManageUsers: boolean;
+  canManageEnrollment: boolean;
   canManageCurriculum: boolean;
   canCreateCourse: boolean;
   canUpdateCourse: boolean;
@@ -109,8 +111,10 @@ export function emptyGlobalPermissions(): GlobalPermissions {
   return {
     canAccessAdminDashboard: false,
     canAccessAcademicWorkspace: false,
+    canAccessEnrollmentWorkspace: false,
     canAccessRoleManagement: false,
     canManageUsers: false,
+    canManageEnrollment: false,
     canManageCurriculum: false,
     canCreateCourse: false,
     canUpdateCourse: false,
@@ -275,8 +279,10 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
     return {
       canAccessAdminDashboard: true,
       canAccessAcademicWorkspace: true,
+      canAccessEnrollmentWorkspace: true,
       canAccessRoleManagement: true,
       canManageUsers: true,
+      canManageEnrollment: true,
       canManageCurriculum: true,
       canCreateCourse: true,
       canUpdateCourse: true,
@@ -289,17 +295,20 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
   const isPd = context.scopes.directedProgramIds.length > 0;
   const isCr = context.scopes.crClassIds.length > 0;
   const isSocietyLeader = context.scopes.societyLeadershipIds.length > 0;
+  const isEnrollmentOfficer = context.scopes.enrollmentOfficerDepartmentIds.length > 0;
   const canAccessRoleManagement = isHod || isPd || isCr || isSocietyLeader;
 
   return {
     canAccessAdminDashboard: false,
     canAccessAcademicWorkspace: isHod || isPd,
+    canAccessEnrollmentWorkspace: isEnrollmentOfficer,
     canAccessRoleManagement,
     canManageUsers: false,
+    canManageEnrollment: isEnrollmentOfficer,
     canManageCurriculum: isHod || isPd,
     canCreateCourse: isHod,
     canUpdateCourse: false,
-    canCreateClass: isHod,
+    canCreateClass: false,
     canCreateSociety: isHod,
   };
 }
@@ -359,9 +368,17 @@ export function buildClassPermissions(
 
   const isHod = context.scopes.hodDepartmentIds.includes(classRecord.departmentId);
   if (isHod) {
-    return classRecord.status === "GRADUATED"
-      ? readOnlyClassPermissions(true)
-      : allClassPermissions();
+    return {
+      canViewStudents: true,
+      canManageStudents: false,
+      canAssignCourses: classRecord.status !== "GRADUATED",
+      canRemoveCourses: classRecord.status !== "GRADUATED",
+      canReplaceCourseTeacher: classRecord.status !== "GRADUATED",
+      canAdvanceSemester: classRecord.status !== "GRADUATED",
+      canGraduate: classRecord.status !== "GRADUATED",
+      canManageChannels: classRecord.status !== "GRADUATED",
+      canAssignModerators: classRecord.status !== "GRADUATED",
+    };
   }
 
   const isPd = context.scopes.directedProgramIds.includes(classRecord.programId);

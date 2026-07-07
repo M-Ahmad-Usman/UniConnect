@@ -16,7 +16,8 @@ export function AppShell() {
   const channelPublicId = parseRouteParamPublicId(params.channelPublicId);
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
   const isAcademicRoute = location.pathname.startsWith('/academics');
-  const isWorkspaceRoute = isAdminRoute || isAcademicRoute;
+  const isEnrollmentRoute = location.pathname.startsWith(ROUTES.ENROLLMENT);
+  const isWorkspaceRoute = isAdminRoute || isAcademicRoute || isEnrollmentRoute;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>('servers');
 

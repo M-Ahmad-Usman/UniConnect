@@ -44,7 +44,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  authorize({ userTypes: ["ADMIN"] }),
   validate(createClassSchema),
   handleCreateClass
 );

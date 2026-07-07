@@ -12,6 +12,8 @@ import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 import { resolveUserPublicId } from "../../shared/ids/index.js";
 import {
   lockClassForAcademicWrite,
+  lockClassForEnrollmentWrite,
+  lockProgramForEnrollmentWrite,
   lockProgramForHodOrAdmin,
   lockStudentProfileForTransfer,
 } from "../../shared/lifecycle/academic.js";
@@ -33,6 +35,10 @@ type CreateClassInput = {
   admissionYear: number;
   section: "A" | "B";
 };
+
+type ClassWriteAccess =
+  | { kind: "academic"; userType: string }
+  | { kind: "enrollment"; allowedDepartmentIds: number[] | null };
 
 type AssignCourseInput = {
   courseId: number;
@@ -589,9 +595,65 @@ function buildScopedClassWhere(
   return where;
 }
 
+function buildEnrollmentClassWhere(
+  query: ListClassesQuery,
+  allowedDepartmentIds: number[] | null
+): Prisma.ClassWhereInput {
+  const where: Prisma.ClassWhereInput = {};
+  if (query.programId) where.programId = query.programId;
+  if (query.departmentId) where.program = { departmentId: query.departmentId };
+  if (query.semester) where.currentSemester = query.semester;
+  if (query.section) where.section = query.section;
+  if (!query.status || query.status === "ACTIVE") where.status = "ACTIVE";
+  else if (query.status === "GRADUATED") where.status = "GRADUATED";
+
+  if (allowedDepartmentIds !== null) {
+    where.AND = [
+      ...(Array.isArray(where.AND) ? where.AND : []),
+      { program: { departmentId: { in: allowedDepartmentIds } } },
+    ];
+  }
+
+  return where;
+}
+
+function assertEnrollmentClassAccess(
+  classRecord: { program: { department: { id: number } } },
+  allowedDepartmentIds: number[] | null
+): void {
+  if (
+    allowedDepartmentIds !== null &&
+    !allowedDepartmentIds.includes(classRecord.program.department.id)
+  ) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this class",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+}
+
+function enrollmentClassPermissions(status?: string) {
+  const isActive = status !== "GRADUATED";
+  return {
+    canViewStudents: true,
+    canManageStudents: isActive,
+    canAssignCourses: false,
+    canRemoveCourses: false,
+    canReplaceCourseTeacher: false,
+    canAdvanceSemester: false,
+    canGraduate: false,
+    canManageChannels: false,
+    canAssignModerators: false,
+  };
+}
+
 // ─── Service Functions ─────────────────────────────────────────────────────
 
-export async function createClass(data: CreateClassInput, userId: number, userType: string) {
+async function createClassWithAccess(
+  data: CreateClassInput,
+  userId: number,
+  access: ClassWriteAccess
+) {
   const program = await prisma.program.findUnique({
     where: { id: data.programId },
     select: {
@@ -612,7 +674,22 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
     );
   }
 
-  await assertHodOrAdmin(userId, userType, program.departmentId);
+  if (access.kind === "academic") {
+    if (access.userType !== "ADMIN") {
+      throw new ForbiddenError(
+        "Class creation is managed through enrollment",
+        ApiErrorCode.SCOPE_FORBIDDEN
+      );
+    }
+  } else if (
+    access.allowedDepartmentIds !== null &&
+    !access.allowedDepartmentIds.includes(program.departmentId)
+  ) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
   await assertFullCurriculumExists(prisma, {
     programId: data.programId,
     programSemesters: program.semesters,
@@ -620,7 +697,11 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
   });
 
   const classRecord = await prisma.$transaction(async (tx) => {
-    await lockProgramForHodOrAdmin(data.programId, userId, userType, tx);
+    if (access.kind === "academic") {
+      await lockProgramForHodOrAdmin(data.programId, userId, access.userType, tx);
+    } else {
+      await lockProgramForEnrollmentWrite(data.programId, userId, access.allowedDepartmentIds, tx);
+    }
     await assertFullCurriculumExists(tx, {
       programId: data.programId,
       programSemesters: program.semesters,
@@ -694,10 +775,46 @@ export async function createClass(data: CreateClassInput, userId: number, userTy
   return toPublicClass(classRecord);
 }
 
+export async function createClass(data: CreateClassInput, userId: number, userType: string) {
+  return createClassWithAccess(data, userId, { kind: "academic", userType });
+}
+
+export async function createClassForEnrollment(
+  data: CreateClassInput,
+  userId: number,
+  allowedDepartmentIds: number[] | null
+) {
+  return createClassWithAccess(data, userId, { kind: "enrollment", allowedDepartmentIds });
+}
+
 export async function listClasses(query: ListClassesQuery, callerUserId: number) {
   const { page, limit, skip, take } = parsePagination(query);
   const context = await getPermissionContext(callerUserId);
   const where = buildScopedClassWhere(query, context);
+
+  const [classes, total] = await Promise.all([
+    prisma.class.findMany({
+      where,
+      select: classListSelect,
+      orderBy: [{ academicYear: "desc" }, { currentSemester: "asc" }, { section: "asc" }],
+      skip,
+      take,
+    }),
+    prisma.class.count({ where }),
+  ]);
+
+  return {
+    data: classes.map(toPublicClass),
+    pagination: buildPaginationResponse(page, limit, total),
+  };
+}
+
+export async function listClassesForEnrollment(
+  query: ListClassesQuery,
+  allowedDepartmentIds: number[] | null
+) {
+  const { page, limit, skip, take } = parsePagination(query);
+  const where = buildEnrollmentClassWhere(query, allowedDepartmentIds);
 
   const [classes, total] = await Promise.all([
     prisma.class.findMany({
@@ -733,6 +850,27 @@ export async function getClassById(id: number, callerUserId: number) {
   return {
     ...toPublicClass(classRecord),
     permissions,
+  };
+}
+
+export async function getClassByPublicIdForEnrollment(
+  publicId: string,
+  allowedDepartmentIds: number[] | null
+) {
+  const classRecord = await prisma.class.findUnique({
+    where: { publicId },
+    select: classDetailSelect,
+  });
+
+  if (!classRecord) {
+    throw new NotFoundError("Class not found");
+  }
+
+  assertEnrollmentClassAccess(classRecord, allowedDepartmentIds);
+
+  return {
+    ...toPublicClass(classRecord),
+    permissions: enrollmentClassPermissions(classRecord.status),
   };
 }
 
@@ -1028,8 +1166,42 @@ export async function listClassStudents(
   userId: number,
   userType: string
 ) {
+  return listClassStudentsWithAccess(classId, query, userId, {
+    kind: "academic",
+    userType,
+  });
+}
+
+export async function listClassStudentsForEnrollment(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  allowedDepartmentIds: number[] | null
+) {
+  return listClassStudentsWithAccess(classId, query, userId, {
+    kind: "enrollment",
+    allowedDepartmentIds,
+  });
+}
+
+async function listClassStudentsWithAccess(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  access: ClassWriteAccess
+) {
   const classRecord = await getManagedClassOrThrow(classId);
-  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+  if (access.kind === "academic") {
+    await assertHodOrAdmin(userId, access.userType, classRecord.program.departmentId);
+  } else if (
+    access.allowedDepartmentIds !== null &&
+    !access.allowedDepartmentIds.includes(classRecord.program.departmentId)
+  ) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
 
   const { page, limit, skip, take } = parsePagination(query);
   const where: Prisma.StudentInfoWhereInput = {
@@ -1069,9 +1241,49 @@ export async function listStudentCandidates(
   userId: number,
   userType: string
 ) {
+  if (userType !== "ADMIN") {
+    throw new ForbiddenError(
+      "Student transfer is managed through enrollment",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+  return listStudentCandidatesWithAccess(classId, query, userId, {
+    kind: "academic",
+    userType,
+  });
+}
+
+export async function listStudentCandidatesForEnrollment(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  allowedDepartmentIds: number[] | null
+) {
+  return listStudentCandidatesWithAccess(classId, query, userId, {
+    kind: "enrollment",
+    allowedDepartmentIds,
+  });
+}
+
+async function listStudentCandidatesWithAccess(
+  classId: number,
+  query: CandidateQuery,
+  userId: number,
+  access: ClassWriteAccess
+) {
   const classRecord = await getManagedClassOrThrow(classId);
   assertClassIsActive(classRecord);
-  await assertHodOrAdmin(userId, userType, classRecord.program.departmentId);
+  if (access.kind === "academic") {
+    await assertHodOrAdmin(userId, access.userType, classRecord.program.departmentId);
+  } else if (
+    access.allowedDepartmentIds !== null &&
+    !access.allowedDepartmentIds.includes(classRecord.program.departmentId)
+  ) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
 
   const { page, limit, skip, take } = parsePagination(query);
   const where: Prisma.StudentInfoWhereInput = {
@@ -1115,12 +1327,52 @@ export async function transferStudentToClass(
   userId: number,
   userType: string
 ) {
+  if (userType !== "ADMIN") {
+    throw new ForbiddenError(
+      "Student transfer is managed through enrollment",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
+  return transferStudentToClassWithAccess(classId, data, userId, {
+    kind: "academic",
+    userType,
+  });
+}
+
+export async function transferStudentToClassForEnrollment(
+  classId: number,
+  data: { studentPublicId: string },
+  userId: number,
+  allowedDepartmentIds: number[] | null
+) {
+  return transferStudentToClassWithAccess(classId, data, userId, {
+    kind: "enrollment",
+    allowedDepartmentIds,
+  });
+}
+
+async function transferStudentToClassWithAccess(
+  classId: number,
+  data: { studentPublicId: string },
+  userId: number,
+  access: ClassWriteAccess
+) {
   const resolvedStudent = await resolveUserPublicId(data.studentPublicId, {
     field: "studentPublicId",
   });
   const targetClass = await getManagedClassOrThrow(classId);
   assertClassIsActive(targetClass);
-  await assertHodOrAdmin(userId, userType, targetClass.program.departmentId);
+  if (access.kind === "academic") {
+    await assertHodOrAdmin(userId, access.userType, targetClass.program.departmentId);
+  } else if (
+    access.allowedDepartmentIds !== null &&
+    !access.allowedDepartmentIds.includes(targetClass.program.departmentId)
+  ) {
+    throw new ForbiddenError(
+      "You do not have enrollment access to this department",
+      ApiErrorCode.SCOPE_FORBIDDEN
+    );
+  }
 
   const student = await prisma.studentInfo.findUnique({
     where: { studentId: resolvedStudent.id },
@@ -1140,7 +1392,11 @@ export async function transferStudentToClass(
     for (const lockedClassId of [...new Set([lockedStudent.classId, classId])].sort(
       (left, right) => left - right
     )) {
-      await lockClassForAcademicWrite(lockedClassId, userId, userType, "HOD", tx);
+      if (access.kind === "academic") {
+        await lockClassForAcademicWrite(lockedClassId, userId, access.userType, "HOD", tx);
+      } else {
+        await lockClassForEnrollmentWrite(lockedClassId, userId, access.allowedDepartmentIds, tx);
+      }
     }
     const currentStudent = await tx.studentInfo.findUnique({
       where: { studentId: resolvedStudent.id },

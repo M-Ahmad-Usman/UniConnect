@@ -38,9 +38,11 @@ describe("Permission policy foundation", () => {
     expect(adminPermissions.global).toEqual({
       canAccessAdminDashboard: true,
       canAccessAcademicWorkspace: true,
+      canAccessEnrollmentWorkspace: true,
       canAccessRoleManagement: true,
       canManageUsers: true,
       canManageCurriculum: true,
+      canManageEnrollment: true,
       canCreateCourse: true,
       canUpdateCourse: true,
       canCreateClass: true,
@@ -53,11 +55,22 @@ describe("Permission policy foundation", () => {
     expect(hodPermissions.global.canManageCurriculum).toBe(true);
     expect(hodPermissions.global.canCreateCourse).toBe(true);
     expect(hodPermissions.global.canUpdateCourse).toBe(false);
-    expect(hodPermissions.global.canCreateClass).toBe(true);
+    expect(hodPermissions.global.canCreateClass).toBe(false);
+    expect(hodPermissions.global.canAccessEnrollmentWorkspace).toBe(false);
+    expect(hodPermissions.global.canManageEnrollment).toBe(false);
     expect(hodPermissions.global.canCreateSociety).toBe(true);
     expect(hodPermissions.global.canManageUsers).toBe(false);
     expect(hodPermissions.scopes.hodDepartmentIds).toContain(fixture.department.id);
     expect(hodPermissions.roleWorkspace.canAssignProgramDirector).toBe(true);
+
+    const enrollmentOfficerPermissions = await getMyPermissions(fixture.enrollmentOfficer.email);
+    expect(enrollmentOfficerPermissions.global.canAccessAcademicWorkspace).toBe(false);
+    expect(enrollmentOfficerPermissions.global.canAccessEnrollmentWorkspace).toBe(true);
+    expect(enrollmentOfficerPermissions.global.canManageEnrollment).toBe(true);
+    expect(enrollmentOfficerPermissions.global.canCreateClass).toBe(false);
+    expect(enrollmentOfficerPermissions.scopes.enrollmentOfficerDepartmentIds).toContain(
+      fixture.department.id,
+    );
 
     const pdPermissions = await getMyPermissions(fixture.pd.email);
     expect(pdPermissions.global.canAccessAcademicWorkspace).toBe(true);
@@ -96,7 +109,8 @@ describe("Permission policy foundation", () => {
     expect(admin.permissions.canManageChannels).toBe(true);
 
     const hod = await getClassDetail(fixture.classRecord.publicId, fixture.hod.email);
-    expect(hod.permissions.canManageStudents).toBe(true);
+    expect(hod.permissions.canViewStudents).toBe(true);
+    expect(hod.permissions.canManageStudents).toBe(false);
     expect(hod.permissions.canAssignCourses).toBe(true);
     expect(hod.permissions.canAdvanceSemester).toBe(true);
     expect(hod.permissions.canAssignModerators).toBe(true);
@@ -195,6 +209,13 @@ async function createPermissionFixture() {
   });
   await assignHOD(department.id, hod.id);
 
+  const enrollmentOfficer = await createUser({
+    email: `enrollment-perm-${uid()}@test.com`,
+    password: "Pass@1234",
+    userType: "STAFF",
+  });
+  await assignEnrollmentOfficer(department.id, enrollmentOfficer.id, admin.id);
+
   const pd = await createTeacherWithInfo(department.id, {
     email: `pd-perm-${uid()}@test.com`,
     password: "Pass@1234",
@@ -251,6 +272,7 @@ async function createPermissionFixture() {
     program,
     classRecord,
     hod,
+    enrollmentOfficer,
     pd,
     cr,
     assignedTeacher,
@@ -262,6 +284,24 @@ async function createPermissionFixture() {
     member,
     nonMemberStudent,
   };
+}
+
+async function assignEnrollmentOfficer(departmentId: number, userId: number, assignedBy?: number) {
+  const role = await prisma.role.upsert({
+    where: { name: "enrollment_officer" },
+    update: { scopeType: "DEPARTMENT" },
+    create: { name: "enrollment_officer", scopeType: "DEPARTMENT" },
+  });
+
+  return prisma.staffRoleAssignment.create({
+    data: {
+      userId,
+      roleId: role.id,
+      scopeType: "DEPARTMENT",
+      departmentId,
+      assignedBy: assignedBy ?? null,
+    },
+  });
 }
 
 async function getMyPermissions(email: string) {

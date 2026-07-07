@@ -38,6 +38,10 @@
   Admin overlap, so concurrency cannot create duplicate active staff authority.
 - Non-admin staff roles do not inherit Admin bypass or posting privileges unless
   explicitly added by future phases.
+- Enrollment Officer is a department-scoped staff role. It can use only
+  enrollment APIs for assigned departments and does not receive role-management,
+  channel-management, posting, curriculum, teacher-assignment, semester
+  progression, graduation, or society-management authority.
 
 ## API Errors
 - Standard shape:

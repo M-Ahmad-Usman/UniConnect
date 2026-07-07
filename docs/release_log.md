@@ -57,6 +57,32 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-07-07 - Phase 2 Enrollment Responsibility Split
+- Added a dedicated `/api/enrollment` backend module and `/enrollment` frontend
+  workspace for class creation, student creation, student-only CSV import,
+  scoped rosters, transfer candidates, and same-department student transfer.
+- Enrollment access is backed by active global Admin or active
+  department-scoped `enrollment_officer` staff-role assignments. Enrollment
+  Officer access does not grant posting, role management, channel management,
+  curriculum edits, teacher assignment, semester progression, graduation, or
+  society management.
+- HOD keeps academic authority and read-only roster visibility, but no longer
+  has class creation, transfer-candidate, or student-transfer permissions.
+  Legacy `/api/classes` class creation is Admin-only; Enrollment Officer class
+  creation uses `/api/enrollment/classes`.
+- Generic Admin `/api/users/bulk-import` now rejects `STAFF` rows so CSV import
+  matches the documented student/teacher-only policy.
+- Verification so far:
+  - `server`: `npm run build`
+  - `server`: focused `tests/modules/enrollment.test.ts`, 7/7
+  - `server`: focused class/permission/enrollment integration slice, 76/76
+  - `server`: test TypeScript compile
+  - `client`: `npm run type-check`
+  - `client`: `npm run lint`
+  - `client`: focused enrollment/admin Vitest schemas and utility suites, 29/29
+  - `client`: focused academic/enrollment Playwright spec, 5/5
+  - `client`: focused accessibility Playwright spec, 2/2
+
 ### 2026-07-07 - Phase 1 Staff Role Authorization Foundation
 - Replaced persisted `ADMIN` user type with `STAFF`; Admin is now resolved from
   an active global staff-role assignment in HTTP auth, Socket.IO auth,

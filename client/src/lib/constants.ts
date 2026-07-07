@@ -29,6 +29,11 @@ export const ROUTES = {
   SOCIETIES: '/societies',
   SOCIETY: (societyId: number | string) => `/societies/${societyId}`,
   ROLES: '/roles',
+  ENROLLMENT: '/enrollment',
+  ENROLLMENT_CLASSES: '/enrollment/classes',
+  ENROLLMENT_CLASS: (classPublicId: string) => `/enrollment/classes/${classPublicId}`,
+  ENROLLMENT_STUDENT_NEW: '/enrollment/students/new',
+  ENROLLMENT_IMPORT: '/enrollment/import',
   ACADEMICS_CLASSES: '/academics/classes',
   ACADEMICS_CLASS: (classPublicId: string) => `/academics/classes/${classPublicId}`,
   ACADEMICS_COURSES: '/academics/courses',
@@ -150,6 +155,19 @@ export const queryKeys = {
     assignableUsers: (params?: object) => ['roles', 'assignable-users', params] as const,
     revokable: (params?: object) => ['roles', 'revokable', params] as const,
     history: (params?: object) => ['roles', 'history', params] as const,
+  },
+  enrollment: {
+    bootstrap: () => ['enrollment', 'bootstrap'] as const,
+    programs: (params?: Record<string, unknown>) => ['enrollment', 'programs', params] as const,
+    curriculum: (programId: number, params?: Record<string, unknown>) =>
+      ['enrollment', 'programs', programId, 'curriculum', params] as const,
+    classesRoot: () => ['enrollment', 'classes'] as const,
+    classes: (params?: Record<string, unknown>) => ['enrollment', 'classes', params] as const,
+    classDetail: (classPublicId: string) => ['enrollment', 'classes', classPublicId] as const,
+    classStudents: (classPublicId: string, params?: Record<string, unknown>) =>
+      ['enrollment', 'classes', classPublicId, 'students', params] as const,
+    transferCandidates: (classPublicId: string, params?: Record<string, unknown>) =>
+      ['enrollment', 'classes', classPublicId, 'transfer-candidates', params] as const,
   },
   societies: {
     all: () => ['societies'] as const,

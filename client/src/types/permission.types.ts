@@ -1,8 +1,10 @@
 export interface GlobalPermissions {
   canAccessAdminDashboard: boolean;
   canAccessAcademicWorkspace: boolean;
+  canAccessEnrollmentWorkspace: boolean;
   canAccessRoleManagement: boolean;
   canManageUsers: boolean;
+  canManageEnrollment: boolean;
   canManageCurriculum: boolean;
   canCreateCourse: boolean;
   canUpdateCourse: boolean;
@@ -50,6 +52,7 @@ export interface RoleWorkspacePermissions {
 export interface PermissionScopeSummary {
   hodDepartmentIds: number[];
   directedProgramIds: number[];
+  enrollmentOfficerDepartmentIds: number[];
 }
 
 export interface MyPermissions {

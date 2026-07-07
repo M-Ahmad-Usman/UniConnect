@@ -16,24 +16,36 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/servers$/);
 }
 
-test.describe.serial('Academic management workflows', () => {
+test.describe.serial('Academic and enrollment management workflows', () => {
   test.setTimeout(90_000);
 
-  test('HOD transfers a student between managed classes', async ({ page }) => {
+  test('HOD cannot open the enrollment workspace', async ({ page }) => {
+    await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
+    await page.goto('/enrollment/classes');
+
+    await expect(page.getByRole('heading', { name: 'Access Denied' })).toBeVisible();
+    await expect(page.getByText('You do not have permission to access enrollment.')).toBeVisible();
+  });
+
+  test('Enrollment Officer transfers a student between managed classes', async ({ page }) => {
     const targetClass = await findClassByServerName(academicShellFixtures.transferTargetServerName);
     const student = await findUserByEmail(e2eUsers.moduleAcademicTransferStudent.email);
 
     expect(targetClass).not.toBeNull();
     expect(student).not.toBeNull();
 
-    await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
-    await page.goto(`/academics/classes/${targetClass!.public_id}`);
+    await signIn(
+      page,
+      e2eUsers.moduleEnrollmentOfficer.email,
+      e2eUsers.moduleEnrollmentOfficer.password,
+    );
+    await page.goto(`/enrollment/classes/${targetClass!.public_id}`);
 
     const transferButton = page.getByRole('button', { name: 'Transfer student' });
     await expect(transferButton).toBeVisible({ timeout: 45_000 });
     await transferButton.click();
     await page.locator('select[name="studentPublicId"]').selectOption(student!.public_id);
-    await page.getByRole('button', { name: 'Transfer' }).click();
+    await page.getByRole('button', { name: 'Transfer', exact: true }).click();
 
     await expect(page.getByText(e2eUsers.moduleAcademicTransferStudent.fullName)).toBeVisible();
     await expect.poll(() => findClassStudentClassId(student!.id)).toBe(targetClass!.id);

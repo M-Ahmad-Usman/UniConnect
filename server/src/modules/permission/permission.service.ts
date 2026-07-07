@@ -13,6 +13,7 @@ export async function getMyPermissions(userId: number) {
     scopes: {
       hodDepartmentIds: context.scopes.hodDepartmentIds,
       directedProgramIds: context.scopes.directedProgramIds,
+      enrollmentOfficerDepartmentIds: context.scopes.enrollmentOfficerDepartmentIds,
     },
   };
 }

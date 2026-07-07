@@ -36,7 +36,12 @@ export function ProgramListPage() {
   const [editingProgram, setEditingProgram] = useState<ProgramListItem | null>(null);
   const [pendingReduction, setPendingReduction] = useState<UpdateProgramFormValues | null>(null);
   const searchParamValue = searchParams.get('search') ?? '';
-  const [searchValue, setSearchValue] = useState(searchParamValue);
+  const [searchState, setSearchState] = useState({
+    source: searchParamValue,
+    value: searchParamValue,
+  });
+  const searchValue =
+    searchState.source === searchParamValue ? searchState.value : searchParamValue;
   const debouncedSearch = useDebouncedValue(searchValue.trim(), 300);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const departmentId = parsePositiveInt(searchParams.get('departmentId'));
@@ -96,10 +101,6 @@ export function ProgramListPage() {
       : null;
   const scopedDepartmentLabel =
     !canManageProgramCatalog && departments.length === 0 ? 'Directed programs' : null;
-
-  useEffect(() => {
-    setSearchValue(searchParamValue);
-  }, [searchParamValue]);
 
   useEffect(() => {
     if (debouncedSearch === searchParamValue) {
@@ -184,7 +185,9 @@ export function ProgramListPage() {
               <input
                 className={`${inputClassName} pl-8`}
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
+                onChange={(event) =>
+                  setSearchState({ source: searchParamValue, value: event.target.value })
+                }
               />
             </span>
           </label>

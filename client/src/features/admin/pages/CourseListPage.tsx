@@ -31,7 +31,12 @@ export function CourseListPage() {
     () => permissions?.scopes.hodDepartmentIds ?? [],
     [permissions?.scopes.hodDepartmentIds],
   );
-  const [searchValue, setSearchValue] = useState(searchParamValue);
+  const [searchState, setSearchState] = useState({
+    source: searchParamValue,
+    value: searchParamValue,
+  });
+  const searchValue =
+    searchState.source === searchParamValue ? searchState.value : searchParamValue;
   const debouncedSearch = useDebouncedValue(searchValue.trim(), 300);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const requestedDepartmentId = parsePositiveInt(searchParams.get('departmentId'));
@@ -56,10 +61,6 @@ export function CourseListPage() {
   );
   const lockedDepartment = !canUpdateCourse && departments.length === 1 ? departments[0] : null;
   const courses = coursesQuery.data?.data ?? [];
-
-  useEffect(() => {
-    setSearchValue(searchParamValue);
-  }, [searchParamValue]);
 
   useEffect(() => {
     if (debouncedSearch === searchParamValue) {
@@ -116,7 +117,9 @@ export function CourseListPage() {
               <input
                 className={`${inputClassName} pl-8`}
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
+                onChange={(event) =>
+                  setSearchState({ source: searchParamValue, value: event.target.value })
+                }
               />
             </span>
           </label>

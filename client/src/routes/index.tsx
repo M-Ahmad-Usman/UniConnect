@@ -4,10 +4,12 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AppShell } from '@/components/layout/AppShell';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { AcademicLayout } from '@/components/layout/AcademicLayout';
+import { EnrollmentLayout } from '@/components/layout/EnrollmentLayout';
 import { AuthGuard } from './guards/AuthGuard';
 import { MustChangePasswordGuard } from './guards/MustChangePasswordGuard';
 import { AdminGuard } from './guards/AdminGuard';
 import { AcademicGuard } from './guards/AcademicGuard';
+import { EnrollmentGuard } from './guards/EnrollmentGuard';
 import { ForceChangePasswordGuard } from './guards/ForceChangePasswordGuard';
 import { GuestGuard } from './guards/GuestGuard';
 import { ROUTES } from '@/lib/constants';
@@ -138,6 +140,26 @@ const RoleManagementPage = lazy(() =>
     default: m.RoleManagementPage,
   })),
 );
+const EnrollmentClassListPage = lazy(() =>
+  import('@/features/enrollment/pages/EnrollmentClassListPage').then((m) => ({
+    default: m.EnrollmentClassListPage,
+  })),
+);
+const EnrollmentClassDetailPage = lazy(() =>
+  import('@/features/enrollment/pages/EnrollmentClassDetailPage').then((m) => ({
+    default: m.EnrollmentClassDetailPage,
+  })),
+);
+const EnrollmentStudentCreatePage = lazy(() =>
+  import('@/features/enrollment/pages/EnrollmentStudentCreatePage').then((m) => ({
+    default: m.EnrollmentStudentCreatePage,
+  })),
+);
+const EnrollmentImportPage = lazy(() =>
+  import('@/features/enrollment/pages/EnrollmentImportPage').then((m) => ({
+    default: m.EnrollmentImportPage,
+  })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -229,6 +251,27 @@ export const router = createBrowserRouter([
                     ],
                   },
                   { path: 'roles', element: <RoleManagementPage /> },
+                  {
+                    element: <EnrollmentGuard />,
+                    children: [
+                      {
+                        path: 'enrollment',
+                        element: <EnrollmentLayout />,
+                        children: [
+                          { index: true, element: <Navigate to={ROUTES.ENROLLMENT_CLASSES} replace /> },
+                          {
+                            path: 'classes',
+                            children: [
+                              { index: true, element: <EnrollmentClassListPage /> },
+                              { path: ':classPublicId', element: <EnrollmentClassDetailPage /> },
+                            ],
+                          },
+                          { path: 'students/new', element: <EnrollmentStudentCreatePage /> },
+                          { path: 'import', element: <EnrollmentImportPage /> },
+                        ],
+                      },
+                    ],
+                  },
                   {
                     element: <AcademicGuard />,
                     children: [

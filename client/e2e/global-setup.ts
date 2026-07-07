@@ -846,6 +846,7 @@ async function createAcademicClass(
 
 async function seedAcademicWorkflowData(pool: Pool) {
   const hodId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicHod.email);
+  const enrollmentOfficerId = await findUserIdByEmail(pool, e2eUsers.moduleEnrollmentOfficer.email);
   const pdId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicPd.email);
   const oldTeacherId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicOldTeacher.email);
   const crossTeacherId = await findUserIdByEmail(pool, e2eUsers.moduleAcademicCrossTeacher.email);
@@ -864,6 +865,7 @@ async function seedAcademicWorkflowData(pool: Pool) {
 
   if (
     !hodId ||
+    !enrollmentOfficerId ||
     !pdId ||
     !oldTeacherId ||
     !crossTeacherId ||
@@ -957,6 +959,35 @@ async function seedAcademicWorkflowData(pool: Pool) {
       ],
       crossTeacherId,
     ],
+  );
+
+  const enrollmentRole = await pool.query<{ id: number }>(
+    `
+      INSERT INTO roles (name, scope_type)
+      VALUES ('enrollment_officer', 'department'::platform_role_scope_type)
+      ON CONFLICT (name) DO UPDATE SET scope_type = EXCLUDED.scope_type
+      RETURNING id
+    `,
+  );
+  const enrollmentRoleId = enrollmentRole.rows[0]?.id;
+
+  if (!enrollmentRoleId) {
+    throw new Error('Enrollment officer E2E role could not be created.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO staff_role_assignments (
+        user_id,
+        role_id,
+        scope_type,
+        department_id,
+        assigned_by,
+        assigned_at
+      )
+      VALUES ($1, $2, 'department'::platform_role_scope_type, $3, $4, NOW())
+    `,
+    [enrollmentOfficerId, enrollmentRoleId, academicDeptId, hodId],
   );
 
   const degreeResult = await pool.query<{ id: number }>(

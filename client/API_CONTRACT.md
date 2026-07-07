@@ -1922,13 +1922,14 @@ class-server communication cleanup impact. The response has
 `checksComplete: true`, `pendingChecks: []`, and `canDelete` based only on the
 student and teaching-assignment blockers.
 
-#### Create Class (Admin/Teacher)
+#### Create Class (Admin)
 
 ```
 POST /api/classes
 ```
 
-**Auth:** Admin or Teacher
+**Auth:** Admin only. Enrollment Officer class creation uses
+`POST /api/enrollment/classes`.
 
 **Rules:** The class admission year must have a complete curriculum for every
 program semester before the class can be created. Class creation creates the
@@ -1992,7 +1993,7 @@ curriculum. Teacher must be active.
 
 **Note:** Also creates auto-channel for this course in class server
 
-#### Class Students (Admin/HOD)
+#### Class Students (Admin/HOD Read, Admin Transfer)
 
 ```
 GET /api/classes/:publicId/students
@@ -2008,7 +2009,87 @@ POST /api/classes/:publicId/students
 }
 ```
 
-Transfers an existing active same-department student into the class and synchronizes class server membership.
+HOD keeps read-only roster visibility through `GET /students`. Transfer
+candidates and `POST /students` are Admin-only legacy class endpoints. Enrollment
+Officer student placement uses `/api/enrollment`.
+
+### Enrollment Workspace
+
+#### Bootstrap
+
+```
+GET /api/enrollment/bootstrap
+```
+
+Returns authorized departments, a default department, and enrollment capability
+flags for Admin and Enrollment Officer users.
+
+#### Programs And Curriculum
+
+```
+GET /api/enrollment/programs?page&limit&departmentId&search
+GET /api/enrollment/programs/:programId/curriculum?semesterNumber&batchYear
+```
+
+Read-only and scoped to departments where the caller has enrollment access.
+
+#### Classes
+
+```
+GET /api/enrollment/classes?page&limit&departmentId&programId&semester&section&status
+POST /api/enrollment/classes
+GET /api/enrollment/classes/:publicId
+GET /api/enrollment/classes/:publicId/students?page&limit&search
+GET /api/enrollment/classes/:publicId/transfer-candidates?page&limit&search
+POST /api/enrollment/classes/:publicId/transfers
+```
+
+`POST /classes` body:
+
+```typescript
+{
+  programId: number;
+  currentSemester: number;
+  academicYear: number;
+  admissionYear: number;
+  section: 'A' | 'B';
+}
+```
+
+`POST /transfers` body:
+
+```typescript
+{
+  studentPublicId: string;
+}
+```
+
+Class creation keeps the existing full-curriculum and class-server/channel
+creation rules. Transfers are same-department and still block CR transfers.
+
+#### Students
+
+```
+POST /api/enrollment/students
+POST /api/enrollment/students/import
+```
+
+`POST /students` body:
+
+```typescript
+{
+  fullName: string;
+  email: string;
+  phone: string;
+  gender: 'MALE' | 'FEMALE';
+  classPublicId: string;
+  rollNumber: string;
+}
+```
+
+Enrollment student creation/import always creates students. The backend derives
+department scope from `classPublicId`. CSV import is student-only and returns
+partial-success counts plus per-row errors.
 
 #### Teacher Candidates and Replacement
 

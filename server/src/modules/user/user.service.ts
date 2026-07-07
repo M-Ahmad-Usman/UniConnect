@@ -457,6 +457,14 @@ export async function bulkImportUsers(
       return;
     }
 
+    if (result.data.userType === "STAFF") {
+      errors.push({
+        row: rowNumber,
+        message: "STAFF rows are not supported by CSV import",
+      });
+      return;
+    }
+
     validRows.push({ rowNumber, data: result.data });
   });
 

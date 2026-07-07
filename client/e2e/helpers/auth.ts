@@ -81,6 +81,13 @@ export const e2eUsers = {
     mustChangePassword: false,
     userType: 'Teacher',
   },
+  moduleEnrollmentOfficer: {
+    email: 'e2e.enrollment.officer@uniconnect.test',
+    password: 'EnrollmentOfficer@1234',
+    fullName: 'E2E Enrollment Officer',
+    mustChangePassword: false,
+    userType: 'Staff',
+  },
   moduleAcademicPd: {
     email: 'e2e.academic.pd@uniconnect.test',
     password: 'AcademicPd@1234',

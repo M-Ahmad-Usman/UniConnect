@@ -203,7 +203,7 @@ describe("Class management", () => {
       expect(courseChannels.every((channel) => channel.isAutoCreated)).toBe(true);
     });
 
-    it("should allow HOD to create class in own department", async () => {
+    it("should return 403 when HOD creates class in own department", async () => {
       const dept = await createDepartment({ code: `HOD-CLS-${uid()}` });
       const hod = await createTeacherWithInfo(dept.id, {
         email: `hod-cls-own-${Date.now()}@test.com`,
@@ -231,9 +231,8 @@ describe("Class management", () => {
           section: "A",
         });
 
-      expect(res.status).toBe(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.currentSemester).toBe(2);
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
     });
 
     it("should return 403 when HOD creates class in other department", async () => {
@@ -1352,21 +1351,21 @@ describe("Class management", () => {
   // ─── POST /api/classes/:id/semester-progression ──────────────────────
 
   describe("Academic class hardening", () => {
-    it("should transfer a same-department student and move auto class memberships", async () => {
+    it("should allow admin to transfer a same-department student and move auto class memberships", async () => {
       const u = uid();
-      const dept = await createDepartment({ code: `TRN-${u}` });
-      const hod = await createTeacherWithInfo(dept.id, {
-        email: `hod-transfer-${u}@test.com`,
+      const admin = await createUser({
+        email: `admin-transfer-${u}@test.com`,
         password: "Pass@1234",
+        userType: "ADMIN",
       });
-      await assignHOD(dept.id, hod.id);
+      const dept = await createDepartment({ code: `TRN-${u}` });
       const program = await createProgram(dept.id, { semesters: 8 });
       const sourceClass = await createClass(program.id, { section: "A" });
       const targetClass = await createClass(program.id, { section: "B" });
       const student = await createStudentWithInfo(sourceClass.id, dept.id, {
         email: `student-transfer-${u}@test.com`,
       });
-      const cookies = await loginAs(hod.email, "Pass@1234");
+      const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
         .post(`/api/classes/${targetClass.publicId}/students`)
@@ -1395,13 +1394,13 @@ describe("Class management", () => {
 
     it("should reject cross-department student transfers", async () => {
       const u = uid();
+      const admin = await createUser({
+        email: `admin-cross-transfer-${u}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
       const deptA = await createDepartment({ code: `TRXA-${u}` });
       const deptB = await createDepartment({ code: `TRXB-${u}` });
-      const hod = await createTeacherWithInfo(deptA.id, {
-        email: `hod-cross-transfer-${u}@test.com`,
-        password: "Pass@1234",
-      });
-      await assignHOD(deptA.id, hod.id);
       const programA = await createProgram(deptA.id, { semesters: 8 });
       const programB = await createProgram(deptB.id, { semesters: 8 });
       const targetClass = await createClass(programA.id);
@@ -1409,7 +1408,7 @@ describe("Class management", () => {
       const student = await createStudentWithInfo(sourceClass.id, deptB.id, {
         email: `student-cross-transfer-${u}@test.com`,
       });
-      const cookies = await loginAs(hod.email, "Pass@1234");
+      const cookies = await loginAs(admin.email, "Pass@1234");
 
       const res = await request(app)
         .post(`/api/classes/${targetClass.publicId}/students`)

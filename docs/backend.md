@@ -72,6 +72,11 @@ are now captured here and in `docs/security.md`:
   global Admin as a direct staff role, department-scoped enrollment officer
   role support, exactly-one active Admin enforcement in service flows, and an
   atomic Admin transfer endpoint.
+- Added the Phase 2 enrollment module under `/api/enrollment`. Enrollment
+  access is direct active Admin or active department-scoped
+  `enrollment_officer`; HOD keeps academic rights and read-only roster
+  visibility but does not create classes, create/import students, or transfer
+  students.
 - Staff-role migrations are split so PostgreSQL enum values are committed before
   use. SQL-only exclusion constraints prevent overlapping staff-role periods and
   overlapping global Admin assignments.
