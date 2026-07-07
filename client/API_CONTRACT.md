@@ -2800,9 +2800,39 @@ GET /api/societies/leadership-candidates
 
 **Rules:**
 
-- `role=president` returns active same-department students with `StudentInfo`.
-- `role=convenor` returns active same-department teachers with `TeacherInfo`.
+- `departmentId` authorizes the managed society department; it is not a candidate department filter.
+- `role=president` returns active university-wide students with `StudentInfo`.
+- `role=convenor` returns active university-wide teachers with `TeacherInfo`.
+- Results exclude users already holding the requested leadership type in an active, non-deleted society.
 - Admins may query any department; HODs may query only their own department.
+
+---
+
+#### Society Leadership Conflict Preflight
+
+```
+GET /api/societies/:publicId/leadership-conflicts?action=activate|restore
+```
+
+**Auth:** Admin or HOD for the society department
+
+**Response:**
+
+```typescript
+{
+  hasConflicts: boolean;
+  conflicts: Array<{
+    role: 'president' | 'convenor';
+    userPublicId: string;
+    fullName: string;
+    conflictingSocietyPublicId: string;
+    conflictingSocietyName: string;
+  }>;
+}
+```
+
+Use this before activating or restoring a society. The mutation endpoints still
+recheck and return 409 `CONFLICT` with conflict details for race safety.
 
 ---
 

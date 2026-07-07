@@ -80,8 +80,12 @@ export class CsrfError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string = "Resource already exists", code: ApiErrorCode = ApiErrorCode.CONFLICT) {
-    super(message, StatusCodes.CONFLICT, code);
+  constructor(
+    message: string = "Resource already exists",
+    code: ApiErrorCode = ApiErrorCode.CONFLICT,
+    details?: Record<string, unknown>[]
+  ) {
+    super(message, StatusCodes.CONFLICT, code, details);
   }
 }
 

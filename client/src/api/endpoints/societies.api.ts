@@ -6,6 +6,8 @@ import type {
   SocietyDeletionImpact,
   SocietyDetail,
   SocietyLeadershipCandidateParams,
+  SocietyLeadershipConflictAction,
+  SocietyLeadershipConflictResult,
   SocietyLifecycleReasonRequest,
   SocietyListItem,
   SocietyListParams,
@@ -114,6 +116,17 @@ export const societiesApi = {
   async getDeletionImpact(societyPublicId: string) {
     const response = await apiClient.get<SocietyDeletionImpact>(
       `/societies/${societyPublicId}/deletion-impact`,
+    );
+    return response.data;
+  },
+
+  async getLeadershipConflicts(
+    societyPublicId: string,
+    action: SocietyLeadershipConflictAction,
+  ) {
+    const response = await apiClient.get<SocietyLeadershipConflictResult>(
+      `/societies/${societyPublicId}/leadership-conflicts`,
+      { params: { action } },
     );
     return response.data;
   },

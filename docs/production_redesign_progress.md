@@ -16,7 +16,7 @@ were folded into the production redesign plan and this progress file.
 | --- | --- | --- |
 | Phase 1: Role And Authorization Foundation | Complete | Hardened and fully verified on 2026-07-07. |
 | Phase 2: Enrollment And HOD Responsibility Split | Implemented | Backend/frontend implementation and focused validation complete; broader regression still pending before marking complete. |
-| Phase 3: Society Leadership Rules | Not started | Plan already captures university-wide leadership candidates and one-active-leadership-position constraints. |
+| Phase 3: Society Leadership Rules | Implemented | Backend/frontend implementation and focused validation complete; focused Playwright needs rerun after assertion fix. |
 | Phase 4: Teaching Assignment And Course-Channel Access | Not started | Must preserve the moderator-assignment verification item for course-only teachers. |
 | Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy | Not started | Depends on Phase 4 teaching/channel access foundations. |
 | Phase 6: Notification Defaults | Not started | Must update every membership/assignment creation path consistently. |
@@ -215,9 +215,32 @@ Suggested Phase 2 validation:
 
 Phase 3:
 
-- Society President candidates become any active student university-wide.
-- Society Convenor candidates become any active teacher university-wide.
-- Add one-active-president-position-per-student and one-active-convenor-position-per-teacher safeguards.
+- Implemented on 2026-07-08:
+  - Society President candidates are active university-wide students with `StudentInfo`.
+  - Society Convenor candidates are active university-wide teachers with `TeacherInfo`.
+  - Admin/HOD authority remains scoped to the society's owning department.
+  - Active, non-deleted society leadership uniqueness is backed by SQL-only partial unique indexes.
+  - Suspended/deleted societies retain leadership history but do not reserve leaders.
+  - Activation/restoration preflight uses `/api/societies/:publicId/leadership-conflicts`.
+  - Activation/restoration returns 409 `CONFLICT` with details when saved leaders are active elsewhere.
+- Focused validation:
+  - `server`: `npx prisma validate`
+  - `server`: `npx dotenv -e .env.test -- prisma migrate reset --force`
+  - `server`: `npx prisma generate`
+  - `server`: `npm test -- tests/modules/society.test.ts tests/modules/society-lifecycle.test.ts --runInBand` -> 68/68
+  - `server`: `npm run build`
+  - `server`: `npx tsc -p tests/tsconfig.json --noEmit --pretty false`
+  - `server`: `npm test -- --runInBand` -> 25 suites, 539/539
+  - `client`: `npm run type-check`
+  - `client`: `npm run lint`
+  - `client`: focused society API/schema/utility Vitest suites -> 8/8
+  - `client`: `npm run test` -> 26 files, 147/147
+  - `client`: `npm run build`
+- Playwright validation:
+  - `client`: `npx playwright test e2e/auth-force-change.spec.ts e2e/server-channel-workflows.spec.ts e2e/ui-accessibility.spec.ts --project=chromium --reporter=list` -> 8/8 after replacing stale waits and mutable academic fixture usage.
+  - `client`: `npx playwright test e2e/society-workflows.spec.ts e2e/ui-accessibility.spec.ts --project=chromium --reporter=list` -> 7/7 after isolating society accessibility fixtures from Phase 3 leadership mutations.
+  - `client`: `npm run test:e2e -- --reporter=list` -> 39/39.
+  - Remaining log noise: backend E2E still emits the existing pg deprecation warning about calling `client.query()` while a client is already executing a query.
 
 Phase 4:
 

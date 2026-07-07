@@ -249,8 +249,8 @@ model StudentInfo {
   user  User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   class Class @relation(fields: [classId], references: [id], onDelete: Restrict)
 
-  crOfClass          Class?   @relation("ClassCR")
-  presidentOfSociety Society? @relation("SocietyPresident")
+  crOfClass            Class?    @relation("ClassCR")
+  presidentOfSocieties Society[] @relation("SocietyPresident")
 
   @@index([classId])
   @@map("student_info")
@@ -265,7 +265,7 @@ model TeacherInfo {
 
   hodOfDepartment          Department? @relation("DepartmentHOD")
   programDirectorOfProgram Program?    @relation("ProgramDirector")
-  convenorOfSociety        Society?    @relation("SocietyConvenor")
+  convenorOfSocieties      Society[]   @relation("SocietyConvenor")
 
   teaches Teaches[]
 
@@ -305,8 +305,8 @@ model Society {
   name             String        @db.VarChar(100)
   description      String?
   departmentId     Int           @map("department_id")
-  presidentId      Int           @unique @map("president_id")
-  convenorId       Int           @unique @map("convenor_id")
+  presidentId      Int           @map("president_id")
+  convenorId       Int           @map("convenor_id")
   serverId         Int           @unique @map("server_id")
   status           SocietyStatus @default(ACTIVE)
   isDeleted        Boolean       @default(false) @map("is_deleted")
@@ -326,6 +326,8 @@ model Society {
 
   @@index([departmentId, isDeleted])
   @@index([status, isDeleted])
+  // SQL-only partial unique indexes enforce one active, non-deleted president
+  // and convenor assignment while allowing deleted/suspended history to coexist.
   @@map("societies")
 }
 

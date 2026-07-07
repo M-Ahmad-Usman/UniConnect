@@ -402,7 +402,18 @@ available.
 - `GET /leadership-candidates`
   - Query: `departmentId, role=president|convenor, page, limit, search?`
   - Auth: admin or HOD for the requested department
-  - Returns same-department students with `StudentInfo` for president or same-department teachers with `TeacherInfo` for convenor
+- `GET /:publicId/leadership-conflicts`
+  - Query: `action=activate|restore`
+  - Auth: admin or HOD for the society department
+  - Returns `{ hasConflicts, conflicts }` for activation/restoration preflight
+  - Conflict entries include `role`, `userPublicId`, `fullName`, `conflictingSocietyPublicId`, and `conflictingSocietyName`
+
+Leadership candidate and assignment rules:
+
+- `departmentId` is the managed society department for authorization, not a candidate department filter.
+- President candidates are active university-wide students with `StudentInfo` and no active non-deleted president assignment.
+- Convenor candidates are active university-wide teachers with `TeacherInfo` and no active non-deleted convenor assignment.
+- Society create/update/activate/restore returns 409 `CONFLICT` with details when saved or selected leadership is already active elsewhere.
 
 Suspended societies are readable only by authorized viewers and fully frozen for
 writes, including lifecycle-scoped server/channel/post/moderator mutations.

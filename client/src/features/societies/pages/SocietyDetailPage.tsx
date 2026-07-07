@@ -30,6 +30,7 @@ import {
   useSociety,
   useSocietyDeletionImpact,
   useSocietyJoinRequests,
+  useSocietyLeadershipConflicts,
   useSocietyMemberCandidates,
   useSocietyMembers,
   useSubmitSocietyJoinRequest,
@@ -88,6 +89,13 @@ export function SocietyDetailPage() {
   const updateSocietyStatus = useUpdateSocietyStatus(stableSocietyPublicId);
   const deleteSociety = useDeleteSociety(stableSocietyPublicId);
   const restoreSociety = useRestoreSociety(stableSocietyPublicId);
+  const leadershipConflictAction =
+    lifecycleAction === 'activate' || lifecycleAction === 'restore' ? lifecycleAction : null;
+  const leadershipConflicts = useSocietyLeadershipConflicts(
+    societyPublicId,
+    leadershipConflictAction,
+    lifecycleAction === 'activate' || lifecycleAction === 'restore',
+  );
   const deletionImpact = useSocietyDeletionImpact(
     societyPublicId,
     lifecycleAction === 'delete',
@@ -165,6 +173,7 @@ export function SocietyDetailPage() {
   const candidates = candidatesQuery.data?.data ?? [];
   const removingMember =
     members.find((member) => member.user.publicId === removingMemberPublicId) ?? null;
+  const lifecycleLeadershipConflicts = leadershipConflicts.data?.conflicts ?? [];
   const lifecyclePending =
     updateSocietyStatus.isPending || deleteSociety.isPending || restoreSociety.isPending;
 
@@ -500,10 +509,38 @@ export function SocietyDetailPage() {
         description="Lifecycle changes affect the society workspace and its members."
         confirmLabel={lifecycleAction ?? 'Confirm'}
         variant={lifecycleAction === 'delete' ? 'destructive' : 'default'}
-        confirmDisabled={lifecyclePending || (lifecycleAction === 'delete' && deletionImpact.data?.canDelete === false)}
+        confirmDisabled={
+          lifecyclePending ||
+          leadershipConflicts.isLoading ||
+          lifecycleLeadershipConflicts.length > 0 ||
+          (lifecycleAction === 'delete' && deletionImpact.data?.canDelete === false)
+        }
         onConfirm={handleLifecycleAction}
       >
         <div className="space-y-3">
+          {lifecycleAction === 'activate' || lifecycleAction === 'restore' ? (
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="font-medium">Leadership availability</p>
+              {leadershipConflicts.isLoading ? (
+                <p className="mt-1 text-muted-foreground">Checking current assignments...</p>
+              ) : lifecycleLeadershipConflicts.length > 0 ? (
+                <div className="mt-2 space-y-2 text-destructive">
+                  {lifecycleLeadershipConflicts.map((conflict) => (
+                    <p key={`${conflict.role}-${conflict.userPublicId}`}>
+                      {conflict.fullName} is already active as {conflict.role} of{' '}
+                      {conflict.conflictingSocietyName}. Change leadership before continuing.
+                    </p>
+                  ))}
+                </div>
+              ) : leadershipConflicts.isError ? (
+                <p className="mt-1 text-muted-foreground">
+                  Availability could not be checked now. The server will recheck before applying changes.
+                </p>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No active leadership conflicts found.</p>
+              )}
+            </div>
+          ) : null}
           {lifecycleAction === 'delete' && deletionImpact.data ? (
             <dl className="grid grid-cols-2 gap-2 rounded-lg border p-3 text-sm">
               <div><dt className="text-muted-foreground">Active members</dt><dd>{deletionImpact.data.activeMemberCount}</dd></div>

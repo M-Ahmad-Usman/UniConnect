@@ -78,6 +78,21 @@ export interface SocietyLeadershipCandidateParams extends PaginationParams {
   search?: string;
 }
 
+export type SocietyLeadershipConflictAction = 'activate' | 'restore';
+
+export interface SocietyLeadershipConflict {
+  role: 'president' | 'convenor';
+  userPublicId: string;
+  fullName: string;
+  conflictingSocietyPublicId: string;
+  conflictingSocietyName: string;
+}
+
+export interface SocietyLeadershipConflictResult {
+  hasConflicts: boolean;
+  conflicts: SocietyLeadershipConflict[];
+}
+
 export interface CreateSocietyRequest {
   name: string;
   description?: string;

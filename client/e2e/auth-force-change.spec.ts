@@ -39,9 +39,17 @@ test.describe('forced password change flow', () => {
 
     await page.locator('#forced-current-password').fill(e2eUsers.forcedChange.password);
     await page.locator('#forced-new-password').fill(updatedPassword);
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/auth/change-password') &&
+        response.request().method() === 'PATCH',
+      { timeout: 15_000 },
+    );
     await page.getByRole('button', { name: 'Update password' }).click();
+    const response = await responsePromise;
+    expect(response.ok()).toBe(true);
 
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login$/, { timeout: 15_000 });
 
     await signIn(page, e2eUsers.forcedChange.email, updatedPassword);
 

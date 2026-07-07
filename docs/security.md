@@ -42,6 +42,10 @@
   enrollment APIs for assigned departments and does not receive role-management,
   channel-management, posting, curriculum, teacher-assignment, semester
   progression, graduation, or society-management authority.
+- Society leadership candidates are university-wide, but creation, leadership
+  change, lifecycle, and conflict-preflight authority remains Admin or HOD for
+  the society's owning department. Active non-deleted leadership uniqueness is
+  enforced by service checks and SQL-only partial unique indexes.
 
 ## API Errors
 - Standard shape:

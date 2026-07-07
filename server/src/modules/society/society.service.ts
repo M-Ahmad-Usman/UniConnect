@@ -84,6 +84,16 @@ type LeadershipCandidatesQuery = MemberCandidatesQuery & {
   role: "president" | "convenor";
 };
 
+type LeadershipConflictAction = "activate" | "restore";
+
+type LeadershipConflict = {
+  role: "president" | "convenor";
+  userPublicId: string;
+  fullName: string;
+  conflictingSocietyPublicId: string;
+  conflictingSocietyName: string;
+};
+
 type CallerInfo = {
   id: number;
   userType: string;
@@ -200,7 +210,6 @@ async function findSocietyOrThrow(
 
 async function assertStudentForSocietyOrThrow(
   userPublicId: string,
-  departmentId: number,
   client: PrismaTransaction = prisma,
 ) {
   const resolved = await resolveUserPublicId(userPublicId, {
@@ -217,22 +226,17 @@ async function assertStudentForSocietyOrThrow(
     select: {
       id: true,
       publicId: true,
-      departmentId: true,
       studentInfo: { select: { studentId: true } },
     },
   });
   if (!user || !user.studentInfo) {
     throw new NotFoundError("Student not found for president role");
   }
-  if (user.departmentId !== departmentId) {
-    throw new ForbiddenError("President must belong to the same department as the society");
-  }
   return user;
 }
 
 async function assertTeacherForSocietyOrThrow(
   userPublicId: string,
-  departmentId: number,
   client: PrismaTransaction = prisma,
 ) {
   const resolved = await resolveUserPublicId(userPublicId, {
@@ -249,17 +253,112 @@ async function assertTeacherForSocietyOrThrow(
     select: {
       id: true,
       publicId: true,
-      departmentId: true,
       teacherInfo: { select: { teacherId: true } },
     },
   });
   if (!user || !user.teacherInfo) {
     throw new NotFoundError("Teacher not found for convenor role");
   }
-  if (user.departmentId !== departmentId) {
-    throw new ForbiddenError("Convenor must belong to the same department as the society");
-  }
   return user;
+}
+
+function activeLeadershipSocietyWhere(excludeSocietyId?: number): Prisma.SocietyWhereInput {
+  return {
+    status: "ACTIVE",
+    isDeleted: false,
+    ...(excludeSocietyId ? { id: { not: excludeSocietyId } } : {}),
+  };
+}
+
+async function findActiveLeadershipConflicts(
+  client: PrismaTransaction,
+  input: {
+    presidentUserId?: number;
+    convenorUserId?: number;
+    excludeSocietyId?: number;
+  },
+): Promise<LeadershipConflict[]> {
+  const conflicts: LeadershipConflict[] = [];
+  const [presidentConflict, convenorConflict] = await Promise.all([
+    input.presidentUserId
+      ? client.society.findFirst({
+          where: {
+            ...activeLeadershipSocietyWhere(input.excludeSocietyId),
+            presidentId: input.presidentUserId,
+          },
+          select: {
+            publicId: true,
+            name: true,
+            president: { select: { user: { select: { publicId: true, fullName: true } } } },
+          },
+        })
+      : Promise.resolve(null),
+    input.convenorUserId
+      ? client.society.findFirst({
+          where: {
+            ...activeLeadershipSocietyWhere(input.excludeSocietyId),
+            convenorId: input.convenorUserId,
+          },
+          select: {
+            publicId: true,
+            name: true,
+            convenor: { select: { user: { select: { publicId: true, fullName: true } } } },
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  if (presidentConflict) {
+    conflicts.push({
+      role: "president",
+      userPublicId: presidentConflict.president.user.publicId,
+      fullName: presidentConflict.president.user.fullName,
+      conflictingSocietyPublicId: presidentConflict.publicId,
+      conflictingSocietyName: presidentConflict.name,
+    });
+  }
+  if (convenorConflict) {
+    conflicts.push({
+      role: "convenor",
+      userPublicId: convenorConflict.convenor.user.publicId,
+      fullName: convenorConflict.convenor.user.fullName,
+      conflictingSocietyPublicId: convenorConflict.publicId,
+      conflictingSocietyName: convenorConflict.name,
+    });
+  }
+
+  return conflicts;
+}
+
+function leadershipConflictDetails(conflicts: LeadershipConflict[]): Record<string, unknown>[] {
+  return conflicts.map((conflict) => ({
+    field: conflict.role === "president" ? "presidentPublicId" : "convenorPublicId",
+    role: conflict.role,
+    userPublicId: conflict.userPublicId,
+    fullName: conflict.fullName,
+    conflictingSocietyPublicId: conflict.conflictingSocietyPublicId,
+    conflictingSocietyName: conflict.conflictingSocietyName,
+  }));
+}
+
+function throwIfLeadershipConflicts(conflicts: LeadershipConflict[]): void {
+  if (conflicts.length === 0) return;
+  throw new ConflictError(
+    "Society leadership is already assigned to another active society",
+    ApiErrorCode.CONFLICT,
+    leadershipConflictDetails(conflicts),
+  );
+}
+
+async function assertNoActiveLeadershipConflicts(
+  client: PrismaTransaction,
+  input: {
+    presidentUserId?: number;
+    convenorUserId?: number;
+    excludeSocietyId?: number;
+  },
+): Promise<void> {
+  throwIfLeadershipConflicts(await findActiveLeadershipConflicts(client, input));
 }
 
 function isCallerLeader(
@@ -393,18 +492,22 @@ export async function createSociety(data: CreateSocietyInput, caller: CallerInfo
   if (caller.userType !== "ADMIN" && department.hodId !== caller.id) {
     throw new ForbiddenError("Only the HOD of this department can create societies");
   }
-  const [president, convenor] = await Promise.all([
-    assertStudentForSocietyOrThrow(data.presidentPublicId, data.departmentId),
-    assertTeacherForSocietyOrThrow(data.convenorPublicId, data.departmentId),
-  ]);
-  const existing = await prisma.society.findFirst({
-    where: { name: data.name, isDeleted: false },
-    select: { id: true },
-  });
-  if (existing) {
-    throw new ConflictError("A society with this name already exists", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
-  }
   return prisma.$transaction(async (tx) => {
+    const [president, convenor] = await Promise.all([
+      assertStudentForSocietyOrThrow(data.presidentPublicId, tx),
+      assertTeacherForSocietyOrThrow(data.convenorPublicId, tx),
+    ]);
+    await assertNoActiveLeadershipConflicts(tx, {
+      presidentUserId: president.id,
+      convenorUserId: convenor.id,
+    });
+    const existing = await tx.society.findFirst({
+      where: { name: data.name, isDeleted: false },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new ConflictError("A society with this name already exists", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
+    }
     const server = await tx.server.create({
       data: {
         name: data.name,
@@ -525,7 +628,11 @@ export async function updateSociety(societyPublicId: string, data: UpdateSociety
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.presidentPublicId !== undefined) {
-      const president = await assertStudentForSocietyOrThrow(data.presidentPublicId, society.departmentId, tx);
+      const president = await assertStudentForSocietyOrThrow(data.presidentPublicId, tx);
+      await assertNoActiveLeadershipConflicts(tx, {
+        presidentUserId: president.id,
+        excludeSocietyId: society.id,
+      });
       updateData.president = { connect: { studentId: president.id } };
       await tx.serverMembership.upsert({
         where: { userId_serverId: { userId: president.id, serverId: society.serverId } },
@@ -534,7 +641,11 @@ export async function updateSociety(societyPublicId: string, data: UpdateSociety
       });
     }
     if (data.convenorPublicId !== undefined) {
-      const convenor = await assertTeacherForSocietyOrThrow(data.convenorPublicId, society.departmentId, tx);
+      const convenor = await assertTeacherForSocietyOrThrow(data.convenorPublicId, tx);
+      await assertNoActiveLeadershipConflicts(tx, {
+        convenorUserId: convenor.id,
+        excludeSocietyId: society.id,
+      });
       updateData.convenor = { connect: { teacherId: convenor.id } };
       await tx.serverMembership.upsert({
         where: { userId_serverId: { userId: convenor.id, serverId: society.serverId } },
@@ -710,8 +821,25 @@ export async function listLeadershipCandidates(query: LeadershipCandidatesQuery,
     userType: query.role === "president" ? "STUDENT" : "TEACHER",
     status: "ACTIVE",
     isDeleted: false,
-    departmentId: query.departmentId,
-    ...(query.role === "president" ? { studentInfo: { isNot: null } } : { teacherInfo: { isNot: null } }),
+    ...(query.role === "president"
+      ? {
+          studentInfo: {
+            is: {
+              presidentOfSocieties: {
+                none: activeLeadershipSocietyWhere(),
+              },
+            },
+          },
+        }
+      : {
+          teacherInfo: {
+            is: {
+              convenorOfSocieties: {
+                none: activeLeadershipSocietyWhere(),
+              },
+            },
+          },
+        }),
     ...(search ? { OR: [{ fullName: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
   };
   const [users, total] = await Promise.all([
@@ -735,6 +863,30 @@ export async function getSocietyDeletionImpact(societyPublicId: string, caller: 
   });
 }
 
+export async function getSocietyLeadershipConflicts(
+  societyPublicId: string,
+  action: LeadershipConflictAction,
+  caller: CallerInfo,
+) {
+  const resolved = await resolveSocietyPublicId(societyPublicId, {
+    field: "publicId",
+    includeDeleted: action === "restore",
+  });
+  return prisma.$transaction(async (tx) => {
+    const society = await findSocietyOrThrow(resolved.id, tx, action === "restore");
+    assertLifecycleAuthority(society, caller);
+    const conflicts =
+      action === "activate" || (action === "restore" && society.status === "ACTIVE")
+        ? await findActiveLeadershipConflicts(tx, {
+            presidentUserId: society.presidentId,
+            convenorUserId: society.convenorId,
+            excludeSocietyId: society.id,
+          })
+        : [];
+    return { hasConflicts: conflicts.length > 0, conflicts };
+  });
+}
+
 export async function updateSocietyStatus(societyPublicId: string, status: SocietyStatus, caller: CallerInfo, auditContext: AuditContext, reason?: string) {
   const resolved = await resolveSocietyPublicId(societyPublicId, { field: "publicId" });
   const result = await prisma.$transaction(async (tx) => {
@@ -742,6 +894,13 @@ export async function updateSocietyStatus(societyPublicId: string, status: Socie
     const society = await findSocietyOrThrow(locked.id, tx);
     assertLifecycleAuthority(society, caller);
     if (locked.status === status) throw new ConflictError(`Society is already ${status.toLowerCase()}`);
+    if (status === "ACTIVE") {
+      await assertNoActiveLeadershipConflicts(tx, {
+        presidentUserId: society.presidentId,
+        convenorUserId: society.convenorId,
+        excludeSocietyId: society.id,
+      });
+    }
     const updated = await tx.society.update({ where: { id: society.id }, data: { status }, select: societyListSelect });
     const notificationIds = await notificationService.createSocietyLifecycleNotifications(tx, { societyId: society.id, serverId: society.serverId, actorUserId: caller.id, societyName: society.name, type: status === "ACTIVE" ? "SOCIETY_ACTIVATED" : "SOCIETY_SUSPENDED" });
     await recordAuditLog({ action: "society.status_update", targetType: "society", targetId: society.publicId, summary: { status: { before: locked.status, after: status }, reason: reason ?? null } }, auditContext, tx);
@@ -782,6 +941,13 @@ export async function restoreSociety(societyPublicId: string, caller: CallerInfo
     if (!locked.deletedCascadeId) throw new ConflictError("Society deletion cascade metadata is missing");
     const duplicate = await tx.society.findFirst({ where: { id: { not: society.id }, name: society.name, isDeleted: false }, select: { id: true } });
     if (duplicate) throw new ConflictError("Society name has been reused", ApiErrorCode.DUPLICATE_SOCIETY_NAME);
+    if (society.status === "ACTIVE") {
+      await assertNoActiveLeadershipConflicts(tx, {
+        presidentUserId: society.presidentId,
+        convenorUserId: society.convenorId,
+        excludeSocietyId: society.id,
+      });
+    }
     const server = await tx.server.updateMany({ where: { id: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, deletedAt: null, deletedBy: null, deletedCascadeId: null } });
     if (server.count !== 1) throw new ConflictError("Society server cascade metadata is inconsistent");
     const channels = await tx.channel.updateMany({ where: { serverId: society.serverId, isDeleted: true, deletedCascadeId: locked.deletedCascadeId }, data: { isDeleted: false, deletedAt: null, deletedBy: null, deletedCascadeId: null } });

@@ -112,7 +112,9 @@ test.describe('Server and channel workflows', () => {
     await signIn(page, e2eUsers.moduleManager.email, e2eUsers.moduleManager.password);
     await page.goto(`/servers/${serverPublicId}/members`);
 
-    await expect(page.getByRole('heading', { name: 'Server members' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Server members' })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText('Showing 1-20 of 24')).toBeVisible();
     await expect(page.getByText('HOD').first()).toBeVisible();
     await expect(page.locator('article')).toHaveCount(20);

@@ -158,12 +158,40 @@ export const e2eUsers = {
     mustChangePassword: false,
     userType: 'Student',
   },
+  moduleSocietyCrossPresident: {
+    email: 'e2e.society.cross.president@uniconnect.test',
+    password: 'SocietyCrossPresident@1234',
+    fullName: 'E2E Society Cross President',
+    mustChangePassword: false,
+    userType: 'Student',
+  },
   moduleSocietyOutsiderTeacher: {
     email: 'e2e.society.outsider.teacher@uniconnect.test',
     password: 'SocietyOutsider@1234',
     fullName: 'E2E Society Outsider Teacher',
     mustChangePassword: false,
     userType: 'Teacher',
+  },
+  moduleSocietyAccessibilityPresident: {
+    email: 'e2e.society.accessibility.president@uniconnect.test',
+    password: 'SocietyAccessibilityPresident@1234',
+    fullName: 'E2E Society Accessibility President',
+    mustChangePassword: false,
+    userType: 'Student',
+  },
+  moduleSocietyAccessibilityConvenor: {
+    email: 'e2e.society.accessibility.convenor@uniconnect.test',
+    password: 'SocietyAccessibilityConvenor@1234',
+    fullName: 'E2E Society Accessibility Convenor',
+    mustChangePassword: false,
+    userType: 'Teacher',
+  },
+  moduleSocietyAccessibilityMember: {
+    email: 'e2e.society.accessibility.member@uniconnect.test',
+    password: 'SocietyAccessibilityMember@1234',
+    fullName: 'E2E Society Accessibility Member',
+    mustChangePassword: false,
+    userType: 'Student',
   },
 } as const;
 

@@ -285,6 +285,20 @@ export async function handleGetSocietyDeletionImpact(req: Request, res: Response
   res.status(StatusCodes.OK).json(response);
 }
 
+export async function handleGetSocietyLeadershipConflicts(req: Request, res: Response): Promise<void> {
+  const query = req.query as Record<string, string | undefined>;
+  const conflicts = await societyService.getSocietyLeadershipConflicts(
+    routeParam(req, "publicId"),
+    query.action as "activate" | "restore",
+    {
+      id: req.user!.id,
+      userType: req.user!.userType,
+    },
+  );
+  const response: ApiResponse<typeof conflicts> = { success: true, data: conflicts };
+  res.status(StatusCodes.OK).json(response);
+}
+
 export async function handleUpdateSocietyStatus(req: Request, res: Response): Promise<void> {
   const society = await societyService.updateSocietyStatus(
     routeParam(req, "publicId"),

@@ -128,7 +128,7 @@ function LeadershipSelects({
       <FormField
         label="President"
         error={presidentError}
-        description="Search is scoped to eligible students in the selected department."
+        description="Search eligible students across the university."
       >
         <div className="space-y-2">
           <Input
@@ -158,7 +158,7 @@ function LeadershipSelects({
       <FormField
         label="Convenor"
         error={convenorError}
-        description="Search is scoped to eligible teachers in the selected department."
+        description="Search eligible teachers across the university."
       >
         <div className="space-y-2">
           <Input
@@ -247,7 +247,7 @@ export function SocietyDialog({
         <DialogHeader>
           <DialogTitle>Create society</DialogTitle>
           <DialogDescription>
-            Create a society workspace with department-scoped leadership.
+            Create a society workspace owned by a department with university-wide leadership.
           </DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
@@ -265,7 +265,7 @@ export function SocietyDialog({
             />
           </FormField>
           {lockedDepartment ? (
-            <FormField label="Department" error={form.formState.errors.departmentId?.message}>
+            <FormField label="Owning department" error={form.formState.errors.departmentId?.message}>
               <input
                 className={inputClassName}
                 value={`${lockedDepartment.code} · ${lockedDepartment.name}`}
@@ -274,7 +274,7 @@ export function SocietyDialog({
               <input type="hidden" {...departmentRegistration} />
             </FormField>
           ) : (
-            <FormField label="Department" error={form.formState.errors.departmentId?.message}>
+            <FormField label="Owning department" error={form.formState.errors.departmentId?.message}>
               <select
                 className={inputClassName}
                 aria-invalid={form.formState.errors.departmentId ? 'true' : undefined}

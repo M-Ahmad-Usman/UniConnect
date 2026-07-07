@@ -27,7 +27,7 @@ test.describe.serial('UI and accessibility workflows', () => {
   test('theme, role management, class detail, and mobile shell stay accessible', async ({
     page,
   }) => {
-    const klass = await findClassByServerName(academicShellFixtures.progressionServerName);
+    const klass = await findClassByServerName(academicShellFixtures.accessibilityServerName);
     expect(klass).not.toBeNull();
 
     await signIn(page, e2eUsers.moduleAcademicHod.email, e2eUsers.moduleAcademicHod.password);
@@ -75,13 +75,13 @@ test.describe.serial('UI and accessibility workflows', () => {
   test('society detail tabs and destructive confirmation are keyboard reachable', async ({
     page,
   }) => {
-    const society = await findSocietyByName(serverSocietyFixtures.societyName);
+    const society = await findSocietyByName(serverSocietyFixtures.accessibilitySocietyName);
     expect(society).not.toBeNull();
 
     await signIn(
       page,
-      e2eUsers.moduleSocietyPresident.email,
-      e2eUsers.moduleSocietyPresident.password,
+      e2eUsers.moduleSocietyAccessibilityConvenor.email,
+      e2eUsers.moduleSocietyAccessibilityConvenor.password,
     );
     await page.goto(`/societies/${society!.publicId}`);
 

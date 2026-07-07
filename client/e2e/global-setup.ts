@@ -301,12 +301,38 @@ async function seedSocietyHardeningData(pool: Pool) {
   const convenorId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyConvenor.email);
   const memberId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyMember.email);
   const applicantId = await findUserIdByEmail(pool, e2eUsers.moduleSocietyApplicant.email);
+  const crossPresidentId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleSocietyCrossPresident.email,
+  );
   const outsiderTeacherId = await findUserIdByEmail(
     pool,
     e2eUsers.moduleSocietyOutsiderTeacher.email,
   );
+  const accessibilityPresidentId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleSocietyAccessibilityPresident.email,
+  );
+  const accessibilityConvenorId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleSocietyAccessibilityConvenor.email,
+  );
+  const accessibilityMemberId = await findUserIdByEmail(
+    pool,
+    e2eUsers.moduleSocietyAccessibilityMember.email,
+  );
 
-  if (!presidentId || !convenorId || !memberId || !applicantId || !outsiderTeacherId) {
+  if (
+    !presidentId ||
+    !convenorId ||
+    !memberId ||
+    !applicantId ||
+    !crossPresidentId ||
+    !outsiderTeacherId ||
+    !accessibilityPresidentId ||
+    !accessibilityConvenorId ||
+    !accessibilityMemberId
+  ) {
     throw new Error('Society hardening E2E users were not created before seeding data.');
   }
 
@@ -330,6 +356,20 @@ async function seedSocietyHardeningData(pool: Pool) {
   );
   const societyServerId = societyServer.rows[0]?.id;
 
+  const accessibilitySocietyServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Society'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    [
+      'E2E Accessibility Society',
+      'Independent society fixture for accessibility coverage.',
+      accessibilityConvenorId,
+    ],
+  );
+  const accessibilitySocietyServerId = accessibilitySocietyServer.rows[0]?.id;
+
   const outsiderServer = await pool.query<{ id: number }>(
     `
       INSERT INTO servers (name, description, type, created_by, created_at)
@@ -340,7 +380,7 @@ async function seedSocietyHardeningData(pool: Pool) {
   );
   const outsiderServerId = outsiderServer.rows[0]?.id;
 
-  if (!departmentServerId || !societyServerId || !outsiderServerId) {
+  if (!departmentServerId || !societyServerId || !accessibilitySocietyServerId || !outsiderServerId) {
     throw new Error('Society hardening E2E servers could not be created.');
   }
 
@@ -426,18 +466,72 @@ async function seedSocietyHardeningData(pool: Pool) {
     throw new Error('Society hardening E2E class could not be created.');
   }
 
+  const outsiderProgram = await pool.query<{ id: number }>(
+    `
+      INSERT INTO programs (department_id, discipline_id, degree_level_id, semesters, code)
+      VALUES ($1, $2, $3, 8, $4)
+      RETURNING id
+    `,
+    [outsiderDepartmentId, disciplineId, degreeId, 'OSOC-E2E'],
+  );
+  const outsiderProgramId = outsiderProgram.rows[0]?.id;
+  const outsiderClassServer = await pool.query<{ id: number }>(
+    `
+      INSERT INTO servers (name, description, type, created_by, created_at)
+      VALUES ($1, $2, 'Class'::server_type, $3, NOW())
+      RETURNING id
+    `,
+    ['E2E Other Society Class', 'Class fixture for cross-department society leaders.', convenorId],
+  );
+  const outsiderClassServerId = outsiderClassServer.rows[0]?.id;
+
+  if (!outsiderProgramId || !outsiderClassServerId) {
+    throw new Error('Society hardening E2E outsider class prerequisites could not be created.');
+  }
+
+  const outsiderClassRecord = await pool.query<{ id: number }>(
+    `
+      INSERT INTO classes (
+        program_id,
+        current_semester,
+        academic_year,
+        admission_year,
+        section,
+        server_id
+      )
+      VALUES ($1, 3, 2026, 2026, 'A'::section, $2)
+      RETURNING id
+    `,
+    [outsiderProgramId, outsiderClassServerId],
+  );
+  const outsiderClassId = outsiderClassRecord.rows[0]?.id;
+
+  if (!outsiderClassId) {
+    throw new Error('Society hardening E2E outsider class could not be created.');
+  }
+
   await pool.query(
     `
       UPDATE users
       SET department_id = CASE
-        WHEN id = $2 THEN $3::int
+        WHEN id = ANY($2::int[]) THEN $3::int
         ELSE $4::int
       END
       WHERE id = ANY($1::int[])
     `,
     [
-      [presidentId, convenorId, memberId, applicantId, outsiderTeacherId],
-      outsiderTeacherId,
+      [
+        presidentId,
+        convenorId,
+        memberId,
+        applicantId,
+        crossPresidentId,
+        outsiderTeacherId,
+        accessibilityPresidentId,
+        accessibilityConvenorId,
+        accessibilityMemberId,
+      ],
+      [crossPresidentId, outsiderTeacherId],
       outsiderDepartmentId,
       departmentId,
     ],
@@ -448,10 +542,16 @@ async function seedSocietyHardeningData(pool: Pool) {
       INSERT INTO teacher_info (teacher_id, designation)
       VALUES
         ($1, 'Society Convenor'),
-        ($2, 'Other Department Teacher')
+        ($2, 'Other Department Teacher'),
+        ($3, 'Society Convenor')
     `,
-    [convenorId, outsiderTeacherId],
+    [convenorId, outsiderTeacherId, accessibilityConvenorId],
   );
+
+  await pool.query('UPDATE departments SET hod_id = $2 WHERE id = $1', [
+    departmentId,
+    convenorId,
+  ]);
 
   await pool.query(
     `
@@ -459,9 +559,21 @@ async function seedSocietyHardeningData(pool: Pool) {
       VALUES
         ($1, $4, 5001),
         ($2, $4, 5002),
-        ($3, $4, 5003)
+        ($3, $4, 5003),
+        ($5, $6, 5004),
+        ($7, $4, 5005),
+        ($8, $4, 5006)
     `,
-    [presidentId, memberId, applicantId, classId],
+    [
+      presidentId,
+      memberId,
+      applicantId,
+      classId,
+      crossPresidentId,
+      outsiderClassId,
+      accessibilityPresidentId,
+      accessibilityMemberId,
+    ],
   );
 
   const society = await pool.query<{ id: number }>(
@@ -492,6 +604,34 @@ async function seedSocietyHardeningData(pool: Pool) {
     throw new Error('Society hardening E2E society could not be created.');
   }
 
+  const accessibilitySociety = await pool.query<{ id: number }>(
+    `
+      INSERT INTO societies (
+        name,
+        description,
+        department_id,
+        president_id,
+        convenor_id,
+        server_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `,
+    [
+      'E2E Accessibility Society',
+      'Independent society fixture for keyboard and accessibility tests.',
+      departmentId,
+      accessibilityPresidentId,
+      accessibilityConvenorId,
+      accessibilitySocietyServerId,
+    ],
+  );
+  const accessibilitySocietyId = accessibilitySociety.rows[0]?.id;
+
+  if (!accessibilitySocietyId) {
+    throw new Error('Society accessibility E2E society could not be created.');
+  }
+
   await pool.query(
     `
       INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
@@ -505,12 +645,38 @@ async function seedSocietyHardeningData(pool: Pool) {
 
   await pool.query(
     `
+      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
+      VALUES
+        ($1, $4, true),
+        ($2, $4, true),
+        ($3, $4, false)
+    `,
+    [
+      accessibilityPresidentId,
+      accessibilityConvenorId,
+      accessibilityMemberId,
+      accessibilitySocietyServerId,
+    ],
+  );
+
+  await pool.query(
+    `
       INSERT INTO channels (server_id, name, description, type, is_auto_created, created_by, created_at)
       VALUES
         ($1, 'announcements', 'Society announcements.', 'announcement'::channel_type, true, $2, NOW()),
         ($1, 'general', 'Society coordination.', 'general'::channel_type, true, $3, NOW())
     `,
     [societyServerId, convenorId, presidentId],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO channels (server_id, name, description, type, is_auto_created, created_by, created_at)
+      VALUES
+        ($1, 'announcements', 'Accessibility society announcements.', 'announcement'::channel_type, true, $2, NOW()),
+        ($1, 'general', 'Accessibility society coordination.', 'general'::channel_type, true, $3, NOW())
+    `,
+    [accessibilitySocietyServerId, accessibilityConvenorId, accessibilityPresidentId],
   );
 }
 
@@ -1053,6 +1219,13 @@ async function seedAcademicWorkflowData(pool: Pool) {
     serverName: 'Academic Semester Progression Class',
     currentSemester: 3,
     section: 'A',
+  });
+  await createAcademicClass(pool, {
+    programId,
+    createdBy: hodId,
+    serverName: 'Academic Accessibility Class',
+    currentSemester: 3,
+    section: 'B',
   });
   const graduationClass = await createAcademicClass(pool, {
     programId,

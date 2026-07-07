@@ -344,7 +344,7 @@ describe("Society management", () => {
       expect(res.body.success).toBe(false);
     });
 
-    it("should return 403 when president belongs to another department", async () => {
+    it("should allow a cross-department student to serve as president", async () => {
       const admin = await createUser({
         email: `admin-soc-crosspres-${uid()}@test.com`,
         password: "Pass@1234",
@@ -352,9 +352,7 @@ describe("Society management", () => {
       });
       const dept1 = await createDepartment({ code: `CS-CP1-${uid()}` });
       const dept2 = await createDepartment({ code: `CS-CP2-${uid()}` });
-      const program1 = await createProgram(dept1.id);
       const program2 = await createProgram(dept2.id);
-      const cls1 = await createClass(program1.id, { creatorId: admin.id });
       const cls2 = await createClass(program2.id, { creatorId: admin.id });
       const studentFromOtherDept = await createStudentWithInfo(cls2.id, dept2.id, {
         email: `pres-cross-${uid()}@test.com`,
@@ -374,11 +372,13 @@ describe("Society management", () => {
           convenorPublicId: convenor.publicId,
         });
 
-      expect(res.status).toBe(403);
-      expect(res.body.success).toBe(false);
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.department.id).toBe(dept1.id);
+      expect(res.body.data.president.user.publicId).toBe(studentFromOtherDept.publicId);
     });
 
-    it("should return 403 when convenor belongs to another department", async () => {
+    it("should allow a cross-department teacher to serve as convenor", async () => {
       const admin = await createUser({
         email: `admin-soc-crossconv-${uid()}@test.com`,
         password: "Pass@1234",
@@ -406,8 +406,241 @@ describe("Society management", () => {
           convenorPublicId: teacherFromOtherDept.publicId,
         });
 
-      expect(res.status).toBe(403);
-      expect(res.body.success).toBe(false);
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.department.id).toBe(dept1.id);
+      expect(res.body.data.convenor.user.publicId).toBe(teacherFromOtherDept.publicId);
+    });
+
+    it("should reject duplicate active president and convenor leadership", async () => {
+      const admin = await createUser({
+        email: `admin-soc-duplead-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-DUPLEAD-${uid()}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-duplead-${uid()}@test.com`,
+      });
+      const otherPresident = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-duplead-other-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-duplead-${uid()}@test.com`,
+      });
+      const otherConvenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-duplead-other-${uid()}@test.com`,
+      });
+      await createSociety(dept.id, president.id, convenor.id, {
+        name: `Duplicate Active Leadership ${uid()}`,
+        creatorId: admin.id,
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      const presidentRes = await request(app)
+        .post("/api/societies")
+        .set("Cookie", cookies)
+        .send({
+          name: `Duplicate Active President ${uid()}`,
+          departmentId: dept.id,
+          presidentPublicId: president.publicId,
+          convenorPublicId: otherConvenor.publicId,
+        });
+      const convenorRes = await request(app)
+        .post("/api/societies")
+        .set("Cookie", cookies)
+        .send({
+          name: `Duplicate Active Convenor ${uid()}`,
+          departmentId: dept.id,
+          presidentPublicId: otherPresident.publicId,
+          convenorPublicId: convenor.publicId,
+        });
+
+      expect(presidentRes.status).toBe(409);
+      expect(presidentRes.body.error.code).toBe("CONFLICT");
+      expect(presidentRes.body.error.details).toEqual(
+        expect.arrayContaining([expect.objectContaining({ field: "presidentPublicId", role: "president" })])
+      );
+      expect(convenorRes.status).toBe(409);
+      expect(convenorRes.body.error.code).toBe("CONFLICT");
+      expect(convenorRes.body.error.details).toEqual(
+        expect.arrayContaining([expect.objectContaining({ field: "convenorPublicId", role: "convenor" })])
+      );
+    });
+
+    it("should allow suspended and deleted society leaders to be reused", async () => {
+      const admin = await createUser({
+        email: `admin-soc-reuse-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-REUSE-${uid()}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-reuse-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-reuse-${uid()}@test.com`,
+      });
+      const suspended = await createSociety(dept.id, president.id, convenor.id, {
+        name: `Suspended Reuse ${uid()}`,
+        creatorId: admin.id,
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+
+      await request(app)
+        .patch(`/api/societies/${suspended.society.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED" })
+        .expect(200);
+      await request(app)
+        .post("/api/societies")
+        .set("Cookie", cookies)
+        .send({
+          name: `Reuse After Suspension ${uid()}`,
+          departmentId: dept.id,
+          presidentPublicId: president.publicId,
+          convenorPublicId: convenor.publicId,
+        })
+        .expect(201);
+
+      const deletedPresident = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-del-reuse-${uid()}@test.com`,
+      });
+      const deletedConvenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-del-reuse-${uid()}@test.com`,
+      });
+      const deleted = await createSociety(dept.id, deletedPresident.id, deletedConvenor.id, {
+        name: `Deleted Reuse ${uid()}`,
+        creatorId: admin.id,
+      });
+      await request(app)
+        .delete(`/api/societies/${deleted.society.publicId}`)
+        .set("Cookie", cookies)
+        .expect(200);
+      await request(app)
+        .post("/api/societies")
+        .set("Cookie", cookies)
+        .send({
+          name: `Reuse After Delete ${uid()}`,
+          departmentId: dept.id,
+          presidentPublicId: deletedPresident.publicId,
+          convenorPublicId: deletedConvenor.publicId,
+        })
+        .expect(201);
+    });
+
+    it("should report and block activation when suspended leadership is active elsewhere", async () => {
+      const admin = await createUser({
+        email: `admin-soc-activate-conflict-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-ACTCON-${uid()}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-actcon-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-actcon-${uid()}@test.com`,
+      });
+      const suspended = await createSociety(dept.id, president.id, convenor.id, {
+        name: `Activation Conflict Suspended ${uid()}`,
+        creatorId: admin.id,
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+      await request(app)
+        .patch(`/api/societies/${suspended.society.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "SUSPENDED" })
+        .expect(200);
+      await request(app)
+        .post("/api/societies")
+        .set("Cookie", cookies)
+        .send({
+          name: `Activation Conflict Active ${uid()}`,
+          departmentId: dept.id,
+          presidentPublicId: president.publicId,
+          convenorPublicId: convenor.publicId,
+        })
+        .expect(201);
+
+      const preflight = await request(app)
+        .get(`/api/societies/${suspended.society.publicId}/leadership-conflicts`)
+        .query({ action: "activate" })
+        .set("Cookie", cookies);
+      const activate = await request(app)
+        .patch(`/api/societies/${suspended.society.publicId}/status`)
+        .set("Cookie", cookies)
+        .send({ status: "ACTIVE" });
+
+      expect(preflight.status).toBe(200);
+      expect(preflight.body.data.hasConflicts).toBe(true);
+      expect(preflight.body.data.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ role: "president", userPublicId: president.publicId }),
+          expect.objectContaining({ role: "convenor", userPublicId: convenor.publicId }),
+        ])
+      );
+      expect(activate.status).toBe(409);
+      expect(activate.body.error.details).toEqual(
+        expect.arrayContaining([expect.objectContaining({ role: "president" })])
+      );
+    });
+
+    it("should block restoring an active deleted society when leadership is active elsewhere", async () => {
+      const admin = await createUser({
+        email: `admin-soc-restore-conflict-${uid()}@test.com`,
+        password: "Pass@1234",
+        userType: "ADMIN",
+      });
+      const dept = await createDepartment({ code: `CS-RESCON-${uid()}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id, { creatorId: admin.id });
+      const president = await createStudentWithInfo(cls.id, dept.id, {
+        email: `pres-rescon-${uid()}@test.com`,
+      });
+      const convenor = await createTeacherWithInfo(dept.id, {
+        email: `conv-rescon-${uid()}@test.com`,
+      });
+      const deleted = await createSociety(dept.id, president.id, convenor.id, {
+        name: `Restore Conflict Deleted ${uid()}`,
+        creatorId: admin.id,
+      });
+      const cookies = await loginAs(admin.email, "Pass@1234");
+      await request(app)
+        .delete(`/api/societies/${deleted.society.publicId}`)
+        .set("Cookie", cookies)
+        .expect(200);
+      await request(app)
+        .post("/api/societies")
+        .set("Cookie", cookies)
+        .send({
+          name: `Restore Conflict Active ${uid()}`,
+          departmentId: dept.id,
+          presidentPublicId: president.publicId,
+          convenorPublicId: convenor.publicId,
+        })
+        .expect(201);
+
+      const preflight = await request(app)
+        .get(`/api/societies/${deleted.society.publicId}/leadership-conflicts`)
+        .query({ action: "restore" })
+        .set("Cookie", cookies);
+      const restore = await request(app)
+        .patch(`/api/societies/${deleted.society.publicId}/restore`)
+        .set("Cookie", cookies);
+
+      expect(preflight.status).toBe(200);
+      expect(preflight.body.data.hasConflicts).toBe(true);
+      expect(restore.status).toBe(409);
+      expect(restore.body.error.details).toEqual(
+        expect.arrayContaining([expect.objectContaining({ role: "convenor" })])
+      );
     });
 
     it("should return 409 for duplicate society name", async () => {
@@ -1977,7 +2210,7 @@ describe("Society management", () => {
   });
 
   describe("GET /api/societies/leadership-candidates", () => {
-    it("should return same-department president and convenor candidates for an authorized HOD", async () => {
+    it("should return university-wide available president and convenor candidates for an authorized HOD", async () => {
       const admin = await createUser({
         email: `admin-soc-leadcand-${uid()}@test.com`,
         password: "Pass@1234",
@@ -2003,6 +2236,13 @@ describe("Society management", () => {
       const departmentTeacher = await createTeacherWithInfo(dept.id, {
         email: `teacher-leadcand-${uid()}@test.com`,
       });
+      const crossDepartmentTeacher = await createTeacherWithInfo(otherDept.id, {
+        email: `cross-teacher-leadcand-${uid()}@test.com`,
+      });
+      await createSociety(dept.id, departmentStudent.id, departmentTeacher.id, {
+        name: `Existing Leadership Candidate Filter ${uid()}`,
+        creatorId: admin.id,
+      });
 
       const cookies = await loginAs(hod.email, "Pass@1234");
       const presidentRes = await request(app)
@@ -2016,13 +2256,16 @@ describe("Society management", () => {
 
       expect(presidentRes.status).toBe(200);
       expect(presidentRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).toContain(
-        departmentStudent.publicId
+        crossDepartmentStudent.publicId
       );
       expect(presidentRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).not.toContain(
-        crossDepartmentStudent.publicId
+        departmentStudent.publicId
       );
       expect(convenorRes.status).toBe(200);
       expect(convenorRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).toContain(
+        crossDepartmentTeacher.publicId
+      );
+      expect(convenorRes.body.data.map((candidate: { publicId: string }) => candidate.publicId)).not.toContain(
         departmentTeacher.publicId
       );
     });

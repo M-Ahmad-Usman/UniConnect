@@ -16,6 +16,7 @@ import {
   removeMemberSchema,
   listMembersSchema,
   listMemberCandidatesSchema,
+  leadershipConflictsSchema,
   listLeadershipCandidatesSchema,
 } from "./society.schema.js";
 import {
@@ -33,6 +34,7 @@ import {
   handleListMemberCandidates,
   handleListLeadershipCandidates,
   handleGetSocietyDeletionImpact,
+  handleGetSocietyLeadershipConflicts,
   handleUpdateSocietyStatus,
   handleDeleteSociety,
   handleRestoreSociety,
@@ -70,6 +72,13 @@ router.get(
   authenticate,
   validate(societyPublicIdParamSchema),
   handleGetSocietyDeletionImpact
+);
+
+router.get(
+  "/:publicId/leadership-conflicts",
+  authenticate,
+  validate(leadershipConflictsSchema),
+  handleGetSocietyLeadershipConflicts
 );
 
 router.patch(

@@ -210,7 +210,8 @@
 **Society access hardening notes:**
 
 - Ordinary society membership is university-wide: any active student can request to join and can be manually added by authorized society leadership/admins.
-- Society president and convenor eligibility remains department-scoped: presidents must be active students in the society department, and convenors must be active teachers in the society department.
+- Society president and convenor eligibility is university-wide: presidents must be active students with `StudentInfo`, and convenors must be active teachers with `TeacherInfo`.
+- A user can hold a given society leadership type in at most one active, non-deleted society. Suspended and deleted societies retain historical leadership but do not reserve those leaders; activation/restoration back to active is blocked when saved leadership now conflicts.
 - Society member lists are visible only to existing society members, society president/convenor, and admins. Department HODs can create societies and change leadership in their department, but HOD status alone does not grant member-list or join-request visibility.
 
 ---

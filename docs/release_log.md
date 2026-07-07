@@ -57,6 +57,36 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-07-08 - Phase 3 Society Leadership Rules
+- Society President and Convenor candidate searches are now university-wide,
+  while Admin/HOD authority remains scoped to the society's owning department.
+- Replaced global `Society.presidentId` and `Society.convenorId` uniqueness with
+  SQL-only partial unique indexes for active, non-deleted societies. Suspended
+  and deleted societies retain leadership history without reserving leaders.
+- Society create/update/activate/restore now rejects active leadership conflicts
+  with typed 409 `CONFLICT` details. Added lifecycle preflight endpoint
+  `/api/societies/:publicId/leadership-conflicts?action=activate|restore`.
+- Frontend society dialogs now describe university-wide leadership search and
+  activation/restoration modals surface preflight conflict details.
+- Verification so far:
+  - `server`: `npx prisma validate`
+  - `server`: test DB reset applied migrations through
+    `20260708000000_phase3_society_leadership_rules`
+  - `server`: `npx prisma generate`
+  - `server`: focused society integration/lifecycle slice, 68/68
+  - `server`: `npm run build`
+  - `server`: test TypeScript compile
+  - `server`: full Jest integration suite, 25 suites and 539/539 tests
+  - `client`: `npm run type-check`
+  - `client`: `npm run lint`
+  - `client`: focused society API/schema/utility Vitest suites, 8/8
+  - `client`: full Vitest suite, 26 files and 147/147 tests
+  - `client`: `npm run build`
+  - `client`: focused Playwright rerun for auth force-change, server members,
+    and accessibility specs, 8/8
+  - `client`: focused Playwright rerun for society and accessibility specs, 7/7
+  - `client`: full Playwright suite, 39/39
+
 ### 2026-07-07 - Phase 2 Enrollment Responsibility Split
 - Added a dedicated `/api/enrollment` backend module and `/enrollment` frontend
   workspace for class creation, student creation, student-only CSV import,

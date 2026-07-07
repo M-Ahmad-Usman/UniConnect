@@ -13,6 +13,7 @@ export const academicShellFixtures = {
   transferTargetServerName: 'Academic Transfer Target Class',
   replacementServerName: 'Academic Teacher Replacement Class',
   progressionServerName: 'Academic Semester Progression Class',
+  accessibilityServerName: 'Academic Accessibility Class',
   graduationServerName: 'Academic Graduation Class',
 } as const;
 

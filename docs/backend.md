@@ -77,6 +77,11 @@ are now captured here and in `docs/security.md`:
   `enrollment_officer`; HOD keeps academic rights and read-only roster
   visibility but does not create classes, create/import students, or transfer
   students.
+- Added Phase 3 society leadership rules: society president/convenor candidates
+  are university-wide, but Admin/HOD authority remains scoped to the society's
+  owning department. SQL-only partial unique indexes reserve each leader only
+  for active, non-deleted societies, and lifecycle activation/restoration checks
+  return typed 409 conflict details when saved leadership is active elsewhere.
 - Staff-role migrations are split so PostgreSQL enum values are committed before
   use. SQL-only exclusion constraints prevent overlapping staff-role periods and
   overlapping global Admin assignments.

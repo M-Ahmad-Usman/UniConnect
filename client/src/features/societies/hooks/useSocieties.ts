@@ -5,6 +5,7 @@ import type {
   CreateSocietyRequest,
   SocietyCandidateParams,
   SocietyLeadershipCandidateParams,
+  SocietyLeadershipConflictAction,
   SocietyLifecycleReasonRequest,
   SocietyListParams,
   SocietyRequestListParams,
@@ -195,6 +196,21 @@ export function useSocietyDeletionImpact(societyPublicId: string | null, enabled
       : ['societies', 'deletion-impact', 'idle'],
     queryFn: () => societiesApi.getDeletionImpact(societyPublicId!),
     enabled: enabled && societyPublicId !== null,
+  });
+}
+
+export function useSocietyLeadershipConflicts(
+  societyPublicId: string | null,
+  action: SocietyLeadershipConflictAction | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey:
+      societyPublicId && action
+        ? queryKeys.societies.leadershipConflicts(societyPublicId, action)
+        : ['societies', 'leadership-conflicts', 'idle'],
+    queryFn: () => societiesApi.getLeadershipConflicts(societyPublicId!, action!),
+    enabled: enabled && societyPublicId !== null && action !== null,
   });
 }
 

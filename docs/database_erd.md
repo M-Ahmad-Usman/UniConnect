@@ -202,9 +202,11 @@ SOCIETY.department_id > DEPARTMENT.id
 
 // One Society can have only one president which must be a student
 SOCIETY.president_id - STUDENT_INFO.student_id
+// SQL-only partial unique index: one active, non-deleted society per president
 
 // One Society can have only one convenor which must be a teacher
 SOCIETY.convenor_id - TEACHER_INFO.teacher_id
+// SQL-only partial unique index: one active, non-deleted society per convenor
 
 // Society must have only one server
 SOCIETY.server_id - SERVER.id

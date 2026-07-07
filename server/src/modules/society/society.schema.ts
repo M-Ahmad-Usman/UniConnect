@@ -168,6 +168,15 @@ export const listLeadershipCandidatesSchema = {
   }),
 };
 
+export const leadershipConflictsSchema = {
+  params: societyPublicIdParamSchema.params,
+  query: z.object({
+    action: z.enum(["activate", "restore"], {
+      error: "Action must be either activate or restore",
+    }),
+  }),
+};
+
 export const updateSocietyStatusSchema = {
   params: societyPublicIdParamSchema.params,
   body: z.object({

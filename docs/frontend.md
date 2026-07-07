@@ -48,6 +48,9 @@ society management, and role management.
   deferred.
 - Society leadership changes stay in society workflows; generic role management
   handles HOD, Program Director, CR, and moderator roles.
+- Society leader search is university-wide while retaining the selected
+  department as the managed society scope. Activation/restoration dialogs use
+  leadership-conflict preflight data and still rely on backend 409 enforcement.
 - Post feeds use paginated APIs with load-more/infinite-style interaction.
 - Server, channel, and post navigation uses UUIDv7 public IDs end to end.
 - Archived channels appear in a separate collapsed history section. Their feeds

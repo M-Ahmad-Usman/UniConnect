@@ -7,6 +7,7 @@ export const serverSocietyFixtures = {
   createdChannelName: 'studio-updates',
   editedChannelName: 'studio-roadmap',
   societyName: 'E2E Robotics Society',
+  accessibilitySocietyName: 'E2E Accessibility Society',
 } as const;
 
 export async function findServerPublicIdByName(name: string) {
@@ -46,6 +47,80 @@ export async function findSocietyByName(name: string) {
 
     const society = result.rows[0];
     return society ? { id: society.id, publicId: society.public_id } : null;
+  });
+}
+
+export async function findUserPublicIdByEmail(email: string) {
+  return withDb(async (pool) => {
+    const result = await pool.query<{ public_id: string }>(
+      'SELECT public_id FROM users WHERE email = $1 LIMIT 1',
+      [email],
+    );
+
+    return result.rows[0]?.public_id ?? null;
+  });
+}
+
+export async function prepareSuspendedSocietyLeadershipConflict(societyId: number) {
+  await withDb(async (pool) => {
+    const society = await pool.query<{
+      department_id: number;
+      president_id: number;
+      convenor_id: number;
+    }>(
+      `
+        UPDATE societies
+        SET status = 'suspended'::society_status
+        WHERE id = $1
+        RETURNING department_id, president_id, convenor_id
+      `,
+      [societyId],
+    );
+    const row = society.rows[0];
+
+    if (!row) {
+      throw new Error('Society fixture not found for leadership conflict setup.');
+    }
+
+    const server = await pool.query<{ id: number }>(
+      `
+        INSERT INTO servers (name, description, type, created_by, created_at)
+        VALUES ($1, $2, 'Society'::server_type, $3, NOW())
+        RETURNING id
+      `,
+      [
+        'E2E Active Leadership Conflict Society',
+        'Active society used to block reactivation in Playwright.',
+        row.convenor_id,
+      ],
+    );
+    const serverId = server.rows[0]?.id;
+
+    if (!serverId) {
+      throw new Error('Conflict society server could not be created.');
+    }
+
+    await pool.query(
+      `
+        INSERT INTO societies (
+          name,
+          description,
+          department_id,
+          president_id,
+          convenor_id,
+          server_id
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+      [
+        'E2E Active Leadership Conflict Society',
+        'Active society used to block reactivation in Playwright.',
+        row.department_id,
+        row.president_id,
+        row.convenor_id,
+        serverId,
+      ],
+    );
   });
 }
 

@@ -25,7 +25,7 @@ Canonical error codes for frontend handling and UX mapping.
 | `FORBIDDEN` | 403 | Authorization/service rules | Authenticated but not allowed | Show permission message / disable action |
 | `CSRF_INVALID` | 403 | CSRF middleware | Missing/invalid CSRF token or untrusted Origin/Referer on unsafe request | Refetch CSRF token once, retry, then show request failure |
 | `NOT_FOUND` | 404 | Service/domain errors | Resource not found or inaccessible by scope | Show not-found state |
-| `CONFLICT` | 409 | Domain checks/Prisma unique mapping | Duplicate or conflicting state | Show conflict UX (duplicate, already exists) |
+| `CONFLICT` | 409 | Domain checks/Prisma unique mapping | Duplicate or conflicting state, including active society leadership conflicts | Show conflict UX; use `details` when present |
 | `RATE_LIMIT_EXCEEDED` | 429 | Rate limiter middleware | Too many requests in current window | Backoff and retry later |
 | `REQUEST_TIMEOUT` | 408 | Request timeout middleware | Request exceeded server timeout | Retry if safe |
 | `INTERNAL_ERROR` | 500 | Global error handler | Unexpected server error | Show generic error and retry option |

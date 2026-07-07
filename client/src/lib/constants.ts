@@ -191,6 +191,8 @@ export const queryKeys = {
       params
         ? (['societies', 'leadership-candidates', params] as const)
         : (['societies', 'leadership-candidates'] as const),
+    leadershipConflicts: (societyPublicId: string, action: string) =>
+      ['societies', societyPublicId, 'leadership-conflicts', action] as const,
   },
   admin: {
     stats: () => ['admin', 'stats'] as const,
