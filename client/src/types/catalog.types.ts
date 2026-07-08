@@ -329,6 +329,9 @@ export interface ClassCourseAssignment {
   courseId: number;
   teacherPublicId: string;
   classPublicId: string;
+  channelPublicId: string;
+  assignedAt: string;
+  assignedByPublicId: string | null;
   course: {
     id: number;
     title: string;

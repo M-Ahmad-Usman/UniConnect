@@ -318,6 +318,9 @@ TEACHES {
   teacher_id INTEGER PK FK
   course_id INTEGER PK FK
   class_id INTEGER PK FK
+  channel_id INTEGER FK // NOT NULL, direct course-channel access target
+  assigned_by INTEGER FK // nullable for historical backfill
+  assigned_at TIMESTAMPTZ // NOT NULL
   // UNIQUE (class_id, course_id) ensures one active teacher per class-course.
 }
 
@@ -325,6 +328,8 @@ TEACHES {
 TEACHES.teacher_id > TEACHER_INFO.teacher_id
 TEACHES.course_id > COURSE.id
 TEACHES.class_id > CLASS.id
+TEACHES.channel_id > CHANNEL.id
+TEACHES.assigned_by > USER.id
 
 POST {
   id SERIAL PK

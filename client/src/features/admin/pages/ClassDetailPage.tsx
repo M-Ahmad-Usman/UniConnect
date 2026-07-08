@@ -155,10 +155,10 @@ export function ClassDetailPage() {
   async function handleAdvance() {
     if (!canProgress) return;
 
-    const teacherAssignments: TeacherAssignmentInput[] = nextCurriculum.map((entry) => ({
-      courseId: entry.course.id,
-      teacherPublicId: teacherByCourse[entry.course.id]!,
-    }));
+    const teacherAssignments: TeacherAssignmentInput[] = nextCurriculum.flatMap((entry) => {
+      const teacherPublicId = teacherByCourse[entry.course.id];
+      return teacherPublicId ? [{ courseId: entry.course.id, teacherPublicId }] : [];
+    });
     await advanceSemester.mutateAsync(teacherAssignments);
     setProgressionOpen(false);
     setTeacherByCourse({});
@@ -168,11 +168,10 @@ export function ClassDetailPage() {
     canAdvanceSemester &&
     !nextCurriculumQuery.isLoading &&
     !nextCurriculumQuery.isError &&
-    (nextCurriculum.length === 0 ||
-      nextCurriculum.every((entry) => {
-        const teacherPublicId = teacherByCourse[entry.course.id];
-        return typeof teacherPublicId === 'string' && validTeacherPublicIds.has(teacherPublicId);
-      }));
+    nextCurriculum.every((entry) => {
+      const teacherPublicId = teacherByCourse[entry.course.id];
+      return !teacherPublicId || validTeacherPublicIds.has(teacherPublicId);
+    });
 
   return (
     <section className="space-y-5">
@@ -352,7 +351,7 @@ export function ClassDetailPage() {
         open={removingCourseId !== null}
         onOpenChange={(open) => !open && setRemovingCourseId(null)}
         title="Remove course assignment"
-        description="This removes the teacher assignment and archives the auto-created course channel."
+        description="This removes the teacher assignment and locks the course channel until another teacher is assigned."
         confirmLabel="Remove"
         variant="destructive"
         onConfirm={async () => {

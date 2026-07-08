@@ -129,8 +129,8 @@
 | FR-30 | Channel-level moderators can post only in assigned channels.                                          |
 | FR-31 | HOD/Program Director can assign courses to a class for the current semester                           |
 | FR-32 | A teacher must be assigned to each course when assigning to a class                                   |
-| FR-33 | Course channels are auto-created in the class server upon course assignment                           |
-| FR-34 | Assigned teacher automatically gets posting rights to the course channel in class server              |
+| FR-33 | Course channels are auto-created in the class server and remain locked until a teacher is assigned    |
+| FR-34 | Assigned teacher gets direct read/post access to the linked course channel without class membership   |
 
 #### 4.4 Posting & Announcements
 
@@ -153,8 +153,8 @@
 | FR-44 | New posts in subscribed channels trigger notifications that identify both the server and channel |
 | FR-45 | User can mark notifications as read                                                              |
 | FR-46 | Urgent posts show prominent visual indicator                                                     |
-| FR-47 | User are automatically subscribed for notifications in the servers in which they are member of.  |
-| FR-48 | Users can unsubscribe from notifications for whole server or individual channels.                |
+| FR-47 | Users are automatically subscribed for notifications in the servers in which they are members. Course teachers receive course-channel notifications through direct teaching access. |
+| FR-48 | Users can unsubscribe from notifications for whole server or individual channels. Course-only teachers can manage channel preferences for assigned course channels. |
 
 #### 4.6 Search & Filter
 
@@ -222,8 +222,8 @@
 | ----- | ------------------------------------------------------------------------------------- |
 | FR-70 | Admin/HOD can trigger semester progression for a class                                |
 | FR-71 | On semester progression, existing course channels are archived (read-only)            |
-| FR-72 | New course channels are auto-created based on curriculum or manual assignment         |
-| FR-73 | TEACHES assignments from previous semester are cleared; new teachers must be assigned |
+| FR-72 | New course channels are auto-created based on curriculum and remain locked when unassigned |
+| FR-73 | TEACHES assignments from previous semester are cleared; target-semester teachers may be assigned partially and later |
 
 #### 4.11 Admin Dashboard
 

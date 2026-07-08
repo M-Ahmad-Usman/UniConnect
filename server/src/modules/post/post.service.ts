@@ -18,6 +18,7 @@ import {
 } from "../../shared/utils/pagination.js";
 import { MAX_ATTACHMENTS } from "../../shared/constants.js";
 import { canPostInChannel } from "../channel/channel.service.js";
+import { assertCanReadChannel } from "../../shared/access/channel-access.js";
 import { emitPostNotificationsDeleted } from "../notification/notification.service.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import { appEvents, APP_EVENTS } from "../../shared/events.js";
@@ -256,20 +257,17 @@ async function lockWritablePostOrThrow(
   return findWritablePostOrThrow(postId, client);
 }
 
-async function assertMembershipOrAdmin(
-  serverId: number,
+async function assertPostChannelAccess(
+  channelId: number,
   caller: CallerInfo,
   client: PrismaTransaction = prisma,
 ) {
-  if (caller.userType === "ADMIN") return;
-
-  const membership = await client.serverMembership.findUnique({
-    where: { userId_serverId: { userId: caller.id, serverId } },
-  });
-
-  if (!membership) {
-    throw new ForbiddenError("You are not a member of this server");
-  }
+  await assertCanReadChannel(
+    { id: caller.id, userType: caller.userType },
+    channelId,
+    { userRoles: caller.userRoles, allowManagementRead: true },
+    client,
+  );
 }
 
 function toPublicUser<T extends { id: number }>(user: T): Omit<T, "id"> {
@@ -470,7 +468,7 @@ async function uploadAttachments(
       if (post.authorId !== caller.id) {
         throw new ForbiddenError("Only the author can add attachments to this post");
       }
-      await assertMembershipOrAdmin(serverId, caller, tx);
+      await assertPostChannelAccess(channelId, caller, tx);
       if (enforceLimit) {
         const existingCount = await tx.postAttachment.count({ where: { postId } });
         if (existingCount + files.length > MAX_ATTACHMENTS) {
@@ -623,7 +621,7 @@ export async function listPosts(
 ) {
   const channel = await findReadableChannelForPostsOrThrow(channelId);
 
-  await assertMembershipOrAdmin(channel.serverId, caller);
+  await assertPostChannelAccess(channelId, caller);
 
   const { page, limit, skip, take } = parsePagination(query);
 
@@ -712,7 +710,7 @@ export async function getPost(postId: number, caller: CallerInfo) {
     throw new NotFoundError("Post not found");
   }
 
-  await assertMembershipOrAdmin(post.channel.serverId, caller);
+  await assertPostChannelAccess(post.channelId, caller);
 
   const badgeMap = await resolveAuthorBadges(
     post.channel.serverId,
@@ -763,7 +761,7 @@ export async function updatePost(
     if (currentPost.authorId !== caller.id) {
       throw new ForbiddenError("Only the author can edit this post");
     }
-    await assertMembershipOrAdmin(post.channel.serverId, caller, tx);
+    await assertPostChannelAccess(post.channelId, caller, tx);
     const currentElapsed = Date.now() - currentPost.createdAt.getTime();
     if (currentElapsed > editWindowMs) {
       throw new ForbiddenError("Edit window has expired", ApiErrorCode.EDIT_WINDOW_EXPIRED);
@@ -819,7 +817,7 @@ export async function deletePost(postId: number, caller: CallerInfo) {
     if (currentPost.authorId !== caller.id && caller.userType !== "ADMIN") {
       throw new ForbiddenError("You do not have permission to delete this post");
     }
-    await assertMembershipOrAdmin(post.channel.serverId, caller, tx);
+    await assertPostChannelAccess(post.channelId, caller, tx);
     await tx.post.update({
       where: { id: postId },
       data: {
@@ -914,7 +912,7 @@ export async function addAttachments(
 
   // Reject former members before invoking the external upload provider. The
   // transaction below repeats this check to cover concurrent membership changes.
-  await assertMembershipOrAdmin(post.channel.serverId, caller);
+  await assertPostChannelAccess(post.channelId, caller);
 
   // Check total attachment count
   const existingCount = await prisma.postAttachment.count({

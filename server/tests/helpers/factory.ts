@@ -182,15 +182,16 @@ async function assignExclusiveAdminRole(userId: number): Promise<void> {
   });
 
   await prisma.$transaction(async (tx) => {
-    await tx.staffRoleAssignment.updateMany({
-      where: {
-        revokedAt: null,
-        scopeType: "GLOBAL",
-        departmentId: null,
-        roleId: role.id,
-      },
-      data: { revokedAt: new Date(), revokedBy: null },
-    });
+    await tx.$executeRaw`
+      UPDATE "staff_role_assignments"
+      SET
+        "revoked_at" = GREATEST(CURRENT_TIMESTAMP, "assigned_at"),
+        "revoked_by" = NULL
+      WHERE "revoked_at" IS NULL
+        AND "scope_type" = 'global'::"platform_role_scope_type"
+        AND "department_id" IS NULL
+        AND "role_id" = ${role.id}
+    `;
 
     await tx.staffRoleAssignment.create({
       data: {
@@ -751,8 +752,52 @@ export async function createTeachesRecord(
   courseId: number,
   classId: number
 ) {
+  const [klass, course] = await Promise.all([
+    prisma.class.findUniqueOrThrow({
+      where: { id: classId },
+      select: { serverId: true },
+    }),
+    prisma.course.findUniqueOrThrow({
+      where: { id: courseId },
+      select: { code: true },
+    }),
+  ]);
+  const existingChannel = await prisma.channel.findFirst({
+    where: {
+      serverId: klass.serverId,
+      courseId,
+      type: "COURSE",
+      isDeleted: false,
+    },
+    select: { id: true },
+  });
+  const channel = existingChannel
+    ? await prisma.channel.update({
+        where: { id: existingChannel.id },
+        data: {
+          isArchived: false,
+          archivedAt: null,
+          archivedBy: null,
+          isLocked: false,
+          lockedAt: null,
+          lockedBy: null,
+        },
+        select: { id: true },
+      })
+    : await prisma.channel.create({
+        data: {
+          serverId: klass.serverId,
+          name: course.code,
+          type: "COURSE",
+          courseId,
+          isAutoCreated: true,
+          isLocked: false,
+        },
+        select: { id: true },
+      });
+
   return prisma.teaches.create({
-    data: { teacherId, courseId, classId },
+    data: { teacherId, courseId, classId, channelId: channel.id },
   });
 }
 

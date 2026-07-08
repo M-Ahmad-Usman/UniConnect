@@ -295,8 +295,8 @@ available.
   - Auth: Admin only. Enrollment Officer class creation uses
     `/api/enrollment/classes`.
   - Requires a complete curriculum for all semesters of the class admission
-    year. Creates the class server, default channels, and current-semester
-    course channels from the curriculum.
+    year. Creates the class server, default channels, and locked
+    current-semester course channels from the curriculum.
 - `GET /`
   - Query: `page, limit, programId?, departmentId?, semester?, section?, status?`
   - `status` accepts `ACTIVE`, `GRADUATED`, or `ALL`; default is `ACTIVE`.
@@ -313,6 +313,8 @@ available.
 - `POST /:publicId/courses`
   - Body: `{ courseId, teacherPublicId }`
   - Course must be in the class current-semester curriculum; teacher must be active.
+  - Creates or reuses the class course channel, links it through `TEACHES.channelId`,
+    unlocks it, and does not create class-server membership.
 - `GET /:publicId/courses`
 - `GET /:publicId/students`
   - Auth: Admin or own-department HOD for read-only roster visibility. Enrollment
@@ -328,12 +330,15 @@ available.
   - Query: `page, limit, search?`
 - `PATCH /:publicId/courses/:courseId/teacher`
   - Body: `{ teacherPublicId }`
+  - Updates assignment audit metadata and keeps access tied to the course channel.
 - `DELETE /:publicId/courses/:courseId`
 - `POST /:publicId/semester-progression`
   - Body: `{ teacherAssignments: [{ courseId, teacherPublicId }] }`
-  - Requires teacher assignments for every course in the target-semester
-    curriculum, rejects duplicate/extra assignments, archives previous active
-    course channels, and creates or reactivates target-semester course channels.
+  - Accepts empty or partial target-semester teacher assignments, rejects
+    duplicate/extra assignments, archives previous active course channels, and
+    creates or reactivates target-semester course channels.
+  - Target courses without teachers remain locked; assigned courses are linked
+    through `TEACHES.channelId` and unlocked.
 - `POST /:publicId/graduation`
   - Final-semester active classes only; locks class channels and keeps history visible.
 
@@ -436,6 +441,7 @@ writes, including lifecycle-scoped server/channel/post/moderator mutations.
   - Returns paginated active users valid for the selected role/scope.
   - Moderator candidates are active server members and exclude users already assigned for the same moderator scope.
   - Moderator candidates exclude `STAFF` users (only `TEACHER` and `STUDENT` are eligible).
+  - Course-only teaching access does not make a user eligible for server/channel moderator roles.
 - `GET /revokable`
   - Query: `role, scopeId?, classPublicId?, serverPublicId?, channelPublicId?, page, limit, search?`
   - Returns only caller-revokable assignments with a server-provided `revokePayload`.
@@ -508,6 +514,8 @@ Academic role writes use their owning modules:
   - Multipart field for attachments: `attachments`
   - General channels accept posts from any active server member unless locked.
   - New-post notification messages include both server and channel names.
+  - Course-channel new-post notifications include subscribed direct teachers linked
+    through `TEACHES.channelId`, even when they are not class-server members.
 - `GET /:publicId/posts`
   - Query: `page, limit, search?, priority?, startDate?, endDate?`
   - Response items include bounded `attachments[]` preview metadata plus `_count.attachments`
@@ -544,6 +552,9 @@ Academic role writes use their owning modules:
   - Body: `{ notificationType, scopeType, serverPublicId, channelPublicId?, isSubscribed }`
   - `NEW_POST` supports server and channel scope.
   - `ROLE_ASSIGNED` supports server scope only.
+  - Course-only teachers may update channel-level `NEW_POST` preferences for
+    assigned course channels. Server-scope preferences and `ROLE_ASSIGNED`
+    preferences require server membership.
   - Society-request and lifecycle notifications do not use notification preferences.
   - Missing preference means subscribed.
 

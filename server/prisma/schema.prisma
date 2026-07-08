@@ -231,6 +231,7 @@ model User {
   refreshTokens           RefreshToken[]
   graduatedClasses        Class[]                  @relation("ClassGraduator")
   auditLogs               AuditLog[]               @relation("AuditActor")
+  teachingAssignmentsCreated Teaches[]             @relation("TeachingAssignmentCreator")
 
   deletedUsers               User[]                     @relation("UserDeleter")
   deletedSocieties           Society[]                  @relation("SocietyDeleter")
@@ -402,8 +403,11 @@ model Channel {
   posts                   Post[]
   platformRoleAssignments UserRoleAssignment[]
   notificationPreferences NotificationPreference[]
+  teachingAssignments     Teaches[]
 
   @@unique([id, serverId])
+  // SQL migration also maintains channels_active_course_channel_key as a
+  // partial unique index for one active course channel per server/course.
   @@index([serverId, isDeleted, isArchived])
   @@index([courseId, isDeleted])
   @@index([programId, isDeleted])
@@ -462,17 +466,26 @@ model Course {
 }
 
 model Teaches {
-  teacherId Int @map("teacher_id")
-  courseId  Int @map("course_id")
-  classId   Int @map("class_id")
+  teacherId  Int      @map("teacher_id")
+  courseId   Int      @map("course_id")
+  classId    Int      @map("class_id")
+  channelId  Int      @map("channel_id")
+  assignedBy Int?     @map("assigned_by")
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(3)
 
   teacher TeacherInfo @relation(fields: [teacherId], references: [teacherId], onDelete: Restrict)
   course  Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
   class   Class       @relation(fields: [classId], references: [id], onDelete: Restrict)
+  channel Channel     @relation(fields: [channelId], references: [id], onDelete: Restrict)
+  assigner User?      @relation("TeachingAssignmentCreator", fields: [assignedBy], references: [id], onDelete: SetNull)
 
+  // channelId is the direct course-channel access source of truth; teaching
+  // assignments do not imply class-server membership.
   @@id([teacherId, courseId, classId])
   @@unique([classId, courseId])
   @@index([courseId])
+  @@index([channelId])
+  @@index([assignedAt])
   @@map("teaches")
 }
 

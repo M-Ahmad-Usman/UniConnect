@@ -123,20 +123,20 @@ Tests:
 - Add `assignedAt`, `assignedBy`, and `channelId` to `TEACHES`; populate on
   assign/replace.
 - Stop auto-adding teachers to class servers solely because they teach a course.
-- Create/unarchive course channels locked by default during semester progression; unlock
-  a course channel only when its teacher is assigned.
+- Create/unarchive course channels locked by default during class creation and
+  semester progression; unlock a course channel only when its teacher is assigned.
 - Refactor channel read/post authorization, post access, Socket.IO channel joins, and
   notification preference access to use a shared channel-access helper that recognizes
   `TEACHES.channelId`.
-- Update moderator assignment so a teacher can be assigned channel moderator for a
-  course channel they access through `TEACHES`, without requiring server membership.
+- Keep server/channel moderator assignment limited to real server members; direct
+  course-channel teaching access does not grant platform role eligibility.
 - Update channel, role, realtime, and academic docs in this phase.
 
 Tests:
 
 - Backend tests for no class-server membership on teacher assignment, direct
   course-channel read/post/socket access, locked-channel denial, unlock on assignment,
-  and moderator assignment without membership.
+  and moderator assignment rejection without membership.
 - Regression tests for ordinary member, CR, HOD, moderator, and Admin access.
 
 ### Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy

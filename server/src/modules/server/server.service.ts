@@ -11,6 +11,7 @@ import {
 } from "../../shared/utils/pagination.js";
 import { activePlatformRoleAssignmentWhere } from "../../shared/roles/index.js";
 import { assertServerAcceptsWrites } from "../../shared/lifecycle/society.js";
+import { getChannelAccess } from "../../shared/access/channel-access.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -150,10 +151,31 @@ async function assertMembershipOrAdmin(serverId: number, caller: CallerInfo) {
 
   if (!membership) {
     const canManage = await canManageServer(caller.id, serverId);
-    if (!canManage) {
+    const hasTeachingAccess = await canAccessServerThroughTeaching(caller.id, serverId);
+    if (!canManage && !hasTeachingAccess) {
       throw new ForbiddenError("You are not a member of this server");
     }
   }
+}
+
+async function canAccessServerThroughTeaching(
+  userId: number,
+  serverId: number,
+): Promise<boolean> {
+  const assignment = await prisma.teaches.findFirst({
+    where: {
+      teacherId: userId,
+      channel: {
+        serverId,
+        isDeleted: false,
+        isArchived: false,
+        server: { isDeleted: false },
+      },
+    },
+    select: { teacherId: true },
+  });
+
+  return assignment !== null;
 }
 
 async function canManageServer(
@@ -337,7 +359,20 @@ export async function listServers(query: ListServersQuery, caller: CallerInfo) {
   const where = {
     isDeleted: false,
     ...(caller.userType !== "ADMIN"
-      ? { memberships: { some: { userId: caller.id } } }
+      ? {
+          OR: [
+            { memberships: { some: { userId: caller.id } } },
+            {
+              channels: {
+                some: {
+                  isDeleted: false,
+                  isArchived: false,
+                  teachingAssignments: { some: { teacherId: caller.id } },
+                },
+              },
+            },
+          ],
+        }
       : {}),
     ...(query.type ? { type: query.type } : {}),
   };
@@ -406,7 +441,23 @@ export async function listServerChannels(
     orderBy: { createdAt: "asc" },
   });
 
-  return channels.map(toPublicChannel);
+  if (caller.userType === "ADMIN") {
+    return channels.map(toPublicChannel);
+  }
+
+  const readableChannels = [];
+  for (const channel of channels) {
+    const access = await getChannelAccess(
+      { id: caller.id, userType: caller.userType },
+      channel.id,
+      { allowManagementRead: true },
+    );
+    if (access.canRead) {
+      readableChannels.push(channel);
+    }
+  }
+
+  return readableChannels.map(toPublicChannel);
 }
 
 export async function listServerMembers(

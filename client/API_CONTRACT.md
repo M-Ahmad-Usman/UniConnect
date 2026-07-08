@@ -2106,7 +2106,8 @@ PATCH /api/classes/:publicId/courses/:courseId/teacher
 }
 ```
 
-Replacement keeps the course channel active and synchronizes auto teacher membership.
+Replacement keeps the course channel active, refreshes teaching assignment audit
+metadata, and does not create class-server membership.
 
 #### List Courses for Class
 
@@ -2125,6 +2126,9 @@ GET /api/classes/:publicId/courses
     courseId: number;
     teacherPublicId: string;
     classPublicId: string;
+    channelPublicId: string;
+    assignedAt: string;
+    assignedByPublicId: string | null;
     course: {
       code: string;
       title: string;
@@ -2161,7 +2165,8 @@ created or reactivated.
 }
 ```
 
-**Note:** Also archives the course channel
+**Note:** Deletes the teaching assignment and locks the course channel until
+another teacher is assigned.
 
 #### Graduate Class (Admin/HOD)
 
@@ -2190,6 +2195,9 @@ POST /api/classes/:publicId/semester-progression
 }
 ```
 
+`teacherAssignments` may be empty or partial. Target-semester curriculum courses
+without an assignment still get locked course channels.
+
 **Response:**
 
 ```json
@@ -2203,9 +2211,11 @@ POST /api/classes/:publicId/semester-progression
 **Side Effects:**
 
 - Increments `currentSemester` by 1
-- Archives all course channels
+- Archives previous active course channels
 - Clears all TEACHES records (course-teacher assignments)
-- Creates new course assignments from `teacherAssignments`
+- Creates or reactivates target-semester course channels
+- Creates new course assignments from `teacherAssignments` and unlocks only
+  those linked course channels
 
 ---
 
@@ -3351,7 +3361,10 @@ POST /api/channels/:publicId/posts
 }
 ```
 
-**Side Effect:** Creates notifications for all subscribed server members. Notification messages include the server and channel, e.g. `New post in BSCS 6-A Hub / #announcements`.
+**Side Effect:** Creates notifications for subscribed server members and, for
+course channels, direct teachers linked through `TEACHES.channelId`. Notification
+messages include the server and channel, e.g. `New post in BSCS 6-A Hub /
+#announcements`.
 
 #### List Posts in Channel
 
@@ -3767,10 +3780,11 @@ PATCH /api/notification-preferences
 }
 ```
 
-**Note:** Server-level `NEW_POST` unsubscribe suppresses all post notifications for that
-server, including urgent posts. Channel toggles are preserved but inactive while the server
-scope is muted. Server-level `ROLE_ASSIGNED` unsubscribe suppresses role-assignment
-notifications for that server.
+**Note:** Server-level `NEW_POST` unsubscribe suppresses all post notifications
+for that server, including urgent posts. Channel toggles are preserved but
+inactive while the server scope is muted. Course-only teachers may update
+channel-level `NEW_POST` preferences for assigned course channels, but server
+scope and `ROLE_ASSIGNED` preferences require server membership.
 
 ---
 

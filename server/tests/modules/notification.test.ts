@@ -18,10 +18,13 @@ import {
   createNotification,
   createNotificationPreference,
   createPost,
+  createCourse,
+  createTeachesRecord,
   addServerMembership,
   loginAs,
   seedRolesAndPermissions,
   assignHOD,
+  assignCR,
   apiId,
   apiServerId,
 } from "../helpers/factory.js";
@@ -118,6 +121,56 @@ describe("Notifications", () => {
       expect(notifications.every((n) => n.type === "NEW_POST")).toBe(true);
       expect(notifications[0]?.message).toContain(server!.name);
       expect(notifications[0]?.message).toContain(`#${channel.name}`);
+    });
+
+    it("should notify direct course teachers who are not class server members", async () => {
+      const u = uid();
+      const dept = await createDepartment({ code: `NTFT-${u}` });
+      const program = await createProgram(dept.id);
+      const cls = await createClass(program.id);
+      const course = await createCourse(dept.id, { code: `NTFT-C-${u}` });
+      const teacher = await createTeacherWithInfo(dept.id, {
+        email: `teacher-direct-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      const cr = await createStudentWithInfo(cls.id, dept.id, {
+        email: `cr-direct-ntf-${u}@test.com`,
+        password: "Pass@1234",
+      });
+      await assignCR(cls.id, cr.id);
+
+      const channel = await createChannel(cls.serverId, {
+        name: `course-direct-${u}`,
+        type: "COURSE",
+        courseId: course.id,
+        isAutoCreated: true,
+      });
+      await createTeachesRecord(teacher.id, course.id, cls.id);
+
+      const membership = await prisma.serverMembership.findUnique({
+        where: { userId_serverId: { userId: teacher.id, serverId: cls.serverId } },
+      });
+      expect(membership).toBeNull();
+
+      const cookies = await loginAs(cr.email, "Pass@1234");
+      const res = await request(app)
+        .post(`/api/channels/${apiId(channel)}/posts`)
+        .set("Cookie", cookies)
+        .send({
+          title: "Direct teacher notice",
+          content: "Course-only teacher should receive this.",
+        });
+
+      expect(res.status).toBe(201);
+      await new Promise((r) => setTimeout(r, 500));
+
+      const postId = await internalPostId(res.body.data.publicId);
+      const notifications = await prisma.notification.findMany({
+        where: { postId },
+        select: { userId: true, type: true },
+      });
+      expect(notifications).toContainEqual({ userId: teacher.id, type: "NEW_POST" });
+      expect(notifications).not.toContainEqual({ userId: cr.id, type: "NEW_POST" });
     });
 
     it("should mark urgent post notifications with urgent indicator", async () => {

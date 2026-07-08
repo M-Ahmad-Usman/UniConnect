@@ -22,6 +22,7 @@ import {
   loginAs,
   seedRolesAndPermissions,
   apiId,
+  createTeachesRecord,
 } from "../helpers/factory.js";
 
 /** Short unique suffix */
@@ -144,17 +145,13 @@ describe("Posts and announcements", () => {
       });
       const course = await createCourse(dept.id, { code: `CRS-CP-${u}` });
 
-      await prisma.teaches.create({
-        data: { teacherId: teacher.id, courseId: course.id, classId: cls.id },
-      });
-      await addServerMembership(teacher.id, cls.serverId);
-
       const channel = await createChannel(cls.serverId, {
         name: `crs-ch-${u}`,
         type: "COURSE",
         isAutoCreated: true,
         courseId: course.id,
       });
+      await createTeachesRecord(teacher.id, course.id, cls.id);
       const cookies = await loginAs(`tch-crs-${u}@test.com`, "Pass@1234");
 
       const res = await request(app)

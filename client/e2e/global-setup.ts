@@ -1280,37 +1280,13 @@ async function seedAcademicWorkflowData(pool: Pool) {
     [programId, replacementCourse.id, progressionCourse.id, graduationCourse.id],
   );
 
-  await pool.query(
-    `
-      INSERT INTO teaches (teacher_id, course_id, class_id)
-      VALUES
-        ($1, $2, $3),
-        ($4, $5, $6)
-    `,
-    [
-      oldTeacherId,
-      replacementCourse.id,
-      replaceClass.id,
-      graduateTeacherId,
-      graduationCourse.id,
-      graduationClass.id,
-    ],
-  );
-  await pool.query(
-    `
-      INSERT INTO server_memberships (user_id, server_id, is_auto_joined)
-      VALUES
-        ($1, $2, true),
-        ($3, $4, true)
-    `,
-    [oldTeacherId, replaceClass.server_id, graduateTeacherId, graduationClass.server_id],
-  );
-  await pool.query(
+  const seededCourseChannels = await pool.query<{ id: number; course_id: number }>(
     `
       INSERT INTO channels (server_id, name, type, course_id, is_auto_created, created_by, created_at)
       VALUES
         ($1, $2, 'course'::channel_type, $3, true, $4, NOW()),
         ($5, $6, 'course'::channel_type, $7, true, $4, NOW())
+      RETURNING id, course_id
     `,
     [
       replaceClass.server_id,
@@ -1320,6 +1296,35 @@ async function seedAcademicWorkflowData(pool: Pool) {
       graduationClass.server_id,
       graduationCourse.code,
       graduationCourse.id,
+    ],
+  );
+  const replacementCourseChannel = seededCourseChannels.rows.find(
+    (channel) => channel.course_id === replacementCourse.id,
+  );
+  const graduationCourseChannel = seededCourseChannels.rows.find(
+    (channel) => channel.course_id === graduationCourse.id,
+  );
+
+  if (!replacementCourseChannel || !graduationCourseChannel) {
+    throw new Error('Academic hardening course channels could not be created.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO teaches (teacher_id, course_id, class_id, channel_id)
+      VALUES
+        ($1, $2, $3, $4),
+        ($5, $6, $7, $8)
+    `,
+    [
+      oldTeacherId,
+      replacementCourse.id,
+      replaceClass.id,
+      replacementCourseChannel.id,
+      graduateTeacherId,
+      graduationCourse.id,
+      graduationClass.id,
+      graduationCourseChannel.id,
     ],
   );
 }

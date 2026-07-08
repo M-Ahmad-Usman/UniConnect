@@ -476,6 +476,49 @@ async function ensureTeachingAssignment(input: {
   courseId: number;
   classId: number;
 }) {
+  const [classRecord, course] = await Promise.all([
+    prisma.class.findUniqueOrThrow({
+      where: { id: input.classId },
+      select: { serverId: true },
+    }),
+    prisma.course.findUniqueOrThrow({
+      where: { id: input.courseId },
+      select: { code: true },
+    }),
+  ]);
+  const existingChannel = await prisma.channel.findFirst({
+    where: {
+      serverId: classRecord.serverId,
+      courseId: input.courseId,
+      type: "COURSE",
+      isDeleted: false,
+    },
+    select: { id: true },
+  });
+  const channel = existingChannel
+    ? await prisma.channel.update({
+        where: { id: existingChannel.id },
+        data: {
+          isArchived: false,
+          archivedAt: null,
+          archivedBy: null,
+          isLocked: false,
+          lockedAt: null,
+          lockedBy: null,
+        },
+        select: { id: true },
+      })
+    : await prisma.channel.create({
+        data: {
+          serverId: classRecord.serverId,
+          name: course.code,
+          type: "COURSE",
+          courseId: input.courseId,
+          isAutoCreated: true,
+          isLocked: false,
+        },
+        select: { id: true },
+      });
   const existingForClassCourse = await prisma.teaches.findUnique({
     where: {
       classId_courseId: {
@@ -506,8 +549,10 @@ async function ensureTeachingAssignment(input: {
         classId: input.classId,
       },
     },
-    update: {},
-    create: input,
+    update: {
+      channelId: channel.id,
+    },
+    create: { ...input, channelId: channel.id },
   });
 }
 

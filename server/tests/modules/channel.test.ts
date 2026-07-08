@@ -21,6 +21,7 @@ import {
   seedRolesAndPermissions,
   createPlatformRoleAssignment,
   apiId,
+  createTeachesRecord,
 } from "../helpers/factory.js";
 import { canPostInChannel } from "../../src/modules/channel/channel.service.js";
 
@@ -658,25 +659,13 @@ describe("Channel management endpoints", () => {
       });
       const course = await createCourse(dept.id, { code: `CRS-${u}` });
 
-      // Assign teacher to course in class
-      await prisma.teaches.create({
-        data: {
-          teacherId: teacher.id,
-          courseId: course.id,
-          classId: cls.id,
-        },
-      });
-
-      // Add teacher as class server member
-      await addServerMembership(teacher.id, cls.serverId);
-
-      // Create course channel
       const channel = await createChannel(cls.serverId, {
         name: `crs-${u}`,
         type: "COURSE",
         isAutoCreated: true,
         courseId: course.id,
       });
+      await createTeachesRecord(teacher.id, course.id, cls.id);
 
       const result = await canPostInChannel(teacher.id, "TEACHER", channel.id);
       expect(result).toBe(true);

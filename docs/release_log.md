@@ -57,6 +57,34 @@ This is the single active implementation and release log going forward. Older ba
 
 ## Active Entries
 
+### 2026-07-08 - Phase 4 Teaching Assignment Channel Access
+- Added direct teaching access with `Teaches.channelId`, assignment audit fields,
+  migration backfill, and SQL-only safeguards for active course-channel
+  uniqueness.
+- Removed teacher auto-membership from class course assignment, teacher
+  replacement, and semester progression flows. Course-only teachers can access
+  only assigned course channels and remain ineligible for platform moderator
+  roles unless separately added as server members.
+- Semester progression now accepts empty or partial teacher assignments. Target
+  course channels are created/reactivated for the target semester, locked when
+  unassigned, and unlocked when a teacher is assigned.
+- Post reads/writes, Socket.IO channel joins, new-post notifications, and
+  channel-level notification preferences now use shared direct course-channel
+  access rules.
+- Verification so far:
+  - `server`: `npx prisma validate`
+  - `server`: `npx prisma generate`
+  - `server`: test DB reset applied migrations through
+    `20260708010000_phase4_teaching_channel_access`
+  - `server`: focused class/channel/post/notification/role integration slice,
+    196/196
+  - `server`: `npm run build`
+  - `server`: test TypeScript compile
+  - `client`: `npm run type-check`
+  - `client`: `npm run lint`
+  - `client`: full Vitest suite, 26 files and 147/147 tests
+  - `client`: `npm run build`
+
 ### 2026-07-08 - Phase 3 Society Leadership Rules
 - Society President and Convenor candidate searches are now university-wide,
   while Admin/HOD authority remains scoped to the society's owning department.

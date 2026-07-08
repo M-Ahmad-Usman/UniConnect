@@ -82,6 +82,11 @@ are now captured here and in `docs/security.md`:
   owning department. SQL-only partial unique indexes reserve each leader only
   for active, non-deleted societies, and lifecycle activation/restoration checks
   return typed 409 conflict details when saved leadership is active elsewhere.
+- Added Phase 4 teaching-assignment access: `Teaches.channelId` now links each
+  assignment to its course channel, course-only teachers can read/post only in
+  assigned course channels without class-server membership, unassigned course
+  channels stay locked, and new-post fanout includes directly assigned teachers.
+  Moderator/platform role eligibility remains limited to real server members.
 - Staff-role migrations are split so PostgreSQL enum values are committed before
   use. SQL-only exclusion constraints prevent overlapping staff-role periods and
   overlapping global Admin assignments.

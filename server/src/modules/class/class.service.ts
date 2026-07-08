@@ -178,7 +178,11 @@ const courseAssignmentSelect = {
   courseId: true,
   teacherId: true,
   classId: true,
+  channelId: true,
+  assignedAt: true,
+  assigner: { select: { publicId: true } },
   class: { select: { publicId: true } },
+  channel: { select: { publicId: true } },
   course: {
     select: {
       id: true,
@@ -303,15 +307,28 @@ function toPublicClass<T extends {
 function toPublicCourseAssignment<T extends {
   teacherId: number;
   classId: number;
+  channelId: number;
   class: { publicId: string };
+  channel: { publicId: string };
+  assigner?: { publicId: string } | null;
   teacher: { teacherId: number; user: { publicId: string } };
 }>(assignment: T) {
-  const { teacherId: _teacherId, classId: _classId, class: classRecord, teacher, ...data } =
-    assignment;
+  const {
+    teacherId: _teacherId,
+    classId: _classId,
+    channelId: _channelId,
+    class: classRecord,
+    channel,
+    assigner,
+    teacher,
+    ...data
+  } = assignment;
   const { teacherId: _nestedTeacherId, user, ...teacherData } = teacher;
   return {
     ...data,
     classPublicId: classRecord.publicId,
+    channelPublicId: channel.publicId,
+    assignedByPublicId: assigner?.publicId ?? null,
     teacherPublicId: user.publicId,
     teacher: { ...teacherData, user },
   };
@@ -551,6 +568,69 @@ async function cleanupAutoClassMembershipIfUnused(
   return false;
 }
 
+async function ensureCourseChannelForTeaching(
+  tx: Prisma.TransactionClient,
+  input: {
+    serverId: number;
+    courseId: number;
+    courseCode: string;
+    actorUserId: number;
+    unlockForAssignment: boolean;
+  },
+): Promise<number> {
+  const existingChannel = await tx.channel.findFirst({
+    where: {
+      serverId: input.serverId,
+      courseId: input.courseId,
+      type: "COURSE",
+      isDeleted: false,
+    },
+    select: { id: true },
+    orderBy: [{ isArchived: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+  });
+
+  const channelData = input.unlockForAssignment
+    ? {
+        isArchived: false,
+        archivedAt: null,
+        archivedBy: null,
+        isLocked: false,
+        lockedAt: null,
+        lockedBy: null,
+      }
+    : {
+        isArchived: false,
+        archivedAt: null,
+        archivedBy: null,
+        isLocked: true,
+        lockedAt: new Date(),
+        lockedBy: input.actorUserId,
+      };
+
+  if (existingChannel) {
+    const updated = await tx.channel.update({
+      where: { id: existingChannel.id },
+      data: channelData,
+      select: { id: true },
+    });
+    return updated.id;
+  }
+
+  const created = await tx.channel.create({
+    data: {
+      serverId: input.serverId,
+      name: input.courseCode,
+      type: "COURSE",
+      courseId: input.courseId,
+      isAutoCreated: true,
+      createdBy: input.actorUserId,
+      ...channelData,
+    },
+    select: { id: true },
+  });
+  return created.id;
+}
+
 function buildScopedClassWhere(
   query: ListClassesQuery,
   context: Awaited<ReturnType<typeof getPermissionContext>>
@@ -763,6 +843,9 @@ async function createClassWithAccess(
           type: "COURSE" as const,
           courseId: entry.courseId,
           isAutoCreated: true,
+          isLocked: true,
+          lockedBy: userId,
+          lockedAt: new Date(),
           createdBy: userId,
         })),
       ],
@@ -937,62 +1020,22 @@ export async function assignCourseToClass(
       }
       throw new ConflictError("Use teacher replacement for an already assigned class course");
     }
+    const channelId = await ensureCourseChannelForTeaching(tx, {
+      serverId: classRecord.serverId,
+      courseId: data.courseId,
+      courseCode: course.code,
+      actorUserId: userId,
+      unlockForAssignment: true,
+    });
     const assignment = await tx.teaches.create({
       data: {
         teacherId: teacher.id,
         courseId: data.courseId,
         classId,
+        channelId,
+        assignedBy: userId,
       },
       select: courseAssignmentSelect,
-    });
-
-    const existingChannel = await tx.channel.findFirst({
-      where: {
-        serverId: classRecord.serverId,
-        courseId: data.courseId,
-        isDeleted: false,
-      },
-      select: { id: true, isArchived: true, isLocked: true },
-    });
-
-    if (!existingChannel) {
-      await tx.channel.create({
-        data: {
-          serverId: classRecord.serverId,
-          name: course.code,
-          type: "COURSE",
-          courseId: data.courseId,
-          isAutoCreated: true,
-          createdBy: userId,
-        },
-      });
-    } else if (existingChannel.isArchived || existingChannel.isLocked) {
-      await tx.channel.update({
-        where: { id: existingChannel.id },
-        data: {
-          isArchived: false,
-          archivedAt: null,
-          archivedBy: null,
-          isLocked: false,
-          lockedAt: null,
-          lockedBy: null,
-        },
-      });
-    }
-
-    await tx.serverMembership.upsert({
-      where: {
-        userId_serverId: {
-          userId: teacher.id,
-          serverId: classRecord.serverId,
-        },
-      },
-      create: {
-        userId: teacher.id,
-        serverId: classRecord.serverId,
-        isAutoJoined: true,
-      },
-      update: {},
     });
 
     return toPublicCourseAssignment(assignment);
@@ -1030,6 +1073,14 @@ export async function replaceClassCourseTeacher(
   await assertCourseInCurrentCurriculum(classRecord, courseId);
   await assertActiveTeacher(teacher.id);
 
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { id: true, code: true },
+  });
+  if (!course) {
+    throw new NotFoundError("Course not found");
+  }
+
   const existingAssignment = await prisma.teaches.findUnique({
     where: { classId_courseId: { classId, courseId } },
     select: { teacherId: true },
@@ -1056,32 +1107,24 @@ export async function replaceClassCourseTeacher(
       throw new ConflictError("This course is already assigned to this teacher");
     }
     const removedUserIds = new Set<number>();
+    const channelId = await ensureCourseChannelForTeaching(tx, {
+      serverId: classRecord.serverId,
+      courseId,
+      courseCode: course.code,
+      actorUserId: userId,
+      unlockForAssignment: true,
+    });
     const updated = await tx.teaches.update({
       where: { classId_courseId: { classId, courseId } },
-      data: { teacherId: teacher.id },
+      data: {
+        teacherId: teacher.id,
+        channelId,
+        assignedBy: userId,
+        assignedAt: new Date(),
+      },
       select: courseAssignmentSelect,
     });
-
-    await tx.serverMembership.upsert({
-      where: { userId_serverId: { userId: teacher.id, serverId: classRecord.serverId } },
-      create: {
-        userId: teacher.id,
-        serverId: classRecord.serverId,
-        isAutoJoined: true,
-      },
-      update: {},
-    });
-
-    if (
-      await cleanupAutoClassMembershipIfUnused(
-        tx,
-        lockedAssignment.teacherId,
-        classId,
-        classRecord.serverId
-      )
-    ) {
-      removedUserIds.add(lockedAssignment.teacherId);
-    }
+    removedUserIds.add(lockedAssignment.teacherId);
 
     return { updated, removedUserIds: Array.from(removedUserIds) };
   });
@@ -1132,26 +1175,19 @@ export async function removeCourseFromClass(
         serverId: classRecord.serverId,
         courseId,
         isAutoCreated: true,
-        isArchived: false,
       },
       data: {
-        isArchived: true,
-        archivedAt: new Date(),
-        archivedBy: userId,
+        isArchived: false,
+        archivedAt: null,
+        archivedBy: null,
+        isLocked: true,
+        lockedAt: new Date(),
+        lockedBy: userId,
       },
     });
 
     for (const assignment of lockedAssignments) {
-      if (
-        await cleanupAutoClassMembershipIfUnused(
-          tx,
-          assignment.teacherId,
-          classId,
-          classRecord.serverId
-        )
-      ) {
-        removedUserIds.add(assignment.teacherId);
-      }
+      removedUserIds.add(assignment.teacherId);
     }
 
     return Array.from(removedUserIds);
@@ -1561,15 +1597,6 @@ export async function advanceSemester(
       );
     }
 
-    const missingCourses = curriculumCourseIds.filter((id) => !assignedCourseIds.includes(id));
-    if (missingCourses.length > 0) {
-      throw new ValidationError(
-        `Teacher assignments are required for all curriculum courses. Missing assignments for course IDs: ${missingCourses.join(", ")}`,
-        undefined,
-        ApiErrorCode.CURRICULUM_TEACHER_ASSIGNMENT_REQUIRED
-      );
-    }
-
     for (const teacherId of [...new Set(teacherAssignments.map((a) => a.teacherId))]) {
       await assertActiveTeacher(teacherId);
     }
@@ -1625,79 +1652,31 @@ export async function advanceSemester(
 
     if (curriculum.length > 0) {
       for (const entry of curriculum) {
-        const existingChannel = await tx.channel.findFirst({
-          where: {
-            serverId: classRecord.serverId,
-            courseId: entry.courseId,
-            isDeleted: false,
-          },
-          select: { id: true },
+        const assignment = teacherAssignments.find((a) => a.courseId === entry.courseId);
+        const channelId = await ensureCourseChannelForTeaching(tx, {
+          serverId: classRecord.serverId,
+          courseId: entry.courseId,
+          courseCode: entry.course.code,
+          actorUserId: userId,
+          unlockForAssignment: assignment !== undefined,
         });
 
-        if (existingChannel) {
-          await tx.channel.update({
-            where: { id: existingChannel.id },
-            data: {
-              isArchived: false,
-              archivedAt: null,
-              archivedBy: null,
-              isLocked: false,
-              lockedBy: null,
-              lockedAt: null,
-            },
-          });
-        } else {
-          await tx.channel.create({
-            data: {
-              serverId: classRecord.serverId,
-              name: entry.course.code,
-              type: "COURSE",
-              courseId: entry.courseId,
-              isAutoCreated: true,
-              createdBy: userId,
-            },
-          });
-        }
-
-        const assignment = teacherAssignments.find((a) => a.courseId === entry.courseId);
         if (assignment) {
           await tx.teaches.create({
             data: {
               teacherId: assignment.teacherId,
               courseId: entry.courseId,
               classId,
+              channelId,
+              assignedBy: userId,
             },
-          });
-
-          await tx.serverMembership.upsert({
-            where: {
-              userId_serverId: {
-                userId: assignment.teacherId,
-                serverId: classRecord.serverId,
-              },
-            },
-            create: {
-              userId: assignment.teacherId,
-              serverId: classRecord.serverId,
-              isAutoJoined: true,
-            },
-            update: {},
           });
         }
       }
     }
 
     for (const previousTeacher of previousTeacherIds) {
-      if (
-        await cleanupAutoClassMembershipIfUnused(
-          tx,
-          previousTeacher.teacherId,
-          classId,
-          classRecord.serverId
-        )
-      ) {
-        removedUserIds.add(previousTeacher.teacherId);
-      }
+      removedUserIds.add(previousTeacher.teacherId);
     }
 
     return { advancedClass: updatedClass, removedUserIds: Array.from(removedUserIds) };

@@ -5,7 +5,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "../../shared/errors/index.js";
-import { getUserRoles } from "../../middleware/authorize.js";
+import { getChannelAccess } from "../../shared/access/channel-access.js";
 import type { UserRole } from "../../shared/types/index.js";
 import {
   assertServerAcceptsWrites,
@@ -208,121 +208,11 @@ export async function canPostInChannel(
   preloadedRoles?: UserRole[],
   client: PrismaTransaction = prisma,
 ): Promise<boolean> {
-  // 1. Fetch channel + server + membership in one round-trip
-  const channel = await client.channel.findUnique({
-    where: { id: channelId },
-    select: {
-      id: true,
-      serverId: true,
-      type: true,
-      isLocked: true,
-      isDeleted: true,
-      isArchived: true,
-      courseId: true,
-      programId: true,
-      server: {
-        select: {
-          type: true,
-          isDeleted: true,
-          memberships: {
-            where: { userId },
-            select: { userId: true },
-            take: 1,
-          },
-          class: { select: { id: true } },
-          society: { select: { status: true, isDeleted: true } },
-        },
-      },
-    },
-  });
-
-  if (!channel || channel.isDeleted || channel.isArchived) return false;
-  if (channel.server.isDeleted) return false;
-  if (
-    channel.server.society &&
-    (
-      channel.server.society.status !== "ACTIVE" ||
-      channel.server.society.isDeleted
-    )
-  ) {
-    return false;
-  }
-
-  // 2. Admin bypasses membership and role checks, but not lifecycle state.
-  if (userType === "ADMIN") return true;
-
-  // 3. Must be a server member (derived from the single query above)
-  if (channel.server.memberships.length === 0) return false;
-
-  // 4. Locked channels: no one posts
-  if (channel.isLocked) return false;
-
-  // 5. Resolve user roles
-  const roles = preloadedRoles ?? await getUserRoles(userId);
-
-  for (const role of roles) {
-    if (role.serverId !== channel.serverId) continue;
-
-    switch (role.role) {
-      case "hod":
-        // HOD can post in all department server channels (FR-22)
-        return true;
-
-      case "program_director": {
-        // PD can post in their program channel (FR-23)
-        if (channel.type === "PROGRAM" && channel.programId) {
-          const program = await client.program.findFirst({
-            where: { id: channel.programId, programDirectorId: userId },
-            select: { id: true },
-          });
-          if (program) return true;
-        }
-        // PD can also post in general channels as a member
-        break;
-      }
-
-      case "cr":
-        // CR can post in all class server channels
-        return true;
-
-      case "society_president":
-      case "society_convenor":
-        // President/Convenor can post in all society server channels
-        return true;
-
-      case "server_moderator":
-        // Server moderator can post in all channels (FR-29)
-        return true;
-
-      case "channel_moderator":
-        // Channel moderator can post in assigned channel (FR-30)
-        if (role.channelId === channelId) return true;
-        break;
-    }
-  }
-
-  // 6. Teacher assigned to a course channel (FR-34)
-  if (channel.type === "COURSE" && channel.courseId && userType === "TEACHER") {
-    // Class info already fetched from the combined query above
-    const classRecord = channel.server.class;
-
-    if (classRecord) {
-      const teaches = await client.teaches.findUnique({
-        where: {
-          teacherId_courseId_classId: {
-            teacherId: userId,
-            courseId: channel.courseId,
-            classId: classRecord.id,
-          },
-        },
-      });
-      if (teaches) return true;
-    }
-  }
-
-  // 7. GENERAL channels: any member can post
-  if (channel.type === "GENERAL") return true;
-
-  // 8. ANNOUNCEMENT channels: only roles above can post (already checked)
-  return false;
+  const access = await getChannelAccess(
+    { id: userId, userType },
+    channelId,
+    { userRoles: preloadedRoles },
+    client,
+  );
+  return access.canPost;
 }

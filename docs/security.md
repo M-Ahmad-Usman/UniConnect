@@ -46,6 +46,10 @@
   change, lifecycle, and conflict-preflight authority remains Admin or HOD for
   the society's owning department. Active non-deleted leadership uniqueness is
   enforced by service checks and SQL-only partial unique indexes.
+- Course teaching assignments grant direct access only to their linked course
+  channel through `Teaches.channelId`; they do not grant class-server membership
+  or server/channel moderator eligibility. Locked and archived course-channel
+  lifecycle state is still enforced before writes.
 
 ## API Errors
 - Standard shape:

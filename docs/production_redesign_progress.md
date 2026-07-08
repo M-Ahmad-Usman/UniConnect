@@ -16,8 +16,8 @@ were folded into the production redesign plan and this progress file.
 | --- | --- | --- |
 | Phase 1: Role And Authorization Foundation | Complete | Hardened and fully verified on 2026-07-07. |
 | Phase 2: Enrollment And HOD Responsibility Split | Implemented | Backend/frontend implementation and focused validation complete; broader regression still pending before marking complete. |
-| Phase 3: Society Leadership Rules | Implemented | Backend/frontend implementation and focused validation complete; focused Playwright needs rerun after assertion fix. |
-| Phase 4: Teaching Assignment And Course-Channel Access | Not started | Must preserve the moderator-assignment verification item for course-only teachers. |
+| Phase 3: Society Leadership Rules | Implemented | Backend/frontend implementation and full Playwright validation complete. |
+| Phase 4: Teaching Assignment And Course-Channel Access | Implemented | Backend/frontend implementation and focused validation complete; broad Playwright regression still pending before marking complete. |
 | Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy | Not started | Depends on Phase 4 teaching/channel access foundations. |
 | Phase 6: Notification Defaults | Not started | Must update every membership/assignment creation path consistently. |
 | Phase 7: Drafts, Bulk Posting, And Acknowledgments | Not started | Drafts are channel-scoped; bulk posting is all-or-nothing. |
@@ -244,12 +244,28 @@ Phase 3:
 
 Phase 4:
 
-- `TEACHES` needs `assignedAt`, `assignedBy`, and direct `channelId`.
-- Course-channel access for teachers must be derived from active `TEACHES.channelId`,
-  not class-server membership.
-- Teachers should not become class-server members solely because they teach a course.
-- Verify and, if needed, decouple moderator assignment from server membership so a
-  course-only teacher can become channel moderator for their own course channel.
+- Implemented on 2026-07-08:
+  - `TEACHES` now stores `assignedAt`, nullable historical `assignedBy`, and direct `channelId`.
+  - Teaching assignment no longer creates class-server membership.
+  - Class creation and semester progression create course channels locked by default when no teacher is assigned.
+  - Semester progression accepts partial or empty target-semester teacher assignments.
+  - Assigning/replacing a teacher unlocks the linked course channel.
+  - Removing a current course assignment deletes the `TEACHES` row and locks the course channel until reassignment.
+  - Channel/post/socket/preference access uses direct `TEACHES.channelId` for course-only teachers.
+  - `NEW_POST` notifications include direct course teachers for their course channel.
+  - Server/channel moderator roles remain limited to real server members; course-only access is not platform role eligibility.
+- Focused validation:
+  - `server`: `npx prisma validate`
+  - `server`: `npx prisma generate`
+  - `server`: test DB reset applied migrations through `20260708010000_phase4_teaching_channel_access`
+  - `server`: `npm run build`
+  - `server`: `npx tsc -p tests/tsconfig.json --noEmit --pretty false`
+  - `server`: focused class/channel/post/notification/role integration slice -> 196/196
+  - `client`: `npm run type-check`
+  - `client`: `npm run lint`
+  - `client`: `npm run test -- --run` -> 26 files, 147/147
+  - `client`: `npm run build`
+  - Existing pg adapter deprecation warning still appears in Jest runs.
 
 Phase 5:
 

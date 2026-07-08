@@ -7,6 +7,7 @@ import { getModuleLogger } from "../config/logger.js";
 import type { AuthUser } from "../shared/types/index.js";
 import { isPublicId, parsePublicId } from "../shared/ids/index.js";
 import { hasActiveAdminRole } from "../shared/roles/index.js";
+import { getChannelAccess } from "../shared/access/channel-access.js";
 
 interface AccessTokenPayload {
   sub: string;
@@ -358,13 +359,11 @@ async function resolveJoinableChannelId(
     return undefined;
   }
 
-  if (user.userType === "ADMIN") {
-    return channel.id;
-  }
+  const access = await getChannelAccess(
+    { id: user.id, userType: user.userType },
+    channel.id,
+    { allowManagementRead: true },
+  );
 
-  const membership = await prisma.serverMembership.findUnique({
-    where: { userId_serverId: { userId: user.id, serverId: channel.serverId } },
-  });
-
-  return membership ? channel.id : undefined;
+  return access.canRead ? channel.id : undefined;
 }

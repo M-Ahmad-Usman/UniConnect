@@ -7,10 +7,12 @@ import {
   assignHOD,
   createChannel,
   createClass,
+  createCourse,
   createDepartment,
   createPlatformRoleAssignment,
   createProgram,
   createStudentWithInfo,
+  createTeachesRecord,
   createTeacherWithInfo,
   createUser,
   loginAs,
@@ -167,6 +169,48 @@ describe("Platform RBAC", () => {
       ).status,
     ).toBe(201);
     expect(await prisma.userRoleAssignment.count({ where: { userId: fixture.student.id } })).toBe(2);
+  });
+
+  it("rejects channel moderator assignment for a course-only teacher without server membership", async () => {
+    const suffix = uid();
+    const { admin, cookies } = await createAdminSession();
+    const department = await createDepartment({ code: `CMEM-${suffix}`, creatorId: admin.id });
+    const program = await createProgram(department.id, { code: `CMEM-P-${suffix}` });
+    const klass = await createClass(program.id, { creatorId: admin.id });
+    const course = await createCourse(department.id, { code: `CMEM-C-${suffix}` });
+    const teacher = await createTeacherWithInfo(department.id, {
+      email: `course-only-mod-${suffix}@test.com`,
+      password: "Pass@1234",
+    });
+    const channel = await createChannel(klass.serverId, {
+      name: `course-only-mod-${suffix}`,
+      type: "COURSE",
+      courseId: course.id,
+      isAutoCreated: true,
+    });
+    await createTeachesRecord(teacher.id, course.id, klass.id);
+    const server = await prisma.server.findUniqueOrThrow({
+      where: { id: klass.serverId },
+      select: { publicId: true },
+    });
+
+    const membership = await prisma.serverMembership.findUnique({
+      where: { userId_serverId: { userId: teacher.id, serverId: klass.serverId } },
+    });
+    expect(membership).toBeNull();
+
+    const res = await request(app)
+      .post("/api/roles/platform-assignments")
+      .set("Cookie", cookies)
+      .send({
+        userPublicId: teacher.publicId,
+        role: "channel_moderator",
+        serverPublicId: server.publicId,
+        channelPublicId: channel.publicId,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
   });
 
   it("supports channel scope, expiry edits, and admin history", async () => {

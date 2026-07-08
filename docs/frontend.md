@@ -51,6 +51,10 @@ society management, and role management.
 - Society leader search is university-wide while retaining the selected
   department as the managed society scope. Activation/restoration dialogs use
   leadership-conflict preflight data and still rely on backend 409 enforcement.
+- Class teacher assignment UX allows partial semester progression. Courses
+  without a selected teacher still get locked course channels, and assigning or
+  replacing a teacher unlocks that channel without adding the teacher to the
+  class-server member list.
 - Post feeds use paginated APIs with load-more/infinite-style interaction.
 - Server, channel, and post navigation uses UUIDv7 public IDs end to end.
 - Archived channels appear in a separate collapsed history section. Their feeds

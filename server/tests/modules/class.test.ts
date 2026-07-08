@@ -12,6 +12,8 @@ import {
   createStudentWithInfo,
   createCourse,
   createCurriculum,
+  createChannel,
+  createTeachesRecord,
   assignHOD,
   loginAs,
 } from "../helpers/factory.js";
@@ -657,6 +659,8 @@ describe("Class management", () => {
       expect(res.body.data.courseId).toBe(course.id);
       expect(res.body.data.teacherPublicId).toBe(teacher.publicId);
       expect(res.body.data.classPublicId).toBe(klass.publicId);
+      expect(res.body.data.channelPublicId).toEqual(expect.any(String));
+      expect(res.body.data.assignedAt).toEqual(expect.any(String));
       expect(res.body.data).not.toHaveProperty("teacherId");
       expect(res.body.data).not.toHaveProperty("classId");
       expect(res.body.data.course).toBeDefined();
@@ -674,8 +678,9 @@ describe("Class management", () => {
       expect(channel!.type).toBe("COURSE");
       expect(channel!.name).toBe(course.code);
       expect(channel!.isAutoCreated).toBe(true);
+      expect(channel!.isLocked).toBe(false);
 
-      // Verify teacher was auto-added to the class server
+      // Teaching grants direct course-channel access, not class-server membership.
       const membership = await prisma.serverMembership.findUnique({
         where: {
           userId_serverId: {
@@ -684,8 +689,7 @@ describe("Class management", () => {
           },
         },
       });
-      expect(membership).not.toBeNull();
-      expect(membership!.isAutoJoined).toBe(true);
+      expect(membership).toBeNull();
     });
 
     it("should allow HOD to assign course in own department", async () => {
@@ -1045,7 +1049,8 @@ describe("Class management", () => {
         },
       });
       expect(archivedChannel).not.toBeNull();
-      expect(archivedChannel!.isArchived).toBe(true);
+      expect(archivedChannel!.isArchived).toBe(false);
+      expect(archivedChannel!.isLocked).toBe(true);
 
       const reassignRes = await request(app)
         .post(`/api/classes/${klass.publicId}/courses`)
@@ -1187,7 +1192,7 @@ describe("Class management", () => {
       });
       expect(teaches.length).toBe(0);
 
-      // Verify channel is archived, not deleted
+      // Verify channel is kept and locked until another teacher is assigned.
       const channel = await prisma.channel.findFirst({
         where: {
           serverId: klass.serverId,
@@ -1195,9 +1200,12 @@ describe("Class management", () => {
         },
       });
       expect(channel).not.toBeNull();
-      expect(channel!.isArchived).toBe(true);
-      expect(channel!.archivedAt).not.toBeNull();
-      expect(channel!.archivedBy).toBe(admin.id);
+      expect(channel!.isArchived).toBe(false);
+      expect(channel!.archivedAt).toBeNull();
+      expect(channel!.archivedBy).toBeNull();
+      expect(channel!.isLocked).toBe(true);
+      expect(channel!.lockedAt).not.toBeNull();
+      expect(channel!.lockedBy).toBe(admin.id);
     });
 
     it("should allow HOD to remove course in own department", async () => {
@@ -1419,7 +1427,7 @@ describe("Class management", () => {
       expect(res.body.success).toBe(false);
     });
 
-    it("should replace a class-course teacher and sync class server memberships", async () => {
+    it("should replace a class-course teacher without class server membership", async () => {
       const u = uid();
       const admin = await createUser({
         email: `admin-replace-teacher-${u}@test.com`,
@@ -1456,6 +1464,7 @@ describe("Class management", () => {
         where: { classId_courseId: { classId: klass.id, courseId: course.id } },
       });
       expect(assignment?.teacherId).toBe(secondTeacher.id);
+      expect(assignment?.channelId).toEqual(expect.any(Number));
 
       const oldMembership = await prisma.serverMembership.findUnique({
         where: { userId_serverId: { userId: firstTeacher.id, serverId: klass.serverId } },
@@ -1464,7 +1473,7 @@ describe("Class management", () => {
         where: { userId_serverId: { userId: secondTeacher.id, serverId: klass.serverId } },
       });
       expect(oldMembership).toBeNull();
-      expect(newMembership?.isAutoJoined).toBe(true);
+      expect(newMembership).toBeNull();
 
       const channel = await prisma.channel.findFirst({
         where: { serverId: klass.serverId, courseId: course.id },
@@ -1851,7 +1860,7 @@ describe("Class management", () => {
       expect(teaches.length).toBe(2);
     });
 
-    it("should return 400 when curriculum exists but teacher assignments are missing", async () => {
+    it("should allow progression with missing teacher assignments and lock unassigned channels", async () => {
       const u = uid();
       const admin = await createUser({
         email: `admin-sp-miss-${u}@test.com`,
@@ -1870,8 +1879,20 @@ describe("Class management", () => {
         .set("Cookie", adminCookies)
         .send({ teacherAssignments: [] });
 
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+
+      const teaches = await prisma.teaches.findMany({
+        where: { classId: klass.id, courseId: course.id },
+      });
+      expect(teaches).toHaveLength(0);
+
+      const channel = await prisma.channel.findFirst({
+        where: { serverId: klass.serverId, courseId: course.id },
+      });
+      expect(channel).not.toBeNull();
+      expect(channel!.isArchived).toBe(false);
+      expect(channel!.isLocked).toBe(true);
     });
 
     it("should return 400 when teacher assignments contain duplicate course entries", async () => {
@@ -2113,19 +2134,14 @@ describe("Class management", () => {
       const adminCookies = await loginAs(admin.email, "Pass@1234");
 
       // Simulate an existing course channel from a prior term without relying on current curriculum.
-      await prisma.teaches.create({
-        data: { classId: klass.id, courseId: course.id, teacherId: teacher.id },
+      await createChannel(klass.serverId, {
+        courseId: course.id,
+        name: course.code,
+        type: "COURSE",
+        isAutoCreated: true,
+        createdBy: admin.id,
       });
-      await prisma.channel.create({
-        data: {
-          serverId: klass.serverId,
-          courseId: course.id,
-          name: course.code,
-          type: "COURSE",
-          isAutoCreated: true,
-          createdBy: admin.id,
-        },
-      });
+      await createTeachesRecord(teacher.id, course.id, klass.id);
 
       const channelBefore = await prisma.channel.findFirst({
         where: { serverId: klass.serverId, courseId: course.id },
@@ -2182,7 +2198,7 @@ describe("Class management", () => {
       expect(res.body.success).toBe(false);
     });
 
-    it("should add teachers as server members when assigned via curriculum", async () => {
+    it("should create direct teaching access without server membership during progression", async () => {
       const u = uid();
       const admin = await createUser({
         email: `admin-sp-mem-${u}@test.com`,
@@ -2214,14 +2230,24 @@ describe("Class management", () => {
           teacherAssignments: [{ courseId: course.id, teacherPublicId: teacher.publicId }],
         });
 
-      // Verify teacher is now a member
+      const assignment = await prisma.teaches.findUnique({
+        where: { classId_courseId: { classId: klass.id, courseId: course.id } },
+      });
+      expect(assignment?.teacherId).toBe(teacher.id);
+      expect(assignment?.channelId).toEqual(expect.any(Number));
+
+      const channel = await prisma.channel.findFirst({
+        where: { serverId: klass.serverId, courseId: course.id },
+      });
+      expect(channel).not.toBeNull();
+      expect(channel!.isLocked).toBe(false);
+
       const memberAfter = await prisma.serverMembership.findUnique({
         where: {
           userId_serverId: { userId: teacher.id, serverId: klass.serverId },
         },
       });
-      expect(memberAfter).not.toBeNull();
-      expect(memberAfter!.isAutoJoined).toBe(true);
+      expect(memberAfter).toBeNull();
     });
   });
 });

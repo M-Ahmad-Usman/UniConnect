@@ -20,6 +20,7 @@ import {
 import { getIO } from "../../socket/index.js";
 import type { PrismaTransaction } from "../../shared/lifecycle/society.js";
 import { resolveServerPublicId } from "../../shared/ids/index.js";
+import { getChannelAccess } from "../../shared/access/channel-access.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -272,21 +273,30 @@ export async function createPostNotifications(
       "message"
     )
     SELECT
-      membership."user_id",
+      eligible_user."user_id",
       ${postId},
       'new_post'::"notification_type",
       ${notificationTitle},
       ${message}
-    FROM "server_memberships" AS membership
-    INNER JOIN "users" AS member ON member."id" = membership."user_id"
-    WHERE membership."server_id" = ${serverId}
-      AND membership."user_id" <> ${authorId}
+    FROM (
+      SELECT membership."user_id"
+      FROM "server_memberships" AS membership
+      WHERE membership."server_id" = ${serverId}
+
+      UNION
+
+      SELECT teaches."teacher_id" AS "user_id"
+      FROM "teaches" AS teaches
+      WHERE teaches."channel_id" = ${channelId}
+    ) AS eligible_user
+    INNER JOIN "users" AS member ON member."id" = eligible_user."user_id"
+    WHERE eligible_user."user_id" <> ${authorId}
       AND member."status" = 'active'::"user_status"
       AND member."is_deleted" = FALSE
       AND NOT EXISTS (
         SELECT 1
         FROM "notification_preferences" AS preference
-        WHERE preference."user_id" = membership."user_id"
+        WHERE preference."user_id" = eligible_user."user_id"
           AND preference."notification_type" = 'new_post'::"notification_type"
           AND preference."is_subscribed" = FALSE
           AND (
@@ -650,14 +660,10 @@ export async function updatePreference(
     );
   }
 
-  // Validate user is a member of the server
   const membership = await prisma.serverMembership.findUnique({
     where: { userId_serverId: { userId, serverId } },
+    select: { userId: true },
   });
-
-  if (!membership) {
-    throw new ForbiddenError("You are not a member of this server");
-  }
 
   // If channel-level, validate channel belongs to server
   if (scopeType === "CHANNEL" && channelPublicId) {
@@ -675,7 +681,23 @@ export async function updatePreference(
         ApiErrorCode.CHANNEL_ARCHIVED,
       );
     }
+    if (!membership && notificationType === "NEW_POST") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { userType: true },
+      });
+      const access = user
+        ? await getChannelAccess({ id: userId, userType: user.userType }, channel.id)
+        : { canRead: false };
+      if (!access.canRead) {
+        throw new ForbiddenError("You are not a member of this server");
+      }
+    } else if (!membership) {
+      throw new ForbiddenError("You are not a member of this server");
+    }
     channelId = channel.id;
+  } else if (!membership) {
+    throw new ForbiddenError("You are not a member of this server");
   }
 
   // The SQL-only null-safe unique index covers server and channel scopes.
