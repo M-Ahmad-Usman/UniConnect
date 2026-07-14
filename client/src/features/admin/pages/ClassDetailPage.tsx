@@ -363,7 +363,7 @@ export function ClassDetailPage() {
         open={graduationOpen}
         onOpenChange={setGraduationOpen}
         title="Graduate class"
-        description="This marks the class as graduated and locks all class channels so history stays readable."
+        description="This marks the class as graduated and makes course channels read-only. Announcement and General remain open to existing members."
         confirmLabel="Graduate"
         onConfirm={async () => {
           await graduateClass.mutateAsync();

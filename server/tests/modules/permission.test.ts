@@ -38,6 +38,8 @@ describe("Permission policy foundation", () => {
     expect(adminPermissions.global).toEqual({
       canAccessAdminDashboard: true,
       canAccessAcademicWorkspace: true,
+      canAccessTeachingWorkspace: false,
+      canBulkAdvanceSemester: true,
       canAccessEnrollmentWorkspace: true,
       canAccessRoleManagement: true,
       canManageUsers: true,
@@ -60,6 +62,8 @@ describe("Permission policy foundation", () => {
     expect(hodPermissions.global.canManageEnrollment).toBe(false);
     expect(hodPermissions.global.canCreateSociety).toBe(true);
     expect(hodPermissions.global.canManageUsers).toBe(false);
+    expect(hodPermissions.global.canAccessTeachingWorkspace).toBe(true);
+    expect(hodPermissions.global.canBulkAdvanceSemester).toBe(true);
     expect(hodPermissions.scopes.hodDepartmentIds).toContain(fixture.department.id);
     expect(hodPermissions.roleWorkspace.canAssignProgramDirector).toBe(true);
 
@@ -68,6 +72,8 @@ describe("Permission policy foundation", () => {
     expect(enrollmentOfficerPermissions.global.canAccessEnrollmentWorkspace).toBe(true);
     expect(enrollmentOfficerPermissions.global.canManageEnrollment).toBe(true);
     expect(enrollmentOfficerPermissions.global.canCreateClass).toBe(false);
+    expect(enrollmentOfficerPermissions.global.canAccessTeachingWorkspace).toBe(false);
+    expect(enrollmentOfficerPermissions.global.canBulkAdvanceSemester).toBe(false);
     expect(enrollmentOfficerPermissions.scopes.enrollmentOfficerDepartmentIds).toContain(
       fixture.department.id,
     );
@@ -77,6 +83,8 @@ describe("Permission policy foundation", () => {
     expect(pdPermissions.global.canManageCurriculum).toBe(true);
     expect(pdPermissions.global.canCreateCourse).toBe(false);
     expect(pdPermissions.global.canCreateClass).toBe(false);
+    expect(pdPermissions.global.canAccessTeachingWorkspace).toBe(true);
+    expect(pdPermissions.global.canBulkAdvanceSemester).toBe(false);
     expect(pdPermissions.scopes.directedProgramIds).toContain(fixture.program.id);
     expect(pdPermissions.roleWorkspace.canOpenRoleManagement).toBe(true);
     expect(pdPermissions.roleWorkspace.canAssignCR).toBe(true);
@@ -97,6 +105,8 @@ describe("Permission policy foundation", () => {
     expect(studentPermissions.global.canAccessAdminDashboard).toBe(false);
     expect(studentPermissions.global.canAccessAcademicWorkspace).toBe(false);
     expect(studentPermissions.global.canAccessRoleManagement).toBe(false);
+    expect(studentPermissions.global.canAccessTeachingWorkspace).toBe(false);
+    expect(studentPermissions.global.canBulkAdvanceSemester).toBe(false);
     expect(studentPermissions.roleWorkspace.canOpenRoleManagement).toBe(false);
   });
 

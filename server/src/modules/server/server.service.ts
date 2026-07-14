@@ -1,4 +1,4 @@
-import type { ServerType } from "@prisma/client";
+import type { Prisma, ServerType } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 import {
   cleanupCloudinaryUploads,
@@ -46,6 +46,7 @@ const serverListSelect = {
   type: true,
   iconUrl: true,
   createdAt: true,
+  class: { select: { status: true } },
 } as const;
 
 const serverDetailSelect = {
@@ -64,6 +65,7 @@ const serverDetailSelect = {
       id: true,
       publicId: true,
       currentSemester: true,
+      status: true,
       section: true,
       program: {
         select: {
@@ -175,7 +177,23 @@ async function canAccessServerThroughTeaching(
     select: { teacherId: true },
   });
 
-  return assignment !== null;
+  if (assignment) return true;
+
+  const historicalAssignment = await prisma.teachingAssignmentHistory.findFirst({
+    where: {
+      teacherId: userId,
+      endReason: { in: ["SEMESTER_PROGRESSION", "GRADUATION"] },
+      channel: {
+        serverId,
+        isDeleted: false,
+        isArchived: true,
+        server: { isDeleted: false },
+      },
+    },
+    select: { id: true },
+  });
+
+  return historicalAssignment !== null;
 }
 
 async function canManageServer(
@@ -356,7 +374,7 @@ async function resolveMemberBadges(
 export async function listServers(query: ListServersQuery, caller: CallerInfo) {
   const { page, limit, skip, take } = parsePagination(query);
 
-  const where = {
+  const where: Prisma.ServerWhereInput = {
     isDeleted: false,
     ...(caller.userType !== "ADMIN"
       ? {
@@ -368,6 +386,20 @@ export async function listServers(query: ListServersQuery, caller: CallerInfo) {
                   isDeleted: false,
                   isArchived: false,
                   teachingAssignments: { some: { teacherId: caller.id } },
+                },
+              },
+            },
+            {
+              channels: {
+                some: {
+                  isDeleted: false,
+                  isArchived: true,
+                  teachingHistory: {
+                    some: {
+                      teacherId: caller.id,
+                      endReason: { in: ["SEMESTER_PROGRESSION", "GRADUATION"] },
+                    },
+                  },
                 },
               },
             },

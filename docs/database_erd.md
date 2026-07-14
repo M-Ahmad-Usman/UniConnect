@@ -498,3 +498,25 @@ PROGRAM_CURRICULUM {
 PROGRAM_CURRICULUM.program_id > PROGRAM.id
 PROGRAM_CURRICULUM.course_id > COURSE.id
 ```
+
+```text
+TEACHING_ASSIGNMENT_HISTORY {
+  id SERIAL PK
+  public_id UUID UNIQUE
+  teacher_id INTEGER FK
+  course_id INTEGER FK
+  class_id INTEGER FK
+  channel_id INTEGER FK
+  semester_number INTEGER
+  assigned_by INTEGER FK
+  assigned_at TIMESTAMPTZ
+  ended_by INTEGER FK
+  ended_at TIMESTAMPTZ
+  end_reason ENUM // replaced, removed, semester_progression, graduation
+}
+
+TEACHING_ASSIGNMENT_HISTORY.teacher_id > TEACHER_INFO.teacher_id
+TEACHING_ASSIGNMENT_HISTORY.course_id > COURSE.id
+TEACHING_ASSIGNMENT_HISTORY.class_id > CLASS.id
+TEACHING_ASSIGNMENT_HISTORY.channel_id > CHANNEL.id
+```

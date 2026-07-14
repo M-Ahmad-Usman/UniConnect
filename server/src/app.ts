@@ -34,6 +34,7 @@ import {
 } from "./modules/notification/notification.routes.js";
 import { registerNotificationListeners } from "./modules/notification/notification.listener.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import teachingRoutes from "./modules/teaching/teaching.routes.js";
 
 const app = express();
 
@@ -129,6 +130,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/notification-preferences", notificationPreferenceRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/teaching", teachingRoutes);
 
 // ─── Production Frontend ────────────────────────────────────────────────────
 const frontendDistPath = path.resolve(process.cwd(), "public");

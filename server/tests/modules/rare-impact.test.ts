@@ -175,12 +175,10 @@ describe("Rare deletion-impact reports", () => {
     });
     const course = await createCourse(department.id, { code: `COI-${uid()}` });
     await createCurriculum(program.id, course.id, 1, 2026);
-    await createTeachesRecord(teacher.id, course.id, klass.id);
-    const channel = await createChannel(klass.serverId, {
-      name: `course-impact-${uid()}`,
-      type: "COURSE",
-      courseId: course.id,
-      createdBy: admin.id,
+    const assignment = await createTeachesRecord(teacher.id, course.id, klass.id);
+    const channel = await prisma.channel.findUniqueOrThrow({
+      where: { id: assignment.channelId },
+      select: { id: true, publicId: true },
     });
     await createPost(channel.id, admin.id);
 

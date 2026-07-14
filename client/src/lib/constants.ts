@@ -34,6 +34,7 @@ export const ROUTES = {
   ENROLLMENT_CLASS: (classPublicId: string) => `/enrollment/classes/${classPublicId}`,
   ENROLLMENT_STUDENT_NEW: '/enrollment/students/new',
   ENROLLMENT_IMPORT: '/enrollment/import',
+  TEACHING: '/teaching',
   ACADEMICS_CLASSES: '/academics/classes',
   ACADEMICS_CLASS: (classPublicId: string) => `/academics/classes/${classPublicId}`,
   ACADEMICS_COURSES: '/academics/courses',
@@ -75,7 +76,8 @@ export const queryKeys = {
   departments: {
     list: () => ['departments'] as const,
     detail: (departmentId: number) => ['departments', departmentId] as const,
-    deletionImpact: (departmentId: number) => ['departments', departmentId, 'deletion-impact'] as const,
+    deletionImpact: (departmentId: number) =>
+      ['departments', departmentId, 'deletion-impact'] as const,
     stats: (departmentId: number) => ['departments', departmentId, 'stats'] as const,
     programs: (departmentId: number) => ['departments', departmentId, 'programs'] as const,
   },
@@ -98,7 +100,8 @@ export const queryKeys = {
     all: () => ['classes'] as const,
     list: (params?: Record<string, unknown>) => ['classes', params] as const,
     detail: (classPublicId: string) => ['classes', classPublicId] as const,
-    deletionImpact: (classPublicId: string) => ['classes', classPublicId, 'deletion-impact'] as const,
+    deletionImpact: (classPublicId: string) =>
+      ['classes', classPublicId, 'deletion-impact'] as const,
     courses: (classPublicId: string) => ['classes', classPublicId, 'courses'] as const,
     students: (classPublicId: string, params?: Record<string, unknown>) =>
       params
@@ -169,12 +172,17 @@ export const queryKeys = {
     transferCandidates: (classPublicId: string, params?: Record<string, unknown>) =>
       ['enrollment', 'classes', classPublicId, 'transfer-candidates', params] as const,
   },
+  teaching: {
+    mine: (historyPage: number) => ['teaching', 'me', historyPage] as const,
+  },
   societies: {
     all: () => ['societies'] as const,
     list: (params?: Record<string, unknown>) => ['societies', params] as const,
     detail: (societyPublicId: string) => ['societies', societyPublicId] as const,
-    deletionImpact: (societyPublicId: string) => ['societies', societyPublicId, 'deletion-impact'] as const,
-    myMembership: (societyPublicId: string) => ['societies', societyPublicId, 'my-membership'] as const,
+    deletionImpact: (societyPublicId: string) =>
+      ['societies', societyPublicId, 'deletion-impact'] as const,
+    myMembership: (societyPublicId: string) =>
+      ['societies', societyPublicId, 'my-membership'] as const,
     requests: (societyPublicId: string, params?: Record<string, unknown>) =>
       params
         ? (['societies', societyPublicId, 'requests', params] as const)

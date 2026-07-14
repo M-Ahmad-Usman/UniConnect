@@ -238,6 +238,29 @@ export async function handleAdvanceSemester(req: Request, res: Response): Promis
   res.status(StatusCodes.OK).json(response);
 }
 
+export async function handleBulkAdvanceSemester(req: Request, res: Response): Promise<void> {
+  const result = await classService.bulkAdvanceSemester(
+    req.body,
+    req.user!.id,
+    req.user!.userType,
+  );
+  await recordAuditLog(
+    {
+      action: "class.semester.advance.bulk",
+      targetType: "class",
+      targetId: "bulk",
+      summary: { total: result.total, succeeded: result.succeeded, failed: result.failed },
+    },
+    auditContextFromRequest(req),
+  );
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    message: "Bulk semester progression completed",
+  };
+  res.status(StatusCodes.OK).json(response);
+}
+
 export async function handleListClassStudents(req: Request, res: Response): Promise<void> {
   const query = req.query as Record<string, string | undefined>;
   const result = await classService.listClassStudents(

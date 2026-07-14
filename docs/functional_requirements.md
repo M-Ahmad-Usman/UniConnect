@@ -324,3 +324,12 @@ The backend exposes grouped boolean capabilities for permission-aware UI. Capabi
 | Browser Support  | Chrome, Firefox, Edge |
 
 ---
+### Teacher Workspace And Academic Lifecycle
+
+- Active teachers can open My Teaching and browse current and historical assignments.
+- Semester progression/graduation history provides read-only archived course access;
+  replacement/removal history does not preserve access.
+- Admins and HODs can progress up to 50 explicitly selected classes with independent
+  results and no cross-class rollback.
+- Graduated classes remain visible to existing members, reject new student placement,
+  archive Course channels, and keep Announcement/General open.

@@ -4,7 +4,7 @@
 UniConnect is a Discord-like university communication platform for National Textile University (NTU), Faisalabad. It organizes official announcements into servers (departments, classes, societies) and channels, with fine-grained role-based access control.
 
 ## Monorepo Structure
-This is a two-app monorepo. Each app is fully independent — no shared packages, no root workspace.
+The production web system is a two-app monorepo. Each app is fully independent — no shared packages, no root workspace. A `mobile/` Capacitor wrapper also exists but is outside web/server redesign phases unless a task explicitly includes it.
 
 ```
 uniconnect/

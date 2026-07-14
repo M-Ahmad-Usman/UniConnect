@@ -135,6 +135,7 @@ export async function getCourseDeletionImpact(courseId: number) {
     curriculumPreview,
     teachingCount,
     teachingPreview,
+    teachingHistoryCount,
     channelCount,
     channelPreview,
     postCount,
@@ -183,6 +184,7 @@ export async function getCourseDeletionImpact(courseId: number) {
       orderBy: [{ class: { admissionYear: "desc" } }, { class: { section: "asc" } }],
       take: IMPACT_PREVIEW_LIMIT,
     }),
+    prisma.teachingAssignmentHistory.count({ where: { courseId } }),
     prisma.channel.count({ where: { courseId } }),
     prisma.channel.findMany({
       where: { courseId },
@@ -202,7 +204,11 @@ export async function getCourseDeletionImpact(courseId: number) {
     prisma.userRoleAssignment.count({ where: { channel: { courseId } } }),
   ]);
 
-  const canDelete = curriculumCount === 0 && teachingCount === 0 && channelCount === 0;
+  const canDelete =
+    curriculumCount === 0 &&
+    teachingCount === 0 &&
+    teachingHistoryCount === 0 &&
+    channelCount === 0;
 
   return {
     course,
@@ -212,6 +218,7 @@ export async function getCourseDeletionImpact(courseId: number) {
     blockers: {
       curriculumEntries: buildImpactGroup(curriculumCount, curriculumPreview),
       activeTeachingAssignments: buildImpactGroup(teachingCount, teachingPreview),
+      teachingHistory: buildImpactGroup(teachingHistoryCount, []),
       courseChannels: buildImpactGroup(channelCount, channelPreview),
     },
     communicationImpact: {

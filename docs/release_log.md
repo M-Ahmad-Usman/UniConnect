@@ -661,3 +661,15 @@ This is the single active implementation and release log going forward. Older ba
     explicit Playwright socket URL to avoid shutdown-time websocket proxy noise.
   - Backend/E2E logs can still expose a Prisma adapter/pg transaction
     deprecation warning that should be cleaned up before pg 9.
+## 2026-07-11 - Production Redesign Phase 5
+
+- Added teaching assignment history, teacher My Teaching API/workspace, and scoped
+  archived-channel history access.
+- Added independent-result bulk semester progression for Admin/HOD users.
+- Hardened graduation and all student-placement paths for graduated classes.
+- Completed Phase 4/5 verification on 2026-07-14: clean six-migration database reset,
+  backend Jest 544/544, frontend Vitest 150/150, and Chromium Playwright 41/41.
+- Added focused My Teaching and bulk-result frontend tests plus browser coverage for
+  replacement-history denial and graduated archived-channel navigation.
+- Serialized channel joins per socket to eliminate burst-time overlapping access
+  queries while preserving concurrency across independent sockets.

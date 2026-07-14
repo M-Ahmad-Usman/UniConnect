@@ -1,5 +1,6 @@
 import {
   Bell,
+  BookOpen,
   Building2,
   GraduationCap,
   KeyRound,
@@ -40,6 +41,7 @@ export function UserDropdown() {
   const canManageRoles = permissionsQuery.data?.roleWorkspace.canOpenRoleManagement ?? false;
   const canAccessAcademics = permissionsQuery.data?.global.canAccessAcademicWorkspace ?? false;
   const canAccessEnrollment = permissionsQuery.data?.global.canAccessEnrollmentWorkspace ?? false;
+  const canAccessTeaching = permissionsQuery.data?.global.canAccessTeachingWorkspace ?? false;
 
   if (!user) {
     return null;
@@ -94,6 +96,12 @@ export function UserDropdown() {
             <DropdownMenuItem onClick={() => navigate(ROUTES.ACADEMICS_PROGRAMS)}>
               <GraduationCap className="size-4" />
               Academics
+            </DropdownMenuItem>
+          ) : null}
+          {canAccessTeaching ? (
+            <DropdownMenuItem onClick={() => navigate(ROUTES.TEACHING)}>
+              <BookOpen className="size-4" />
+              My Teaching
             </DropdownMenuItem>
           ) : null}
           {canAccessEnrollment ? (

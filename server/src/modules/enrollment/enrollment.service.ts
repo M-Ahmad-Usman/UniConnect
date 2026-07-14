@@ -84,12 +84,21 @@ async function resolveClassForEnrollment(
     select: {
       id: true,
       publicId: true,
+      status: true,
       program: { select: { departmentId: true } },
     },
   });
 
   if (!classRecord) {
     throw new NotFoundError("Class not found");
+  }
+
+  if (classRecord.status !== "ACTIVE") {
+    throw new ValidationError(
+      "Students cannot be placed in a graduated class",
+      undefined,
+      ApiErrorCode.CLASS_GRADUATED,
+    );
   }
 
   ensureDepartmentAccess(access, classRecord.program.departmentId);

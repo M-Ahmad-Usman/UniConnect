@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { StableAvatar } from '@/components/shared/StableAvatar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ROUTES } from '@/lib/constants';
 import { useServers } from '@/features/servers/hooks/useServers';
@@ -59,7 +60,12 @@ export function ServersPage() {
             <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
               <div className="space-y-1">
                 <CardTitle className="text-lg">{server.name}</CardTitle>
-                <CardDescription>{server.type.replace('_', ' ')}</CardDescription>
+                <CardDescription className="flex items-center gap-2">
+                  {server.type.replace('_', ' ')}
+                  {server.class?.status === 'GRADUATED' ? (
+                    <Badge variant="outline">Graduated</Badge>
+                  ) : null}
+                </CardDescription>
               </div>
               <StableAvatar
                 src={server.iconUrl}

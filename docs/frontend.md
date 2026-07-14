@@ -90,3 +90,9 @@ Use `client/ARCHITECTURE.md` for detailed rules. Current standards include:
   not reintroduce direct `UserType.ADMIN` comparisons.
 - Log future release work in `docs/release_log.md`, not a frontend-local progress
   file.
+## Phase 5 Workspaces
+
+`/teaching` is a permission-guarded teacher workspace backed by TanStack Query. It
+shows active assignments and paginated history and links into the existing channel
+experience. `/academics/classes` exposes controlled multi-class selection and an
+independent-result bulk progression dialog to Admin/HOD users only.

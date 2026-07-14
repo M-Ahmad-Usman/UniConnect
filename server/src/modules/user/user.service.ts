@@ -316,11 +316,19 @@ export async function createUser(input: CreateUserInput, auditContext?: AuditCon
     if (input.userType === "STUDENT" && input.classPublicId) {
       const classRecord = await tx.class.findUnique({
         where: { publicId: input.classPublicId },
-        select: { id: true, serverId: true, program: { select: { departmentId: true } } },
+        select: { id: true, serverId: true, status: true, program: { select: { departmentId: true } } },
       });
 
       if (!classRecord) {
         throw new NotFoundError("Class not found");
+      }
+
+      if (classRecord.status !== "ACTIVE") {
+        throw new ValidationError(
+          "Students cannot be placed in a graduated class",
+          undefined,
+          ApiErrorCode.CLASS_GRADUATED,
+        );
       }
 
       classServerId = classRecord.serverId;

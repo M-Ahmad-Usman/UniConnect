@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma.js";
 import {
   ApiErrorCode,
+  AppError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
@@ -22,6 +23,7 @@ import { getServerCommunicationImpact } from "../../shared/lifecycle/communicati
 import { buildImpactGroup, IMPACT_PREVIEW_LIMIT } from "../../shared/lifecycle/impact.js";
 import { invalidateSystemStatsCache } from "../admin/admin.service.js";
 import { disconnectUserSockets } from "../../socket/index.js";
+import { archiveTeachingAssignments } from "../../shared/teaching/history.js";
 import type { Prisma } from "@prisma/client";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -73,6 +75,10 @@ type InternalTeacherAssignment = {
 
 type SemesterProgressionInput = {
   teacherAssignments: TeacherAssignment[];
+};
+
+type BulkSemesterProgressionInput = {
+  classes: Array<{ classPublicId: string; teacherAssignments: TeacherAssignment[] }>;
 };
 
 // ─── Selects ───────────────────────────────────────────────────────────────
@@ -1043,7 +1049,16 @@ export async function assignCourseToClass(
 }
 
 export async function listClassCourses(classId: number, callerUserId: number) {
-  await getClassById(classId, callerUserId);
+  const classRecord = await getClassById(classId, callerUserId);
+
+  if (classRecord.status === "GRADUATED") {
+    const historicalAssignments = await prisma.teachingAssignmentHistory.findMany({
+      where: { classId, endReason: "GRADUATION" },
+      select: courseAssignmentSelect,
+      orderBy: { course: { code: "asc" } },
+    });
+    return historicalAssignments.map(toPublicCourseAssignment);
+  }
 
   const assignments = await prisma.teaches.findMany({
     where: { classId },
@@ -1114,6 +1129,13 @@ export async function replaceClassCourseTeacher(
       actorUserId: userId,
       unlockForAssignment: true,
     });
+    await archiveTeachingAssignments(
+      tx,
+      { classId, courseId },
+      classRecord.currentSemester,
+      userId,
+      "REPLACED",
+    );
     const updated = await tx.teaches.update({
       where: { classId_courseId: { classId, courseId } },
       data: {
@@ -1160,10 +1182,13 @@ export async function removeCourseFromClass(
 
   const removedUserIds = await prisma.$transaction(async (tx) => {
     await lockClassForAcademicWrite(classId, userId, userType, "HOD_OR_PD", tx);
-    const lockedAssignments = await tx.teaches.findMany({
-      where: { classId, courseId },
-      select: { teacherId: true },
-    });
+    const lockedAssignments = await archiveTeachingAssignments(
+      tx,
+      { classId, courseId },
+      classRecord.currentSemester,
+      userId,
+      "REMOVED",
+    );
     if (lockedAssignments.length === 0) {
       throw new NotFoundError("Course is not assigned to this class");
     }
@@ -1635,6 +1660,13 @@ export async function advanceSemester(
       },
     });
 
+    await archiveTeachingAssignments(
+      tx,
+      { classId },
+      classRecord.currentSemester,
+      userId,
+      "SEMESTER_PROGRESSION",
+    );
     await tx.teaches.deleteMany({ where: { classId } });
 
     const updatedClass = await tx.class.update({
@@ -1693,6 +1725,52 @@ export async function advanceSemester(
   };
 }
 
+export async function bulkAdvanceSemester(
+  input: BulkSemesterProgressionInput,
+  userId: number,
+  userType: string,
+) {
+  const results: Array<
+    | { classPublicId: string; status: "SUCCESS"; data: Awaited<ReturnType<typeof advanceSemester>> }
+    | {
+        classPublicId: string;
+        status: "FAILED";
+        error: { code: string; message: string; details?: Record<string, unknown>[] };
+      }
+  > = [];
+
+  for (const item of input.classes) {
+    try {
+      const classRecord = await prisma.class.findUnique({
+        where: { publicId: item.classPublicId },
+        select: { id: true },
+      });
+      if (!classRecord) throw new NotFoundError("Class not found");
+
+      const data = await advanceSemester(
+        classRecord.id,
+        { teacherAssignments: item.teacherAssignments },
+        userId,
+        userType,
+      );
+      results.push({ classPublicId: item.classPublicId, status: "SUCCESS", data });
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        results.push({
+          classPublicId: item.classPublicId,
+          status: "FAILED",
+          error: { code: error.code, message: error.message, details: error.details },
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  const succeeded = results.filter((result) => result.status === "SUCCESS").length;
+  return { total: results.length, succeeded, failed: results.length - succeeded, results };
+}
+
 export async function graduateClass(classId: number, userId: number, userType: string) {
   const classRecord = await getManagedClassOrThrow(classId);
   assertClassIsActive(classRecord);
@@ -1712,6 +1790,14 @@ export async function graduateClass(classId: number, userId: number, userType: s
       throw new ConflictError("Class semester changed; reload and try again");
     }
     const now = new Date();
+    const endedAssignments = await archiveTeachingAssignments(
+      tx,
+      { classId },
+      classRecord.currentSemester,
+      userId,
+      "GRADUATION",
+    );
+    await tx.teaches.deleteMany({ where: { classId } });
     const updatedClass = await tx.class.update({
       where: { id: classId },
       data: {
@@ -1750,14 +1836,16 @@ export async function graduateClass(classId: number, userId: number, userType: s
       },
     });
 
-    return updatedClass;
+    return { updatedClass, removedUserIds: [...new Set(endedAssignments.map((a) => a.teacherId))] };
   });
 
+  graduatedClass.removedUserIds.forEach(disconnectUserSockets);
+
   return {
-    ...toPublicClass(graduatedClass),
+    ...toPublicClass(graduatedClass.updatedClass),
     permissions: buildClassPermissions(
       await getPermissionContext(userId),
-      buildClassPermissionTarget(graduatedClass)
+      buildClassPermissionTarget(graduatedClass.updatedClass)
     ),
   };
 }
@@ -1788,7 +1876,14 @@ export async function getClassDeletionImpact(classId: number) {
     throw new NotFoundError("Class not found");
   }
 
-  const [studentCount, studentPreview, teachingCount, teachingPreview, communicationImpact] =
+  const [
+    studentCount,
+    studentPreview,
+    teachingCount,
+    teachingPreview,
+    teachingHistoryCount,
+    communicationImpact,
+  ] =
     await Promise.all([
       prisma.studentInfo.count({ where: { classId } }),
       prisma.studentInfo.findMany({
@@ -1823,10 +1918,11 @@ export async function getClassDeletionImpact(classId: number) {
         orderBy: { course: { code: "asc" } },
         take: IMPACT_PREVIEW_LIMIT,
       }),
+      prisma.teachingAssignmentHistory.count({ where: { classId } }),
       getServerCommunicationImpact(classRecord.serverId),
     ]);
 
-  const canDelete = studentCount === 0 && teachingCount === 0;
+  const canDelete = studentCount === 0 && teachingCount === 0 && teachingHistoryCount === 0;
 
   return {
     class: {
@@ -1847,6 +1943,7 @@ export async function getClassDeletionImpact(classId: number) {
     blockers: {
       enrolledStudents: buildImpactGroup(studentCount, studentPreview),
       activeTeachingAssignments: buildImpactGroup(teachingCount, teachingPreview),
+      teachingHistory: buildImpactGroup(teachingHistoryCount, []),
     },
     communicationImpact,
   };

@@ -17,8 +17,8 @@ were folded into the production redesign plan and this progress file.
 | Phase 1: Role And Authorization Foundation | Complete | Hardened and fully verified on 2026-07-07. |
 | Phase 2: Enrollment And HOD Responsibility Split | Implemented | Backend/frontend implementation and focused validation complete; broader regression still pending before marking complete. |
 | Phase 3: Society Leadership Rules | Implemented | Backend/frontend implementation and full Playwright validation complete. |
-| Phase 4: Teaching Assignment And Course-Channel Access | Implemented | Backend/frontend implementation and focused validation complete; broad Playwright regression still pending before marking complete. |
-| Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy | Not started | Depends on Phase 4 teaching/channel access foundations. |
+| Phase 4: Teaching Assignment And Course-Channel Access | Complete | Implementation, focused coverage, and full backend/frontend/Playwright regression verified on 2026-07-14. |
+| Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy | Complete | Implementation, focused coverage, and full backend/frontend/Playwright regression verified on 2026-07-14. |
 | Phase 6: Notification Defaults | Not started | Must update every membership/assignment creation path consistently. |
 | Phase 7: Drafts, Bulk Posting, And Acknowledgments | Not started | Drafts are channel-scoped; bulk posting is all-or-nothing. |
 | Phase 8: Full Verification And Release Readiness | Not started | Final broad release verification after all phases land. |
@@ -266,13 +266,43 @@ Phase 4:
   - `client`: `npm run test -- --run` -> 26 files, 147/147
   - `client`: `npm run build`
   - Existing pg adapter deprecation warning still appears in Jest runs.
+- Completion validation on 2026-07-14:
+  - Added deterministic per-socket channel-join serialization so burst joins do not
+    issue overlapping Prisma access queries or intermittently lose valid rooms.
+  - Full clean-migration/backend/frontend/browser evidence is shared with Phase 5 below.
 
-Phase 5:
+Phase 5 implemented on 2026-07-11 and completed on 2026-07-14:
 
-- Add `GET /api/teaching/me` and a teacher "My Teaching" view.
-- Bulk semester progression is per-class independent success/failure.
-- Graduated class servers remain visible to existing members; course channels are
-  archived, Announcement/General remain open, and no new members can be added.
+- Added append-only `TeachingAssignmentHistory` records for replacement, removal,
+  semester progression, and graduation. Only progression/graduation history grants
+  read-only access to archived course channels.
+- Added `GET /api/teaching/me` and the guarded `/teaching` workspace with active and
+  paginated historical assignments linked to existing channel routes.
+- Added `POST /api/classes/semester-progression/bulk` for Admin/HOD callers. Up to 50
+  unique classes are processed sequentially in independent transactions and return
+  an HTTP 200 result array with per-class success or typed failure details.
+- Graduation now archives teaching history, clears live `TEACHES`, archives/locks
+  Course channels only, and leaves Announcement/General open to existing members.
+- Student creation, import, enrollment, and transfer resolution reject graduated
+  destination classes with `CLASS_GRADUATED`.
+- Added `canAccessTeachingWorkspace` and `canBulkAdvanceSemester` permissions.
+- Historical progression/graduation access now permits the exact archived server and
+  channel shell data needed for direct navigation. Replacement/removal history remains
+  audit-only and does not expose server or channel content.
+- Mobile is outside Phase 5 scope; the hosted web client and server contract are the
+  source of truth for this phase.
+- Completion validation:
+  - Clean test database reset applied all six migrations through
+    `20260711000000_phase5_teaching_history`.
+  - `server`: Prisma validation, production build, test TypeScript compilation, and
+    full Jest integration regression -> 26 suites, 544/544.
+  - `client`: type-check, lint, production build, and full Vitest regression ->
+    28 files, 150/150.
+  - Targeted academic Playwright -> 7/7, including replacement history denial and
+    graduated archived-channel read-only navigation.
+  - Full Chromium Playwright regression -> 41/41.
+  - Remaining non-blocking warning: the Prisma pg adapter still reports deprecated
+    concurrent `client.query()` usage in several unrelated integration paths.
 
 Phase 6:
 

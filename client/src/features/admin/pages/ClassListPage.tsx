@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Plus, Wand2 } from 'lucide-react';
+import type { BulkSemesterProgressionResult } from '@/api/endpoints/catalog.api';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '@/lib/constants';
@@ -8,7 +9,13 @@ import { useMyPermissions } from '@/hooks/useMyPermissions';
 import { ClassStatus, type Section } from '@/types';
 import { parsePositiveInt } from '../utils';
 import { useDepartments } from '../hooks/useDepartments';
-import { useAdminClasses, useCreateClass, usePrograms } from '../hooks/useAcademicCatalog';
+import {
+  useAdminClasses,
+  useBulkAdvanceSemester,
+  useCreateClass,
+  usePrograms,
+} from '../hooks/useAcademicCatalog';
+import { BulkSemesterProgressionDialog } from '../components/BulkSemesterProgressionDialog';
 import {
   AdminPageHeader,
   DataState,
@@ -33,6 +40,9 @@ function parseStatus(value: string | null): ClassStatus | 'ALL' | undefined {
 export function ClassListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [selectedClassIds, setSelectedClassIds] = useState<Set<string>>(new Set());
+  const [bulkResult, setBulkResult] = useState<BulkSemesterProgressionResult | null>(null);
   const page = parsePositiveInt(searchParams.get('page')) ?? 1;
   const departmentId = parsePositiveInt(searchParams.get('departmentId'));
   const programId = parsePositiveInt(searchParams.get('programId'));
@@ -59,15 +69,18 @@ export function ClassListPage() {
       ? directedProgramIds
       : undefined;
 
-  const classesQuery = useAdminClasses({
-    page,
-    limit: DEFAULT_PAGE_SIZE,
-    departmentId: effectiveDepartmentId,
-    programId,
-    semester,
-    section,
-    status,
-  }, canListClasses);
+  const classesQuery = useAdminClasses(
+    {
+      page,
+      limit: DEFAULT_PAGE_SIZE,
+      departmentId: effectiveDepartmentId,
+      programId,
+      semester,
+      section,
+      status,
+    },
+    canListClasses,
+  );
   const departmentsQuery = useDepartments();
   const programsQuery = usePrograms(
     {
@@ -80,6 +93,7 @@ export function ClassListPage() {
     permissionsQuery.isSuccess && canListClasses,
   );
   const createClass = useCreateClass();
+  const bulkAdvance = useBulkAdvanceSemester();
   const departments = useMemo(() => {
     const records = departmentsQuery.data ?? [];
     return canAccessAllDepartments
@@ -95,6 +109,8 @@ export function ClassListPage() {
   const programs = programsQuery.data?.data ?? [];
   const classes = classesQuery.data?.data ?? [];
   const canCreateClass = permissionsQuery.data?.global.canCreateClass ?? false;
+  const canBulkAdvance = permissionsQuery.data?.global.canBulkAdvanceSemester ?? false;
+  const selectedClasses = classes.filter((klass) => selectedClassIds.has(klass.publicId));
 
   function updateFilter(updates: {
     departmentId?: string;
@@ -138,12 +154,27 @@ export function ClassListPage() {
         title="Classes"
         description="Manage class servers and academic class metadata."
         actions={
-          canCreateClass ? (
-            <Button type="button" onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" />
-              Create class
-            </Button>
-          ) : null
+          <>
+            {canBulkAdvance && selectedClasses.length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setBulkResult(null);
+                  setBulkOpen(true);
+                }}
+              >
+                <Wand2 className="size-4" />
+                Advance selected ({selectedClasses.length})
+              </Button>
+            ) : null}
+            {canCreateClass ? (
+              <Button type="button" onClick={() => setCreateOpen(true)}>
+                <Plus className="size-4" />
+                Create class
+              </Button>
+            ) : null}
+          </>
         }
       />
       <div className="rounded-lg border bg-background p-3">
@@ -156,7 +187,7 @@ export function ClassListPage() {
                 value={
                   lockedDepartment
                     ? `${lockedDepartment.code} · ${lockedDepartment.name}`
-                    : scopedDepartmentLabel ?? ''
+                    : (scopedDepartmentLabel ?? '')
                 }
                 readOnly
               />
@@ -179,7 +210,11 @@ export function ClassListPage() {
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Program</span>
-            <select className={inputClassName} value={programId ?? ''} onChange={(event) => updateFilter({ programId: event.target.value })}>
+            <select
+              className={inputClassName}
+              value={programId ?? ''}
+              onChange={(event) => updateFilter({ programId: event.target.value })}
+            >
               <option value="">All programs</option>
               {programs.map((program) => (
                 <option key={program.id} value={program.id}>
@@ -190,11 +225,20 @@ export function ClassListPage() {
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Semester</span>
-            <input className={inputClassName} type="number" value={semester ?? ''} onChange={(event) => updateFilter({ semester: event.target.value })} />
+            <input
+              className={inputClassName}
+              type="number"
+              value={semester ?? ''}
+              onChange={(event) => updateFilter({ semester: event.target.value })}
+            />
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Section</span>
-            <select className={inputClassName} value={section ?? ''} onChange={(event) => updateFilter({ section: event.target.value })}>
+            <select
+              className={inputClassName}
+              value={section ?? ''}
+              onChange={(event) => updateFilter({ section: event.target.value })}
+            >
               <option value="">All sections</option>
               <option value="A">A</option>
               <option value="B">B</option>
@@ -202,7 +246,11 @@ export function ClassListPage() {
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Status</span>
-            <select className={inputClassName} value={status ?? ''} onChange={(event) => updateFilter({ status: event.target.value })}>
+            <select
+              className={inputClassName}
+              value={status ?? ''}
+              onChange={(event) => updateFilter({ status: event.target.value })}
+            >
               <option value="">Active</option>
               <option value={ClassStatus.GRADUATED}>Graduated</option>
               <option value="ALL">All</option>
@@ -222,6 +270,11 @@ export function ClassListPage() {
             <table className="w-full min-w-[980px] text-sm">
               <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                 <tr>
+                  {canBulkAdvance ? (
+                    <th className="w-12 px-4 py-3 font-medium">
+                      <span className="sr-only">Select</span>
+                    </th>
+                  ) : null}
                   <th className="px-4 py-3 font-medium">Program</th>
                   <th className="px-4 py-3 font-medium">Department</th>
                   <th className="px-4 py-3 font-medium">Semester</th>
@@ -235,15 +288,38 @@ export function ClassListPage() {
               <tbody className="divide-y">
                 {classes.map((klass) => (
                   <tr key={klass.publicId}>
+                    {canBulkAdvance ? (
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${klass.program.code} section ${klass.section}`}
+                          checked={selectedClassIds.has(klass.publicId)}
+                          disabled={klass.status !== ClassStatus.ACTIVE}
+                          onChange={(event) =>
+                            setSelectedClassIds((current) => {
+                              const next = new Set(current);
+                              if (event.target.checked) next.add(klass.publicId);
+                              else next.delete(klass.publicId);
+                              return next;
+                            })
+                          }
+                        />
+                      </td>
+                    ) : null}
                     <td className="px-4 py-3 font-medium">{klass.program.code}</td>
                     <td className="px-4 py-3">{klass.program.department.code}</td>
                     <td className="px-4 py-3">{klass.currentSemester}</td>
                     <td className="px-4 py-3">{klass.section}</td>
                     <td className="px-4 py-3">{klass.academicYear}</td>
-                    <td className="px-4 py-3">{klass.status === ClassStatus.GRADUATED ? 'Graduated' : 'Active'}</td>
+                    <td className="px-4 py-3">
+                      {klass.status === ClassStatus.GRADUATED ? 'Graduated' : 'Active'}
+                    </td>
                     <td className="px-4 py-3">{klass.cr?.user.fullName ?? 'Not assigned'}</td>
                     <td className="px-4 py-3 text-right">
-                      <Link to={ROUTES.ACADEMICS_CLASS(klass.publicId)} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                      <Link
+                        to={ROUTES.ACADEMICS_CLASS(klass.publicId)}
+                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                      >
                         <Eye className="size-4" />
                         Open
                       </Link>
@@ -265,6 +341,22 @@ export function ClassListPage() {
         programs={programs}
         loading={createClass.isPending}
         onSubmit={handleCreate}
+      />
+      <BulkSemesterProgressionDialog
+        open={bulkOpen}
+        onOpenChange={(open) => {
+          setBulkOpen(open);
+          if (!open) {
+            setSelectedClassIds(new Set());
+            setBulkResult(null);
+          }
+        }}
+        classes={selectedClasses}
+        loading={bulkAdvance.isPending}
+        result={bulkResult}
+        onSubmit={async (items) => {
+          setBulkResult(await bulkAdvance.mutateAsync({ classes: items }));
+        }}
       />
     </section>
   );

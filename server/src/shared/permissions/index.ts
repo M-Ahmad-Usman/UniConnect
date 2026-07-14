@@ -7,6 +7,8 @@ import {
 export interface GlobalPermissions {
   canAccessAdminDashboard: boolean;
   canAccessAcademicWorkspace: boolean;
+  canAccessTeachingWorkspace: boolean;
+  canBulkAdvanceSemester: boolean;
   canAccessEnrollmentWorkspace: boolean;
   canAccessRoleManagement: boolean;
   canManageUsers: boolean;
@@ -111,6 +113,8 @@ export function emptyGlobalPermissions(): GlobalPermissions {
   return {
     canAccessAdminDashboard: false,
     canAccessAcademicWorkspace: false,
+    canAccessTeachingWorkspace: false,
+    canBulkAdvanceSemester: false,
     canAccessEnrollmentWorkspace: false,
     canAccessRoleManagement: false,
     canManageUsers: false,
@@ -279,6 +283,8 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
     return {
       canAccessAdminDashboard: true,
       canAccessAcademicWorkspace: true,
+      canAccessTeachingWorkspace: false,
+      canBulkAdvanceSemester: true,
       canAccessEnrollmentWorkspace: true,
       canAccessRoleManagement: true,
       canManageUsers: true,
@@ -301,6 +307,8 @@ export function buildGlobalPermissions(context: PermissionContext): GlobalPermis
   return {
     canAccessAdminDashboard: false,
     canAccessAcademicWorkspace: isHod || isPd,
+    canAccessTeachingWorkspace: context.user?.userType === "TEACHER",
+    canBulkAdvanceSemester: isHod,
     canAccessEnrollmentWorkspace: isEnrollmentOfficer,
     canAccessRoleManagement,
     canManageUsers: false,

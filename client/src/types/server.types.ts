@@ -9,6 +9,7 @@ export interface ServerListItem {
   type: ServerType;
   iconUrl: string | null;
   createdAt: string;
+  class: { status: 'ACTIVE' | 'GRADUATED' } | null;
 }
 
 // ─── Server Detail ──────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ export interface ServerDetail {
   class: {
     publicId: string;
     currentSemester: number;
+    status: 'ACTIVE' | 'GRADUATED';
     section: string;
     program: {
       id: number;

@@ -101,6 +101,20 @@ export interface CandidateParams {
   search?: string;
 }
 
+export interface BulkSemesterProgressionRequest {
+  classes: Array<{ classPublicId: string; teacherAssignments: TeacherAssignmentInput[] }>;
+}
+
+export interface BulkSemesterProgressionResult {
+  total: number;
+  succeeded: number;
+  failed: number;
+  results: Array<
+    | { classPublicId: string; status: 'SUCCESS'; data: ClassDetail }
+    | { classPublicId: string; status: 'FAILED'; error: { code: string; message: string } }
+  >;
+}
+
 export const catalogApi = {
   async listDepartments() {
     const response = await apiClient.get<DepartmentListItem[]>('/departments');
@@ -264,7 +278,9 @@ export const catalogApi = {
   },
 
   async listClassCourses(classPublicId: string) {
-    const response = await apiClient.get<ClassCourseAssignment[]>(`/classes/${classPublicId}/courses`);
+    const response = await apiClient.get<ClassCourseAssignment[]>(
+      `/classes/${classPublicId}/courses`,
+    );
     return response.data;
   },
 
@@ -321,9 +337,20 @@ export const catalogApi = {
   },
 
   async advanceSemester(classPublicId: string, teacherAssignments: TeacherAssignmentInput[]) {
-    const response = await apiClient.post<ClassDetail>(`/classes/${classPublicId}/semester-progression`, {
-      teacherAssignments,
-    });
+    const response = await apiClient.post<ClassDetail>(
+      `/classes/${classPublicId}/semester-progression`,
+      {
+        teacherAssignments,
+      },
+    );
+    return response.data;
+  },
+
+  async bulkAdvanceSemester(payload: BulkSemesterProgressionRequest) {
+    const response = await apiClient.post<BulkSemesterProgressionResult>(
+      '/classes/semester-progression/bulk',
+      payload,
+    );
     return response.data;
   },
 

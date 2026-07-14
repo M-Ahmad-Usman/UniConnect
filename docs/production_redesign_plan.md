@@ -120,6 +120,8 @@ Tests:
 
 ### Phase 4: Teaching Assignment And Course-Channel Access
 
+Implementation status: complete and fully regression-verified on 2026-07-14.
+
 - Add `assignedAt`, `assignedBy`, and `channelId` to `TEACHES`; populate on
   assign/replace.
 - Stop auto-adding teachers to class servers solely because they teach a course.
@@ -140,6 +142,9 @@ Tests:
 - Regression tests for ordinary member, CR, HOD, moderator, and Admin access.
 
 ### Phase 5: Teacher Workspace, Bulk Progression, Graduation Policy
+
+Implementation status: complete and fully regression-verified on 2026-07-14. See
+`production_redesign_progress.md` for exact validation evidence.
 
 - Add "My Teaching" API and frontend view grouped by course, listing classes and linking
   directly to course channels.

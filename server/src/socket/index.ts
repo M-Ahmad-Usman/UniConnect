@@ -154,6 +154,7 @@ export function initializeSocket(server: http.Server): SocketIOServer {
     const joinedChannelIds = new Map<string, number>();
     const pendingChannelPublicIds = new Set<string>();
     let joinAttemptWindow = { count: 0, resetAt: Date.now() + 60_000 };
+    let channelJoinQueue = Promise.resolve();
 
     // Join user-specific room for targeted notification delivery
     socket.join(`user:${user.id}`);
@@ -171,46 +172,48 @@ export function initializeSocket(server: http.Server): SocketIOServer {
       pendingChannelPublicIds.clear();
     });
 
-    socket.on("channel:join", async (rawEnvelope: unknown) => {
-      const now = Date.now();
-      if (now > joinAttemptWindow.resetAt) {
-        joinAttemptWindow = { count: 0, resetAt: now + 60_000 };
-      }
-      joinAttemptWindow.count++;
-      if (joinAttemptWindow.count > MAX_CHANNEL_JOIN_ATTEMPTS_PER_MINUTE) {
-        return;
-      }
+    socket.on("channel:join", (rawEnvelope: unknown) => {
+      channelJoinQueue = channelJoinQueue.then(async () => {
+        if (!socket.connected) return;
 
-      const channelPublicId = getChannelPublicId(rawEnvelope);
-      if (
-        !channelPublicId ||
-        joinedChannelIds.has(channelPublicId) ||
-        pendingChannelPublicIds.has(channelPublicId)
-      ) {
-        return;
-      }
-      if (joinedChannelIds.size + pendingChannelPublicIds.size >= MAX_JOINED_CHANNEL_ROOMS) {
-        return;
-      }
-
-      pendingChannelPublicIds.add(channelPublicId);
-      try {
-        const channelId = await resolveJoinableChannelId(user, channelPublicId);
-        if (!channelId) {
+        const now = Date.now();
+        if (now > joinAttemptWindow.resetAt) {
+          joinAttemptWindow = { count: 0, resetAt: now + 60_000 };
+        }
+        joinAttemptWindow.count++;
+        if (joinAttemptWindow.count > MAX_CHANNEL_JOIN_ATTEMPTS_PER_MINUTE) {
           return;
         }
 
-        socket.join(`channel:${channelId}`);
-        joinedChannelIds.set(channelPublicId, channelId);
-      } catch (error) {
-        socketLogger.warn({
-          userId: user.id,
-          channelPublicId,
-          err: error,
-        }, "Failed to join channel");
-      } finally {
-        pendingChannelPublicIds.delete(channelPublicId);
-      }
+        const channelPublicId = getChannelPublicId(rawEnvelope);
+        if (
+          !channelPublicId ||
+          joinedChannelIds.has(channelPublicId) ||
+          pendingChannelPublicIds.has(channelPublicId)
+        ) {
+          return;
+        }
+        if (joinedChannelIds.size + pendingChannelPublicIds.size >= MAX_JOINED_CHANNEL_ROOMS) {
+          return;
+        }
+
+        pendingChannelPublicIds.add(channelPublicId);
+        try {
+          const channelId = await resolveJoinableChannelId(user, channelPublicId);
+          if (!channelId) return;
+
+          socket.join(`channel:${channelId}`);
+          joinedChannelIds.set(channelPublicId, channelId);
+        } catch (error) {
+          socketLogger.warn({
+            userId: user.id,
+            channelPublicId,
+            err: error,
+          }, "Failed to join channel");
+        } finally {
+          pendingChannelPublicIds.delete(channelPublicId);
+        }
+      });
     });
 
     socket.on("channel:leave", (rawEnvelope: unknown) => {

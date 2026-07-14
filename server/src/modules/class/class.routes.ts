@@ -14,6 +14,7 @@ import {
   semesterProgressionSchema,
   transferStudentSchema,
   graduationSchema,
+  bulkSemesterProgressionSchema,
   assignClassCrSchema,
   classCrParamSchema,
 } from "./class.schema.js";
@@ -34,10 +35,19 @@ import {
   handleAssignClassCr,
   handleRevokeClassCr,
   handleGetClassDeletionImpact,
+  handleBulkAdvanceSemester,
 } from "./class.controller.js";
 import { resolveClassTarget } from "../../middleware/resolveClassTarget.js";
 
 const router = Router();
+
+router.post(
+  "/semester-progression/bulk",
+  authenticate,
+  authorize({ userTypes: ["ADMIN", "TEACHER"] }),
+  validate(bulkSemesterProgressionSchema),
+  handleBulkAdvanceSemester,
+);
 
 // ─── Class Routes ──────────────────────────────────────────────────────────
 

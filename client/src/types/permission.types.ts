@@ -1,6 +1,8 @@
 export interface GlobalPermissions {
   canAccessAdminDashboard: boolean;
   canAccessAcademicWorkspace: boolean;
+  canAccessTeachingWorkspace: boolean;
+  canBulkAdvanceSemester: boolean;
   canAccessEnrollmentWorkspace: boolean;
   canAccessRoleManagement: boolean;
   canManageUsers: boolean;

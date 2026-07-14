@@ -18,6 +18,7 @@ export async function resetDB(): Promise<void> {
     "roles",
     "society_membership_requests",
     "server_memberships",
+    "teaching_assignment_history",
     "teaches",
     "program_curriculum",
     "channels",

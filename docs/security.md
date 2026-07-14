@@ -116,3 +116,17 @@
   authorization and transaction commit. Communication lifecycle and
   membership-sensitive writes already revalidate their critical state inside
   Module 6 transactions.
+## Teaching History Access
+
+Teaching history is not a general authorization grant. Only history ended by semester
+progression or graduation permits REST read access to that exact archived course
+channel. Replacement/removal history is audit-only. Archived or locked channels deny
+posting, and archived channels cannot be joined over Socket.IO.
+
+The same progression/graduation rule permits loading the containing server shell and
+its readable archived channel list for direct history navigation. It does not grant
+membership, member-list access, moderator eligibility, or access to unrelated channels.
+
+Graduated classes reject new student placement in both Admin and Enrollment entry
+points. Existing server membership remains visible and Announcement/General continue
+under their normal role/member posting rules.

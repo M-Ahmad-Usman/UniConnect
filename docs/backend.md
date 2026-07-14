@@ -109,3 +109,13 @@ are now captured here and in `docs/security.md`:
   without reading `docs/deployment.md`. The deploy pipeline has specific ordering
   requirements: `prisma generate` must run in Docker Stage 2 before `tsc`;
   migrations run in the deploy job, not inside the image.
+## Phase 5 Teaching Lifecycle
+
+Live course-channel authority is stored in `TEACHES.channelId`. Ended assignments are
+copied to append-only `TeachingAssignmentHistory` rows before replacement, removal,
+semester progression, or graduation. Archived-channel reads recognize only progression
+and graduation history; writes and Socket.IO joins remain denied for archived channels.
+
+Bulk semester progression processes at most 50 classes sequentially, reusing the
+single-class authorization and transaction boundary. Expected domain failures are
+reported per class; infrastructure failures fail the request.

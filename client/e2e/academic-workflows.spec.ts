@@ -76,6 +76,23 @@ test.describe.serial('Academic and enrollment management workflows', () => {
       .toBe(e2eUsers.moduleAcademicCrossTeacher.fullName);
   });
 
+  test('replaced teacher sees audit history without retained channel access', async ({ page }) => {
+    await signIn(
+      page,
+      e2eUsers.moduleAcademicOldTeacher.email,
+      e2eUsers.moduleAcademicOldTeacher.password,
+    );
+    await page.goto('/teaching');
+
+    await expect(page.getByRole('heading', { name: 'My Teaching' })).toBeVisible();
+    await page.getByRole('tab', { name: /History/ }).click();
+    await expect(page.getByText('E2E-RP-101: Replacement Systems')).toBeVisible();
+    await expect(page.getByText('Replaced')).toBeVisible();
+    await expect(
+      page.getByText('E2E-RP-101: Replacement Systems').locator('xpath=ancestor::a'),
+    ).toHaveCount(0);
+  });
+
   test('HOD advances a class semester with required teacher assignments', async ({ page }) => {
     const klass = await findClassByServerName(academicShellFixtures.progressionServerName);
     const teacher = await findUserByEmail(e2eUsers.moduleAcademicProgressTeacher.email);
@@ -111,5 +128,25 @@ test.describe.serial('Academic and enrollment management workflows', () => {
 
     await expect(page.getByText('This class is graduated.')).toBeVisible();
     await expect.poll(() => findClassStatus(klass!.id)).toBe('graduated');
+  });
+
+  test('graduated teacher opens archived course history in read-only mode', async ({ page }) => {
+    await signIn(
+      page,
+      e2eUsers.moduleAcademicGraduateTeacher.email,
+      e2eUsers.moduleAcademicGraduateTeacher.password,
+    );
+    await page.goto('/teaching');
+
+    await page.getByRole('tab', { name: /History/ }).click();
+    const historyAssignment = page.getByRole('link', {
+      name: /E2E-GR-801: Graduation Seminar/,
+    });
+    await expect(historyAssignment).toBeVisible();
+    await expect(page.getByText('Graduated')).toBeVisible();
+    await historyAssignment.click();
+
+    await expect(page.getByText('Archived read-only')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Publish/ })).toHaveCount(0);
   });
 });

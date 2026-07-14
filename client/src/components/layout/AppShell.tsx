@@ -17,7 +17,8 @@ export function AppShell() {
   const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN);
   const isAcademicRoute = location.pathname.startsWith('/academics');
   const isEnrollmentRoute = location.pathname.startsWith(ROUTES.ENROLLMENT);
-  const isWorkspaceRoute = isAdminRoute || isAcademicRoute || isEnrollmentRoute;
+  const isTeachingRoute = location.pathname.startsWith(ROUTES.TEACHING);
+  const isWorkspaceRoute = isAdminRoute || isAcademicRoute || isEnrollmentRoute || isTeachingRoute;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState<DrawerView>('servers');
 
@@ -38,10 +39,7 @@ export function AppShell() {
       ) : null}
       {!isWorkspaceRoute ? (
         <aside className="hidden h-full w-72 shrink-0 lg:block">
-          <ChannelSidebar
-            serverPublicId={serverPublicId}
-            activeChannelPublicId={channelPublicId}
-          />
+          <ChannelSidebar serverPublicId={serverPublicId} activeChannelPublicId={channelPublicId} />
         </aside>
       ) : null}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">

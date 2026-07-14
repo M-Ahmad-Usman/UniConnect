@@ -1344,18 +1344,26 @@ describe("Notifications", () => {
       for (const channel of activeChannels) {
         clientSocket.emit("channel:join", { channelPublicId: channel.publicId });
       }
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       const socketServer = getIO();
       expect(socketServer).not.toBeNull();
       const serverSocket = [...socketServer!.sockets.sockets.values()].find((socket) =>
         socket.rooms.has(`user:${student.id}`),
       );
       expect(serverSocket).toBeDefined();
-      const channelRooms = [...serverSocket!.rooms].filter((room) =>
-        room.startsWith("channel:"),
-      );
-      expect(channelRooms).toHaveLength(32);
+      await new Promise<void>((resolve, reject) => {
+        const deadline = Date.now() + 5_000;
+        const checkRoomCount = () => {
+          const count = [...serverSocket!.rooms].filter((room) =>
+            room.startsWith("channel:"),
+          ).length;
+          if (count === 32) return resolve();
+          if (Date.now() >= deadline) {
+            return reject(new Error(`Timed out waiting for 32 channel rooms; received ${count}`));
+          }
+          setTimeout(checkRoomCount, 50);
+        };
+        checkRoomCount();
+      });
       expect(serverSocket!.rooms.has(`channel:${archivedChannel.id}`)).toBe(false);
       expect(serverSocket!.rooms.has(`channel:${activeChannels[32]!.id}`)).toBe(false);
 

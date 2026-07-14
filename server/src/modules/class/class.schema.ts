@@ -133,6 +133,31 @@ export const semesterProgressionSchema = {
   }),
 };
 
+const bulkSemesterProgressionItemSchema = z.object({
+  classPublicId: publicIdSchema,
+  teacherAssignments: semesterProgressionSchema.body.shape.teacherAssignments,
+});
+
+export const bulkSemesterProgressionSchema = {
+  body: z
+    .object({
+      classes: z.array(bulkSemesterProgressionItemSchema).min(1).max(50),
+    })
+    .superRefine((value, ctx) => {
+      const seen = new Set<string>();
+      value.classes.forEach((item, index) => {
+        if (seen.has(item.classPublicId)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Each class may appear only once",
+            path: ["classes", index, "classPublicId"],
+          });
+        }
+        seen.add(item.classPublicId);
+      });
+    }),
+};
+
 export const graduationSchema = {
   params: z.object({
     publicId: publicIdSchema,

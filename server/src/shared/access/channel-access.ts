@@ -131,7 +131,20 @@ async function isDirectCourseTeacher(
     select: { teacherId: true },
   });
 
-  return assignment !== null;
+  if (assignment) return true;
+
+  if (!channel.isArchived) return false;
+
+  const historicalAssignment = await client.teachingAssignmentHistory.findFirst({
+    where: {
+      teacherId: user.id,
+      channelId: channel.id,
+      endReason: { in: ["SEMESTER_PROGRESSION", "GRADUATION"] },
+    },
+    select: { id: true },
+  });
+
+  return historicalAssignment !== null;
 }
 
 async function isAcademicOrSocietyManager(

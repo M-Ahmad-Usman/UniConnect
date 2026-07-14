@@ -129,7 +129,9 @@ export function useClassDeletionImpact(classPublicId: string | null, enabled = t
 
 export function useAdminClassCourses(classPublicId: string | null) {
   return useQuery({
-    queryKey: classPublicId ? queryKeys.classes.courses(classPublicId) : ['classes', null, 'courses'],
+    queryKey: classPublicId
+      ? queryKeys.classes.courses(classPublicId)
+      : ['classes', null, 'courses'],
     queryFn: () => catalogApi.listClassCourses(classPublicId!),
     enabled: classPublicId !== null,
   });
@@ -337,7 +339,8 @@ export function useAssignClassCourse(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: TeacherAssignmentInput) => catalogApi.assignCourse(classPublicId, payload),
+    mutationFn: (payload: TeacherAssignmentInput) =>
+      catalogApi.assignCourse(classPublicId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.courses(classPublicId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
@@ -350,7 +353,8 @@ export function useTransferClassStudent(classPublicId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (studentPublicId: string) => catalogApi.transferStudent(classPublicId, studentPublicId),
+    mutationFn: (studentPublicId: string) =>
+      catalogApi.transferStudent(classPublicId, studentPublicId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.detail(classPublicId) });
@@ -404,6 +408,19 @@ export function useAdvanceSemester(classPublicId: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
       toast.success('Semester advanced');
+    },
+  });
+}
+
+export function useBulkAdvanceSemester() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: catalogApi.bulkAdvanceSemester,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.servers.all() });
+      toast.success('Bulk semester progression completed');
     },
   });
 }

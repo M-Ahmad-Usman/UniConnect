@@ -316,6 +316,9 @@ available.
   - Creates or reuses the class course channel, links it through `TEACHES.channelId`,
     unlocks it, and does not create class-server membership.
 - `GET /:publicId/courses`
+  - Active classes source assignments from `TEACHES`. Graduated classes source the
+    final teaching display from `TeachingAssignmentHistory` because live assignments
+    are cleared at graduation.
 - `GET /:publicId/students`
   - Auth: Admin or own-department HOD for read-only roster visibility. Enrollment
     Officer roster reads use `/api/enrollment/classes/:publicId/students`.
@@ -340,7 +343,20 @@ available.
   - Target courses without teachers remain locked; assigned courses are linked
     through `TEACHES.channelId` and unlocked.
 - `POST /:publicId/graduation`
-  - Final-semester active classes only; locks class channels and keeps history visible.
+  - Final-semester active classes only; archives/locks Course channels, leaves
+    Announcement/General open, archives teaching history, and clears live `TEACHES`.
+- `POST /semester-progression/bulk`
+  - Admin or HOD. Body: `{ classes: [{ classPublicId, teacherAssignments }] }`.
+  - Accepts 1–50 unique classes. Each class uses an independent transaction.
+  - Returns HTTP 200 with `total`, `succeeded`, `failed`, and ordered per-class
+    `SUCCESS`/`FAILED` results. HOD out-of-scope classes fail individually.
+
+### Teaching (`/api/teaching`)
+
+- `GET /me`
+  - Active Teacher only. Query: `includeHistory?`, `historyPage?`, `historyLimit?`.
+  - Returns active assignments plus paginated history with public class/server/channel
+    identifiers, course metadata, semester snapshot, timestamps, and end reason.
 
 ### Courses (`/api/courses`)
 

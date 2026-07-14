@@ -12,6 +12,7 @@ import { AcademicGuard } from './guards/AcademicGuard';
 import { EnrollmentGuard } from './guards/EnrollmentGuard';
 import { ForceChangePasswordGuard } from './guards/ForceChangePasswordGuard';
 import { GuestGuard } from './guards/GuestGuard';
+import { TeachingGuard } from './guards/TeachingGuard';
 import { ROUTES } from '@/lib/constants';
 
 // ─── Lazy-loaded page components ────────────────────────────────────────────
@@ -160,6 +161,9 @@ const EnrollmentImportPage = lazy(() =>
     default: m.EnrollmentImportPage,
   })),
 );
+const MyTeachingPage = lazy(() =>
+  import('@/features/teaching/pages/MyTeachingPage').then((m) => ({ default: m.MyTeachingPage })),
+);
 
 // ─── Placeholder components for routes not yet implemented ──────────────────
 
@@ -252,13 +256,20 @@ export const router = createBrowserRouter([
                   },
                   { path: 'roles', element: <RoleManagementPage /> },
                   {
+                    element: <TeachingGuard />,
+                    children: [{ path: 'teaching', element: <MyTeachingPage /> }],
+                  },
+                  {
                     element: <EnrollmentGuard />,
                     children: [
                       {
                         path: 'enrollment',
                         element: <EnrollmentLayout />,
                         children: [
-                          { index: true, element: <Navigate to={ROUTES.ENROLLMENT_CLASSES} replace /> },
+                          {
+                            index: true,
+                            element: <Navigate to={ROUTES.ENROLLMENT_CLASSES} replace />,
+                          },
                           {
                             path: 'classes',
                             children: [
@@ -279,7 +290,10 @@ export const router = createBrowserRouter([
                         path: 'academics',
                         element: <AcademicLayout />,
                         children: [
-                          { index: true, element: <Navigate to={ROUTES.ACADEMICS_PROGRAMS} replace /> },
+                          {
+                            index: true,
+                            element: <Navigate to={ROUTES.ACADEMICS_PROGRAMS} replace />,
+                          },
                           {
                             path: 'programs',
                             children: [
@@ -350,7 +364,10 @@ export const router = createBrowserRouter([
                               },
                             ],
                           },
-                          { path: 'societies', element: <Navigate to={ROUTES.SOCIETIES} replace /> },
+                          {
+                            path: 'societies',
+                            element: <Navigate to={ROUTES.SOCIETIES} replace />,
+                          },
                           { path: 'roles', element: <Navigate to={ROUTES.ROLES} replace /> },
                         ],
                       },

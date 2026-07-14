@@ -83,6 +83,68 @@ describe("Class list filters", () => {
   });
 });
 
+describe("Bulk semester progression", () => {
+  it("returns ordered independent success and failure results", async () => {
+    const u = uid();
+    const admin = await createUser({
+      email: `admin-bulk-semester-${u}@test.com`,
+      password: "Pass@1234",
+      userType: "ADMIN",
+    });
+    const department = await createDepartment({ code: `BSP-${u}` });
+    const program = await createProgram(department.id, { semesters: 3 });
+    const successfulClass = await createClass(program.id, { currentSemester: 1, section: "A" });
+    const failingClass = await createClass(program.id, { currentSemester: 2, section: "B" });
+    const targetCourse = await createCourse(department.id, { code: `BSP-C-${u}` });
+    await createCurriculum(program.id, targetCourse.id, 2, successfulClass.admissionYear);
+    const teacher = await createTeacherWithInfo(department.id, {
+      email: `teacher-bulk-semester-${u}@test.com`,
+    });
+
+    const response = await request(app)
+      .post("/api/classes/semester-progression/bulk")
+      .set("Cookie", await loginAs(admin.email, "Pass@1234"))
+      .send({
+        classes: [
+          {
+            classPublicId: successfulClass.publicId,
+            teacherAssignments: [
+              { courseId: targetCourse.id, teacherPublicId: teacher.publicId },
+            ],
+          },
+          { classPublicId: failingClass.publicId, teacherAssignments: [] },
+        ],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({ total: 2, succeeded: 1, failed: 1 }),
+    );
+    expect(response.body.data.results[0]).toEqual(
+      expect.objectContaining({ classPublicId: successfulClass.publicId, status: "SUCCESS" }),
+    );
+    expect(response.body.data.results[1]).toEqual(
+      expect.objectContaining({
+        classPublicId: failingClass.publicId,
+        status: "FAILED",
+        error: expect.objectContaining({ code: "VALIDATION_ERROR" }),
+      }),
+    );
+    expect(
+      await prisma.class.findUniqueOrThrow({
+        where: { id: successfulClass.id },
+        select: { currentSemester: true },
+      }),
+    ).toEqual({ currentSemester: 2 });
+    expect(
+      await prisma.class.findUniqueOrThrow({
+        where: { id: failingClass.id },
+        select: { currentSemester: true },
+      }),
+    ).toEqual({ currentSemester: 2 });
+  });
+});
+
 describe("Class public boundary and deletion impact", () => {
   it("rejects numeric class route identifiers", async () => {
     const admin = await createUser({
@@ -1656,6 +1718,13 @@ describe("Class management", () => {
       });
       expect(generalChannel?.isArchived).toBe(false);
       expect(generalChannel?.isLocked).toBe(false);
+
+      expect(await prisma.teaches.count({ where: { classId: klass.id } })).toBe(0);
+      expect(
+        await prisma.teachingAssignmentHistory.count({
+          where: { classId: klass.id, teacherId: teacher.id, endReason: "GRADUATION" },
+        }),
+      ).toBe(1);
 
       const progression = await request(app)
         .post(`/api/classes/${klass.publicId}/semester-progression`)

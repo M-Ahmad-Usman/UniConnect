@@ -2174,7 +2174,23 @@ another teacher is assigned.
 POST /api/classes/:publicId/graduation
 ```
 
-Final-semester active classes only. Graduation marks the class as `GRADUATED`, locks class channels, and keeps history visible.
+Final-semester active classes only. Graduation marks the class as `GRADUATED`, archives and locks Course channels, preserves final teaching history, clears live assignments, and leaves Announcement and General open to existing members.
+
+#### Bulk Semester Progression (Admin/HOD)
+
+`POST /api/classes/semester-progression/bulk`
+
+Body: `{ classes: Array<{ classPublicId, teacherAssignments }> }` with 1–50 unique
+classes. Returns HTTP 200 with ordered per-class `SUCCESS` or typed `FAILED` results;
+each class commits independently.
+
+#### My Teaching (Teacher)
+
+`GET /api/teaching/me?includeHistory=true&historyPage=1&historyLimit=20`
+
+Returns active course assignments and paginated assignment history. Progression and
+graduation history links to archived read-only channels; replacement/removal history
+is audit-only and grants no channel access.
 
 #### Semester Progression (Admin/Teacher)
 
