@@ -1,5 +1,11 @@
 import type { Kysely } from 'kysely'
-import type { Database, InsertUserEntity, InsertUserTypeAssignmentEntity } from '../../../db/types.js'
+import type {
+  Database,
+  InsertUserEntity,
+  InsertUserTypeAssignmentEntity,
+  InsertTeacherEntity,
+  InsertStudentEntity,
+} from '../../db/types.js'
 
 export default class UserRepository {
 
@@ -28,4 +34,16 @@ export default class UserRepository {
     return usersRow?.id
   }
 
+  async createTeacher(createTeacherDetails: InsertTeacherEntity, trx: Kysely<Database> = this.db) {
+    return await trx.insertInto('teachers')
+      .values(createTeacherDetails)
+      .returningAll()
+      .executeTakeFirstOrThrow()
+  }
+
+  async createStudent(createStudentDetails: InsertStudentEntity, trx: Kysely<Database> = this.db) {
+    return await trx.insertInto('students')
+      .values(createStudentDetails)
+      .executeTakeFirstOrThrow()
+  }
 }

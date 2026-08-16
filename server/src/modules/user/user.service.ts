@@ -12,9 +12,7 @@ import type {
 } from '../../db/types.js'
 
 // Repositories
-import type UserRepository from './repositories/user.repository.js'
-import type TeacherRepository from './repositories/teacher.repository.js'
-import type StudentRepository from './repositories/student.repository.js'
+import type UserRepository from './user.repository.js'
 import type ServerRepository from '../server/server.repository.js'
 import type ClassRepository from '../class/class.repository.js'
 import type DepartmentRepository from '../department/department.repository.js'
@@ -33,8 +31,6 @@ export default class UserService {
   constructor(
     private readonly db: Kysely<Database>, // use for creating transactions only
     private readonly userRepository: UserRepository,
-    private readonly teacherRepository: TeacherRepository,
-    private readonly studentRepository: StudentRepository,
     private readonly serverRepository: ServerRepository,
     private readonly classRepository: ClassRepository,
     private readonly departmentRepository: DepartmentRepository,
@@ -84,7 +80,7 @@ export default class UserService {
 
         // Insert rest of the data
         const [createdTeacherData, ..._] = await Promise.all([
-          this.teacherRepository.createTeacher(createTeacherInfo, trx),
+          this.userRepository.createTeacher(createTeacherInfo, trx),
           this.serverRepository.addMember(serverMembershipInfo, trx),
           this.userRepository.assignType(userTypeAssignmentInfo, trx),
         ])
@@ -176,7 +172,7 @@ export default class UserService {
 
         // Insert rest of the data
         await Promise.all([
-          this.studentRepository.createStudent(createStudentInfo, trx),
+          this.userRepository.createStudent(createStudentInfo, trx),
           this.serverRepository.addMember(classServerMembershipInfo, trx),
           this.serverRepository.addMember(departmentServerMembershipInfo, trx),
           this.userRepository.assignType(userTypeAssignmentInfo, trx),
