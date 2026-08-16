@@ -59,7 +59,7 @@ async function seedUserTypes(db: Kysely<any>): Promise<void> {
     .values([
       { value: 'student', label: 'Student', description: 'Enrolled student' },
       { value: 'teacher', label: 'Teacher', description: 'Faculty member' },
-      { value: 'admin', label: 'Admin', description: 'System administrator' },
+      { value: 'staff', label: 'Staff', description: 'Management Staff' },
     ])
     .execute()
 }

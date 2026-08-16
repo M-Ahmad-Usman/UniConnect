@@ -42,7 +42,7 @@ export const DISCIPLINES = [
 ] as const
 export type DisciplineValue = typeof DISCIPLINES[number]
 
-export const USER_TYPES = ['student', 'teacher', 'admin'] as const
+export const USER_TYPES = ['student', 'teacher', 'staff'] as const
 export type UserTypeValue = typeof USER_TYPES[number]
 
 export const DESIGNATIONS = [

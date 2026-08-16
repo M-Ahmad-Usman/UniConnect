@@ -109,7 +109,7 @@ program_curricula.course_id > courses.id // ON DELETE RESTRICT
 
 // lookup table
 user_types {
-  value VARCHAR(50) PK // CHECK value IN ('student', 'teacher', 'admin')
+  value VARCHAR(50) PK // CHECK value IN ('student', 'teacher', 'staff')
   label VARCHAR(100) // NOT NULL
   description VARCHAR(500)
 }
