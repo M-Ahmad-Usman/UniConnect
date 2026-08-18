@@ -390,7 +390,7 @@ const createServersTable: TableCreationFunction = async (db, tableName) => {
     .addColumn('public_id', 'uuid', col => col.notNull().defaultTo(sql`uuidv7()`))
 
     .addColumn('name', 'varchar(100)', col => col.notNull())
-    .addColumn('description', 'text')
+    .addColumn('description', 'varchar(1000)')
     .addColumn('icon_url', 'text')
 
     // data type must be same from 'server_types'
@@ -724,8 +724,8 @@ const createNotificationsTable: TableCreationFunction = async (db, tableName) =>
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['id'])
 
-    .addColumn('title', 'varchar(200)', col => col.notNull())
-    .addColumn('message', 'text')
+    .addColumn('title', 'varchar(100)', col => col.notNull())
+    .addColumn('message', 'varchar(300)')
 
     // data type must be same from 'notification_types'
     .addColumn('type', 'varchar(50)', col => col.notNull())

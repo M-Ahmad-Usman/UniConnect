@@ -249,7 +249,7 @@ servers {
   public_id UUID // NOT NULL DEFAULT uuidv7()
 
   name VARCHAR(100) // NOT NULL
-  description TEXT
+  description VARCHAR(1000)
   icon_url TEXT
 
   type VARCHAR(50) FK // NOT NULL
@@ -515,8 +515,8 @@ notification_types {
 notifications {
   id PK // INTEGER GENERATED ALWAYS AS IDENTITY
 
-  title VARCHAR(200) // NOT NULL
-  message TEXT
+  title VARCHAR(100) // NOT NULL
+  message VARCHAR(300)
 
   type VARCHAR(50) FK // NOT NULL
 
