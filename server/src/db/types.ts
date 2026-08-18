@@ -14,9 +14,7 @@ import type {
   PostPriority,
   MembershipRequestStatus,
   NotificationScope,
-  DisciplineValue,
   UserTypeValue,
-  DesignationValue,
   ServerTypeValue,
   ChannelTypeValue,
   PostAttachmentTypeValue,
@@ -121,7 +119,7 @@ export type InsertDepartmentEntity = Insertable<DepartmentTable>
 export type UpdateDepartmentEntity = Updateable<DepartmentTable>
 
 export interface DisciplineTable {
-  value: DisciplineValue
+  value: string
   label: string
 }
 
@@ -133,7 +131,7 @@ export interface ProgramTable {
   id: Generated<number>
 
   departmentId: number
-  discipline: DisciplineValue
+  discipline: string
   degreeLevel: DegreeLevel
 
   programDirectorId: number
@@ -215,7 +213,7 @@ export type InsertStudentEntity = Insertable<StudentTable>
 export type UpdateStudentEntity = Updateable<StudentTable>
 
 export interface DesignationTable {
-  value: DesignationValue
+  value: string
   label: string
   description: string | null
 }
@@ -227,7 +225,7 @@ export type UpdateDesignationEntity = Updateable<DesignationTable>
 export interface TeacherTable {
   teacherId: number
   departmentId: number
-  designation: DesignationValue
+  designation: string
 }
 
 export type TeacherEntity = Selectable<TeacherTable>
@@ -518,7 +516,6 @@ export type UpdateUserRoleAssignmentEntity = Updateable<UserRoleAssignmentTable>
 export interface NotificationTypeTable {
   value: NotificationTypeValue
   label: string
-  description: string | null
 }
 
 export type NotificationTypeEntity = Selectable<NotificationTypeTable>

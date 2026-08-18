@@ -1,5 +1,7 @@
 import { z } from 'zod'
-import { DEGREE_LEVELS, DISCIPLINES } from '../../db/constants.js'
+
+import { DEGREE_LEVELS } from '../../db/constants.js'
+import { programsVarcharSizes } from '../../db/constants.js'
 
 const courseAssignmentsForSemester = z.object({
   semesterNumber: z.coerce.number().min(1),
@@ -13,13 +15,13 @@ export const batchCurriculum = z.object({
 
 export const createProgramSchema = z.object({
   departmentId: z.coerce.number().positive(),
-  discipline: z.enum(DISCIPLINES),
+  discipline: z.string().max(programsVarcharSizes.discipline),
   degreeLevel: z.enum(DEGREE_LEVELS),
 
   programDirectorPublicId: z.uuidv7(),
 
   totalSemesters: z.coerce.number().positive().max(10),
-  code: z.string().min(2).max(20), // db allows max 20 characters
+  code: z.string().min(2).max(programsVarcharSizes.code),
 
   curriculums: z.array(batchCurriculum).min(1, 'atleast 1 curriculum is required'), // TODO: improve error response
 }).superRefine((programData, ctx) => {
