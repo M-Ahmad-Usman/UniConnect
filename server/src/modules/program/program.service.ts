@@ -6,7 +6,7 @@ import type { Database, InsertProgramEntity } from '../../db/types.js'
 
 // Repositories
 import type ProgramRepository from './program.repository.js'
-import type UserRepository from '../user/repositories/user.repository.js'
+import type UserRepository from '../user/user.repository.js'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'

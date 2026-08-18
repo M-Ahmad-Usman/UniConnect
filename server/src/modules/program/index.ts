@@ -1,7 +1,7 @@
 
 // Repositories
 import ProgramRepository from './program.repository.js'
-import UserRepository from '../user/repositories/user.repository.js'
+import UserRepository from '../user/user.repository.js'
 
 // Services
 import ProgramService from './program.service.js'
