@@ -510,6 +510,7 @@ user_role_assignments.assigned_by > users.id // ON DELETE SET NULL
 notification_types {
   value VARCHAR(50) PK
   label VARCHAR(100) // NOT NULL
+  description VARCHAR(500)
 }
 
 notifications {

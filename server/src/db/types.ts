@@ -518,6 +518,7 @@ export type UpdateUserRoleAssignmentEntity = Updateable<UserRoleAssignmentTable>
 export interface NotificationTypeTable {
   value: NotificationTypeValue
   label: string
+  description: string | null
 }
 
 export type NotificationTypeEntity = Selectable<NotificationTypeTable>

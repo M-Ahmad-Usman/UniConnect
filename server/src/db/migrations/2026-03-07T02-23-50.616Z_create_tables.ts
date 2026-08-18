@@ -712,6 +712,7 @@ const createNotificationTypesTable: TableCreationFunction = async (db, tableName
     .addCheckConstraint(`chk_${tableName}_snake_cased_value`, sql<boolean>`value ~ '^[a-z]+(_[a-z]+)*$'`)
 
     .addColumn('label', 'varchar(100)', col => col.notNull())
+    .addColumn('description', 'varchar(500)')
 
     .execute()
 
