@@ -21,6 +21,6 @@ export const createStudentSchema = z.object({
 }).and(createUserSchema)
 
 export const createTeacherSchema = z.object({
-  designation: z.string().max(teachersVarcharSizes.designation).optional(),
+  designation: z.string().max(teachersVarcharSizes.designation),
   departmentId: z.coerce.number().positive(),
 }).and(createUserSchema)
