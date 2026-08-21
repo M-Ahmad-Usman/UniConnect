@@ -3,16 +3,6 @@ import { z } from 'zod'
 import { DEGREE_LEVELS } from '../../db/constants.js'
 import { programsVarcharSizes } from '../../db/constants.js'
 
-const courseAssignmentsForSemester = z.object({
-  semesterNumber: z.coerce.number().min(1),
-  courseIds: z.array(z.coerce.number()).min(1),
-})
-
-export const batchCurriculum = z.object({
-  batchYear: z.coerce.number().min(2000).max(2100),
-  semesterCourses: z.array(courseAssignmentsForSemester),
-})
-
 export const createProgramSchema = z.object({
   departmentId: z.coerce.number().positive(),
   discipline: z.string().max(programsVarcharSizes.discipline),
@@ -22,20 +12,32 @@ export const createProgramSchema = z.object({
 
   totalSemesters: z.coerce.number().positive().max(10),
   code: z.string().min(2).max(programsVarcharSizes.code),
+})
 
-  curriculums: z.array(batchCurriculum).min(1, 'atleast 1 curriculum is required'), // TODO: improve error response
-}).superRefine((programData, ctx) => {
+const courseAssignmentsPerSemester = z.object({
+  semesterNumber: z.coerce.number().min(1),
+  courseIds: z.array(z.coerce.number()).min(1),
+})
+
+export const batchCurriculum = z.object({
+  batchYear: z.coerce.number().min(2000).max(2100),
+  semesterCourses: z.array(courseAssignmentsPerSemester),
+})
+
+export const createProgramCurriculaSchema = z.object({
+  programId: z.number(),
+  curricula: z.array(batchCurriculum).min(1, 'Atleast 1 curriculum is required'), // TODO: improve error response
+}).superRefine(({ curricula }, ctx) => {
 
   /**
    * Validate following in each curriculum
    * 1. batchYear is unique for each curriculum
    * 2. all courses are unique within each curriculum
-   * 3. validate semester number for all curriculum entries stays within the range of 1 and programData.totalSemesters
-   * 4. no duplicate semester number within each curriculum
-   * 5. curriculum is provided for all semesters of the program neither less nor more
+   * 3. no duplicate semester number within each curriculum
   */
+
   const batches = new Set<number>()
-  programData.curriculums.forEach((curriculum, curriculumIdx) => {
+  curricula.forEach((curriculum, curriculumIdx) => {
 
     // 1. no duplicate batchYear between curriculums
     if (batches.has(curriculum.batchYear))
@@ -63,16 +65,7 @@ export const createProgramSchema = z.object({
         courseIds.add(courseId)
       })
 
-      // 3. validate semesterNumber stays within the range of 1 and programData.totalSemesters
-      if (semesterCourses.semesterNumber > programData.totalSemesters) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['curriculums', curriculumIdx, 'semesterCourses', semesterCoursesIdx, 'semesterNumber'],
-          message: `Semester number cannot exceed ${programData.totalSemesters.toString()}`,
-        })
-      }
-
-      // 4. validate semester number is not duplicated within a curriculum
+      // 3. validate semester number is not duplicated within a curriculum
       if (semesters.has(semesterCourses.semesterNumber)) {
         ctx.addIssue({
           code: 'custom',
@@ -83,13 +76,5 @@ export const createProgramSchema = z.object({
 
       semesters.add(semesterCourses.semesterNumber)
     })
-
-    // 5. validate curriculum is specified for all semesters
-    if (semesters.size !== programData.totalSemesters)
-      ctx.addIssue({
-        code: 'custom',
-        path: ['curriculums', curriculumIdx, 'semesterCourses'],
-        message: `semesterCourses entries must be provided for ${programData.totalSemesters.toString()} semesters. Got ${semesters.size.toString()} instead`,
-      })
   })
 })

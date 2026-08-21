@@ -13,15 +13,24 @@ export default class ProgramRepository {
   }
 
   async createProgramCurricula(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
-    await trx.insertInto('programCurricula')
+    return await trx.insertInto('programCurricula')
+      .returningAll()
       .values(createProgramCurriculumDetails)
       .execute()
   }
 
   async getProgramDetails(programId: number, trx: Kysely<Database> = this.db) {
-    return trx.selectFrom('programs')
+    return await trx.selectFrom('programs')
       .selectAll()
       .where('id', '=', programId)
       .executeTakeFirst()
+  }
+
+  async getSemesterCount(programId: number, trx: Kysely<Database> = this.db) {
+    const { totalSemesters } = await trx.selectFrom('programs')
+      .select('totalSemesters')
+      .where('id', '=', programId)
+      .executeTakeFirstOrThrow()
+    return totalSemesters
   }
 }

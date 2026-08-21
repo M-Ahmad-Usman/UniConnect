@@ -9,10 +9,10 @@ import type ProgramService from './program.service.js'
 
 // Validations
 import { validate, validateContentType } from '../../core/middleware/index.js'
-import { createProgramSchema } from './program.schema.js'
+import { createProgramSchema, createProgramCurriculaSchema } from './program.schema.js'
 
 // Types
-import type { CreateProgram } from './program.types.js'
+import type { CreateProgram, CreateProgramCurricula } from './program.types.js'
 import type { SuccessResponseBody } from '../../core/types/api.js'
 
 export default function createProgramRouter(programService: ProgramService): Router {
@@ -29,6 +29,22 @@ export default function createProgramRouter(programService: ProgramService): Rou
       const resBody: SuccessResponseBody<typeof newProgram> = {
         success: true,
         data: newProgram,
+      }
+
+      res.status(201).json(resBody)
+    },
+  )
+
+  programRouter.post('/curricula',
+    validateContentType('application/json'),
+    validate(createProgramCurriculaSchema),
+    async (req: Request<ParamsDictionary, unknown, CreateProgramCurricula>, res: Response) => {
+
+      const newCurricula = await programService.createProgramCurricula(req.body)
+
+      const resBody: SuccessResponseBody<typeof newCurricula> = {
+        success: true,
+        data: newCurricula,
       }
 
       res.status(201).json(resBody)
