@@ -3,7 +3,7 @@ import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 import { pinoHttp } from 'pino-http'
 
-import middleware from './core/middleware/index.js'
+import * as middleware from './core/middleware/index.js'
 import { logger } from './core/logger.js'
 
 import type { Request, Response } from 'express'
