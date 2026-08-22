@@ -2,8 +2,12 @@ import pino from 'pino'
 
 import { env } from '../config/env.js'
 
+const level = env.NODE_ENV === 'production' ? 'info'
+  : env.NODE_ENV === 'test' ? 'silent'
+    : 'debug' // on development
+
 const loggerOptions: pino.LoggerOptions = {
-  level: env.NODE_ENV === 'production' ? 'info' : 'debug',
+  level,
   timestamp: pino.stdTimeFunctions.isoTime,
   redact: {
     paths: ['*.password', '*.password_hash', '*.token', '*.secret'],
@@ -11,7 +15,7 @@ const loggerOptions: pino.LoggerOptions = {
   },
 }
 
-if (env.NODE_ENV !== 'production') {
+if (env.NODE_ENV === 'development') {
   loggerOptions.transport = {
     target: 'pino-pretty',
     options: {

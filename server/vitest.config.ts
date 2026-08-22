@@ -1,4 +1,13 @@
 import { defineConfig } from 'vitest/config'
+import { config as loadEnv } from 'dotenv'
+import path from 'path'
+
+// This MUST run before defineConfig, and before any app code (env.ts, db/index.ts)
+// gets imported anywhere. It runs in the main process, before Vitest spawns
+// worker threads — and worker threads inherit process.env at spawn time, so
+// this guarantees every test file, globalSetup, and setup.ts all see the
+// test values instead of your dev .env.
+loadEnv({ path: path.resolve(import.meta.dirname, '.env.test') })
 
 export default defineConfig({
   test: {
