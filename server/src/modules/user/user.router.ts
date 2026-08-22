@@ -11,8 +11,13 @@ import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createTeacherSchema, createStudentSchema } from './user.schema.js'
 
 // Data Types
-import type { CreateStudent, CreateTeacher } from './user.types.js'
 import type { SuccessResponseBody } from '../../core/types/api.js'
+import type {
+  CreateStudentRequest,
+  StudentResponse,
+  CreateTeacherRequest,
+  TeacherResponse,
+} from './user.dto.js'
 
 export default function createUserRouter(userService: UserService): Router {
 
@@ -21,13 +26,13 @@ export default function createUserRouter(userService: UserService): Router {
   userRouter.post('/teachers',
     validateContentType('application/json'),
     validate(createTeacherSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateTeacher>, res: Response) => {
+    async (req: Request<ParamsDictionary, unknown, CreateTeacherRequest>, res: Response) => {
 
-      const newTeacher = await userService.createTeacher(req.body)
+      const teacherResponse = await userService.createTeacher(req.body)
 
-      const resBody: SuccessResponseBody<typeof newTeacher> = {
+      const resBody: SuccessResponseBody<TeacherResponse> = {
         success: true,
-        data: newTeacher,
+        data: teacherResponse,
       }
 
       res.status(201).json(resBody)
@@ -37,13 +42,13 @@ export default function createUserRouter(userService: UserService): Router {
   userRouter.post('/students',
     validateContentType('application/json'),
     validate(createStudentSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateStudent>, res: Response) => {
+    async (req: Request<ParamsDictionary, unknown, CreateStudentRequest>, res: Response) => {
 
-      const newStudent = await userService.createStudent(req.body)
+      const studentResponse = await userService.createStudent(req.body)
 
-      const resBody: SuccessResponseBody<typeof newStudent> = {
+      const resBody: SuccessResponseBody<StudentResponse> = {
         success: true,
-        data: newStudent,
+        data: studentResponse,
       }
 
       res.status(201).json(resBody)

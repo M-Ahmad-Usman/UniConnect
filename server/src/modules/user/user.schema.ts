@@ -15,12 +15,12 @@ export const createUserSchema = z.object({
   bio: z.string().max(usersVarcharSizes.bio).optional(),
 })
 
-export const createStudentSchema = z.object({
+export const createStudentSchema = createUserSchema.extend({
   classPublicId: z.uuidv7(),
   rollNumber: z.string(),
-}).and(createUserSchema)
+})
 
-export const createTeacherSchema = z.object({
+export const createTeacherSchema = createUserSchema.extend({
   designation: z.string().max(teachersVarcharSizes.designation),
   departmentId: z.coerce.number().positive(),
-}).and(createUserSchema)
+})

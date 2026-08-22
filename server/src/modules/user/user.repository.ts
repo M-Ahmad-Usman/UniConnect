@@ -1,9 +1,13 @@
 import type { Kysely } from 'kysely'
 import type {
   Database,
+  UserEntity,
   InsertUserEntity,
+  UserTypeAssignmentEntity,
   InsertUserTypeAssignmentEntity,
+  TeacherEntity,
   InsertTeacherEntity,
+  StudentEntity,
   InsertStudentEntity,
 } from '../../db/types.js'
 
@@ -11,21 +15,21 @@ export default class UserRepository {
 
   constructor(private readonly db: Kysely<Database>) { }
 
-  async createUser(createUserDetails: InsertUserEntity, trx: Kysely<Database> = this.db) {
+  async createUser(userInsert: InsertUserEntity, trx: Kysely<Database> = this.db): Promise<UserEntity> {
     return await trx.insertInto('users')
-      .values(createUserDetails)
+      .values(userInsert)
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async assignType(typeAssignmentDetails: InsertUserTypeAssignmentEntity, trx: Kysely<Database> = this.db) {
+  async assignType(typeAssignmentInsert: InsertUserTypeAssignmentEntity, trx: Kysely<Database> = this.db): Promise<UserTypeAssignmentEntity> {
     return await trx.insertInto('userTypeAssignments')
-      .values(typeAssignmentDetails)
+      .values(typeAssignmentInsert)
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async getIdFromPublicId(publicId: string, trx: Kysely<Database> = this.db) {
+  async findIdByPublicId(publicId: string, trx: Kysely<Database> = this.db): Promise<number | undefined> {
     const usersRow = await trx.selectFrom('users')
       .select('id')
       .where('publicId', '=', publicId)
@@ -34,16 +38,17 @@ export default class UserRepository {
     return usersRow?.id
   }
 
-  async createTeacher(createTeacherDetails: InsertTeacherEntity, trx: Kysely<Database> = this.db) {
+  async createTeacher(teacherInsert: InsertTeacherEntity, trx: Kysely<Database> = this.db): Promise<TeacherEntity> {
     return await trx.insertInto('teachers')
-      .values(createTeacherDetails)
+      .values(teacherInsert)
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async createStudent(createStudentDetails: InsertStudentEntity, trx: Kysely<Database> = this.db) {
+  async createStudent(studentInsert: InsertStudentEntity, trx: Kysely<Database> = this.db): Promise<StudentEntity> {
     return await trx.insertInto('students')
-      .values(createStudentDetails)
+      .values(studentInsert)
+      .returningAll()
       .executeTakeFirstOrThrow()
   }
 }
