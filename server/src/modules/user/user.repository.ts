@@ -1,4 +1,5 @@
 import type { Kysely } from 'kysely'
+import type { IUserRepository } from './user.interface.js'
 import type {
   Database,
   UserEntity,
@@ -11,7 +12,7 @@ import type {
   InsertStudentEntity,
 } from '../../db/types.js'
 
-export default class UserRepository {
+export default class UserRepository implements IUserRepository {
 
   constructor(private readonly db: Kysely<Database>) { }
 

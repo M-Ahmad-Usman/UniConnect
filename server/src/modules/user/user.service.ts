@@ -12,10 +12,12 @@ import type {
 } from '../../db/types.js'
 
 // Repositories
-import type UserRepository from './user.repository.js'
 import type ServerRepository from '../server/server.repository.js'
 import type ClassRepository from '../class/class.repository.js'
 import type DepartmentRepository from '../department/department.repository.js'
+
+// Interfaces
+import type { IUserRepository } from './user.interface.js'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
@@ -36,7 +38,7 @@ export default class UserService {
 
   constructor(
     private readonly db: Kysely<Database>, // use for creating transactions only
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: IUserRepository,
     private readonly serverRepository: ServerRepository,
     private readonly classRepository: ClassRepository,
     private readonly departmentRepository: DepartmentRepository,
@@ -100,6 +102,8 @@ export default class UserService {
             throw new ConflictError('Specified personal email is already registered.')
           case 'uidx_users_active_university_email':
             throw new ConflictError('Specified university email is already in use.')
+          case 'fk_teachers_designation':
+            throw new BadRequestError('Wrong or Invalid designation value')
           case 'fk_teachers_department_id':
             throw new BadRequestError('Wrong or Invalid departmentId for teacher.')
         }
