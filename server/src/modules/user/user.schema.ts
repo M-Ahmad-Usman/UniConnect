@@ -21,6 +21,6 @@ export const createStudentSchema = createUserSchema.extend({
 })
 
 export const createTeacherSchema = createUserSchema.extend({
-  designation: z.string().max(teachersVarcharSizes.designation),
+  designation: z.string().max(teachersVarcharSizes.designation).toLowerCase(),
   departmentId: z.coerce.number().positive(),
 })
