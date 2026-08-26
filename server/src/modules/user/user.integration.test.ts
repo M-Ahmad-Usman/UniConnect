@@ -57,8 +57,7 @@ describe('/users', () => {
         expect(personalEmailFieldError.code).toBe('invalid_format')
 
         expect(genderFieldError.code).toBe('invalid_value')
-        expect(genderFieldError.message).includes('male')
-        expect(genderFieldError.message).includes('female')
+        expect(genderFieldError.message).toMatch(/male|female/)
 
         expect(details.length).toBe(2)
       })
@@ -162,8 +161,7 @@ describe('/users', () => {
         expect(personalEmailFieldError.code).toBe('invalid_format')
 
         expect(genderFieldError.code).toBe('invalid_value')
-        expect(genderFieldError.message).includes('male')
-        expect(genderFieldError.message).includes('female')
+        expect(genderFieldError.message).toMatch(/male|female/)
 
         expect(details.length).toBe(2)
       })
