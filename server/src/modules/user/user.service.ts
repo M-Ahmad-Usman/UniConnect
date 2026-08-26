@@ -120,7 +120,7 @@ export default class UserService {
       .getStudentEnrollmentContext(createStudentRequest.classPublicId)
 
     if (!studentEnrollmentContext)
-      throw new BadRequestError("Wrong or Invalid publicId for student's class")
+      throw new BadRequestError("Wrong or Invalid classPublicId for student's class")
 
     const {
       classId: studentClassId,
@@ -178,9 +178,11 @@ export default class UserService {
         // constraint names are defined in src/db/migrations/2026-03-07T02-23-50.616Z_create_tables.ts
         switch (err.constraint) {
           case 'uq_users_personal_email':
-            throw new ConflictError('Specified personal email is already registered.')
+            throw new ConflictError('Specified personalEmail is already registered.')
           case 'uidx_users_active_university_email':
-            throw new ConflictError('Specified university email is already in use.')
+            throw new ConflictError('Specified universityEmail is already in use')
+          case 'uq_students_roll_number':
+            throw new ConflictError('Specified rollNumber is already in use')
         }
       }
       throw err
