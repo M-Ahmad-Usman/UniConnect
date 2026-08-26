@@ -28,7 +28,7 @@ export default class ProgramService {
   async createProgram(createProgramData: CreateProgram) {
 
     const programDirectorId = await this.userRepository
-      .getIdFromPublicId(createProgramData.programDirectorPublicId)
+      .findIdByPublicId(createProgramData.programDirectorPublicId)
 
     if (!programDirectorId)
       throw new BadRequestError('Wrong or Invalid Program Director Public Id')
