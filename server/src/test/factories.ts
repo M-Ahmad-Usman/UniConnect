@@ -5,6 +5,7 @@ import type {
   InsertUserEntity,
   InsertTeacherEntity,
   InsertDepartmentEntity,
+  InsertClassEntity,
 } from '../db/types.js'
 
 const uniqueCounter = () => {
@@ -87,6 +88,57 @@ export const createTeacher = async (
 
     return { ...userEntity, ...teacherEntity }
   })
+}
+
+// Creates a full class: department (+ server) -> a teacher as program
+// director -> program -> class (+ its own server). This mirrors the real
+// dependency chain ClassService.createClass and
+// ClassRepository.getStudentEnrollmentContext rely on.
+export const createClass = async (classOverrides: Partial<InsertClassEntity> = {}) => {
+
+  const departmentEntity = await createDepartment()
+  const teacherEntity = await createTeacher({}, { departmentId: departmentEntity.id })
+
+  const programEntity = await db.insertInto('programs')
+    .values({
+      departmentId: departmentEntity.id,
+      discipline: 'computer_science', // must match a value seeded in `disciplines`
+      degreeLevel: 'bachelors',
+      programDirectorId: teacherEntity.id,
+      totalSemesters: 8,
+      code: `BSCS${getUniqueCounter()}`,
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+
+  const classServerEntity = await db.insertInto('servers')
+    .values({
+      name: `Test Class Server ${getUniqueCounter()}`,
+      type: 'class',
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+
+  const classEntity = await db.insertInto('classes')
+    .values({
+      programId: programEntity.id,
+      currentSemester: 1,
+      section: 'A',
+      academicYear: new Date().getFullYear(),
+      admissionYear: new Date().getFullYear(),
+      serverId: classServerEntity.id,
+      ...classOverrides,
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+
+  return {
+    ...classEntity,
+    classServer: classServerEntity,
+    programDirector: teacherEntity,
+    department: departmentEntity,
+    program: programEntity,
+  }
 }
 
 export const generateTeacher = (createTeacherRequest = {}) => {
