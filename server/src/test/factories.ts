@@ -2,9 +2,7 @@ import { db } from '../db/index.js'
 import type {
   ServerEntity,
   InsertServerEntity,
-  UserEntity,
   InsertUserEntity,
-  TeacherEntity,
   InsertTeacherEntity,
   InsertDepartmentEntity,
 } from '../db/types.js'
@@ -55,7 +53,7 @@ export const createDepartment = async (
 export const createTeacher = async (
   userOverrides: Partial<InsertUserEntity> = {},
   teacherOverrides: Partial<InsertTeacherEntity> = {},
-): Promise<UserEntity | TeacherEntity> => {
+) => {
 
   const departmentId = teacherOverrides.departmentId ?? (await createDepartment()).id
 
