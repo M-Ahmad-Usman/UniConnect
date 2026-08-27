@@ -26,7 +26,7 @@ import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 import * as passwordUtil from '../../core/utils/password.js'
 import { toStudentResponse, toTeacherResponse } from './user.dto.js'
 
-// Types
+// DTOs
 import type {
   StudentResponse,
   CreateStudentRequest,
