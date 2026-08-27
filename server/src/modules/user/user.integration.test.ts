@@ -8,7 +8,7 @@ import * as testFactory from '../../test/factories.js'
 import * as testHelper from '../../test/helpers.js'
 
 // Types
-import type { TeacherResponse, StudentResponse } from './user.dto.js'
+import type { CreateTeacherResponse, CreateStudentResponse } from './user.dto.js'
 
 const api = request(app)
 
@@ -25,7 +25,7 @@ describe('/users', () => {
           departmentId: teacherDepartment.id,
         }))
 
-      const body = testHelper.assertSuccessBody<TeacherResponse>(res)
+      const body = testHelper.assertSuccessBody<CreateTeacherResponse>(res)
 
       expect(res.status).toBe(201)
       expect(body.data).toMatchObject({ fullName: 'Muhammad Ahmad' })
@@ -160,7 +160,7 @@ describe('/users', () => {
           classPublicId: classContext.publicId,
         })
 
-      const body = testHelper.assertSuccessBody<StudentResponse>(res)
+      const body = testHelper.assertSuccessBody<CreateStudentResponse>(res)
 
       expect(res.status).toBe(201)
       expect(body.data).toMatchObject({ fullName: 'Muhammad Ahmad', classPublicId: classContext.publicId })

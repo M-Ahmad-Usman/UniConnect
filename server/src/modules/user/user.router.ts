@@ -10,13 +10,15 @@ import type UserService from './user.service.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createTeacherSchema, createStudentSchema } from './user.schema.js'
 
-// Data Types
+// API Types
 import type { SuccessResponseBody } from '../../core/types/api.js'
+
+// DTOs
 import type {
   CreateStudentRequest,
-  StudentResponse,
+  CreateStudentResponse,
   CreateTeacherRequest,
-  TeacherResponse,
+  CreateTeacherResponse,
 } from './user.dto.js'
 
 export default function createUserRouter(userService: UserService): Router {
@@ -28,9 +30,9 @@ export default function createUserRouter(userService: UserService): Router {
     validate(createTeacherSchema),
     async (req: Request<ParamsDictionary, unknown, CreateTeacherRequest>, res: Response) => {
 
-      const teacherResponse = await userService.createTeacher(req.body)
+      const teacherResponse: CreateTeacherResponse = await userService.createTeacher(req.body)
 
-      const resBody: SuccessResponseBody<TeacherResponse> = {
+      const resBody: SuccessResponseBody<CreateTeacherResponse> = {
         success: true,
         data: teacherResponse,
       }
@@ -44,9 +46,9 @@ export default function createUserRouter(userService: UserService): Router {
     validate(createStudentSchema),
     async (req: Request<ParamsDictionary, unknown, CreateStudentRequest>, res: Response) => {
 
-      const studentResponse = await userService.createStudent(req.body)
+      const studentResponse: CreateStudentResponse = await userService.createStudent(req.body)
 
-      const resBody: SuccessResponseBody<StudentResponse> = {
+      const resBody: SuccessResponseBody<CreateStudentResponse> = {
         success: true,
         data: studentResponse,
       }

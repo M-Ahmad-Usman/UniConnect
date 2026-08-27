@@ -24,14 +24,14 @@ import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 
 // Utils
 import * as passwordUtil from '../../core/utils/password.js'
-import { toStudentResponse, toTeacherResponse } from './user.dto.js'
+import { toCreateStudentResponse, toCreateTeacherResponse } from './user.dto.js'
 
 // DTOs
 import type {
-  StudentResponse,
   CreateStudentRequest,
-  TeacherResponse,
+  CreateStudentResponse,
   CreateTeacherRequest,
+  CreateTeacherResponse,
 } from './user.dto.ts'
 
 export default class UserService {
@@ -44,7 +44,7 @@ export default class UserService {
     private readonly departmentRepository: DepartmentRepository,
   ) { }
 
-  async createTeacher(createTeacherRequest: CreateTeacherRequest): Promise<TeacherResponse> {
+  async createTeacher(createTeacherRequest: CreateTeacherRequest): Promise<CreateTeacherResponse> {
 
     const passwordHash = await passwordUtil.hash(createTeacherRequest.password)
 
@@ -90,7 +90,7 @@ export default class UserService {
         }
         await this.serverRepository.addMember(serverMembershipInsert, trx)
 
-        return toTeacherResponse(userEntity, teacherEntity)
+        return toCreateTeacherResponse(userEntity, teacherEntity)
       })
     }
     // Enrich known and expected DB Errors
@@ -112,7 +112,7 @@ export default class UserService {
     }
   }
 
-  async createStudent(createStudentRequest: CreateStudentRequest): Promise<StudentResponse> {
+  async createStudent(createStudentRequest: CreateStudentRequest): Promise<CreateStudentResponse> {
 
     const passwordHash = await passwordUtil.hash(createStudentRequest.password)
 
@@ -169,7 +169,7 @@ export default class UserService {
         }
         await this.serverRepository.addMember(departmentServerMembershipInsert, trx)
 
-        return toStudentResponse(userEntity, studentEntity, createStudentRequest.classPublicId)
+        return toCreateStudentResponse(userEntity, studentEntity, createStudentRequest.classPublicId)
       })
     }
     // Enrich known and expected DB Errors

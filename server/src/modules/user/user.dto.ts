@@ -5,7 +5,7 @@ import type { UserEntity, StudentEntity, TeacherEntity } from '../../db/types.js
 export type CreateTeacherRequest = z.infer<typeof createTeacherSchema>
 export type CreateStudentRequest = z.infer<typeof createStudentSchema>
 
-interface UserResponse {
+interface CreateUserResponse {
   publicId: string
   fullName: string
   personalEmail: string
@@ -16,17 +16,17 @@ interface UserResponse {
   bio: string | null
 }
 
-export interface StudentResponse extends UserResponse {
+export interface CreateStudentResponse extends CreateUserResponse {
   rollNumber: string
   classPublicId: string
 }
 
-export interface TeacherResponse extends UserResponse {
+export interface CreateTeacherResponse extends CreateUserResponse {
   designation: string
   departmentId: number
 }
 
-function toBaseUserResponse(user: UserEntity): UserResponse {
+function toCreateBaseUserResponse(user: UserEntity): CreateUserResponse {
   return {
     publicId: user.publicId,
     fullName: user.fullName,
@@ -39,24 +39,24 @@ function toBaseUserResponse(user: UserEntity): UserResponse {
   }
 }
 
-export function toStudentResponse(
+export function toCreateStudentResponse(
   userEntity: UserEntity,
   studentEntity: StudentEntity,
   classPublicId: string,
-): StudentResponse {
+): CreateStudentResponse {
   return {
-    ...toBaseUserResponse(userEntity),
+    ...toCreateBaseUserResponse(userEntity),
     rollNumber: studentEntity.rollNumber,
     classPublicId,
   }
 }
 
-export function toTeacherResponse(
+export function toCreateTeacherResponse(
   userEntity: UserEntity,
   teacherEntity: TeacherEntity,
-): TeacherResponse {
+): CreateTeacherResponse {
   return {
-    ...toBaseUserResponse(userEntity),
+    ...toCreateBaseUserResponse(userEntity),
     designation: teacherEntity.designation,
     departmentId: teacherEntity.departmentId,
   }
