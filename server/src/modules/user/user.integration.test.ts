@@ -61,6 +61,37 @@ describe('/users', () => {
 
         expect(details.length).toBe(2)
       })
+
+      it('fails with status 422 if empty JSON body is provided', async () => {
+        const res = await api.post(ENDPOINT).send({})
+
+        const body = testHelper.assertErrorBody(res)
+        expect(res.status).toBe(422)
+        expect(body.error.type).toBe('VALIDATION_FAILED')
+      })
+
+      it('fails with status 415 if data with invalid content type is provided', async () => {
+        const res = await api.post(ENDPOINT)
+          .set('Content-Type', 'text/html')
+          .send('<p>Hello World</p>')
+
+        const body = testHelper.assertErrorBody(res)
+        expect(res.status).toBe(415)
+        expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
+      })
+
+      it('fails with status 400 if invalid json is provided', async () => {
+        const res = await api.post(ENDPOINT)
+          .send('{ "name": "Ahmad", }')
+          .set('Content-Type', 'application/json')
+          .expect(400)
+
+        const body = testHelper.assertErrorBody(res)
+
+        expect(res.status).toBe(400)
+        expect(body.error.type).toBe('BAD_REQUEST')
+        expect(body.error.message.toLowerCase()).toContain('json')
+      })
     })
 
     describe('DB dependent validations', () => {
@@ -164,6 +195,37 @@ describe('/users', () => {
         expect(genderFieldError.message).toMatch(/male|female/)
 
         expect(details.length).toBe(2)
+      })
+
+      it('fails with status 422 if empty JSON body is provided', async () => {
+        const res = await api.post(ENDPOINT).send({})
+
+        const body = testHelper.assertErrorBody(res)
+        expect(res.status).toBe(422)
+        expect(body.error.type).toBe('VALIDATION_FAILED')
+      })
+
+      it('fails with status 415 if data with invalid content type is provided', async () => {
+        const res = await api.post(ENDPOINT)
+          .set('Content-Type', 'text/html')
+          .send('<p>Hello World</p>')
+
+        const body = testHelper.assertErrorBody(res)
+        expect(res.status).toBe(415)
+        expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
+      })
+
+      it('fails with status 400 if invalid json is provided', async () => {
+        const res = await api.post(ENDPOINT)
+          .send('{ "name": "Ahmad", }')
+          .set('Content-Type', 'application/json')
+          .expect(400)
+
+        const body = testHelper.assertErrorBody(res)
+
+        expect(res.status).toBe(400)
+        expect(body.error.type).toBe('BAD_REQUEST')
+        expect(body.error.message.toLowerCase()).toContain('json')
       })
     })
 
