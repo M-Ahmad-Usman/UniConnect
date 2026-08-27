@@ -8,83 +8,67 @@ import type {
 } from '../../db/types.js'
 
 // Repositories
-import type ClassRepository from './class.repository.js'
 import type ProgramRepository from '../program/program.repository.js'
 import type ServerRepository from '../server/server.repository.js'
+
+// Interface
+import type { IClassRepository } from './class.interface.js'
 
 // Errors
 import { BadRequestError } from '../../core/errors/AppError.js'
 
 // Utils
+import { toCreateClassRespose } from './class.dto.js'
 
-// Types
-import type { CreateClass } from './class.types.js'
+// DTOs
+import type { CreateClassRequest, CreateClassResponse } from './class.dto.js'
 
 export default class ClassService {
 
   constructor(
     private readonly db: Kysely<Database>, // use for creating transactions only
-    private readonly classRepository: ClassRepository,
+    private readonly classRepository: IClassRepository,
     private readonly programRepository: ProgramRepository,
     private readonly serverRepository: ServerRepository,
   ) { }
 
-  async createClass(createClassData: CreateClass) {
+  async createClass(createClassRequest: CreateClassRequest): Promise<CreateClassResponse> {
 
-    const programDetails = await this.programRepository
-      .getProgramDetails(createClassData.programId)
+    const classProgramEntity = await this.programRepository
+      .getProgramDetails(createClassRequest.programId)
 
-    if (!programDetails)
-      throw new BadRequestError('Wrong or invalid ProgramId')
+    if (!classProgramEntity)
+      throw new BadRequestError('Wrong or invalid programId')
 
     // Validate that the class's current_semester doesn't exceeds the class's enrolled program's allowed semesters
-    if (createClassData.currentSemester > programDetails.totalSemesters)
-      throw new BadRequestError(`Class's current_semester cannot exceed from its enrolled program's semesters. Max ${programDetails.code} semesters: ${programDetails.totalSemesters.toString()}`)
+    if (createClassRequest.currentSemester > classProgramEntity.totalSemesters)
+      throw new BadRequestError(`Class's current_semester cannot exceed from its enrolled program's semesters. Max ${classProgramEntity.code} semesters: ${classProgramEntity.totalSemesters.toString()}`)
 
     return await this.db.transaction().execute(async trx => {
 
-      const createClassServerInfo: InsertServerEntity = {
-        name: `${programDetails.code}-${createClassData.section}-${createClassData.admissionYear.toString()}`,
+      const classServerInsert: InsertServerEntity = {
+        name: `${classProgramEntity.code}-${createClassRequest.section}-${createClassRequest.admissionYear.toString()}`,
         type: 'class',
         description: 'Centralized hub for course materials, official announcements, and academic collaboration.',
         // createdBy: req.authorizedUser.id, // TODO: Implement authorization
       }
-      const createdClassServerInfo = await this.serverRepository
-        .createServer(createClassServerInfo, trx)
+      const classServerEntity = await this.serverRepository
+        .createServer(classServerInsert, trx)
 
-      const createClassInfo: InsertClassEntity = {
-        programId: createClassData.programId,
-        currentSemester: createClassData.currentSemester,
-        section: createClassData.section,
+      const classInsert: InsertClassEntity = {
+        programId: createClassRequest.programId,
+        currentSemester: createClassRequest.currentSemester,
+        section: createClassRequest.section,
 
         academicYear: new Date().getFullYear(),
-        admissionYear: createClassData.admissionYear,
+        admissionYear: createClassRequest.admissionYear,
 
-        serverId: createdClassServerInfo.id,
+        serverId: classServerEntity.id,
       }
-      const createdClassInfo = await this.classRepository
-        .createClass(createClassInfo, trx)
+      const classEntity = await this.classRepository
+        .createClass(classInsert, trx)
 
-      const classDetails = {
-        publicId: createdClassInfo.publicId,
-        programId: createdClassInfo.programId,
-        currentSemester: createdClassInfo.currentSemester,
-
-        crId: null,
-
-        academicYear: createdClassInfo.academicYear,
-        admissionYear: createdClassInfo.admissionYear,
-
-        server: {
-          publicId: createdClassServerInfo.publicId,
-
-          name: createdClassServerInfo.name,
-          description: createdClassServerInfo.description,
-          iconUrl: createdClassServerInfo.iconUrl ?? null,
-        },
-      }
-
-      return classDetails
+      return toCreateClassRespose(classEntity, classServerEntity)
     })
   }
 }

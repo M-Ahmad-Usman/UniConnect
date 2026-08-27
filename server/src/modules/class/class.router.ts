@@ -10,9 +10,11 @@ import type ClassService from './class.service.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createClassSchema } from './class.schema.js'
 
-// Types
-import type { CreateClass } from './class.types.js'
+// API Types
 import type { SuccessResponseBody } from '../../core/types/api.js'
+
+// DTOs
+import type { CreateClassRequest, CreateClassResponse } from './class.dto.js'
 
 export default function createClassRouter(classService: ClassService) {
 
@@ -21,13 +23,13 @@ export default function createClassRouter(classService: ClassService) {
   classRouter.post('/',
     validateContentType('application/json'),
     validate(createClassSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateClass>, res: Response) => {
+    async (req: Request<ParamsDictionary, unknown, CreateClassRequest>, res: Response) => {
 
-      const newClass = await classService.createClass(req.body)
+      const classResponse: CreateClassResponse = await classService.createClass(req.body)
 
-      const resBody: SuccessResponseBody<typeof newClass> = {
+      const resBody: SuccessResponseBody<CreateClassResponse> = {
         success: true,
-        data: newClass,
+        data: classResponse,
       }
 
       res.status(201).json(resBody)

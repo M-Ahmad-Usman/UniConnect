@@ -13,11 +13,11 @@ import type {
 
 // Repositories
 import type ServerRepository from '../server/server.repository.js'
-import type ClassRepository from '../class/class.repository.js'
 import type DepartmentRepository from '../department/department.repository.js'
 
 // Interfaces
 import type { IUserRepository } from './user.interface.js'
+import type { IClassRepository } from '../class/class.interface.ts'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
@@ -40,7 +40,7 @@ export default class UserService {
     private readonly db: Kysely<Database>, // use for creating transactions only
     private readonly userRepository: IUserRepository,
     private readonly serverRepository: ServerRepository,
-    private readonly classRepository: ClassRepository,
+    private readonly classRepository: IClassRepository,
     private readonly departmentRepository: DepartmentRepository,
   ) { }
 
@@ -117,7 +117,7 @@ export default class UserService {
     const passwordHash = await passwordUtil.hash(createStudentRequest.password)
 
     const studentEnrollmentContext = await this.classRepository
-      .getStudentEnrollmentContext(createStudentRequest.classPublicId)
+      .findStudentEnrollmentContextByClassPublicId(createStudentRequest.classPublicId)
 
     if (!studentEnrollmentContext)
       throw new BadRequestError("Wrong or Invalid classPublicId for student's class")

@@ -1,30 +1,28 @@
 import type { Kysely } from 'kysely'
 import type { Database, InsertClassEntity } from '../../db/types.js'
+import type { IClassRepository } from './class.interface.js'
 
-export default class ClassRepository {
+export default class ClassRepository implements IClassRepository {
 
   constructor(private readonly db: Kysely<Database>) { }
 
-  async createClass(createClassDetails: InsertClassEntity, trx: Kysely<Database> = this.db) {
+  async createClass(classInsert: InsertClassEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('classes')
-      .values(createClassDetails)
+      .values(classInsert)
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async getIdFromPublicId(publicId: string, trx: Kysely<Database> = this.db): Promise<number | undefined> {
+  async findClassIdByClassPublicId(classPublicId: string, trx: Kysely<Database> = this.db): Promise<number | undefined> {
     const classesRow = await trx.selectFrom('classes')
       .select('classes.id')
-      .where('classes.publicId', '=', publicId)
+      .where('classes.publicId', '=', classPublicId)
       .executeTakeFirst()
 
     return classesRow?.id
   }
 
-  /**
-   * Returns the id (serverId) of the class's department's server
-  **/
-  async getClassDepartmentServerId(classId: number, trx: Kysely<Database> = this.db): Promise<number | undefined> {
+  async findClassDepartmentServerIdByClassId(classId: number, trx: Kysely<Database> = this.db): Promise<number | undefined> {
     const classesProgramsJoinedRow = await trx.selectFrom('classes')
       .innerJoin('programs', 'programs.id', 'classes.programId')
       .innerJoin('departments', 'departments.id', 'programs.departmentId')
@@ -35,7 +33,7 @@ export default class ClassRepository {
     return classesProgramsJoinedRow?.serverId
   }
 
-  async getClassServerId(classId: number, trx: Kysely<Database> = this.db): Promise<number | undefined> {
+  async findClassServerIdByClassId(classId: number, trx: Kysely<Database> = this.db): Promise<number | undefined> {
     const classesRow = await trx.selectFrom('classes')
       .select('serverId')
       .where('id', '=', classId)
@@ -51,7 +49,7 @@ export default class ClassRepository {
    * - class's serverId as classServerId,
    * - class's department's serverId as departmentServerId (serverId of department to which the class belongs)
    */
-  async getStudentEnrollmentContext(publicId: string, trx = this.db): Promise<{
+  async findStudentEnrollmentContextByClassPublicId(publicId: string, trx = this.db): Promise<{
     classId: number,
     classServerId: number,
     departmentServerId: number,
