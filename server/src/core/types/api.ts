@@ -6,12 +6,12 @@ export interface SuccessResponseBody<T> {
   meta?: Record<string, unknown>
 }
 
-export interface ErrorResponseBody<TDetails = unknown> {
+export interface ErrorResponseBody {
   success: false
   error: {
     message: string
     type: ErrorType
-    details?: TDetails
+    details: FieldError[]
   }
 }
 

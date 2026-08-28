@@ -1,8 +1,13 @@
 import { ZodError } from 'zod'
 
-import { AppError, ValidationError, InternalServerError, BadRequestError } from '../errors/AppError.js'
-import { logger } from '../logger.js'
 import { formatZodError } from '../utils/formatZodError.js'
+import { logger } from '../logger.js'
+import {
+  AppError,
+  ValidationError,
+  InternalServerError,
+  BadRequestError,
+} from '../errors/AppError.js'
 
 import type { ErrorResponseBody } from '../types/api.js'
 import type { Request, Response, NextFunction } from 'express'
@@ -56,11 +61,9 @@ function buildErrorResponseBody(appError: AppError): ErrorResponseBody {
     error: {
       type: appError.type,
       message: appError.message,
+      details: appError.details,
     },
   }
-
-  if (appError.details !== undefined)
-    body.error.details = appError.details
 
   return body
 }

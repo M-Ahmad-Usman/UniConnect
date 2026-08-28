@@ -1,20 +1,19 @@
 import type { ErrorType } from '../types/error.js'
 import type { FieldError } from '../types/api.js'
-import type { ContentType } from '../types/contentType.js'
 
-export class AppError<TDetails = unknown> extends Error {
+export class AppError extends Error {
   public readonly statusCode: number
   public readonly type: ErrorType
 
   public readonly isOperational: boolean
-  public readonly details: TDetails | undefined
+  public readonly details: FieldError[]
 
   constructor(
     message: string,
     statusCode: number,
     type: ErrorType,
     isOperational = true,
-    details?: TDetails,
+    details: FieldError[] = [],
   ) {
     super(message)
     this.statusCode = statusCode
@@ -61,9 +60,15 @@ export class ConflictError extends AppError {
 
 // ValidationError is special — it carries field-level details from Zod
 // so the client knows exactly which fields failed and why.
-export class ValidationError extends AppError<FieldError[]> {
+export class ValidationError extends AppError {
   constructor(details: FieldError[], message = 'Validation failed') {
     super(message, 422, 'VALIDATION_FAILED', true, details)
+  }
+}
+
+export class InvalidContentTypeError extends AppError {
+  constructor(message = 'Content Type is not supported') {
+    super(message, 415, 'INVALID_CONTENT_TYPE', true)
   }
 }
 
@@ -71,11 +76,5 @@ export class InternalServerError extends AppError {
   constructor(message = 'An unexpected error occurred') {
     // isOperational = false signals this is a programmer error, not a user error
     super(message, 500, 'INTERNAL_SERVER_ERROR', false)
-  }
-}
-
-export class InvalidContentTypeError extends AppError<{ allowedContentType: ContentType }> {
-  constructor(allowedContentType: ContentType, message = 'Content Type is not supported') {
-    super(message, 415, 'INVALID_CONTENT_TYPE', true, { allowedContentType })
   }
 }

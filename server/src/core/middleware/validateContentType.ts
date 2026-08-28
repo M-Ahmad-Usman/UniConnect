@@ -6,9 +6,10 @@ import type { ContentType } from '../types/contentType.js'
 export const validateContentType = (contentType: ContentType) => {
 
   return (request: Request, _response: Response, next: NextFunction) => {
+    const receivedContentType = request.get('Content-Type') ?? 'none'
 
     if (!request.is(contentType))
-      next(new InvalidContentTypeError(contentType, 'Content format is not supported'))
+      next(new InvalidContentTypeError(`Content-Type: "${contentType}" expected, got ${receivedContentType} instead.`))
     else
       next()
   }

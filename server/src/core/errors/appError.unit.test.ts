@@ -148,6 +148,7 @@ describe('App Error', () => {
         expect(validationError.statusCode).toBe(422)
         expect(validationError.type).toBe('VALIDATION_FAILED')
         expect(validationError.isOperational).toBe(true)
+        expect(validationError.details).toBe(fieldErrors)
       })
 
       it('should store and expose field level details', () => {
@@ -177,17 +178,11 @@ describe('App Error', () => {
     // InvalidContentTypeError
     describe('InvalidContentTypeError', () => {
       it('should have correct HTTP semantics', () => {
-        const invalidContentTypeError = new InvalidContentTypeError('application/json')
+        const invalidContentTypeError = new InvalidContentTypeError('require application/json, got text/html instead')
 
         expect(invalidContentTypeError.statusCode).toBe(415)
         expect(invalidContentTypeError.type).toBe('INVALID_CONTENT_TYPE')
         expect(invalidContentTypeError.isOperational).toBe(true)
-      })
-
-      it('should expose the allowed content type in details', () => {
-        const invalidContentTypeError = new InvalidContentTypeError('application/json')
-
-        expect(invalidContentTypeError.details).toEqual({ allowedContentType: 'application/json' })
       })
 
       it('should be an instance of AppError', () => {
