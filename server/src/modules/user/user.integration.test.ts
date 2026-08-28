@@ -18,17 +18,18 @@ describe('/users', () => {
 
     it('succeeds with status 201 on correct data', async () => {
       const teacherDepartment = await testFactory.createDepartment()
+      const teacher = testFactory.generateTeacher({ departmentId: teacherDepartment.id })
 
-      const res = await api.post(ENDPOINT)
-        .send(testFactory.generateTeacher({
-          fullName: 'Muhammad Ahmad',
-          departmentId: teacherDepartment.id,
-        }))
+      const res = await api.post(ENDPOINT).send(teacher)
 
       const body = testHelper.assertSuccessBody<CreateTeacherResponse>(res)
 
+      const { password: _password, ...expectedCreateTeacherResponse } = teacher
+
       expect(res.status).toBe(201)
-      expect(body.data).toMatchObject({ fullName: 'Muhammad Ahmad' })
+      expect(body.data).toMatchObject(expectedCreateTeacherResponse)
+      expect(body.data).not.toHaveProperty('password')
+      expect(body.data).not.toHaveProperty('passwordHash')
     })
 
     describe('Input validations', () => {
@@ -153,17 +154,19 @@ describe('/users', () => {
 
     it('Succeeds with status 201 on correct data', async () => {
       const classContext = await testFactory.createClass()
+      const student = testFactory.generateStudent({ classPublicId: classContext.publicId })
 
-      const res = await api.post(ENDPOINT)
-        .send({
-          ...testFactory.generateStudent({ fullName: 'Muhammad Ahmad' }),
-          classPublicId: classContext.publicId,
-        })
+      const res = await api.post(ENDPOINT).send(student)
 
       const body = testHelper.assertSuccessBody<CreateStudentResponse>(res)
 
+      // Remove password field from response
+      const { password: _password, ...expectedCreateStudentResponse } = student
+
       expect(res.status).toBe(201)
-      expect(body.data).toMatchObject({ fullName: 'Muhammad Ahmad', classPublicId: classContext.publicId })
+      expect(body.data).toMatchObject(expectedCreateStudentResponse)
+      expect(body.data).not.toHaveProperty('password')
+      expect(body.data).not.toHaveProperty('passwordHash')
     })
 
     describe('Input validations', () => {
