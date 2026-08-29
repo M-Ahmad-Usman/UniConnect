@@ -11,7 +11,7 @@ import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createDepartmentSchema } from './department.schema.js'
 
 // Data Types
-import type { CreateDepartment } from './department.types.js'
+import type { CreateDepartmentRequest, CreateDepartmentResponse } from './department.dto.js'
 import type { SuccessResponseBody } from '../../core/types/api.js'
 
 export default function createDepartmentRouter(departmentService: DepartmentService) {
@@ -21,13 +21,13 @@ export default function createDepartmentRouter(departmentService: DepartmentServ
   departmentRouter.post('/',
     validateContentType('application/json'),
     validate(createDepartmentSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateDepartment>, res: Response) => {
+    async (req: Request<ParamsDictionary, unknown, CreateDepartmentRequest>, res: Response) => {
 
-      const newDepartment = await departmentService.createDepartment(req.body)
+      const departmentResponse: CreateDepartmentResponse = await departmentService.createDepartment(req.body)
 
-      const resBody: SuccessResponseBody<typeof newDepartment> = {
+      const resBody: SuccessResponseBody<CreateDepartmentResponse> = {
         success: true,
-        data: newDepartment,
+        data: departmentResponse,
       }
 
       res.status(201).json(resBody)
