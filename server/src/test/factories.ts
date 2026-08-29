@@ -6,6 +6,7 @@ import type {
   InsertTeacherEntity,
   InsertDepartmentEntity,
   InsertClassEntity,
+  InsertProgramEntity,
 } from '../db/types.js'
 
 const uniqueCounter = () => {
@@ -99,17 +100,11 @@ export const createClass = async (classOverrides: Partial<InsertClassEntity> = {
   const departmentEntity = await createDepartment()
   const teacherEntity = await createTeacher({}, { departmentId: departmentEntity.id })
 
-  const programEntity = await db.insertInto('programs')
-    .values({
-      departmentId: departmentEntity.id,
-      discipline: 'computer_science', // must match a value seeded in `disciplines`
-      degreeLevel: 'bachelors',
-      programDirectorId: teacherEntity.id,
-      totalSemesters: 8,
-      code: `BSCS${getUniqueCounter()}`,
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
+  const programEntity = await createProgram(
+    {},
+    { id: departmentEntity.id },
+    { teacherId: teacherEntity.teacherId },
+  )
 
   const classServerEntity = await db.insertInto('servers')
     .values({
@@ -138,6 +133,48 @@ export const createClass = async (classOverrides: Partial<InsertClassEntity> = {
     programDirector: teacherEntity,
     department: departmentEntity,
     program: programEntity,
+  }
+}
+
+export const createProgram = async (
+  programOverrides: Partial<InsertProgramEntity> = {},
+  departmentOverrides: Partial<InsertDepartmentEntity> = {},
+  teacherOverrides: Partial<InsertUserEntity & InsertTeacherEntity> = {},
+) => {
+
+  const programDepartmentId = departmentOverrides.id ?? (await createDepartment()).id
+  const programDirectorId = teacherOverrides.teacherId
+    ?? teacherOverrides.id
+    ?? (await createTeacher({}, { departmentId: programDepartmentId })).teacherId
+
+  const programEntity = await db.insertInto('programs')
+    .values({
+      departmentId: programDepartmentId,
+      discipline: 'computer_science',
+      degreeLevel: 'bachelors',
+      programDirectorId: programDirectorId,
+      totalSemesters: 8,
+      code: `BSCS${getUniqueCounter()}`,
+      ...programOverrides,
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+
+  return programEntity
+}
+
+// Utility Functions to generate test data
+
+/* IMPORTANT: Make sure that the generated data shape represents the actual request dtos */
+
+export const generateClass = (createClassRequest = {}) => {
+  return {
+    programId: 1,
+    currentSemester: 1,
+    section: 'A',
+    academicYear: 2026,
+    admissionYear: 2024,
+    ...createClassRequest,
   }
 }
 
