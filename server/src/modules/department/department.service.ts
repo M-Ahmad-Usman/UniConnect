@@ -32,9 +32,9 @@ export default class DepartmentService {
 
       // Create Department Server
       const departmentServerInsert: InsertServerEntity = {
-        name: createDepartmentRequest.serverName,
-        description: createDepartmentRequest.description ?? null,
-        iconUrl: createDepartmentRequest.iconUrl ?? null, // TODO: Implement media handling
+        name: createDepartmentRequest.server.name,
+        description: createDepartmentRequest.server.description ?? null,
+        iconUrl: createDepartmentRequest.server.iconUrl ?? null, // TODO: Implement media handling
         type: 'department',
         // createdBy: req.authorizedUser.id, // TODO: Implement authorization
       }

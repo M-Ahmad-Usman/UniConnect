@@ -8,7 +8,9 @@ export const createDepartmentSchema = z.object({
   code: z.string().min(2).max(departmentsVarcharSizes.code),
 
   // department server details
-  serverName: z.string().min(5).max(serversVarcharSizes.name), // db allows max 100 characters
-  description: z.string().max(serversVarcharSizes.description).optional(),
-  iconUrl: z.string().optional(), // TODO: Implement media handling
+  server: z.object({
+    name: z.string().min(5).max(serversVarcharSizes.name), // db allows max 100 characters
+    description: z.string().max(serversVarcharSizes.description).optional(),
+    iconUrl: z.string().optional(), // TODO: Implement media handling
+  }),
 })

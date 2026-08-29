@@ -32,7 +32,7 @@ export const toCreateDepartmentResponse = (
       publicId: departmentServerEntity.publicId,
       name: departmentServerEntity.name,
       description: departmentServerEntity.description,
-      iconUrl: departmentServerEntity.iconUrl
-    }
+      iconUrl: departmentServerEntity.iconUrl,
+    },
   }
 }
