@@ -1,4 +1,4 @@
-import type { SuccessResponseBody, ErrorResponseBody } from '../core/types/api.js'
+import type { SuccessResponseBody, ErrorResponseBody, FieldError } from '../core/types/api.js'
 import type { Response } from 'supertest'
 
 export function assertSuccessBody<T>(res: Response): SuccessResponseBody<T> {
@@ -23,4 +23,11 @@ export function expectDefined<T>(
   if (value === undefined || value === null) {
     throw new Error(message)
   }
+}
+
+export function findFieldError(
+  fieldErrors: FieldError[],
+  field: string,
+): FieldError | undefined {
+  return fieldErrors.find(fieldError => fieldError.field === field)
 }
