@@ -1,6 +1,8 @@
 import { db } from '../db/index.js'
+import type { Kysely } from 'kysely'
+import { Transaction } from 'kysely'
 import type {
-  ServerEntity,
+  Database,
   InsertServerEntity,
   InsertUserEntity,
   InsertTeacherEntity,
@@ -15,51 +17,53 @@ const uniqueCounter = () => {
 }
 const getUniqueCounter = uniqueCounter()
 
-export const createDepartment = async (
-  departmentOverrides: Partial<InsertDepartmentEntity> = {},
-  departmentServerOverrides: Partial<InsertServerEntity> = {},
+export const createServer = async (
+  options: { serverOverrides?: Partial<InsertServerEntity> } = {},
+  client = db,
 ) => {
-
-  let departmentServerEntity = {} as ServerEntity
-
-  // skip department server creation if already provided
-  if (!departmentServerOverrides.id) {
-    const departmentServerTestData: InsertServerEntity = {
+  return await client.insertInto('servers')
+    .values({
       name: `Test Server ${getUniqueCounter()}`,
       type: 'department',
-    }
+      ...options.serverOverrides,
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+}
 
-    departmentServerEntity = await db.insertInto('servers')
-      .values({ ...departmentServerTestData, ...departmentServerOverrides })
-      .returningAll()
-      .executeTakeFirstOrThrow()
-  }
+export const createDepartment = async (
+  options: { departmentOverrides?: Partial<InsertDepartmentEntity> } = {},
+  client = db,
+) => {
 
-  const departmentTestData: InsertDepartmentEntity = {
-    name: `Test Department ${getUniqueCounter()}`,
-    code: `TD ${getUniqueCounter()}`,
-    serverId: departmentServerEntity.id,
-  }
+  // Skip server creation if already provided
+  const departmentServerId = options.departmentOverrides?.serverId
+    ?? (await createServer({}, client)).id
 
-  const departmentEntity = await db.insertInto('departments')
-    .values({ ...departmentTestData, ...departmentOverrides })
+  const departmentEntity = await client.insertInto('departments')
+    .values({
+      name: `Test Department ${getUniqueCounter()}`,
+      code: `TD ${getUniqueCounter()}`,
+      serverId: departmentServerId,
+      ...options.departmentOverrides,
+    })
     .returningAll()
     .executeTakeFirstOrThrow()
 
-  return {
-    ...departmentEntity,
-    server: departmentServerEntity,
-  }
+  return departmentEntity
 }
 
 export const createTeacher = async (
-  userOverrides: Partial<InsertUserEntity> = {},
-  teacherOverrides: Partial<InsertTeacherEntity> = {},
+  options: {
+    userOverrides?: Partial<InsertUserEntity>,
+    teacherOverrides?: Partial<InsertTeacherEntity>
+  } = {},
+  client = db,
 ) => {
+  return runInTransaction(client, async trx => {
 
-  const departmentId = teacherOverrides.departmentId ?? (await createDepartment()).id
+    const departmentId = options.teacherOverrides?.departmentId ?? (await createDepartment({}, trx)).id
 
-  return await db.transaction().execute(async (trx) => {
     const userEntity = await trx.insertInto('users')
       .values({
         fullName: 'Test Teacher',
@@ -68,7 +72,7 @@ export const createTeacher = async (
         phone: '0312-1234567',
         passwordHash: 'password123',
         gender: 'male',
-        ...userOverrides,
+        ...options.userOverrides,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -78,7 +82,7 @@ export const createTeacher = async (
         teacherId: userEntity.id,
         departmentId,
         designation: 'lecturer',
-        ...teacherOverrides,
+        ...options.teacherOverrides,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -91,94 +95,99 @@ export const createTeacher = async (
   })
 }
 
-// Creates a full class: department (+ server) -> a teacher as program
-// director -> program -> class (+ its own server). This mirrors the real
-// dependency chain ClassService.createClass and
-// ClassRepository.getStudentEnrollmentContext rely on.
-export const createClass = async (classOverrides: Partial<InsertClassEntity> = {}) => {
+/** Creates a full class: department (+ server) -> a teacher as program
+ * director -> program -> class (+ its own server). This mirrors the real
+ * dependency chain.
+**/
+export const createClass = async (
+  options: { classOverrides?: Partial<InsertClassEntity> } = {},
+  client = db,
+) => {
+  return runInTransaction(client, async (trx) => {
 
-  const departmentEntity = await createDepartment()
-  const teacherEntity = await createTeacher({}, { departmentId: departmentEntity.id })
+    const departmentEntity = await createDepartment({}, trx)
+    const teacherEntity = await createTeacher({ teacherOverrides: { departmentId: departmentEntity.id } }, trx)
 
-  const programEntity = await createProgram(
-    {},
-    { id: departmentEntity.id },
-    { teacherId: teacherEntity.teacherId },
-  )
+    const programEntity = await createProgram({
+      programOverrides: {
+        departmentId: departmentEntity.id,
+        programDirectorId: teacherEntity.id,
+      },
+    }, trx)
 
-  const classServerEntity = await db.insertInto('servers')
-    .values({
-      name: `Test Class Server ${getUniqueCounter()}`,
-      type: 'class',
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
+    const classServerEntity = await createServer({}, trx)
 
-  const classEntity = await db.insertInto('classes')
-    .values({
-      programId: programEntity.id,
-      currentSemester: 1,
-      section: 'A',
-      academicYear: new Date().getFullYear(),
-      admissionYear: new Date().getFullYear(),
-      serverId: classServerEntity.id,
-      ...classOverrides,
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
+    const classEntity = await trx.insertInto('classes')
+      .values({
+        programId: programEntity.id,
+        currentSemester: 1,
+        section: 'A',
+        academicYear: new Date().getFullYear(),
+        admissionYear: new Date().getFullYear(),
+        serverId: classServerEntity.id,
+        ...options.classOverrides,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
 
-  return {
-    ...classEntity,
-    classServer: classServerEntity,
-    programDirector: teacherEntity,
-    department: departmentEntity,
-    program: programEntity,
-  }
+    return classEntity
+  })
 }
 
 export const createProgram = async (
-  programOverrides: Partial<InsertProgramEntity> = {},
-  departmentOverrides: Partial<InsertDepartmentEntity> = {},
-  teacherOverrides: Partial<InsertUserEntity & InsertTeacherEntity> = {},
+  options: { programOverrides?: Partial<InsertProgramEntity> } = {},
+  client = db,
 ) => {
+  return await runInTransaction(client, async (trx) => {
 
-  const programDepartmentId = departmentOverrides.id ?? (await createDepartment()).id
-  const programDirectorId = teacherOverrides.teacherId
-    ?? teacherOverrides.id
-    ?? (await createTeacher({}, { departmentId: programDepartmentId })).teacherId
+    const departmentId = options.programOverrides?.departmentId
+      ?? (await createDepartment({}, trx)).id
+    const programDirectorId = options.programOverrides?.programDirectorId
+      ?? (await createTeacher({}, trx)).id
 
-  const programEntity = await db.insertInto('programs')
-    .values({
-      departmentId: programDepartmentId,
-      discipline: 'computer_science',
-      degreeLevel: 'bachelors',
-      programDirectorId: programDirectorId,
-      totalSemesters: 8,
-      code: `BSCS${getUniqueCounter()}`,
-      ...programOverrides,
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
+    const programEntity = await trx.insertInto('programs')
+      .values({
+        departmentId,
+        discipline: 'computer_science',
+        degreeLevel: 'bachelors',
+        programDirectorId,
+        totalSemesters: 8,
+        code: `BSCS${getUniqueCounter()}`,
+        ...options.programOverrides,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
+    return programEntity
+  })
+}
 
-  return programEntity
+// Adaptive Transaction Wrapper Utility Function
+export const runInTransaction = <T>(
+  dbOrTrx: Kysely<Database> | Transaction<Database>,
+  callback: (trx: Transaction<Database>) => Promise<T>,
+): Promise<T> => {
+  // If already inside a transaction, reuse it directly
+  if (dbOrTrx instanceof Transaction) return callback(dbOrTrx)
+  // Otherwise, start a new root transaction
+  return dbOrTrx.transaction().execute(callback)
 }
 
 // Utility Functions to generate test data
 
 /* IMPORTANT: Make sure that the generated data shape represents the actual request dtos */
 
-export const generateClass = (createClassRequest = {}) => {
+export const generateClass = (classOverrides = {}) => {
   return {
     programId: 1,
     currentSemester: 1,
     section: 'A',
     academicYear: 2026,
     admissionYear: 2024,
-    ...createClassRequest,
+    ...classOverrides,
   }
 }
 
-export const generateTeacher = (createTeacherRequest = {}) => {
+export const generateTeacher = (teacherOverrides = {}) => {
   return {
     fullName: 'Test Teacher',
     personalEmail: `teacher.${getUniqueCounter()}@example.com`,
@@ -188,11 +197,11 @@ export const generateTeacher = (createTeacherRequest = {}) => {
     gender: 'male',
     designation: 'lecturer',
     departmentId: 1,
-    ...createTeacherRequest,
+    ...teacherOverrides,
   }
 }
 
-export const generateStudent = (createStudentRequest: Record<string, unknown> = {}) => {
+export const generateStudent = (studentOverrides = {}) => {
   return {
     fullName: 'Test Student',
     personalEmail: `student.${getUniqueCounter()}@example.com`,
@@ -202,6 +211,6 @@ export const generateStudent = (createStudentRequest: Record<string, unknown> = 
     gender: 'female',
     classPublicId: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa', // caller should override with a real class's publicId
     rollNumber: `TR-${getUniqueCounter()}`,
-    ...createStudentRequest,
+    ...studentOverrides,
   }
 }
