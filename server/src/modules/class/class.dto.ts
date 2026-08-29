@@ -7,7 +7,8 @@ export type CreateClassRequest = z.infer<typeof createClassSchema>
 export interface CreateClassResponse {
   publicId: string,
   programId: number,
-  currentSemester: number
+  currentSemester: number,
+  section: string,
 
   crId: null
 
@@ -30,6 +31,7 @@ export function toCreateClassRespose(
     publicId: classEntity.publicId,
     programId: classEntity.programId,
     currentSemester: classEntity.currentSemester,
+    section: classEntity.section,
 
     crId: null,
 
