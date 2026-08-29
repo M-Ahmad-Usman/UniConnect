@@ -1,12 +1,12 @@
-import type { SuccessResponseBody, ErrorResponseBody, FieldError } from '../core/types/api.js'
+import type { SuccessResponseBody, ErrorResponseBody } from '../core/types/api.js'
 import type { Response } from 'supertest'
 
 export function assertSuccessBody<T>(res: Response): SuccessResponseBody<T> {
   return res.body as SuccessResponseBody<T>
 }
 
-export function assertErrorBody<TDetails = FieldError[]>(res: Response): ErrorResponseBody<TDetails> {
-  return res.body as ErrorResponseBody<TDetails>
+export function assertErrorBody(res: Response): ErrorResponseBody {
+  return res.body as ErrorResponseBody
 }
 
 /**

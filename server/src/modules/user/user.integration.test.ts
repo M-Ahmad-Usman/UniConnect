@@ -38,29 +38,22 @@ describe('/users', () => {
           .send(testFactory.generateTeacher({ personalEmail: 'incorrect.email', gender: 'invalid gender' }))
 
         const body = testHelper.assertErrorBody(res)
+
         expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
+        expect(body.error.details.length).toBe(2)
 
-        // Destructure details before asserting Non Nullability
-        // If we pass body.error.details to testHelper.assertDefined
-        // then any subsequent function call would re-widen the
-        // details type to <FieldError[] | undefined>
-        const { details } = body.error
-        testHelper.expectDefined(details)
+        const personalEmailFieldError = body.error.details
+          .find(fieldError => fieldError.field === 'personalEmail')
+        const genderFieldError = body.error.details
+          .find(fieldError => fieldError.field === 'gender')
 
-        // Assertion is required here to satisfy noUncheckedIndexedAccess rule
-        const personalEmailFieldError = details.find(fieldError => fieldError.field === 'personalEmail')
-        const genderFieldError = details.find(fieldError => fieldError.field === 'gender')
+        expect(personalEmailFieldError).toBeDefined()
+        expect(personalEmailFieldError?.code).toBe('invalid_format')
 
-        testHelper.expectDefined(personalEmailFieldError)
-        testHelper.expectDefined(genderFieldError)
-
-        expect(personalEmailFieldError.code).toBe('invalid_format')
-
-        expect(genderFieldError.code).toBe('invalid_value')
-        expect(genderFieldError.message).toMatch(/male|female/)
-
-        expect(details.length).toBe(2)
+        expect(genderFieldError).toBeDefined()
+        expect(genderFieldError?.code).toBe('invalid_value')
+        expect(genderFieldError?.message).toMatch(/male|female/)
       })
 
       it('fails with status 422 if empty JSON body is provided', async () => {
@@ -79,6 +72,7 @@ describe('/users', () => {
         const body = testHelper.assertErrorBody(res)
         expect(res.status).toBe(415)
         expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
+        expect(body.error.message).toContain('application/json')
       })
 
       it('fails with status 400 if invalid json is provided', async () => {
@@ -175,29 +169,22 @@ describe('/users', () => {
           .send(testFactory.generateStudent({ personalEmail: 'incorrect.email', gender: 'invalid gender' }))
 
         const body = testHelper.assertErrorBody(res)
+
         expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
+        expect(body.error.details.length).toBe(2)
 
-        // Destructure details before asserting Non Nullability
-        // If we pass body.error.details to testHelper.assertDefined
-        // then any subsequent function call would re-widen the
-        // details type to <FieldError[] | undefined>
-        const { details } = body.error
-        testHelper.expectDefined(details)
+        const personalEmailFieldError = body.error.details
+          .find(fieldError => fieldError.field === 'personalEmail')
+        const genderFieldError = body.error.details
+          .find(fieldError => fieldError.field === 'gender')
 
-        // Assertion is required here to satisfy noUncheckedIndexedAccess rule
-        const personalEmailFieldError = details.find(fieldError => fieldError.field === 'personalEmail')
-        const genderFieldError = details.find(fieldError => fieldError.field === 'gender')
+        expect(personalEmailFieldError).toBeDefined()
+        expect(personalEmailFieldError?.code).toBe('invalid_format')
 
-        testHelper.expectDefined(personalEmailFieldError)
-        testHelper.expectDefined(genderFieldError)
-
-        expect(personalEmailFieldError.code).toBe('invalid_format')
-
-        expect(genderFieldError.code).toBe('invalid_value')
-        expect(genderFieldError.message).toMatch(/male|female/)
-
-        expect(details.length).toBe(2)
+        expect(genderFieldError).toBeDefined()
+        expect(genderFieldError?.code).toBe('invalid_value')
+        expect(genderFieldError?.message).toMatch(/male|female/)
       })
 
       it('fails with status 422 if empty JSON body is provided', async () => {
@@ -216,6 +203,7 @@ describe('/users', () => {
         const body = testHelper.assertErrorBody(res)
         expect(res.status).toBe(415)
         expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
+        expect(body.error.message).toContain('application/json')
       })
 
       it('fails with status 400 if invalid json is provided', async () => {
