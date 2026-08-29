@@ -49,7 +49,7 @@ export default class UserService {
     const passwordHash = await passwordUtil.hash(createTeacherRequest.password)
 
     const teacherDepartmentServerId = await this.departmentRepository
-      .getDepartmentServerId(createTeacherRequest.departmentId)
+      .findDepartmentServerId(createTeacherRequest.departmentId)
 
     if (!teacherDepartmentServerId)
       throw new BadRequestError('Wrong or Invalid departmentId for teacher.')
