@@ -99,9 +99,9 @@ export default class UserService {
         // constraint names are defined in src/db/migrations/2026-03-07T02-23-50.616Z_create_tables.ts
         switch (err.constraint) {
           case 'uq_users_personal_email':
-            throw new ConflictError('Specified personal email is already registered.')
+            throw new ConflictError('Specified personalEmail is already registered.')
           case 'uidx_users_active_university_email':
-            throw new ConflictError('Specified university email is already in use.')
+            throw new ConflictError('Specified universityEmail is already in use.')
           case 'fk_teachers_designation':
             throw new BadRequestError('Wrong or Invalid designation value')
           case 'fk_teachers_department_id':
