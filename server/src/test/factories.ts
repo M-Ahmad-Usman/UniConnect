@@ -176,6 +176,19 @@ export const runInTransaction = <T>(
 
 /* IMPORTANT: Make sure that the generated data shape represents the actual request dtos */
 
+export const generateDepartment = (departmentOverrides = {}) => {
+  return {
+    name: `Test Department ${getUniqueCounter()}`,
+    code: `TD${getUniqueCounter()}`,
+    server: {
+      name: 'Test Server',
+      description: 'Test Description',
+      iconUrl: 'https://icon-url.com',
+    },
+    ...departmentOverrides,
+  }
+}
+
 export const generateClass = (classOverrides = {}) => {
   return {
     programId: 1,
