@@ -11,8 +11,15 @@ import type ProgramService from './program.service.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createProgramSchema, createProgramCurriculaSchema } from './program.schema.js'
 
-// Types
-import type { CreateProgram, CreateProgramCurricula } from './program.types.js'
+// DTO Types
+import type {
+  CreateProgramRequest,
+  CreateProgramResponse,
+  CreateProgramCurriculaRequest,
+  CreateProgramCurriculaResponse,
+} from './program.dto.js'
+
+// API Types
 import type { SuccessResponseBody } from '../../core/types/api.js'
 
 export default function createProgramRouter(programService: ProgramService): Router {
@@ -22,13 +29,13 @@ export default function createProgramRouter(programService: ProgramService): Rou
   programRouter.post('/',
     validateContentType('application/json'),
     validate(createProgramSchema, 'body'),
-    async (req: Request<ParamsDictionary, unknown, CreateProgram>, res: Response) => {
+    async (req: Request<ParamsDictionary, unknown, CreateProgramRequest>, res: Response) => {
 
-      const newProgram = await programService.createProgram(req.body)
+      const programResponse: CreateProgramResponse = await programService.createProgram(req.body)
 
-      const resBody: SuccessResponseBody<typeof newProgram> = {
+      const resBody: SuccessResponseBody<CreateProgramResponse> = {
         success: true,
-        data: newProgram,
+        data: programResponse,
       }
 
       res.status(201).json(resBody)
@@ -38,13 +45,14 @@ export default function createProgramRouter(programService: ProgramService): Rou
   programRouter.post('/curricula',
     validateContentType('application/json'),
     validate(createProgramCurriculaSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateProgramCurricula>, res: Response) => {
+    async (req: Request<ParamsDictionary, unknown, CreateProgramCurriculaRequest>, res: Response) => {
 
-      const newCurricula = await programService.createProgramCurricula(req.body)
+      const programCurriculaResponse: CreateProgramCurriculaResponse =
+        await programService.createProgramCurricula(req.body)
 
-      const resBody: SuccessResponseBody<typeof newCurricula> = {
+      const resBody: SuccessResponseBody<CreateProgramCurriculaResponse> = {
         success: true,
-        data: newCurricula,
+        data: programCurriculaResponse,
       }
 
       res.status(201).json(resBody)

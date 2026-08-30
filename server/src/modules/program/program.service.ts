@@ -4,63 +4,62 @@ import pg from 'pg'
 import type { Kysely } from 'kysely'
 import type { Database, InsertProgramEntity } from '../../db/types.js'
 
-// Repositories
-import type ProgramRepository from './program.repository.js'
-import type UserRepository from '../user/user.repository.js'
+// DB Interfaces
+import type { IProgramRepository } from './program.interface.js'
+import type { IUserRepository } from '../user/user.interface.js'
 
 // Errors
-import { BadRequestError, ConflictError, ValidationError } from '../../core/errors/AppError.js'
 import type { FieldError } from '../../core/types/api.js'
-
-// Types
-import type { CreateProgram, CreateProgramCurricula } from './program.types.js'
-import { processProgramCurriculaForDb } from './program.utils.js'
 import { NoResultError } from 'kysely'
+import { BadRequestError, ConflictError, ValidationError } from '../../core/errors/AppError.js'
+
+// DTO Types
+import type {
+  CreateProgramRequest,
+  CreateProgramResponse,
+  CreateProgramCurriculaRequest,
+  CreateProgramCurriculaResponse,
+} from './program.dto.js'
+
+// DTO Mappers
+import {
+  toCreateProgramResponse,
+  toCreateProgramCurriculaResponse,
+  toProgramCurriculaInsert,
+} from './program.dto.js'
 
 export default class ProgramService {
 
   constructor(
     private readonly db: Kysely<Database>,
-    private readonly programRepository: ProgramRepository,
-    private readonly userRepository: UserRepository,
+    private readonly programRepository: IProgramRepository,
+    private readonly userRepository: IUserRepository,
   ) { }
 
-  async createProgram(createProgramData: CreateProgram) {
-
-    const programDirectorId = await this.userRepository
-      .findIdByPublicId(createProgramData.programDirectorPublicId)
-
-    if (!programDirectorId)
-      throw new BadRequestError('Wrong or Invalid Program Director Public Id')
-
+  async createProgram(createProgramRequest: CreateProgramRequest): Promise<CreateProgramResponse> {
     try {
       return await this.db.transaction().execute(async trx => {
 
-        const createProgramInfo: InsertProgramEntity = {
-          departmentId: createProgramData.departmentId,
-          discipline: createProgramData.discipline,
-          degreeLevel: createProgramData.degreeLevel,
+        const directorId = await this.userRepository
+          .findIdByPublicId(createProgramRequest.directorPublicId)
 
-          programDirectorId: programDirectorId,
+        if (!directorId)
+          throw new BadRequestError('Wrong or Invalid directorPublicId')
 
-          totalSemesters: createProgramData.totalSemesters,
-          code: createProgramData.code,
-        }
-        const createdProgramInfo = await this.programRepository.createProgram(createProgramInfo, trx)
+        const programInsert: InsertProgramEntity = {
+          departmentId: createProgramRequest.departmentId,
+          discipline: createProgramRequest.discipline,
+          degreeLevel: createProgramRequest.degreeLevel,
 
-        const newProgram = {
-          id: createdProgramInfo.id,
-          departmentId: createdProgramInfo.departmentId,
-          discipline: createdProgramInfo.discipline,
-          degreeLevel: createdProgramInfo.degreeLevel,
+          programDirectorId: directorId,
 
-          programDirectorPublicId: createProgramData.programDirectorPublicId,
-
-          totalSemesters: createdProgramInfo.totalSemesters,
-          code: createdProgramInfo.code,
+          totalSemesters: createProgramRequest.totalSemesters,
+          code: createProgramRequest.code,
         }
 
-        return newProgram
+        const programEntity = await this.programRepository.createProgram(programInsert, trx)
+
+        return toCreateProgramResponse(programEntity, createProgramRequest.directorPublicId)
       })
     }
     catch (err: unknown) {
@@ -87,16 +86,16 @@ export default class ProgramService {
     }
   }
 
-  async createProgramCurricula(createProgramCurriculaData: CreateProgramCurricula) {
-
+  async createProgramCurricula(createProgramCurriculaRequest: CreateProgramCurriculaRequest): Promise<CreateProgramCurriculaResponse> {
     try {
       return await this.db.transaction().execute(async trx => {
 
-        const programSemesterCount = await this.programRepository.getSemesterCount(createProgramCurriculaData.programId)
+        const programTotalSemesters = await this.programRepository
+          .findTotalSemestersById(createProgramCurriculaRequest.programId)
 
         // Validate all curriculums are complete i.e specified for all semesters
-        createProgramCurriculaData.curricula.forEach((curriculum, curriculumIdx) => {
-          if (curriculum.semesterCourses.length !== programSemesterCount) {
+        createProgramCurriculaRequest.curricula.forEach((curriculum, curriculumIdx) => {
+          if (curriculum.semesterCourses.length !== programTotalSemesters) {
             const semesterCountValidationError: FieldError = {
               field: `curriculums.${curriculumIdx.toString()}`,
               message: 'Curriculum must be specified for complete program i.e for all semesters',
@@ -106,13 +105,14 @@ export default class ProgramService {
           }
         })
 
-        const processedCurricula = processProgramCurriculaForDb(
-          createProgramCurriculaData.curricula,
-          createProgramCurriculaData.programId,
+        const programCurriculaInsert = toProgramCurriculaInsert(
+          createProgramCurriculaRequest.curricula,
+          createProgramCurriculaRequest.programId,
         )
 
-        return await this.programRepository
-          .createProgramCurricula(processedCurricula, trx)
+        await this.programRepository.createProgramCurricula(programCurriculaInsert, trx)
+
+        return toCreateProgramCurriculaResponse(createProgramCurriculaRequest)
       })
     }
     catch (err) {

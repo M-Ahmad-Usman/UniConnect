@@ -8,7 +8,7 @@ export const createProgramSchema = z.object({
   discipline: z.string().max(programsVarcharSizes.discipline),
   degreeLevel: z.enum(DEGREE_LEVELS),
 
-  programDirectorPublicId: z.uuidv7(),
+  directorPublicId: z.uuidv7(),
 
   totalSemesters: z.coerce.number().positive().max(10),
   code: z.string().min(2).max(programsVarcharSizes.code),

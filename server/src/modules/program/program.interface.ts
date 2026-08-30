@@ -24,7 +24,7 @@ export interface IProgramRepository {
     trx?: Kysely<Database>,
   ): Promise<ProgramEntity | undefined>,
 
-  findSemesterCountById(
+  findTotalSemestersById(
     programId: number,
     trx?: Kysely<Database>,
   ): Promise<number | undefined>,

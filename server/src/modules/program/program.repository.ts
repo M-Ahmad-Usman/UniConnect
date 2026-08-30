@@ -1,36 +1,38 @@
 import type { Kysely } from 'kysely'
 import type { Database, InsertProgramCurriculumEntity, InsertProgramEntity } from '../../db/types.js'
+import type { IProgramRepository } from './program.interface.js'
 
-export default class ProgramRepository {
+export default class ProgramRepository implements IProgramRepository {
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async createProgram(createProgramDetails: InsertProgramEntity, trx: Kysely<Database> = this.db) {
+  async createProgram(programInsert: InsertProgramEntity, trx: Kysely<Database> = this.db) {
     return await trx.insertInto('programs')
-      .values(createProgramDetails)
+      .values(programInsert)
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async createProgramCurricula(createProgramCurriculumDetails: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
+  async createProgramCurricula(programCurriculaInsert: InsertProgramCurriculumEntity[], trx: Kysely<Database> = this.db) {
     return await trx.insertInto('programCurricula')
       .returningAll()
-      .values(createProgramCurriculumDetails)
+      .values(programCurriculaInsert)
       .execute()
   }
 
-  async getProgramDetails(programId: number, trx: Kysely<Database> = this.db) {
+  async findProgramById(id: number, trx: Kysely<Database> = this.db) {
     return await trx.selectFrom('programs')
       .selectAll()
-      .where('id', '=', programId)
+      .where('id', '=', id)
       .executeTakeFirst()
   }
 
-  async getSemesterCount(programId: number, trx: Kysely<Database> = this.db) {
-    const { totalSemesters } = await trx.selectFrom('programs')
+  async findSemesterCountById(id: number, trx: Kysely<Database> = this.db) {
+    const program = await trx.selectFrom('programs')
       .select('totalSemesters')
-      .where('id', '=', programId)
-      .executeTakeFirstOrThrow()
-    return totalSemesters
+      .where('id', '=', id)
+      .executeTakeFirst()
+
+    return program?.totalSemesters
   }
 }
