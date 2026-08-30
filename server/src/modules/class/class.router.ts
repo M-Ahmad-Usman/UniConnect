@@ -10,11 +10,11 @@ import type ClassService from './class.service.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createClassSchema } from './class.schema.js'
 
+// DTO Types
+import type { CreateClassRequest, CreateClassResponse } from './class.dto.js'
+
 // API Types
 import type { SuccessResponseBody } from '../../core/types/api.js'
-
-// DTOs
-import type { CreateClassRequest, CreateClassResponse } from './class.dto.js'
 
 export default function createClassRouter(classService: ClassService) {
 

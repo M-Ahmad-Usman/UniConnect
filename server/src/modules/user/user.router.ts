@@ -1,4 +1,4 @@
-// Express Types
+// Express
 import { Router } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
@@ -10,16 +10,16 @@ import type UserService from './user.service.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createTeacherSchema, createStudentSchema } from './user.schema.js'
 
-// API Types
-import type { SuccessResponseBody } from '../../core/types/api.js'
-
-// DTOs
+// DTO Types
 import type {
   CreateStudentRequest,
   CreateStudentResponse,
   CreateTeacherRequest,
   CreateTeacherResponse,
 } from './user.dto.js'
+
+// API Types
+import type { SuccessResponseBody } from '../../core/types/api.js'
 
 export default function createUserRouter(userService: UserService): Router {
 

@@ -1,4 +1,4 @@
-// Express Types
+// Express
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
@@ -10,8 +10,10 @@ import type DepartmentService from './department.service.js'
 import { validate, validateContentType } from '../../core/middleware/index.js'
 import { createDepartmentSchema } from './department.schema.js'
 
-// Data Types
+// DTO Types
 import type { CreateDepartmentRequest, CreateDepartmentResponse } from './department.dto.js'
+
+// API Types
 import type { SuccessResponseBody } from '../../core/types/api.js'
 
 export default function createDepartmentRouter(departmentService: DepartmentService) {

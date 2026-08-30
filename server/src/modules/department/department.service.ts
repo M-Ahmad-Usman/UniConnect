@@ -9,13 +9,13 @@ import type {
 
 import type ServerRepository from '../server/server.repository.js'
 
-// Interface
+// DB Interface
 import type { IDepartmentRepository } from './department.interface.js'
 
-// DTOs
+// DTO Types
 import type { CreateDepartmentRequest, CreateDepartmentResponse } from './department.dto.js'
 
-// Utils
+// DTO Mappers
 import { toCreateDepartmentResponse } from './department.dto.js'
 
 export default class DepartmentService {

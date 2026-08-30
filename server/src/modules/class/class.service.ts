@@ -8,27 +8,27 @@ import type {
 } from '../../db/types.js'
 
 // Repositories
-import type ProgramRepository from '../program/program.repository.js'
 import type ServerRepository from '../server/server.repository.js'
 
-// Interface
+// DB Interface
 import type { IClassRepository } from './class.interface.js'
+import type { IProgramRepository } from '../program/program.interface.js'
 
 // Errors
 import { BadRequestError } from '../../core/errors/AppError.js'
 
-// Utils
-import { toCreateClassRespose } from './class.dto.js'
-
-// DTOs
+// DTO Types
 import type { CreateClassRequest, CreateClassResponse } from './class.dto.js'
+
+// DTO Mappers
+import { toCreateClassRespose } from './class.dto.js'
 
 export default class ClassService {
 
   constructor(
     private readonly db: Kysely<Database>, // use for creating transactions only
     private readonly classRepository: IClassRepository,
-    private readonly programRepository: ProgramRepository,
+    private readonly programRepository: IProgramRepository,
     private readonly serverRepository: ServerRepository,
   ) { }
 

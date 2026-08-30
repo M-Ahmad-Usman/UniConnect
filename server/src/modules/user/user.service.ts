@@ -13,26 +13,28 @@ import type {
 
 // Repositories
 import type ServerRepository from '../server/server.repository.js'
-import type DepartmentRepository from '../department/department.repository.js'
 
-// Interfaces
+// DB Interfaces
 import type { IUserRepository } from './user.interface.js'
 import type { IClassRepository } from '../class/class.interface.ts'
+import type { IDepartmentRepository } from '../department/department.interface.js'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 
-// Utils
-import * as passwordUtil from '../../core/utils/password.js'
-import { toCreateStudentResponse, toCreateTeacherResponse } from './user.dto.js'
-
-// DTOs
+// DTOs Types
 import type {
   CreateStudentRequest,
   CreateStudentResponse,
   CreateTeacherRequest,
   CreateTeacherResponse,
 } from './user.dto.ts'
+
+// DTO Mappers
+import { toCreateStudentResponse, toCreateTeacherResponse } from './user.dto.js'
+
+// Utils
+import * as passwordUtil from '../../core/utils/password.js'
 
 export default class UserService {
 
@@ -41,7 +43,7 @@ export default class UserService {
     private readonly userRepository: IUserRepository,
     private readonly serverRepository: ServerRepository,
     private readonly classRepository: IClassRepository,
-    private readonly departmentRepository: DepartmentRepository,
+    private readonly departmentRepository: IDepartmentRepository,
   ) { }
 
   async createTeacher(createTeacherRequest: CreateTeacherRequest): Promise<CreateTeacherResponse> {
