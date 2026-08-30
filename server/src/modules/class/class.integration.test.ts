@@ -4,8 +4,8 @@ import request from 'supertest'
 import app from '../../app.js'
 
 // Utils
-import * as testFactory from '../../test/factories.js'
-import * as testHelper from '../../test/helpers.js'
+import { assertSuccessBody, assertErrorBody, findFieldError } from '../../test/helpers.js'
+import { createProgram, generateClass } from '../../test/factories.js'
 
 // DTOs
 import type { CreateClassResponse } from './class.dto.js'
@@ -17,12 +17,12 @@ describe('/classes', () => {
     const ENDPOINT = '/classes'
 
     it('succeeds with status 201 on correct data', async () => {
-      const classEnrolledProgram = await testFactory.createProgram()
-      const classToCreate = testFactory.generateClass({ programId: classEnrolledProgram.id })
+      const programId = (await createProgram()).id
+      const classToCreate = generateClass({ programId })
 
       const res = await api.post(ENDPOINT).send(classToCreate)
 
-      const body = testHelper.assertSuccessBody<CreateClassResponse>(res)
+      const body = assertSuccessBody<CreateClassResponse>(res)
 
       expect(res.status).toBe(201)
       expect(body.data).toMatchObject(classToCreate)
@@ -32,14 +32,14 @@ describe('/classes', () => {
     describe('Input validations', () => {
       it('fails with status 422 on invalid section', async () => {
         const res = await api.post(ENDPOINT)
-          .send(testFactory.generateClass({ section: 'C' }))
+          .send(generateClass({ section: 'C' }))
 
-        const body = testHelper.assertErrorBody(res)
+        const body = assertErrorBody(res)
 
         expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
-        const sectionFieldError = body.error.details.find(fieldError => fieldError.field === 'section')
+        const sectionFieldError = findFieldError(body.error.details, 'section')
 
         expect(sectionFieldError).toBeDefined()
         expect(sectionFieldError?.field).toBe('section')
@@ -48,19 +48,19 @@ describe('/classes', () => {
       })
 
       it('fails with status 422 on negative currentSemester', async () => {
-        const classToCreate = testFactory.generateClass({ currentSemester: -1 })
+        const classToCreate = generateClass({ currentSemester: -1 })
 
         const res = await api.post(ENDPOINT).send(classToCreate)
 
-        const body = testHelper.assertErrorBody(res)
+        const body = assertErrorBody(res)
 
         expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
-        const currentSemesterFieldError = body.error.details.find(fieldError => fieldError.field === 'currentSemester')
+        const currentSemesterFieldError = findFieldError(body.error.details, 'currentSemester')
 
         expect(currentSemesterFieldError).toBeDefined()
-        expect(currentSemesterFieldError?.message.toLocaleLowerCase()).toContain('too small')
+        expect(currentSemesterFieldError?.code).toContain('too_small')
       })
 
       it('fails with status 415 if data with invalid content type is provided', async () => {
@@ -68,7 +68,7 @@ describe('/classes', () => {
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
 
-        const body = testHelper.assertErrorBody(res)
+        const body = assertErrorBody(res)
         expect(res.status).toBe(415)
         expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
         expect(body.error.message).toContain('application/json')
@@ -80,7 +80,7 @@ describe('/classes', () => {
           .set('Content-Type', 'application/json')
           .expect(400)
 
-        const body = testHelper.assertErrorBody(res)
+        const body = assertErrorBody(res)
 
         expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
@@ -90,11 +90,11 @@ describe('/classes', () => {
 
     describe('DB dependent validations', () => {
       it('fails with status 400 on incorrect programId', async () => {
-        const classToCreate = testFactory.generateClass()
+        const classToCreate = generateClass()
 
         const res = await api.post(ENDPOINT).send(classToCreate)
 
-        const body = testHelper.assertErrorBody(res)
+        const body = assertErrorBody(res)
 
         expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
