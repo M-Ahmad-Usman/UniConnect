@@ -35,7 +35,7 @@ export default class ClassService {
   async createClass(createClassRequest: CreateClassRequest): Promise<CreateClassResponse> {
 
     const classProgramEntity = await this.programRepository
-      .getProgramDetails(createClassRequest.programId)
+      .findProgramById(createClassRequest.programId)
 
     if (!classProgramEntity)
       throw new BadRequestError('Wrong or invalid programId')
