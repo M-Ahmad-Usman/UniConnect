@@ -189,6 +189,18 @@ export const generateDepartment = (departmentOverrides = {}) => {
   }
 }
 
+export const generateProgram = (programOverrides = {}) => {
+  return {
+    departmentId: 1,
+    discipline: 'computer_science',
+    degreeLevel: 'bachelors',
+    directorPublicId: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa',
+    totalSemesters: 8,
+    code: `BSCS${getUniqueCounter()}`,
+    ...programOverrides,
+  }
+}
+
 export const generateClass = (classOverrides = {}) => {
   return {
     programId: 1,
