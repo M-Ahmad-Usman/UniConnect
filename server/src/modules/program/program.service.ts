@@ -74,6 +74,8 @@ export default class ProgramService {
             throw new BadRequestError('Wrong or Invalid courseId')
           case 'fk_programs_program_director_id':
             throw new BadRequestError('No teacher exists with specified programDirectorPublicId')
+          case 'fk_programs_discipline':
+            throw new BadRequestError('Wrong or Invalid discipline')
 
           // Unique constraints are defined in 2026-03-07T02-23-50.616Z_create_tables.ts file
           case 'uq_programs':
