@@ -15,9 +15,9 @@
     "migrate:down": "tsx src/db/migrator.ts down",
     "create:migration": "tsx src/db/migrator.ts create",
     "get:migrations": "tsx src/db/migrator.ts get:migrations",
-    "test": "vitest",
-    "test:integration": "vitest integration",
-    "test:unit": "vitest unit",
+    "test": "vitest run",
+    "test:integration": "vitest run integration",
+    "test:unit": "vitest run unit",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
