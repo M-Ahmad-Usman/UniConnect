@@ -27,7 +27,7 @@ export default class ProgramRepository implements IProgramRepository {
       .executeTakeFirst()
   }
 
-  async findSemesterCountById(id: number, trx: Kysely<Database> = this.db) {
+  async findTotalSemestersById(id: number, trx: Kysely<Database> = this.db) {
     const program = await trx.selectFrom('programs')
       .select('totalSemesters')
       .where('id', '=', id)
