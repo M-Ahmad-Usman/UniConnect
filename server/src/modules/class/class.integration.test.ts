@@ -63,7 +63,7 @@ describe('/classes', () => {
         expect(currentSemesterFieldError?.code).toContain('too_small')
       })
 
-      it('fails with status 415 if data with invalid content type is provided', async () => {
+      it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
@@ -74,7 +74,7 @@ describe('/classes', () => {
         expect(body.error.message).toContain('application/json')
       })
 
-      it('fails with status 400 if invalid json is provided', async () => {
+      it('fails with status 400 on malformatted JSON', async () => {
         const res = await api.post(ENDPOINT)
           .send('{ "name": "Ahmad", }')
           .set('Content-Type', 'application/json')
@@ -89,7 +89,7 @@ describe('/classes', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 400 on incorrect programId', async () => {
+      it('fails with status 400 on invalid programId', async () => {
         const classToCreate = generateClass()
 
         const res = await api.post(ENDPOINT).send(classToCreate)

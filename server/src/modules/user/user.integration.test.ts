@@ -72,7 +72,7 @@ describe('/users', () => {
         expect(body.error.type).toBe('VALIDATION_FAILED')
       })
 
-      it('fails with status 415 if data with invalid content type is provided', async () => {
+      it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
@@ -84,7 +84,7 @@ describe('/users', () => {
         expect(body.error.message).toContain('application/json')
       })
 
-      it('fails with status 400 if invalid json is provided', async () => {
+      it('fails with status 400 on malformatted JSON', async () => {
         const res = await api.post(ENDPOINT)
           .send('{ "name": "Ahmad", }')
           .set('Content-Type', 'application/json')
@@ -99,7 +99,7 @@ describe('/users', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 409 for duplicate personal email', async () => {
+      it('fails with status 409 on duplicate personal email', async () => {
         const departmentId = (await createDepartment()).id
 
         const teacher1 = generateTeacher({
@@ -122,7 +122,7 @@ describe('/users', () => {
         expect(body.error.message).toContain('personalEmail')
       })
 
-      it('fails with status 409 for duplicate university email', async () => {
+      it('fails with status 409 on duplicate university email', async () => {
         const departmentId = (await createDepartment()).id
 
         const teacher1 = generateTeacher({
@@ -145,7 +145,7 @@ describe('/users', () => {
         expect(body.error.message).toContain('universityEmail')
       })
 
-      it.skip('succeeds with 201 with duplicate university email if previous holder is soft-deleted', () => true)
+      it.skip('succeeds with 201 with duplicate university email if previous holder was soft-deleted', () => true)
 
       it('fails with status 400 on invalid designation', async () => {
         const departmentId = (await createDepartment()).id
@@ -230,7 +230,7 @@ describe('/users', () => {
         expect(body.error.type).toBe('VALIDATION_FAILED')
       })
 
-      it('fails with status 415 if data with invalid content type is provided', async () => {
+      it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
@@ -242,7 +242,7 @@ describe('/users', () => {
         expect(body.error.message).toContain('application/json')
       })
 
-      it('fails with status 400 if invalid json is provided', async () => {
+      it('fails with status 400 on malformmted JSON', async () => {
         const res = await api.post(ENDPOINT)
           .send('{ "name": "Ahmad", }')
           .set('Content-Type', 'application/json')
@@ -257,7 +257,7 @@ describe('/users', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 409 for duplicate personal email', async () => {
+      it('fails with status 409 on duplicate personal email', async () => {
         const classPublicId = (await createClass()).publicId
 
         const student1 = generateStudent({
@@ -279,7 +279,7 @@ describe('/users', () => {
         expect(body.error.type).toBe('CONFLICT')
       })
 
-      it('fails with status 409 for duplicate university email', async () => {
+      it('fails with status 409 on duplicate university email', async () => {
         const classPublicId = (await createClass()).publicId
 
         const student1 = generateStudent({
@@ -301,7 +301,7 @@ describe('/users', () => {
         expect(body.error.type).toBe('CONFLICT')
       })
 
-      it.skip('succeeds with 201 with duplicate university email if previous holder is soft-deleted', () => true)
+      it.skip('succeeds with 201 with duplicate university email if previous holder was soft-deleted', () => true)
 
       it('fails with status 400 on invalid classPublicId', async () => {
         const res = await api.post(ENDPOINT).send(generateStudent())
@@ -313,7 +313,7 @@ describe('/users', () => {
         expect(body.error.message).includes('classPublicId')
       })
 
-      it('fails with status 409 on duplicate roll number', async () => {
+      it('fails with status 409 on duplicate rollNumber', async () => {
         const classPublicId = (await createClass()).publicId
 
         const student1 = generateStudent({

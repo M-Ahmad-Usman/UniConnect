@@ -40,7 +40,7 @@ describe('/programs', () => {
     })
 
     describe('Input validations', () => {
-      it('fails with status 422 on invalid totalSemesters or code value', async () => {
+      it('fails with status 422 on invalid totalSemesters or code', async () => {
         const departmentId = (await createDepartment()).id
         const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
 
@@ -95,7 +95,7 @@ describe('/programs', () => {
         expect(degreeLevelFieldError?.message).toContain('phd')
       })
 
-      it('fails with status 415 if data with invalid content type is provided', async () => {
+      it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
@@ -108,7 +108,7 @@ describe('/programs', () => {
         expect(body.error.message).toContain('application/json')
       })
 
-      it('fails with status 400 if invalid json is provided', async () => {
+      it('fails with status 400 on malformatted JSON', async () => {
         const res = await api.post(ENDPOINT)
           .send('{ "name": "Ahmad", }')
           .set('Content-Type', 'application/json')
@@ -124,7 +124,7 @@ describe('/programs', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 400 on incorrect departmentId', async () => {
+      it('fails with status 400 on invalid departmentId', async () => {
         const departmentId = (await createDepartment()).id
         const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
 
@@ -139,7 +139,7 @@ describe('/programs', () => {
         expect(body.error.message).toContain('departmentId')
       })
 
-      it('fails with status 400 on incorrect discipline', async () => {
+      it('fails with status 400 on invalid discipline', async () => {
         const departmentId = (await createDepartment()).id
         const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
 
@@ -241,7 +241,7 @@ describe('/programs', () => {
         expect(curriculumFieldError?.message).toMatch(/semesters/i)
       })
 
-      it('fails with status 422 if duplicate batchYear is provided for curricula', async () => {
+      it('fails with status 422 if 2 curricula are provided for same batch', async () => {
         const curricula = [
           {
             batchYear: 2022,
@@ -275,7 +275,7 @@ describe('/programs', () => {
         expect(batchYearFieldError?.message).toMatch(/duplicate/i)
       })
 
-      it('fails with status 422 if duplicate course is specified within a batch', async () => {
+      it('fails with status 422 if course assignment is duplicated in a batch', async () => {
         const curricula = [
           {
             batchYear: 2022,
@@ -301,7 +301,7 @@ describe('/programs', () => {
         expect(courseFieldError?.message).toMatch(/duplicate/i)
       })
 
-      it('fails with status 422 if duplicate semester is specified within a batch', async () => {
+      it('fails with status 422 if duplicate 2 course assignments are provided for same semester', async () => {
         const curricula = [
           {
             batchYear: 2022,
@@ -327,7 +327,7 @@ describe('/programs', () => {
         expect(semesterFieldError?.message).toMatch(/duplicate/i)
       })
 
-      it('fails with status 422 if invalid semesterNumber is provided', async () => {
+      it('fails with status 422 on invalid semesterNumber', async () => {
         const curricula = [
           {
             batchYear: 2022,
@@ -357,7 +357,7 @@ describe('/programs', () => {
         expect(zeroSemesterNumberFieldError?.message).toMatch(/too small/i)
       })
 
-      it('fails with status 415 if data with invalid content type is provided', async () => {
+      it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
@@ -370,7 +370,7 @@ describe('/programs', () => {
         expect(body.error.message).toContain('application/json')
       })
 
-      it('fails with status 400 if invalid json is provided', async () => {
+      it('fails with status 400 on malformatted JSON', async () => {
         const res = await api.post(ENDPOINT)
           .send('{ "name": "Ahmad", }')
           .set('Content-Type', 'application/json')
@@ -408,7 +408,7 @@ describe('/programs', () => {
         expect(body.error.message).toMatch('programId')
       })
 
-      it('fails with status 400 on invalud courseIds', async () => {
+      it('fails with status 400 on invalid courseIds', async () => {
         const programId = (await createProgram({ programOverrides: { totalSemesters: 1 } })).id
 
         const curricula = [{
