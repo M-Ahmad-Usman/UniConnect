@@ -46,8 +46,8 @@ async function ensureTestDatabaseExists(): Promise<void> {
 async function runMigrations(): Promise<void> {
   try {
     const { stdout, stderr } = await execFileAsync(
-      'npx',
-      ['tsx', 'src/db/migrator.ts', 'latest'],
+      'pnpm',
+      ['exec', 'tsx', 'src/db/migrator.ts', 'latest'],
       { env: process.env },
     )
 

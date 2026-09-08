@@ -1,0 +1,10 @@
+{
+  "name": "uniconnect",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev:server": "pnpm --filter server dev",
+    "build:server": "pnpm --filter server build",
+    "test:server": "pnpm --filter server test"
+  }
+}

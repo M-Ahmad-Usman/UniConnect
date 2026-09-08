@@ -1,5 +1,5 @@
 import pino from 'pino'
-
+import pretty from 'pino-pretty'
 import { env } from '../config/env.js'
 
 const level = env.NODE_ENV === 'production' ? 'info'
@@ -15,15 +15,12 @@ const loggerOptions: pino.LoggerOptions = {
   },
 }
 
-if (env.NODE_ENV === 'development') {
-  loggerOptions.transport = {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-    },
-  }
-}
+const stream = env.NODE_ENV === 'development'
+  ? pretty({
+    colorize: true,
+    translateTime: 'SYS:standard',
+    ignore: 'pid,hostname',
+  })
+  : undefined
 
-export const logger = pino(loggerOptions)
+export const logger = pino(loggerOptions, stream)
