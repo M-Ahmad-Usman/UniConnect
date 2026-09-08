@@ -10,7 +10,6 @@ import type { IUserRepository } from '../user/user.interface.js'
 
 // Errors
 import type { FieldError } from '../../core/types/api.js'
-import { NoResultError } from 'kysely'
 import { BadRequestError, ConflictError, ValidationError } from '../../core/errors/AppError.js'
 
 // DTO Types
@@ -121,8 +120,6 @@ export default class ProgramService {
       })
     }
     catch (err) {
-      if (err instanceof NoResultError)
-        throw new BadRequestError('Wrong or Invalid programId')
       if (err instanceof pg.DatabaseError && err.constraint === 'fk_program_curricula_course_id')
         throw new BadRequestError('Wrong or Invalid courseId')
       throw err
