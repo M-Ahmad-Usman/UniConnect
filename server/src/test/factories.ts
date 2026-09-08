@@ -9,6 +9,8 @@ import type {
   InsertDepartmentEntity,
   InsertClassEntity,
   InsertProgramEntity,
+  CourseEntity,
+  InsertCourseEntity,
 } from '../db/types.js'
 
 const uniqueCounter = () => {
@@ -161,6 +163,19 @@ export const createProgram = async (
   })
 }
 
+export const createCourse = async(
+  options: { courseOverrides?: Partial<InsertCourseEntity> } = {},
+  client = db,
+): Promise<CourseEntity> => {
+  return client.insertInto('courses')
+    .values({
+      ...generateCourse(),
+      ...options.courseOverrides,
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+}
+
 // Adaptive Transaction Wrapper Utility Function
 export const runInTransaction = <T>(
   dbOrTrx: Kysely<Database> | Transaction<Database>,
@@ -198,6 +213,16 @@ export const generateProgram = (programOverrides = {}) => {
     totalSemesters: 8,
     code: `BSCS${getUniqueCounter()}`,
     ...programOverrides,
+  }
+}
+
+export const generateCourse = (courseOverrides = {}) => {
+  return {
+    title: `Test Course${getUniqueCounter()}`,
+    code: `TD${getUniqueCounter()}`,
+    creditHours: 3,
+    departmentId: 1,
+    ...courseOverrides,
   }
 }
 
