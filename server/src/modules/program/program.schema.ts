@@ -43,7 +43,7 @@ export const createProgramCurriculaSchema = z.object({
     if (batches.has(curriculum.batchYear))
       ctx.addIssue({
         code: 'custom',
-        path: ['curriculums', curriculumIdx, 'batchYear'],
+        path: ['curricula', curriculumIdx, 'batchYear'],
         message: 'Duplicate batchYear. batchYear must be unique for each curriculum',
       })
 
@@ -59,7 +59,7 @@ export const createProgramCurriculaSchema = z.object({
         if (courseIds.has(courseId))
           ctx.addIssue({
             code: 'custom',
-            path: ['curriculums', curriculumIdx, 'semesterCourses', semesterCoursesIdx, 'courseIds', courseIdIdx],
+            path: ['curricula', curriculumIdx, 'semesterCourses', semesterCoursesIdx, 'courseIds', courseIdIdx],
             message: 'Duplicate course assignment. All course assignments must be unique within a batch',
           })
         courseIds.add(courseId)
@@ -69,8 +69,8 @@ export const createProgramCurriculaSchema = z.object({
       if (semesters.has(semesterCourses.semesterNumber)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['curriculums', curriculumIdx, 'semesterCourses', semesterCoursesIdx],
-          message: 'Semester numbers must be unique within a curriculum',
+          path: ['curricula', curriculumIdx, 'semesterCourses', semesterCoursesIdx, 'semesterNumber'],
+          message: 'Duplicate semesterNumber. Semester numbers must be unique within a curriculum',
         })
       }
 
