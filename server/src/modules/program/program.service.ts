@@ -95,11 +95,14 @@ export default class ProgramService {
         const programTotalSemesters = await this.programRepository
           .findTotalSemestersById(createProgramCurriculaRequest.programId)
 
+        if (programTotalSemesters === undefined)
+          throw new BadRequestError('Wrong or Invalid programId')
+
         // Validate all curriculums are complete i.e specified for all semesters
         createProgramCurriculaRequest.curricula.forEach((curriculum, curriculumIdx) => {
           if (curriculum.semesterCourses.length !== programTotalSemesters) {
             const semesterCountValidationError: FieldError = {
-              field: `curriculums.${curriculumIdx.toString()}`,
+              field: `curricula.${curriculumIdx.toString()}`,
               message: 'Curriculum must be specified for complete program i.e for all semesters',
               code: 'VALIDATION_ERROR',
             }
