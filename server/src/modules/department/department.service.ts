@@ -1,5 +1,6 @@
 
 // Database
+import pg from 'pg'
 import type { Kysely } from 'kysely'
 import type {
   Database,
@@ -12,11 +13,19 @@ import type ServerRepository from '../server/server.repository.js'
 // DB Interface
 import type { IDepartmentRepository } from './department.interface.js'
 
+// Errors
+import { BadRequestError } from '../../core/errors/AppError.js'
+
 // DTO Types
-import type { CreateDepartmentRequest, CreateDepartmentResponse } from './department.dto.js'
+import type {
+  CreateDepartmentRequest,
+  CreateDepartmentResponse,
+  CreateCourseRequest,
+  CreateCourseResponse,
+} from './department.dto.js'
 
 // DTO Mappers
-import { toCreateDepartmentResponse } from './department.dto.js'
+import { toCreateDepartmentResponse, toCreateCourseResponse } from './department.dto.js'
 
 export default class DepartmentService {
 
@@ -52,6 +61,19 @@ export default class DepartmentService {
 
       return toCreateDepartmentResponse(departmentEntity, departmentServerEntity)
     })
+  }
+
+  async createCourse(createCourseRequest: CreateCourseRequest): Promise<CreateCourseResponse> {
+    try {
+      const courseEntity = await this.departmentRepository.createCourse(createCourseRequest)
+      return toCreateCourseResponse(courseEntity)
+    }
+    catch (err: unknown) {
+      // Enrich known and expected DB errors
+      if (err instanceof pg.DatabaseError && err.constraint === 'fk_courses_department_id')
+        throw new BadRequestError('Wrong or Invalid departmentId')
+      throw err
+    }
   }
 
 }

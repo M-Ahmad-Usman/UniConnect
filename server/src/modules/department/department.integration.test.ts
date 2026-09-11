@@ -4,15 +4,15 @@ import request from 'supertest'
 import app from '../../app.js'
 
 // DTOs
-import type { CreateDepartmentResponse } from './department.dto.js'
+import type { CreateDepartmentResponse, CreateCourseResponse } from './department.dto.js'
 
 // Utils
-import { generateDepartment } from '../../test/factories.js'
+import { generateDepartment, generateCourse, createDepartment } from '../../test/factories.js'
 import { assertSuccessBody, assertErrorBody, findFieldError } from '../../test/helpers.js'
 
 const api = request(app)
 
-describe('/departments', () => {
+describe('Department Module', () => {
   describe('POST /departments', () => {
     const ENDPOINT = '/departments'
 
@@ -109,6 +109,108 @@ describe('/departments', () => {
 
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message.toLowerCase()).toContain('json')
+      })
+    })
+  })
+
+  describe('POST /departments/courses', () => {
+    const ENDPOINT = '/departments/courses'
+
+    it('succeeds with status 201 on correct data', async () => {
+      const departmentId = (await createDepartment()).id
+      const course = generateCourse({ departmentId })
+
+      const res = await api.post(ENDPOINT).send(course)
+
+      const body = assertSuccessBody<CreateCourseResponse>(res)
+
+      expect(body.data).toMatchObject(course)
+    })
+
+    describe('Input Validations', () => {
+      it('fails with status 422 on inputs smaller than required', async () => {
+        const course = generateCourse({ title: 'a', code: 'b', creditHours: -1 })
+
+        const res = await api.post(ENDPOINT).send(course)
+
+        const body = assertErrorBody(res)
+
+        expect(res.status).toBe(422)
+        expect(body.error.type).toBe('VALIDATION_FAILED')
+
+        const titleFieldError = findFieldError(body.error.details, 'title')
+        const codeFieldError = findFieldError(body.error.details, 'code')
+        const creditHoursFieldError = findFieldError(body.error.details, 'creditHours')
+
+        expect(titleFieldError?.code).toBe('too_small')
+        expect(codeFieldError?.code).toBe('too_small')
+        expect(creditHoursFieldError?.code).toBe('too_small')
+      })
+
+      it('fails with status 422 on inputs larger than allowed', async () => {
+        const course = generateCourse({
+          title: 'a'.repeat(101),
+          code: 'b'.repeat(51),
+          creditHours: 4,
+        })
+
+        const res = await api.post(ENDPOINT).send(course)
+
+        const body = assertErrorBody(res)
+
+        expect(res.status).toBe(422)
+        expect(body.error.type).toBe('VALIDATION_FAILED')
+
+        const titleFieldError = findFieldError(body.error.details, 'title')
+        const codeFieldError = findFieldError(body.error.details, 'code')
+        const creditHoursFieldError = findFieldError(body.error.details, 'creditHours')
+
+        expect(titleFieldError?.code).toBe('too_big')
+        expect(codeFieldError?.code).toBe('too_big')
+        expect(creditHoursFieldError?.code).toBe('too_big')
+      })
+
+      it('fails with status 415 on unexpected Content-Type', async () => {
+        const res = await api.post(ENDPOINT)
+          .set('Content-Type', 'text/html')
+          .send('<p>Hello World</p>')
+
+        expect(res.status).toBe(415)
+
+        const body = assertErrorBody(res)
+
+        expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
+        expect(body.error.message).toContain('application/json')
+      })
+
+      it('fails with status 400 on malformatted JSON', async () => {
+        const res = await api.post(ENDPOINT)
+          .send('{ "name": "Ahmad", }')
+          .set('Content-Type', 'application/json')
+          .expect(400)
+
+        expect(res.status).toBe(400)
+
+        const body = assertErrorBody(res)
+
+        expect(body.error.type).toBe('BAD_REQUEST')
+        expect(body.error.message.toLowerCase()).toContain('json')
+      })
+    })
+
+    describe('DB dependent validations', () => {
+      it('fails with status 400 on invalid departmentId', async () => {
+        const course = generateCourse()
+
+        const res = await api.post(ENDPOINT).send(course)
+
+        const body = assertErrorBody(res)
+
+        expect(res.status).toBe(400)
+
+        expect(body.error.type).toBe('BAD_REQUEST')
+
+        expect(body.error.message).toMatch('departmentId')
       })
     })
   })

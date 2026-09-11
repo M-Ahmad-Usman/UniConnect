@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely'
-import type { Database, InsertDepartmentEntity } from '../../db/types.js'
+import type { Database, InsertDepartmentEntity, InsertCourseEntity } from '../../db/types.js'
 import type { IDepartmentRepository } from './department.interface.js'
 
 export default class DepartmentRepository implements IDepartmentRepository {
@@ -20,5 +20,12 @@ export default class DepartmentRepository implements IDepartmentRepository {
       .executeTakeFirst()
 
     return departmentsRow?.serverId
+  }
+
+  async createCourse(courseInsert: InsertCourseEntity, trx: Kysely<Database> = this.db) {
+    return await trx.insertInto('courses')
+      .values(courseInsert)
+      .returningAll()
+      .executeTakeFirstOrThrow()
   }
 }
