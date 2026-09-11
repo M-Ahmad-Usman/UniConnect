@@ -1,7 +1,6 @@
 // Express
 import { Router } from 'express'
 import type { Request, Response } from 'express'
-import type { ParamsDictionary } from 'express-serve-static-core'
 
 // Services
 import type DepartmentService from './department.service.js'
@@ -28,7 +27,7 @@ export default function createDepartmentRouter(departmentService: DepartmentServ
   departmentRouter.post('/',
     validateContentType('application/json'),
     validate(createDepartmentSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateDepartmentRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateDepartmentRequest>, res: Response) => {
 
       const createDepartmentResponse = await departmentService.createDepartment(req.body)
 
@@ -44,7 +43,7 @@ export default function createDepartmentRouter(departmentService: DepartmentServ
   departmentRouter.post('/courses',
     validateContentType('application/json'),
     validate(createCourseSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateCourseRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateCourseRequest>, res: Response) => {
 
       const createCourseResponse = await departmentService.createCourse(req.body)
 

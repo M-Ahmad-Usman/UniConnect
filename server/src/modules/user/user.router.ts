@@ -1,6 +1,5 @@
 // Express
 import { Router } from 'express'
-import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
 
 // Services
@@ -28,7 +27,7 @@ export default function createUserRouter(userService: UserService): Router {
   userRouter.post('/teachers',
     validateContentType('application/json'),
     validate(createTeacherSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateTeacherRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateTeacherRequest>, res: Response) => {
 
       const teacherResponse: CreateTeacherResponse = await userService.createTeacher(req.body)
 
@@ -44,7 +43,7 @@ export default function createUserRouter(userService: UserService): Router {
   userRouter.post('/students',
     validateContentType('application/json'),
     validate(createStudentSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateStudentRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateStudentRequest>, res: Response) => {
 
       const studentResponse: CreateStudentResponse = await userService.createStudent(req.body)
 

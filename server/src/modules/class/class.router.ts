@@ -1,6 +1,5 @@
 // Express
 import { Router } from 'express'
-import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
 
 // Services
@@ -23,7 +22,7 @@ export default function createClassRouter(classService: ClassService) {
   classRouter.post('/',
     validateContentType('application/json'),
     validate(createClassSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateClassRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateClassRequest>, res: Response) => {
 
       const classResponse: CreateClassResponse = await classService.createClass(req.body)
 

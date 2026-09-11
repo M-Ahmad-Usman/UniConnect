@@ -1,7 +1,6 @@
 
 // Express
 import { Router } from 'express'
-import type { ParamsDictionary } from 'express-serve-static-core'
 import type { Request, Response } from 'express'
 
 // Services
@@ -29,7 +28,7 @@ export default function createProgramRouter(programService: ProgramService): Rou
   programRouter.post('/',
     validateContentType('application/json'),
     validate(createProgramSchema, 'body'),
-    async (req: Request<ParamsDictionary, unknown, CreateProgramRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateProgramRequest>, res: Response) => {
 
       const programResponse: CreateProgramResponse = await programService.createProgram(req.body)
 
@@ -45,7 +44,7 @@ export default function createProgramRouter(programService: ProgramService): Rou
   programRouter.post('/curricula',
     validateContentType('application/json'),
     validate(createProgramCurriculaSchema),
-    async (req: Request<ParamsDictionary, unknown, CreateProgramCurriculaRequest>, res: Response) => {
+    async (req: Request<object, unknown, CreateProgramCurriculaRequest>, res: Response) => {
 
       const programCurriculaResponse: CreateProgramCurriculaResponse =
         await programService.createProgramCurricula(req.body)
