@@ -22,7 +22,7 @@ import {
 
 const api = request(app)
 
-describe('/programs', () => {
+describe('Program Module', () => {
   describe('POST /programs', () => {
     const ENDPOINT = '/programs'
 

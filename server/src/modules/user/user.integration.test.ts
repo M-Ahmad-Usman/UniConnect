@@ -17,7 +17,7 @@ import type { CreateTeacherResponse, CreateStudentResponse } from './user.dto.js
 
 const api = request(app)
 
-describe('/users', () => {
+describe('User Module', () => {
   describe('POST /users/teachers', () => {
     const ENDPOINT = '/users/teachers'
 

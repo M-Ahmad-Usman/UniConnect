@@ -12,7 +12,7 @@ import type { CreateClassResponse } from './class.dto.js'
 
 const api = request(app)
 
-describe('/classes', () => {
+describe('Class Module', () => {
   describe('POST /classes', () => {
     const ENDPOINT = '/classes'
 
