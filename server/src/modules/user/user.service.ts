@@ -12,12 +12,12 @@ import type {
 } from '../../db/types.js'
 
 // Repositories
-import type ServerRepository from '../server/server.repository.js'
 
 // DB Interfaces
 import type { IUserRepository } from './user.interface.js'
 import type { IClassRepository } from '../class/class.interface.ts'
 import type { IDepartmentRepository } from '../department/department.interface.js'
+import type { IServerRepository } from '../server/server.interface.js'
 
 // Errors
 import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
@@ -41,7 +41,7 @@ export default class UserService {
   constructor(
     private readonly db: Kysely<Database>, // use for creating transactions only
     private readonly userRepository: IUserRepository,
-    private readonly serverRepository: ServerRepository,
+    private readonly serverRepository: IServerRepository,
     private readonly classRepository: IClassRepository,
     private readonly departmentRepository: IDepartmentRepository,
   ) { }

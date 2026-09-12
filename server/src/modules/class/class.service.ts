@@ -8,10 +8,10 @@ import type {
 } from '../../db/types.js'
 
 // Repositories
-import type ServerRepository from '../server/server.repository.js'
 
 // DB Interface
 import type { IClassRepository } from './class.interface.js'
+import type { IServerRepository } from '../server/server.interface.js'
 import type { IProgramRepository } from '../program/program.interface.js'
 
 // Errors
@@ -29,7 +29,7 @@ export default class ClassService {
     private readonly db: Kysely<Database>, // use for creating transactions only
     private readonly classRepository: IClassRepository,
     private readonly programRepository: IProgramRepository,
-    private readonly serverRepository: ServerRepository,
+    private readonly serverRepository: IServerRepository,
   ) { }
 
   async createClass(createClassRequest: CreateClassRequest): Promise<CreateClassResponse> {

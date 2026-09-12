@@ -8,10 +8,10 @@ import type {
   InsertServerEntity,
 } from '../../db/types.js'
 
-import type ServerRepository from '../server/server.repository.js'
 
 // DB Interface
 import type { IDepartmentRepository } from './department.interface.js'
+import type { IServerRepository } from '../server/server.interface.js'
 
 // Errors
 import { BadRequestError } from '../../core/errors/AppError.js'
@@ -32,7 +32,7 @@ export default class DepartmentService {
   constructor(
     private readonly db: Kysely<Database>, // use for creating transactions only
     private readonly departmentRepository: IDepartmentRepository,
-    private readonly serverRepository: ServerRepository,
+    private readonly serverRepository: IServerRepository,
   ) { }
 
   async createDepartment(createDepartmentRequest: CreateDepartmentRequest): Promise<CreateDepartmentResponse> {
