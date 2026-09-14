@@ -6,6 +6,7 @@ import type {
   InsertServerEntity,
   InsertUserEntity,
   InsertTeacherEntity,
+  InsertStudentEntity,
   InsertDepartmentEntity,
   InsertClassEntity,
   InsertProgramEntity,
@@ -97,6 +98,49 @@ export const createTeacher = async (
   })
 }
 
+export const createStudent = async (
+  options: {
+    userOverrides?: Partial<InsertUserEntity>,
+    studentOverrides?: Partial<InsertStudentEntity>
+  } = {},
+  client = db,
+) => {
+  return runInTransaction(client, async trx => {
+
+    const classId = options.studentOverrides?.classId
+      ?? (await createClass({}, trx)).id
+
+    const userEntity = await trx.insertInto('users')
+      .values({
+        fullName: 'Test Student',
+        personalEmail: `student.${getUniqueCounter()}@example.com`,
+        universityEmail: `student.${getUniqueCounter()}@ntu.edu.pk`,
+        phone: '0312-1234567',
+        passwordHash: 'password123',
+        gender: 'male',
+        ...options.userOverrides,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
+
+    const studentEntity = await trx.insertInto('students')
+      .values({
+        studentId: userEntity.id,
+        classId,
+        rollNumber: `01${getUniqueCounter()}`,
+        ...options.studentOverrides,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
+
+    await trx.insertInto('userTypeAssignments')
+      .values({ userId: userEntity.id, type: 'student' })
+      .execute()
+
+    return { ...userEntity, ...studentEntity }
+  })
+}
+
 /** Creates a full class: department (+ server) -> a teacher as program
  * director -> program -> class (+ its own server). This mirrors the real
  * dependency chain.
@@ -107,21 +151,13 @@ export const createClass = async (
 ) => {
   return runInTransaction(client, async (trx) => {
 
-    const departmentEntity = await createDepartment({}, trx)
-    const teacherEntity = await createTeacher({ teacherOverrides: { departmentId: departmentEntity.id } }, trx)
-
-    const programEntity = await createProgram({
-      programOverrides: {
-        departmentId: departmentEntity.id,
-        programDirectorId: teacherEntity.id,
-      },
-    }, trx)
+    const programId = options.classOverrides?.programId ?? (await createProgram({}, trx)).id
 
     const classServerEntity = await createServer({}, trx)
 
     const classEntity = await trx.insertInto('classes')
       .values({
-        programId: programEntity.id,
+        programId,
         currentSemester: 1,
         section: 'A',
         academicYear: new Date().getFullYear(),
@@ -262,5 +298,21 @@ export const generateStudent = (studentOverrides = {}) => {
     classPublicId: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa', // caller should override with a real class's publicId
     rollNumber: `TR-${getUniqueCounter()}`,
     ...studentOverrides,
+  }
+}
+
+export const generateSociety = (societyOverrides = {}) => {
+  return {
+    name: 'Test Society',
+    description: 'Test Descrption',
+    departmentId: 1,
+    presidentPublicId: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa',
+    convenorPublicId: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa',
+
+    server: {
+      name: 'Test Society Server',
+      description: 'Test Society Server Description',
+    },
+    ...societyOverrides,
   }
 }
