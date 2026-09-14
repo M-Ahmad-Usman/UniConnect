@@ -27,22 +27,21 @@ describe('Program Module', () => {
     const ENDPOINT = '/programs'
 
     it('succeeds with status 201 on correct data', async () => {
-      const departmentId = (await createDepartment()).id
-      const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
+      const { id: departmentId } = await createDepartment()
+      const { publicId: directorPublicId } = await createTeacher({ teacherOverrides: { departmentId } })
 
       const program = generateProgram({ departmentId, directorPublicId })
 
-      const res = await api.post(ENDPOINT).send(program)
+      const res = await api.post(ENDPOINT).send(program).expect(201)
       const body = assertSuccessBody<CreateProgramResponse>(res)
 
-      expect(res.status).toBe(201)
       expect(body.data).toMatchObject(program)
     })
 
     describe('Input validations', () => {
       it('fails with status 422 on invalid totalSemesters or code', async () => {
-        const departmentId = (await createDepartment()).id
-        const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
+        const { id: departmentId } = await createDepartment()
+        const { publicId: directorPublicId } = await createTeacher({ teacherOverrides: { departmentId } })
 
         const program = generateProgram({
           departmentId,
@@ -51,25 +50,21 @@ describe('Program Module', () => {
           code: 'a',
         })
 
-        const res = await api.post(ENDPOINT).send(program)
+        const res = await api.post(ENDPOINT).send(program).expect(422)
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const totalSemestersFieldError = findFieldError(body.error.details, 'totalSemesters')
         const codeFieldError = findFieldError(body.error.details, 'code')
 
-        expect(totalSemestersFieldError).toBeDefined()
         expect(totalSemestersFieldError?.code).toBe('too_small')
-
-        expect(codeFieldError).toBeDefined()
         expect(codeFieldError?.code).toBe('too_small')
       })
 
       it('fails with status 400 on invalid degreeLevel', async () => {
-        const departmentId = (await createDepartment()).id
-        const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
+        const { id: departmentId } = await createDepartment()
+        const { publicId: directorPublicId } = await createTeacher({ teacherOverrides: { departmentId } })
 
         const program = generateProgram({
           departmentId,
@@ -77,30 +72,26 @@ describe('Program Module', () => {
           degreeLevel: 'incorrect',
         })
 
-        const res = await api.post(ENDPOINT).send(program)
+        const res = await api.post(ENDPOINT).send(program).expect(422)
         const body = assertErrorBody(res)
-
-        expect(res.status).toBe(422)
 
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const degreeLevelFieldError = findFieldError(body.error.details, 'degreeLevel')
 
-        expect(degreeLevelFieldError).toBeDefined()
         expect(degreeLevelFieldError?.code).toBe('invalid_value')
 
-        // Expected values
-        expect(degreeLevelFieldError?.message).toContain('bachelors')
-        expect(degreeLevelFieldError?.message).toContain('masters')
-        expect(degreeLevelFieldError?.message).toContain('phd')
+        // Allowed values
+        expect(degreeLevelFieldError?.message).toMatch('bachelors')
+        expect(degreeLevelFieldError?.message).toMatch('masters')
+        expect(degreeLevelFieldError?.message).toMatch('phd')
       })
 
       it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
-
-        expect(res.status).toBe(415)
+          .expect(415)
 
         const body = assertErrorBody(res)
 
@@ -114,8 +105,6 @@ describe('Program Module', () => {
           .set('Content-Type', 'application/json')
           .expect(400)
 
-        expect(res.status).toBe(400)
-
         const body = assertErrorBody(res)
 
         expect(body.error.type).toBe('BAD_REQUEST')
@@ -124,24 +113,21 @@ describe('Program Module', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 400 on invalid departmentId', async () => {
-        const departmentId = (await createDepartment()).id
-        const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
+      it('fails with status 400 on non-existent department', async () => {
+        const { publicId: directorPublicId } = await createTeacher()
 
-        const program = generateProgram({ departmentId: 10000, directorPublicId })
+        const program = generateProgram({ departmentId: 100, directorPublicId })
 
-        const res = await api.post(ENDPOINT).send(program)
+        const res = await api.post(ENDPOINT).send(program).expect(400)
         const body = assertErrorBody(res)
-
-        expect(res.status).toBe(400)
 
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toContain('departmentId')
       })
 
-      it('fails with status 400 on invalid discipline', async () => {
-        const departmentId = (await createDepartment()).id
-        const directorPublicId = (await createTeacher({ teacherOverrides: { departmentId } })).publicId
+      it('fails with status 400 on non-existent discipline', async () => {
+        const { id: departmentId } = await createDepartment()
+        const { publicId: directorPublicId } = await createTeacher({ teacherOverrides: { departmentId } })
 
         const program = generateProgram({
           departmentId,
@@ -149,24 +135,20 @@ describe('Program Module', () => {
           discipline: 'incorrect',
         })
 
-        const res = await api.post(ENDPOINT).send(program)
+        const res = await api.post(ENDPOINT).send(program).expect(400)
         const body = assertErrorBody(res)
-
-        expect(res.status).toBe(400)
 
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toContain('discipline')
       })
 
-      it('fails with status 400 on invalid directorPublicId', async () => {
-        const departmentId = (await createDepartment()).id
+      it('fails with status 400 on non-existent programDirector', async () => {
+        const { id: departmentId } = await createDepartment()
 
         const program = generateProgram({ departmentId })
 
-        const res = await api.post(ENDPOINT).send(program)
+        const res = await api.post(ENDPOINT).send(program).expect(400)
         const body = assertErrorBody(res)
-
-        expect(res.status).toBe(400)
 
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toContain('directorPublicId')
@@ -178,8 +160,8 @@ describe('Program Module', () => {
     const ENDPOINT = '/programs/curricula'
 
     it('succeeds with status 201 on correct data', async () => {
-      const departmentId = (await createDepartment()).id
-      const programId = (await createProgram({ programOverrides: { totalSemesters: 4, departmentId } })).id
+      const { id: departmentId } = await createDepartment()
+      const { id: programId } = await createProgram({ programOverrides: { totalSemesters: 4, departmentId } })
       const courseIds = (await Promise.all([
         createCourse({ courseOverrides: { departmentId } }),
         createCourse({ courseOverrides: { departmentId } }),
@@ -201,17 +183,17 @@ describe('Program Module', () => {
 
       const res = await api.post(ENDPOINT)
         .send({ programId, curricula })
+        .expect(201)
 
       const body = assertSuccessBody<CreateProgramCurriculaResponse>(res)
 
-      expect(res.status).toBe(201)
       expect(body.data[0]).toStrictEqual(curricula[0])
     })
 
     describe('Input validations', () => {
       it("fails with status 422 if curriculum isn't provided for all semesters", async () => {
-        const departmentId = (await createDepartment()).id
-        const programId = (await createProgram({ programOverrides: { totalSemesters: 4, departmentId } })).id
+        const { id: departmentId } = await createDepartment()
+        const { id: programId } = await createProgram({ programOverrides: { totalSemesters: 4, departmentId } })
         const courseIds = (await Promise.all([
           createCourse({ courseOverrides: { departmentId } }),
           createCourse({ courseOverrides: { departmentId } }),
@@ -229,12 +211,12 @@ describe('Program Module', () => {
 
         const res = await api.post(ENDPOINT)
           .send({ programId, curricula: [curriculum] })
+          .expect(422)
 
         const body = assertErrorBody(res)
 
         const curriculumFieldError = findFieldError(body.error.details, 'curricula.0')
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         expect(curriculumFieldError).toBeDefined()
@@ -263,15 +245,14 @@ describe('Program Module', () => {
 
         const res = await api.post(ENDPOINT)
           .send({ programId: 1, curricula: curricula })
+          .expect(422)
 
         const body = assertErrorBody(res)
 
         const batchYearFieldError = findFieldError(body.error.details, 'curricula.1.batchYear')
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
-        expect(batchYearFieldError).toBeDefined()
         expect(batchYearFieldError?.message).toMatch(/duplicate/i)
       })
 
@@ -289,15 +270,14 @@ describe('Program Module', () => {
 
         const res = await api.post(ENDPOINT)
           .send({ programId: 1, curricula: curricula })
+          .expect(422)
 
         const body = assertErrorBody(res)
 
         const courseFieldError = findFieldError(body.error.details, 'curricula.0.semesterCourses.1.courseIds.0')
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
-        expect(courseFieldError).toBeDefined()
         expect(courseFieldError?.message).toMatch(/duplicate/i)
       })
 
@@ -315,15 +295,14 @@ describe('Program Module', () => {
 
         const res = await api.post(ENDPOINT)
           .send({ programId: 1, curricula: curricula })
+          .expect(422)
 
         const body = assertErrorBody(res)
 
         const semesterFieldError = findFieldError(body.error.details, 'curricula.0.semesterCourses.1.semesterNumber')
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
-        expect(semesterFieldError).toBeDefined()
         expect(semesterFieldError?.message).toMatch(/duplicate/i)
       })
 
@@ -341,19 +320,17 @@ describe('Program Module', () => {
 
         const res = await api.post(ENDPOINT)
           .send({ programId: 1, curricula: curricula })
+          .expect(422)
 
         const body = assertErrorBody(res)
+
+        expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const negativeSemesterNumberFieldError = findFieldError(body.error.details, 'curricula.0.semesterCourses.0.semesterNumber')
         const zeroSemesterNumberFieldError = findFieldError(body.error.details, 'curricula.0.semesterCourses.1.semesterNumber')
 
-        expect(res.status).toBe(422)
-        expect(body.error.type).toBe('VALIDATION_FAILED')
 
-        expect(negativeSemesterNumberFieldError).toBeDefined()
         expect(negativeSemesterNumberFieldError?.message).toMatch(/too small/i)
-
-        expect(zeroSemesterNumberFieldError).toBeDefined()
         expect(zeroSemesterNumberFieldError?.message).toMatch(/too small/i)
       })
 
@@ -361,8 +338,7 @@ describe('Program Module', () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
-
-        expect(res.status).toBe(415)
+          .expect(415)
 
         const body = assertErrorBody(res)
 
@@ -376,8 +352,6 @@ describe('Program Module', () => {
           .set('Content-Type', 'application/json')
           .expect(400)
 
-        expect(res.status).toBe(400)
-
         const body = assertErrorBody(res)
 
         expect(body.error.type).toBe('BAD_REQUEST')
@@ -386,7 +360,7 @@ describe('Program Module', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 400 on invalid programId', async () => {
+      it('fails with status 400 on non-existent program', async () => {
         const curricula = [
           {
             batchYear: 2022,
@@ -400,27 +374,28 @@ describe('Program Module', () => {
 
         const res = await api.post(ENDPOINT)
           .send({ programId: 1, curricula: curricula })
+          .expect(400)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toMatch('programId')
       })
 
-      it('fails with status 400 on invalid courseIds', async () => {
-        const programId = (await createProgram({ programOverrides: { totalSemesters: 1 } })).id
+      it('fails with status 400 on non-existent courses', async () => {
+        const { id: programId } = await createProgram({ programOverrides: { totalSemesters: 1 } })
 
         const curricula = [{
           batchYear: 2022,
           semesterCourses: [{ semesterNumber: 1, courseIds: [1] }],
         }]
 
-        const res = await api.post(ENDPOINT).send({ programId, curricula })
+        const res = await api.post(ENDPOINT).send({ programId, curricula }).expect(400)
+
+        expect(res.status).toBe(400)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toMatch('courseId')
       })

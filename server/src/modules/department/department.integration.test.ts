@@ -18,11 +18,11 @@ describe('Department Module', () => {
 
     it('succeeds with status 201 on correct data', async () => {
       const department = generateDepartment()
-      const res = await api.post(ENDPOINT).send(department)
+
+      const res = await api.post(ENDPOINT).send(department).expect(201)
 
       const body = assertSuccessBody<CreateDepartmentResponse>(res)
 
-      expect(res.status).toBe(201)
       expect(body.data).toMatchObject(department)
     })
 
@@ -34,23 +34,18 @@ describe('Department Module', () => {
           server: { name: 'a' },
         })
 
-        const res = await api.post(ENDPOINT).send(department)
-        expect(res.status).toBe(422)
+        const res = await api.post(ENDPOINT).send(department).expect(422)
 
         const body = assertErrorBody(res)
+
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const nameFieldError = findFieldError(body.error.details, 'name')
         const codeFieldError = findFieldError(body.error.details, 'code')
         const serverNameFieldError = findFieldError(body.error.details, 'server.name')
 
-        expect(nameFieldError).toBeDefined()
         expect(nameFieldError?.code).toBe('too_small')
-
-        expect(codeFieldError).toBeDefined()
         expect(codeFieldError?.code).toBe('too_small')
-
-        expect(serverNameFieldError).toBeDefined()
         expect(serverNameFieldError?.code).toBe('too_small')
       })
 
@@ -64,23 +59,18 @@ describe('Department Module', () => {
           },
         })
 
-        const res = await api.post(ENDPOINT).send(department)
-        expect(res.status).toBe(422)
+        const res = await api.post(ENDPOINT).send(department).expect(422)
 
         const body = assertErrorBody(res)
+
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const nameFieldError = findFieldError(body.error.details, 'name')
         const codeFieldError = findFieldError(body.error.details, 'code')
         const serverNameFieldError = findFieldError(body.error.details, 'server.name')
 
-        expect(nameFieldError).toBeDefined()
         expect(nameFieldError?.code).toBe('too_big')
-
-        expect(codeFieldError).toBeDefined()
         expect(codeFieldError?.code).toBe('too_big')
-
-        expect(serverNameFieldError).toBeDefined()
         expect(serverNameFieldError?.code).toBe('too_big')
       })
 
@@ -88,8 +78,7 @@ describe('Department Module', () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
-
-        expect(res.status).toBe(415)
+          .expect(415)
 
         const body = assertErrorBody(res)
 
@@ -103,8 +92,6 @@ describe('Department Module', () => {
           .set('Content-Type', 'application/json')
           .expect(400)
 
-        expect(res.status).toBe(400)
-
         const body = assertErrorBody(res)
 
         expect(body.error.type).toBe('BAD_REQUEST')
@@ -117,10 +104,10 @@ describe('Department Module', () => {
     const ENDPOINT = '/departments/courses'
 
     it('succeeds with status 201 on correct data', async () => {
-      const departmentId = (await createDepartment()).id
+      const { id: departmentId } = await createDepartment()
       const course = generateCourse({ departmentId })
 
-      const res = await api.post(ENDPOINT).send(course)
+      const res = await api.post(ENDPOINT).send(course).expect(201)
 
       const body = assertSuccessBody<CreateCourseResponse>(res)
 
@@ -131,11 +118,10 @@ describe('Department Module', () => {
       it('fails with status 422 on inputs smaller than required', async () => {
         const course = generateCourse({ title: 'a', code: 'b', creditHours: -1 })
 
-        const res = await api.post(ENDPOINT).send(course)
+        const res = await api.post(ENDPOINT).send(course).expect(422)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const titleFieldError = findFieldError(body.error.details, 'title')
@@ -154,11 +140,10 @@ describe('Department Module', () => {
           creditHours: 4,
         })
 
-        const res = await api.post(ENDPOINT).send(course)
+        const res = await api.post(ENDPOINT).send(course).expect(422)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const titleFieldError = findFieldError(body.error.details, 'title')
@@ -174,8 +159,7 @@ describe('Department Module', () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
-
-        expect(res.status).toBe(415)
+          .expect(415)
 
         const body = assertErrorBody(res)
 
@@ -189,8 +173,6 @@ describe('Department Module', () => {
           .set('Content-Type', 'application/json')
           .expect(400)
 
-        expect(res.status).toBe(400)
-
         const body = assertErrorBody(res)
 
         expect(body.error.type).toBe('BAD_REQUEST')
@@ -199,14 +181,12 @@ describe('Department Module', () => {
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 400 on invalid departmentId', async () => {
+      it('fails with status 400 on non-existent department', async () => {
         const course = generateCourse()
 
-        const res = await api.post(ENDPOINT).send(course)
+        const res = await api.post(ENDPOINT).send(course).expect(400)
 
         const body = assertErrorBody(res)
-
-        expect(res.status).toBe(400)
 
         expect(body.error.type).toBe('BAD_REQUEST')
 

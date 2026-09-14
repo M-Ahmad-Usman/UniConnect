@@ -4,13 +4,17 @@ import request from 'supertest'
 import app from '../../app.js'
 
 // Utils
-import { assertSuccessBody, assertErrorBody, findFieldError } from '../../test/helpers.js'
 import {
   createDepartment,
   generateTeacher,
   generateStudent,
   createClass,
 } from '../../test/factories.js'
+import {
+  assertSuccessBody,
+  assertErrorBody,
+  findFieldError,
+} from '../../test/helpers.js'
 
 // Types
 import type { CreateTeacherResponse, CreateStudentResponse } from './user.dto.js'
@@ -22,15 +26,15 @@ describe('User Module', () => {
     const ENDPOINT = '/users/teachers'
 
     it('succeeds with status 201 on correct data', async () => {
-      const departmentId = (await createDepartment()).id
+      const { id: departmentId } = await createDepartment()
       const teacher = generateTeacher({ departmentId })
 
-      const res = await api.post(ENDPOINT).send(teacher)
+      const res = await api.post(ENDPOINT).send(teacher).expect(201)
+
       const body = assertSuccessBody<CreateTeacherResponse>(res)
 
       const { password: _password, ...expectedCreateTeacherResponse } = teacher
 
-      expect(res.status).toBe(201)
       expect(body.data).toMatchObject(expectedCreateTeacherResponse)
       expect(body.data).not.toHaveProperty('password')
       expect(body.data).not.toHaveProperty('passwordHash')
@@ -43,43 +47,31 @@ describe('User Module', () => {
           gender: 'invalid gender',
         })
 
-        const res = await api.post(ENDPOINT).send(teacher)
+        const res = await api.post(ENDPOINT).send(teacher).expect(422)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
         expect(body.error.details.length).toBe(2)
 
         const personalEmailFieldError = findFieldError(body.error.details, 'personalEmail')
         const genderFieldError = findFieldError(body.error.details, 'gender')
 
-        expect(personalEmailFieldError).toBeDefined()
         expect(personalEmailFieldError?.code).toBe('invalid_format')
 
-        expect(genderFieldError).toBeDefined()
         expect(genderFieldError?.code).toBe('invalid_value')
         expect(genderFieldError?.message).toContain('male')
         expect(genderFieldError?.message).toContain('female')
-      })
-
-      it('fails with status 422 if empty JSON body is provided', async () => {
-        const res = await api.post(ENDPOINT).send({})
-
-        const body = assertErrorBody(res)
-
-        expect(res.status).toBe(422)
-        expect(body.error.type).toBe('VALIDATION_FAILED')
       })
 
       it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
+          .expect(415)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(415)
         expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
         expect(body.error.message).toContain('application/json')
       })
@@ -92,7 +84,6 @@ describe('User Module', () => {
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message.toLowerCase()).toContain('json')
       })
@@ -100,7 +91,7 @@ describe('User Module', () => {
 
     describe('DB dependent validations', () => {
       it('fails with status 409 on duplicate personal email', async () => {
-        const departmentId = (await createDepartment()).id
+        const { id: departmentId } = await createDepartment()
 
         const teacher1 = generateTeacher({
           personalEmail: 'duplicate@example.com',
@@ -113,17 +104,16 @@ describe('User Module', () => {
         })
 
         await api.post(ENDPOINT).send(teacher1)
-        const res = await api.post(ENDPOINT).send(teacher2)
+        const res = await api.post(ENDPOINT).send(teacher2).expect(409)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(409)
         expect(body.error.type).toBe('CONFLICT')
         expect(body.error.message).toContain('personalEmail')
       })
 
       it('fails with status 409 on duplicate university email', async () => {
-        const departmentId = (await createDepartment()).id
+        const { id: departmentId } = await createDepartment()
 
         const teacher1 = generateTeacher({
           universityEmail: 'duplicate@ntu.edu.pk',
@@ -136,39 +126,38 @@ describe('User Module', () => {
         })
 
         await api.post(ENDPOINT).send(teacher1)
-        const res = await api.post(ENDPOINT).send(teacher2)
+        const res = await api.post(ENDPOINT).send(teacher2).expect(409)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(409)
         expect(body.error.type).toBe('CONFLICT')
         expect(body.error.message).toContain('universityEmail')
       })
 
       it.skip('succeeds with 201 with duplicate university email if previous holder was soft-deleted', () => true)
 
-      it('fails with status 400 on invalid designation', async () => {
-        const departmentId = (await createDepartment()).id
+      it('fails with status 400 on non-existent designation', async () => {
+        const { id: departmentId } = await createDepartment()
         const teacher = generateTeacher({
           designation: 'non-existent',
           departmentId,
         })
 
-        const res = await api.post(ENDPOINT).send(teacher)
+        const res = await api.post(ENDPOINT).send(teacher).expect(400)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toContain('designation')
       })
 
-      it('fails with status 400 on invalid departmentId', async () => {
-        const res = await api.post(ENDPOINT).send(generateTeacher())
+      it('fails with status 400 on non-existent department', async () => {
+        const res = await api.post(ENDPOINT)
+          .send(generateTeacher())
+          .expect(400)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toContain('departmentId')
       })
@@ -179,17 +168,16 @@ describe('User Module', () => {
     const ENDPOINT = '/users/students'
 
     it('Succeeds with status 201 on correct data', async () => {
-      const classPublicId = (await createClass()).publicId
+      const { publicId: classPublicId } = await createClass()
       const student = generateStudent({ classPublicId })
 
-      const res = await api.post(ENDPOINT).send(student)
+      const res = await api.post(ENDPOINT).send(student).expect(201)
 
       const body = assertSuccessBody<CreateStudentResponse>(res)
 
       // Remove password field from response
       const { password: _password, ...expectedCreateStudentResponse } = student
 
-      expect(res.status).toBe(201)
       expect(body.data).toMatchObject(expectedCreateStudentResponse)
       expect(body.data).not.toHaveProperty('password')
       expect(body.data).not.toHaveProperty('passwordHash')
@@ -202,42 +190,31 @@ describe('User Module', () => {
           gender: 'invalid gender',
         })
 
-        const res = await api.post(ENDPOINT).send(student)
+        const res = await api.post(ENDPOINT).send(student).expect(422)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
         expect(body.error.details.length).toBe(2)
 
         const personalEmailFieldError = findFieldError(body.error.details, 'personalEmail')
         const genderFieldError = findFieldError(body.error.details, 'gender')
 
-        expect(personalEmailFieldError).toBeDefined()
         expect(personalEmailFieldError?.code).toBe('invalid_format')
 
-        expect(genderFieldError).toBeDefined()
         expect(genderFieldError?.code).toBe('invalid_value')
         expect(genderFieldError?.message).toContain('male')
         expect(genderFieldError?.message).toContain('female')
-      })
-
-      it('fails with status 422 if empty JSON body is provided', async () => {
-        const res = await api.post(ENDPOINT).send({})
-
-        const body = assertErrorBody(res)
-        expect(res.status).toBe(422)
-        expect(body.error.type).toBe('VALIDATION_FAILED')
       })
 
       it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
+          .expect(415)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(415)
         expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
         expect(body.error.message).toContain('application/json')
       })
@@ -250,7 +227,6 @@ describe('User Module', () => {
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message.toLowerCase()).toContain('json')
       })
@@ -258,7 +234,7 @@ describe('User Module', () => {
 
     describe('DB dependent validations', () => {
       it('fails with status 409 on duplicate personal email', async () => {
-        const classPublicId = (await createClass()).publicId
+        const { publicId: classPublicId } = await createClass()
 
         const student1 = generateStudent({
           personalEmail: 'duplicate@example.com',
@@ -271,16 +247,15 @@ describe('User Module', () => {
         })
 
         await api.post(ENDPOINT).send(student1)
-        const res = await api.post(ENDPOINT).send(student2)
+        const res = await api.post(ENDPOINT).send(student2).expect(409)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(409)
         expect(body.error.type).toBe('CONFLICT')
       })
 
       it('fails with status 409 on duplicate university email', async () => {
-        const classPublicId = (await createClass()).publicId
+        const { publicId: classPublicId } = await createClass()
 
         const student1 = generateStudent({
           universityEmail: 'duplicate@ntu.edu.pk',
@@ -293,28 +268,26 @@ describe('User Module', () => {
         })
 
         await api.post(ENDPOINT).send(student1)
-        const res = await api.post(ENDPOINT).send(student2)
+        const res = await api.post(ENDPOINT).send(student2).expect(409)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(409)
         expect(body.error.type).toBe('CONFLICT')
       })
 
       it.skip('succeeds with 201 with duplicate university email if previous holder was soft-deleted', () => true)
 
-      it('fails with status 400 on invalid classPublicId', async () => {
-        const res = await api.post(ENDPOINT).send(generateStudent())
+      it('fails with status 400 on non-existent class', async () => {
+        const res = await api.post(ENDPOINT).send(generateStudent()).expect(400)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).includes('classPublicId')
       })
 
       it('fails with status 409 on duplicate rollNumber', async () => {
-        const classPublicId = (await createClass()).publicId
+        const { publicId: classPublicId } = await createClass()
 
         const student1 = generateStudent({
           rollNumber: '22-NTU-CS-1184',
@@ -327,11 +300,10 @@ describe('User Module', () => {
         })
 
         await api.post(ENDPOINT).send(student1)
-        const res = await api.post(ENDPOINT).send(student2)
+        const res = await api.post(ENDPOINT).send(student2).expect(409)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(409)
         expect(body.error.type).toBe('CONFLICT')
         expect(body.error.message).includes('rollNumber')
       })

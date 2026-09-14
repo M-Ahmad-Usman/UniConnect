@@ -17,14 +17,13 @@ describe('Class Module', () => {
     const ENDPOINT = '/classes'
 
     it('succeeds with status 201 on correct data', async () => {
-      const programId = (await createProgram()).id
+      const { id: programId } = await createProgram()
       const classToCreate = generateClass({ programId })
 
-      const res = await api.post(ENDPOINT).send(classToCreate)
+      const res = await api.post(ENDPOINT).send(classToCreate).expect(201)
 
       const body = assertSuccessBody<CreateClassResponse>(res)
 
-      expect(res.status).toBe(201)
       expect(body.data).toMatchObject(classToCreate)
       expect(body.data.server).toBeDefined()
     })
@@ -33,16 +32,14 @@ describe('Class Module', () => {
       it('fails with status 422 on invalid section', async () => {
         const res = await api.post(ENDPOINT)
           .send(generateClass({ section: 'C' }))
+          .expect(422)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const sectionFieldError = findFieldError(body.error.details, 'section')
 
-        expect(sectionFieldError).toBeDefined()
-        expect(sectionFieldError?.field).toBe('section')
         expect(sectionFieldError?.message).contain('A')
         expect(sectionFieldError?.message).contain('B')
       })
@@ -50,26 +47,25 @@ describe('Class Module', () => {
       it('fails with status 422 on negative currentSemester', async () => {
         const classToCreate = generateClass({ currentSemester: -1 })
 
-        const res = await api.post(ENDPOINT).send(classToCreate)
+        const res = await api.post(ENDPOINT).send(classToCreate).expect(422)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(422)
         expect(body.error.type).toBe('VALIDATION_FAILED')
 
         const currentSemesterFieldError = findFieldError(body.error.details, 'currentSemester')
 
-        expect(currentSemesterFieldError).toBeDefined()
-        expect(currentSemesterFieldError?.code).toContain('too_small')
+        expect(currentSemesterFieldError?.code).toMatch('too_small')
       })
 
       it('fails with status 415 on unexpected Content-Type', async () => {
         const res = await api.post(ENDPOINT)
           .set('Content-Type', 'text/html')
           .send('<p>Hello World</p>')
+          .expect(415)
 
         const body = assertErrorBody(res)
-        expect(res.status).toBe(415)
+
         expect(body.error.type).toBe('INVALID_CONTENT_TYPE')
         expect(body.error.message).toContain('application/json')
       })
@@ -82,21 +78,19 @@ describe('Class Module', () => {
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message.toLowerCase()).toContain('json')
       })
     })
 
     describe('DB dependent validations', () => {
-      it('fails with status 400 on invalid programId', async () => {
+      it('fails with status 400 on non-existent program', async () => {
         const classToCreate = generateClass()
 
-        const res = await api.post(ENDPOINT).send(classToCreate)
+        const res = await api.post(ENDPOINT).send(classToCreate).expect(400)
 
         const body = assertErrorBody(res)
 
-        expect(res.status).toBe(400)
         expect(body.error.type).toBe('BAD_REQUEST')
         expect(body.error.message).toContain('programId')
       })
