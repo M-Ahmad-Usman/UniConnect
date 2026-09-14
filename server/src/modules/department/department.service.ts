@@ -14,7 +14,7 @@ import type { IDepartmentRepository } from './department.interface.js'
 import type { IServerRepository } from '../server/server.interface.js'
 
 // Errors
-import { BadRequestError } from '../../core/errors/AppError.js'
+import { BadRequestError, ConflictError } from '../../core/errors/AppError.js'
 
 // DTO Types
 import type {
@@ -36,31 +36,44 @@ export default class DepartmentService {
   ) { }
 
   async createDepartment(createDepartmentRequest: CreateDepartmentRequest): Promise<CreateDepartmentResponse> {
+    try {
+      return await this.db.transaction().execute(async trx => {
 
-    return await this.db.transaction().execute(async trx => {
+        // Create Department Server
+        const departmentServerInsert: InsertServerEntity = {
+          name: createDepartmentRequest.server.name,
+          description: createDepartmentRequest.server.description ?? null,
+          iconUrl: createDepartmentRequest.server.iconUrl ?? null, // TODO: Implement media handling
+          type: 'department',
+          // createdBy: req.authorizedUser.id, // TODO: Implement authorization
+        }
+        const departmentServerEntity = await this.serverRepository
+          .createServer(departmentServerInsert, trx)
 
-      // Create Department Server
-      const departmentServerInsert: InsertServerEntity = {
-        name: createDepartmentRequest.server.name,
-        description: createDepartmentRequest.server.description ?? null,
-        iconUrl: createDepartmentRequest.server.iconUrl ?? null, // TODO: Implement media handling
-        type: 'department',
-        // createdBy: req.authorizedUser.id, // TODO: Implement authorization
+        // Create Department
+        const departmentInsert: InsertDepartmentEntity = {
+          name: createDepartmentRequest.name,
+          code: createDepartmentRequest.code,
+          serverId: departmentServerEntity.id,
+        }
+        const departmentEntity = await this.departmentRepository
+          .createDepartment(departmentInsert, trx)
+
+        return toCreateDepartmentResponse(departmentEntity, departmentServerEntity)
+      })
+    } catch (err: unknown) {
+      if (err instanceof pg.DatabaseError) {
+        switch (err.constraint) {
+          case 'uq_departments_name':
+            throw new ConflictError('Specified department name is already in use')
+          case 'uq_departments_code':
+            throw new ConflictError('Specified department code is already in use')
+          default:
+            throw err
+        }
       }
-      const departmentServerEntity = await this.serverRepository
-        .createServer(departmentServerInsert, trx)
-
-      // Create Department
-      const departmentInsert: InsertDepartmentEntity = {
-        name: createDepartmentRequest.name,
-        code: createDepartmentRequest.code,
-        serverId: departmentServerEntity.id,
-      }
-      const departmentEntity = await this.departmentRepository
-        .createDepartment(departmentInsert, trx)
-
-      return toCreateDepartmentResponse(departmentEntity, departmentServerEntity)
-    })
+      throw err
+    }
   }
 
   async createCourse(createCourseRequest: CreateCourseRequest): Promise<CreateCourseResponse> {
