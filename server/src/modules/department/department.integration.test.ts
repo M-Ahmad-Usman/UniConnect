@@ -98,6 +98,34 @@ describe('Department Module', () => {
         expect(body.error.message.toLowerCase()).toContain('json')
       })
     })
+
+    describe('DB dependent validations', () => {
+      it('fails with status 409 on duplicate name', async () => {
+        const department1 = generateDepartment({ name: 'computer science' })
+        const department2 = generateDepartment({ name: 'computer science' })
+
+        await api.post(ENDPOINT).send(department1).expect(201)
+        const res = await api.post(ENDPOINT).send(department2).expect(409)
+
+        const body = assertErrorBody(res)
+
+        expect(body.error.type).toBe('CONFLICT')
+        expect(body.error.message).toMatch('name')
+      })
+
+      it('fails with status 409 on duplicate code', async () => {
+        const department1 = generateDepartment({ code: 'BSCS' })
+        const department2 = generateDepartment({ code: 'BSCS' })
+
+        await api.post(ENDPOINT).send(department1).expect(201)
+        const res = await api.post(ENDPOINT).send(department2).expect(409)
+
+        const body = assertErrorBody(res)
+
+        expect(body.error.type).toBe('CONFLICT')
+        expect(body.error.message).toMatch('code')
+      })
+    })
   })
 
   describe('POST /departments/courses', () => {
