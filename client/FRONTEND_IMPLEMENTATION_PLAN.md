@@ -7,7 +7,7 @@
 
 **Current contract note:** This plan is historical. Current API and lifecycle
 contracts are governed by `client/API_CONTRACT.md` and
-`docs/schema_lifecycle_refactor_plan.md`.
+`docs/archive/schema_lifecycle_refactor_plan.md`.
 
 ---
 
