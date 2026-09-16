@@ -5,7 +5,7 @@ export type ErrorType =
   | 'BAD_REQUEST'
 
   // Auth
-  | 'UNAUTHORIZED'
+  | 'UNAUTHENTICATED'
   | 'FORBIDDEN'
   | 'TOKEN_EXPIRED'
   | 'TOKEN_INVALID'
