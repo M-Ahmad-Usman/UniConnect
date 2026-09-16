@@ -1,9 +1,26 @@
 import { z } from 'zod'
 import 'dotenv/config'
 
+import type { SignOptions } from 'jsonwebtoken'
+type JwtExpiresIn = NonNullable<SignOptions['expiresIn']>
+
+const timeStringSchema = z
+  .string()
+  .regex(/^\d+[smhdw]$/, { message: "Must be a valid duration (e.g., '15m', '2h', '7d')" })
+  .transform((val) => val as JwtExpiresIn)
+
 const envSchema = z.object({
   PORT: z.coerce.number().int().positive(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+
+  JWT_ISSUER: z.string(),
+  JWT_AUDIENCE: z.string(),
+
+  ACCESS_TOKEN_SECRET: z.string().min(32),
+  ACCESS_TOKEN_TTL: timeStringSchema.default('15m'),
+
+  REFRESH_TOKEN_SECRET: z.string().min(32),
+  REFRESH_TOKEN_TTL: timeStringSchema.default('7d'),
 
   POSTGRES_PASSWORD: z.string().min(5),
   POSTGRES_USER: z.string().min(1),
