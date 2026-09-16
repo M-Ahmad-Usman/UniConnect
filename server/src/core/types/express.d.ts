@@ -5,6 +5,9 @@ declare global {
     interface Request {
       requestId: string
       log: HttpLogger['logger']
+      user?: {
+        publicId: string
+      }
     }
   }
 }
