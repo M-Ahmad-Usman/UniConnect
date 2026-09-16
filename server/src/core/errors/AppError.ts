@@ -8,18 +8,21 @@ export class AppError extends Error {
   public readonly isOperational: boolean
   public readonly details: FieldError[]
 
-  constructor(
+  constructor(options: {
     message: string,
     statusCode: number,
     type: ErrorType,
-    isOperational = true,
-    details: FieldError[] = [],
-  ) {
-    super(message)
-    this.statusCode = statusCode
-    this.type = type
-    this.isOperational = isOperational
-    this.details = details
+    details?: FieldError[],
+    isOperational?: boolean,
+    cause?: unknown
+  }) {
+
+    super(options.message, { cause: options.cause })
+
+    this.statusCode = options.statusCode
+    this.type = options.type
+    this.isOperational = options.isOperational ?? true
+    this.details = options.details ?? []
 
     // Restores the correct prototype chain, required when extending built-ins in TS
     Object.setPrototypeOf(this, new.target.prototype)
@@ -29,52 +32,59 @@ export class AppError extends Error {
 }
 
 export class NotFoundError extends AppError {
-  constructor(message = 'Resource not found') {
-    super(message, 404, 'NOT_FOUND')
+  constructor(message = 'Resource not found', cause?: unknown) {
+    super({ message, statusCode: 404, type: 'NOT_FOUND', cause })
   }
 }
 
 export class BadRequestError extends AppError {
-  constructor(message = 'Bad request') {
-    super(message, 400, 'BAD_REQUEST')
+  constructor(message = 'Bad request', cause?: unknown) {
+    super({ message, statusCode: 400, type: 'BAD_REQUEST', cause })
   }
 }
 
-export class UnauthorizedError extends AppError {
-  constructor(message = 'Authentication required') {
-    super(message, 401, 'UNAUTHORIZED')
+export class UnauthenticatedError extends AppError {
+  constructor(message = 'Authentication required', cause?: unknown) {
+    super({ message, statusCode: 401, type: 'UNAUTHENTICATED', cause })
+  }
+}
+
+export class TokenExpiredError extends AppError {
+  constructor(message = 'Token expired. Please login again.', cause?: unknown) {
+    super({ message, statusCode: 401, type: 'TOKEN_EXPIRED', cause })
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message = 'Insufficient permissions') {
-    super(message, 403, 'FORBIDDEN')
+  constructor(message = 'Insufficient permissions', cause?: unknown) {
+    super({ message, statusCode: 403, type: 'FORBIDDEN', cause })
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(message = 'Resource already exists') {
-    super(message, 409, 'CONFLICT')
+  constructor(message = 'Resource already exists', cause?: unknown) {
+    super({ message, statusCode: 409, type: 'CONFLICT', cause })
   }
 }
 
 // ValidationError is special — it carries field-level details from Zod
 // so the client knows exactly which fields failed and why.
 export class ValidationError extends AppError {
-  constructor(details: FieldError[], message = 'Validation failed') {
-    super(message, 422, 'VALIDATION_FAILED', true, details)
+  constructor(details: FieldError[], message = 'Validation failed', cause?: unknown) {
+    super({ details, message, statusCode: 422, type: 'VALIDATION_FAILED', cause })
   }
 }
 
 export class InvalidContentTypeError extends AppError {
-  constructor(message = 'Content Type is not supported') {
-    super(message, 415, 'INVALID_CONTENT_TYPE', true)
+  constructor(message = 'Content Type is not supported', cause?: unknown) {
+    super({ message, statusCode: 415, type: 'INVALID_CONTENT_TYPE', cause })
   }
 }
 
 export class InternalServerError extends AppError {
-  constructor(message = 'An unexpected error occurred') {
-    // isOperational = false signals this is a programmer error, not a user error
-    super(message, 500, 'INTERNAL_SERVER_ERROR', false)
+  // cause is required here so that the actual cause can be inspected
+  constructor(message = 'An unexpected error occurred', cause: unknown) {
+  // isOperational = false signals this is a programmer error, not a user error
+    super({ message, statusCode: 500, type: 'INTERNAL_SERVER_ERROR', isOperational: false, cause })
   }
 }
