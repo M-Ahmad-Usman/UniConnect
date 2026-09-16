@@ -8,48 +8,58 @@ import {
   ConflictError,
   ValidationError,
   InternalServerError,
-  UnauthorizedError,
+  UnauthenticatedError,
   InvalidContentTypeError,
 } from './AppError.js'
 import type { FieldError } from '../types/api.js'
 
 describe('App Error', () => {
   describe('Base Class', () => {
-    // AppError
-    describe('AppError', () => {
-      it('should be an instance of both Error and AppError', () => {
-        const error = new AppError('Something failed', 500, 'INTERNAL_SERVER_ERROR', false)
-
-        expect(error).toBeInstanceOf(Error)
-        expect(error).toBeInstanceOf(AppError)
+    it('should be child of Error', () => {
+      const appError = new AppError({
+        message: 'Something failed',
+        statusCode: 500,
+        type: 'INTERNAL_SERVER_ERROR',
       })
 
-      it('should store all constructor arguments as readable properties', () => {
-        const error = new AppError('Something failed', 500, 'INTERNAL_SERVER_ERROR', false)
+      expect(appError).toBeInstanceOf(Error)
+    })
 
-        expect(error.message).toBe('Something failed')
-        expect(error.statusCode).toBe(500)
-        expect(error.type).toBe('INTERNAL_SERVER_ERROR')
-        expect(error.isOperational).toBe(false)
+    it('should set isOperational to true by default', () => {
+      const appError = new AppError({
+        message: 'malformed input',
+        statusCode: 400,
+        type: 'BAD_REQUEST',
       })
 
-      it('should default isOperational to true', () => {
-        const error = new AppError('malformed input', 400, 'BAD_REQUEST')
+      expect(appError.isOperational).toBe(true)
+    })
 
-        expect(error.isOperational).toBe(true)
+    it('should have a stack trace', () => {
+      const appError = new AppError({
+        message: 'malformed input',
+        statusCode: 400,
+        type: 'BAD_REQUEST',
       })
 
-      it('should have a stack trace', () => {
-        const error = new AppError('malformed input', 400, 'BAD_REQUEST')
+      // Stack traces are critical for debugging production issues.
+      expect(appError.stack).toBeDefined()
+    })
 
-        // Stack traces are critical for debugging production issues.
-        expect(error.stack).toBeDefined()
+    it('should preserve original cause if provided', () => {
+      const cause = new Error('Original cause')
+      const appError = new AppError({
+        message: 'Something went wrong',
+        statusCode: 500,
+        type: 'INTERNAL_SERVER_ERROR',
+        cause,
       })
+
+      expect(appError.cause).toMatchObject(cause)
     })
   })
 
   describe('Sub Classes', () => {
-    // NotFoundError
     describe('NotFoundError', () => {
       it('should have correct HTTP semantics', () => {
         const notFoundError = new NotFoundError()
@@ -64,9 +74,15 @@ describe('App Error', () => {
 
         expect(notFoundError).toBeInstanceOf(AppError)
       })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const notFoundError = new NotFoundError('', cause)
+
+        expect(notFoundError.cause).toMatchObject(cause)
+      })
     })
 
-    // BadRequestError
     describe('BadRequestError', () => {
       it('should have correct HTTP semantics', () => {
         const badRequestError = new BadRequestError()
@@ -81,26 +97,38 @@ describe('App Error', () => {
 
         expect(badRequestError).toBeInstanceOf(AppError)
       })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const badRequestError = new BadRequestError('', cause)
+
+        expect(badRequestError.cause).toMatchObject(cause)
+      })
     })
 
-    // UnauthorizedError
-    describe('UnauthorizedError', () => {
+    describe('UnauthenticatedError', () => {
       it('should have correct HTTP semantics', () => {
-        const unauthorizedError = new UnauthorizedError()
+        const unauthenticatedError = new UnauthenticatedError()
 
-        expect(unauthorizedError.statusCode).toBe(401)
-        expect(unauthorizedError.type).toBe('UNAUTHORIZED')
-        expect(unauthorizedError.isOperational).toBe(true)
+        expect(unauthenticatedError.statusCode).toBe(401)
+        expect(unauthenticatedError.type).toBe('UNAUTHENTICATED')
+        expect(unauthenticatedError.isOperational).toBe(true)
       })
 
       it('should be an instance of AppError', () => {
-        const unauthorizedError = new UnauthorizedError()
+        const unauthenticatedError = new UnauthenticatedError()
 
-        expect(unauthorizedError).toBeInstanceOf(AppError)
+        expect(unauthenticatedError).toBeInstanceOf(AppError)
+      })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const unauthenticatedError = new UnauthenticatedError('', cause)
+
+        expect(unauthenticatedError.cause).toMatchObject(cause)
       })
     })
 
-    // ForbiddenError
     describe('ForbiddenError', () => {
       it('should have correct HTTP semantics', () => {
         const forbiddenError = new ForbiddenError()
@@ -115,9 +143,15 @@ describe('App Error', () => {
 
         expect(forbiddenError).toBeInstanceOf(AppError)
       })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const forbiddenError = new ForbiddenError('', cause)
+
+        expect(forbiddenError.cause).toMatchObject(cause)
+      })
     })
 
-    // ConflictError
     describe('ConflictError', () => {
       it('should have correct HTTP semantics', () => {
         const conflictError = new ConflictError()
@@ -132,9 +166,15 @@ describe('App Error', () => {
 
         expect(conflictError).toBeInstanceOf(AppError)
       })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const conflictError = new ConflictError('', cause)
+
+        expect(conflictError.cause).toMatchObject(cause)
+      })
     })
 
-    // ValidationError
     describe('ValidationError', () => {
       it('should have correct HTTP semantics', () => {
         const fieldErrors: FieldError[] = [{
@@ -173,9 +213,15 @@ describe('App Error', () => {
 
         expect(validationError).toBeInstanceOf(AppError)
       })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const validationError = new ValidationError([], '', cause)
+
+        expect(validationError.cause).toMatchObject(cause)
+      })
     })
 
-    // InvalidContentTypeError
     describe('InvalidContentTypeError', () => {
       it('should have correct HTTP semantics', () => {
         const invalidContentTypeError = new InvalidContentTypeError('require application/json, got text/html instead')
@@ -190,25 +236,38 @@ describe('App Error', () => {
 
         expect(invalidContentTypeError).toBeInstanceOf(AppError)
       })
+
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const invalidContentTypeError = new InvalidContentTypeError('', cause)
+
+        expect(invalidContentTypeError.cause).toMatchObject(cause)
+      })
     })
 
-    // InteralServerError
     describe('InteralServerError', () => {
+      it('should preserve original cause if provided', () => {
+        const cause = new Error('Original cause')
+        const internalServerError = new InternalServerError('', cause)
+
+        expect(internalServerError.cause).toMatchObject(cause)
+      })
+
       it('should have correct HTTP semantics', () => {
-        const internalServerError = new InternalServerError()
+        const internalServerError = new InternalServerError('', '')
 
         expect(internalServerError.statusCode).toBe(500)
         expect(internalServerError.type).toBe('INTERNAL_SERVER_ERROR')
       })
 
       it('should set isOperational to false', () => {
-        const internalServerError = new InternalServerError()
+        const internalServerError = new InternalServerError('', '')
 
         expect(internalServerError.isOperational).toBe(false)
       })
 
       it('should be an instance of AppError', () => {
-        const internalServerError = new InternalServerError()
+        const internalServerError = new InternalServerError('', '')
 
         expect(internalServerError).toBeInstanceOf(AppError)
       })
