@@ -372,11 +372,21 @@ const INDEXES: TableIndexes = {
    */
   notificationPreferences: {},
 
+  /**
+   * constraints (indexes) already defined in create_tables
+   * - onTokenHash: unique constraint
+   */
   refreshTokens: {
-    onUserIdExpiresAtRevokedAt: {
-      name: 'idx_refresh_tokens_user_id_expires_at_revoked_at',
+    onActiveUserSessions: {
+      name: 'idx_refresh_tokens_active_user_sessions',
       onTable: 'refresh_tokens',
-      onColumns: ['user_id', 'expires_at', 'revoked_at'],
+      onColumns: ['user_id', 'expires_at'],
+      where: sql<boolean>`revoked_at IS NULL`,
+    },
+    onFamilyId: {
+      name: 'idx_refresh_tokens_family_id',
+      onTable: 'refresh_tokens',
+      onColumns: ['family_id'],
     },
   },
 

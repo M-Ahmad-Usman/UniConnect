@@ -561,6 +561,7 @@ notification_preferences.channel_id > channels.id // ON DELETE CASCADE
 
 refresh_tokens {
   id PK // INTEGER GENERATED ALWAYS AS IDENTITY
+  family_id UUID // NOT NULL
 
   user_id INTEGER FK  // NOT NULL
 
@@ -685,4 +686,5 @@ refresh_tokens.user_id > users.id // ON DELETE CASCADE
 ### `refresh_tokens`
 | Index | Columns | Partial | Rationale |
 |---|---|---|---|
-| `idx_refresh_tokens_user_id_expires_at_revoked_at` | `user_id, expires_at, revoked_at` | — | Finding valid (non-expired, non-revoked) tokens for a user during refresh |
+| `idx_refresh_tokens_active_user_sessions` | `user_id, expires_at` | `revoked_at IS NULL` | Partial constraint to find active non-revoked user sessions |
+| `idx_refresh_tokens_family_id` | `family_id` | - | To revoke entire family if theft is detected |

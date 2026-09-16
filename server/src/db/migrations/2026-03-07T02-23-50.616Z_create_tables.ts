@@ -778,6 +778,8 @@ const createRefreshTokensTable: TableCreationFunction = async (db, tableName) =>
     .addColumn('id', 'integer', col => col.generatedAlwaysAsIdentity())
     .addPrimaryKeyConstraint(`pk_${tableName}`, ['id'])
 
+    .addColumn('family_id', 'uuid', col => col.notNull())
+
     .addColumn('user_id', 'integer', col => col.notNull())
 
     .addColumn('token_hash', 'varchar(255)', col => col.notNull())
