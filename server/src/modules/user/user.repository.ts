@@ -34,6 +34,7 @@ export default class UserRepository implements IUserRepository {
     const usersRow = await trx.selectFrom('users')
       .select('id')
       .where('publicId', '=', publicId)
+      .where('isDeleted', '=', false)
       .executeTakeFirst()
 
     return usersRow?.id
