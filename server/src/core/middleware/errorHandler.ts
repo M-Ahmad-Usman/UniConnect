@@ -1,10 +1,8 @@
-import { ZodError } from 'zod'
 
-import { formatZodError } from '../utils/formatZodError.js'
+
 import { logger } from '../logger.js'
 import {
   AppError,
-  ValidationError,
   InternalServerError,
   BadRequestError,
 } from '../errors/AppError.js'
@@ -28,7 +26,11 @@ export function errorHandler(
   // 2. log
   if (appError.isOperational) {
     // Expected failures — debug level, no stack trace needed
-    logger.debug({ type: appError.type, path: request.path }, appError.message)
+    logger.debug({
+      type: appError.type,
+      path: request.path,
+      cause: appError.cause instanceof Error ? appError.cause.message : appError.cause,
+    }, appError.message)
   }
   else {
     // Log the original error to debug it, then send a safe response
@@ -44,15 +46,11 @@ function createAppError(error: unknown): AppError {
   if (error instanceof AppError)
     return error
 
-  if (error instanceof ZodError)
-    // Raw Zod error that escaped the validation middleware
-    return new ValidationError(formatZodError(error))
-
   if (isMalformedJsonError(error))
     return new BadRequestError('Malformed JSON body')
 
   // Unknown error
-  return new InternalServerError()
+  return new InternalServerError('Something went wrong', error)
 }
 
 function buildErrorResponseBody(appError: AppError): ErrorResponseBody {
