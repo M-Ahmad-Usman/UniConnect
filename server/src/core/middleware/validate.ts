@@ -1,5 +1,5 @@
 import { ValidationError } from '../errors/AppError.js'
-import { formatZodError } from '../utils/formatZodError.js'
+import { translateZodError } from '../errors/translators.js'
 
 import type { Request, Response, NextFunction } from 'express'
 import type { z } from 'zod'
@@ -14,7 +14,7 @@ export const validate = (
     const result = schema.safeParse(request[target])
 
     if (!result.success) {
-      throw new ValidationError(formatZodError(result.error))
+      throw new ValidationError(translateZodError(result.error))
     }
 
     request[target] = result.data

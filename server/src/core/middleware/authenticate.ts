@@ -1,8 +1,8 @@
 import { BadRequestError } from '../errors/AppError.js'
 import { verifyAccessToken } from '../security/token.js'
 
-// Utils
-import { translateJwtError } from '../security/jwtErrorTranslator.js'
+// Error Translators
+import { translateJwtError } from '../errors/translators.js'
 
 import type { Request, Response, NextFunction } from 'express'
 
