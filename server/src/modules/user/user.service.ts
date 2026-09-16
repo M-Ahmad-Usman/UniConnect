@@ -34,7 +34,7 @@ import type {
 import { toCreateStudentResponse, toCreateTeacherResponse } from './user.dto.js'
 
 // Utils
-import * as passwordUtil from '../../core/utils/password.js'
+import * as passwordUtil from '../../core/security/password.js'
 
 export default class UserService {
 
